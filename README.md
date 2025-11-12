@@ -11,6 +11,24 @@ SaaS completo de controle financeiro desenvolvido com React, Vite, Tailwind CSS 
 - Tabela de transações com ordenação e paginação
 - Preview de metas em andamento
 
+### Transações
+- Visualização completa de todas as transações (créditos e débitos)
+- Cards com estatísticas: Total de Créditos, Total de Débitos e Saldo
+- Filtros por tipo de transação (Todas, Créditos, Débitos)
+- Formulário para adicionar novas transações
+- Tabela com todas as transações ordenáveis por data, descrição e valor
+- Interface preparada para exportação de dados
+
+### Despesas
+- Gerenciamento detalhado de despesas por categoria
+- 12 categorias predefinidas com cores distintas
+- Gráfico de pizza mostrando distribuição por categoria
+- Listagem de despesas com porcentagens por categoria
+- Filtros por categoria
+- CRUD completo (Criar, Editar, Excluir despesas)
+- Modal para visualizar todas as categorias disponíveis
+- Cards com estatísticas: Total de Despesas, Total de Itens e Categorias Ativas
+
 ### Investimentos
 - Lista de ativos com valores e rendimentos
 - Modal de detalhes com histórico de evolução
@@ -71,6 +89,8 @@ financeiro-saas/
 │   │       └── MultiLineChart.jsx
 │   ├── pages/               # Páginas da aplicação
 │   │   ├── Dashboard.jsx
+│   │   ├── Transacoes.jsx
+│   │   ├── Despesas.jsx
 │   │   ├── Investimentos.jsx
 │   │   ├── Metas.jsx
 │   │   ├── Comparador.jsx
@@ -183,6 +203,16 @@ npm run dev
 
 Acesse: `http://localhost:5173`
 
+### Rotas Disponíveis
+
+- `/` - Dashboard (página inicial)
+- `/transacoes` - Gerenciamento de transações
+- `/despesas` - Gerenciamento de despesas
+- `/investimentos` - Portfolio de investimentos
+- `/metas` - Metas financeiras
+- `/comparador` - Comparador de ativos
+- `/perfil` - Perfil do usuário
+
 3. **Build para produção**
 
 ```bash
@@ -206,6 +236,23 @@ Os dados mock estão em `src/data/mockData.json` e incluem:
 - **targets**: Metas financeiras
 - **transactions**: Histórico de transações
 - **comparison_sample**: Dados para comparação de ativos
+
+### Categorias de Despesas
+
+O sistema inclui 12 categorias predefinidas com cores distintas:
+
+- **Moradia** - Aluguel, financiamento, condomínio
+- **Transporte** - Combustível, transporte público, manutenção
+- **Alimentação** - Supermercado, restaurantes
+- **Saúde** - Plano de saúde, medicamentos, consultas
+- **Educação** - Cursos, livros, material escolar
+- **Lazer** - Cinema, passeios, hobbies
+- **Assinaturas** - Streaming, software, serviços
+- **Família** - Ajuda familiar, presentes
+- **Poupança** - Investimentos mensais
+- **Crédito** - Cartão de crédito, empréstimos
+- **Utilities** - Água, luz, internet, telefone
+- **Outros** - Despesas diversas
 
 ### Modificar Dados Mock
 
@@ -296,13 +343,30 @@ const response = await fetch('https://api.exemplo.com/expenses');
 const data = await response.json();
 ```
 
+## Funcionalidades Implementadas
+
+- [x] Dashboard com resumo financeiro e gráficos
+- [x] Gerenciamento completo de Transações (CRUD)
+- [x] Gerenciamento completo de Despesas por categoria (CRUD)
+- [x] Sistema de Metas financeiras (CRUD)
+- [x] Portfolio de Investimentos
+- [x] Comparador de Ativos
+- [x] Perfil do usuário
+- [x] Filtros por categoria nas Despesas
+- [x] Filtros por tipo nas Transações
+- [x] Gráficos interativos com Recharts
+- [x] Sistema de categorias com cores
+
 ## Próximos Passos (Sugestões)
 
 - [ ] Integrar com API backend real
 - [ ] Adicionar autenticação (JWT, OAuth)
-- [ ] Implementar filtros avançados (data range, categorias)
-- [ ] Exportar dados (PDF, CSV, Excel)
+- [ ] Implementar filtros avançados de data (data range picker)
+- [ ] Exportar dados (PDF, CSV, Excel) - UI já preparada
 - [ ] Notificações e alertas de metas
+- [ ] Adicionar funcionalidade de busca nas transações
+- [ ] Criar relatórios mensais e anuais
+- [ ] Gráficos de tendência de gastos
 - [ ] Dark mode
 - [ ] Internacionalização (i18n)
 - [ ] Testes (Jest, Testing Library)

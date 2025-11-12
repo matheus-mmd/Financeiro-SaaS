@@ -16,6 +16,7 @@ import { Receipt, Plus, Edit, Trash2, TrendingDown, PieChart } from 'lucide-reac
  */
 export default function Despesas() {
   const [expenses, setExpenses] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [categoryModalOpen, setCategoryModalOpen] = useState(false);
@@ -28,29 +29,17 @@ export default function Despesas() {
     date: new Date().toISOString().split('T')[0],
   });
 
-  // Categorias predefinidas
-  const categories = [
-    { id: 'moradia', name: 'Moradia', color: '#3b82f6' },
-    { id: 'transporte', name: 'Transporte', color: '#ef4444' },
-    { id: 'alimentacao', name: 'Alimentação', color: '#10b981' },
-    { id: 'saude', name: 'Saúde', color: '#f59e0b' },
-    { id: 'educacao', name: 'Educação', color: '#8b5cf6' },
-    { id: 'lazer', name: 'Lazer', color: '#ec4899' },
-    { id: 'assinaturas', name: 'Assinaturas', color: '#06b6d4' },
-    { id: 'familia', name: 'Família', color: '#f97316' },
-    { id: 'poupanca', name: 'Poupança', color: '#14b8a6' },
-    { id: 'credito', name: 'Crédito', color: '#6366f1' },
-    { id: 'utilities', name: 'Utilities', color: '#84cc16' },
-    { id: 'outros', name: 'Outros', color: '#64748b' },
-  ];
-
   useEffect(() => {
     const loadData = async () => {
       try {
-        const response = await fetchMock('/api/expenses');
-        setExpenses(response.data);
+        const [expensesRes, categoriesRes] = await Promise.all([
+          fetchMock('/api/expenses'),
+          fetchMock('/api/categories'),
+        ]);
+        setExpenses(expensesRes.data);
+        setCategories(categoriesRes.data);
       } catch (error) {
-        console.error('Erro ao carregar despesas:', error);
+        console.error('Erro ao carregar dados:', error);
       } finally {
         setLoading(false);
       }

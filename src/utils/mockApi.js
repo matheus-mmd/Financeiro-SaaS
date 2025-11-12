@@ -20,6 +20,7 @@ export const fetchMock = async (endpoint) => {
     '/api/targets': mockData.targets,
     '/api/transactions': mockData.transactions,
     '/api/comparison': mockData.comparison_sample,
+    '/api/categories': mockData.categories,
   };
 
   if (routes[endpoint]) {
