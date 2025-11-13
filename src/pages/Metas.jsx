@@ -7,7 +7,7 @@ import Modal from '../components/Modal';
 import Spinner from '../components/Spinner';
 import ProgressBar from '../components/ProgressBar';
 import { fetchMock, formatCurrency } from '../utils/mockApi';
-import { Target, Plus, Edit, Trash2, CheckCircle } from 'lucide-react';
+import { Target, Plus, Edit, Trash2, CheckCircle, Minus } from 'lucide-react';
 
 /**
  * Página Metas - CRUD de metas financeiras
@@ -22,6 +22,7 @@ export default function Metas() {
     title: '',
     goal: '',
     progress: '',
+    monthlyAmount: '',
   });
 
   useEffect(() => {
@@ -41,7 +42,7 @@ export default function Metas() {
 
   const handleAddTarget = () => {
     setEditingTarget(null);
-    setFormData({ title: '', goal: '', progress: '' });
+    setFormData({ title: '', goal: '', progress: '', monthlyAmount: '' });
     setModalOpen(true);
   };
 
@@ -51,6 +52,7 @@ export default function Metas() {
       title: target.title,
       goal: target.goal.toString(),
       progress: target.progress.toString(),
+      monthlyAmount: target.monthlyAmount?.toString() || '',
     });
     setModalOpen(true);
   };
@@ -69,6 +71,7 @@ export default function Metas() {
       title: formData.title,
       goal: parseFloat(formData.goal),
       progress: parseFloat(formData.progress || 0),
+      monthlyAmount: formData.monthlyAmount ? parseFloat(formData.monthlyAmount) : 0,
       status: parseFloat(formData.progress || 0) >= parseFloat(formData.goal) ? 'completed' : 'in_progress',
     };
 
@@ -79,7 +82,21 @@ export default function Metas() {
     }
 
     setModalOpen(false);
-    setFormData({ title: '', goal: '', progress: '' });
+    setFormData({ title: '', goal: '', progress: '', monthlyAmount: '' });
+  };
+
+  const calculateMonthsToGoal = (goal, progress, monthlyAmount) => {
+    if (!monthlyAmount || monthlyAmount <= 0) return null;
+    const remaining = goal - progress;
+    if (remaining <= 0) return 0;
+    return Math.ceil(remaining / monthlyAmount);
+  };
+
+  const getTargetDate = (months) => {
+    if (months === null || months === 0) return null;
+    const date = new Date();
+    date.setMonth(date.getMonth() + months);
+    return date.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
   };
 
   const handleInputChange = (field, value) => {
@@ -182,13 +199,32 @@ export default function Metas() {
                   variant="brand"
                 />
 
-                <div className="mt-4 pt-4 border-t border-gray-100">
+                <div className="mt-4 pt-4 border-t border-gray-100 space-y-2">
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Faltam</span>
                     <span className="font-semibold text-gray-900">
                       {formatCurrency(target.goal - target.progress)}
                     </span>
                   </div>
+                  {target.monthlyAmount > 0 && (
+                    <>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">Guardar por mês</span>
+                        <span className="font-semibold text-brand-600">
+                          {formatCurrency(target.monthlyAmount)}
+                        </span>
+                      </div>
+                      {(() => {
+                        const months = calculateMonthsToGoal(target.goal, target.progress, target.monthlyAmount);
+                        const targetDate = getTargetDate(months);
+                        return targetDate && (
+                          <div className="text-sm text-gray-600 mt-2 p-2 bg-brand-50 rounded">
+                            Assim você alcança o seu objetivo em <span className="font-semibold text-brand-600">{targetDate}</span>
+                          </div>
+                        );
+                      })()}
+                    </>
+                  )}
                 </div>
               </Card>
             ))}
@@ -205,13 +241,22 @@ export default function Metas() {
               <Card key={target.id} className="p-6 bg-green-50 border-green-200">
                 <div className="flex items-start justify-between mb-3">
                   <Badge variant="success">Concluída</Badge>
-                  <button
-                    onClick={() => handleDeleteTarget(target.id)}
-                    className="p-1 hover:bg-green-100 rounded transition-colors"
-                    aria-label="Excluir meta"
-                  >
-                    <Trash2 className="w-4 h-4 text-gray-600" />
-                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleEditTarget(target)}
+                      className="p-1 hover:bg-green-100 rounded transition-colors"
+                      aria-label="Editar meta"
+                    >
+                      <Edit className="w-4 h-4 text-gray-600" />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteTarget(target.id)}
+                      className="p-1 hover:bg-green-100 rounded transition-colors"
+                      aria-label="Excluir meta"
+                    >
+                      <Trash2 className="w-4 h-4 text-gray-600" />
+                    </button>
+                  </div>
                 </div>
 
                 <h3 className="font-semibold text-gray-900 mb-2">{target.title}</h3>
@@ -258,7 +303,7 @@ export default function Metas() {
           </>
         }
       >
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} className="space-y-4">
           <Input
             label="Título da Meta"
             placeholder="Ex: Reserva de emergência"
@@ -285,6 +330,67 @@ export default function Metas() {
             value={formData.progress}
             onChange={(e) => handleInputChange('progress', e.target.value)}
           />
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Guardar por mês (R$) <span className="text-gray-400 font-normal">(opcional)</span>
+            </label>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  const current = parseFloat(formData.monthlyAmount) || 0;
+                  const newValue = Math.max(0, current - 100);
+                  handleInputChange('monthlyAmount', newValue.toString());
+                }}
+                className="p-3 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+              >
+                <Minus className="w-5 h-5 text-gray-700" />
+              </button>
+
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                placeholder="0,00"
+                value={formData.monthlyAmount}
+                onChange={(e) => handleInputChange('monthlyAmount', e.target.value)}
+                className="flex-1 px-4 py-3 text-center text-lg font-semibold border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
+              />
+
+              <button
+                type="button"
+                onClick={() => {
+                  const current = parseFloat(formData.monthlyAmount) || 0;
+                  const newValue = current + 100;
+                  handleInputChange('monthlyAmount', newValue.toString());
+                }}
+                className="p-3 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+              >
+                <Plus className="w-5 h-5 text-gray-700" />
+              </button>
+            </div>
+
+            {formData.monthlyAmount && parseFloat(formData.monthlyAmount) > 0 && formData.goal && (
+              <div className="mt-3 p-3 bg-brand-50 rounded-lg text-sm">
+                {(() => {
+                  const months = calculateMonthsToGoal(
+                    parseFloat(formData.goal),
+                    parseFloat(formData.progress || 0),
+                    parseFloat(formData.monthlyAmount)
+                  );
+                  const targetDate = getTargetDate(months);
+                  return targetDate ? (
+                    <p className="text-gray-700">
+                      Assim você alcança o seu objetivo em <span className="font-semibold text-brand-600">{targetDate}</span>
+                    </p>
+                  ) : (
+                    <p className="text-green-600 font-semibold">Meta já alcançada!</p>
+                  );
+                })()}
+              </div>
+            )}
+          </div>
         </form>
       </Modal>
     </div>
