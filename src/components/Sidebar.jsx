@@ -37,7 +37,11 @@ export default function Sidebar() {
       {/* Mobile menu button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-white rounded-lg shadow-lg"
+        className={`
+          lg:hidden fixed top-4 z-50 p-2 bg-white rounded-lg shadow-lg
+          transition-all duration-300 ease-in-out
+          ${isOpen ? 'left-60' : 'left-4'}
+        `}
         aria-label="Menu"
       >
         {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
