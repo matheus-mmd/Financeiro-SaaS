@@ -14,9 +14,9 @@ import {
 
 /**
  * Componente Sidebar - Menu lateral de navegação
- * Responsivo: colapsável em mobile
+ * Responsivo: colapsável em mobile, comprimível em desktop
  */
-export default function Sidebar() {
+export default function Sidebar({ isCollapsed = false }) {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
 
@@ -72,20 +72,25 @@ export default function Sidebar() {
       <aside
         className={`
           fixed lg:static inset-y-0 left-0 z-40
-          w-64 bg-white border-r border-gray-200
-          transform transition-transform duration-300 ease-in-out
+          bg-white border-r border-gray-200
+          transform transition-all duration-300 ease-in-out
           ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+          ${isCollapsed ? 'lg:w-20' : 'w-64'}
         `}
       >
         <div className="flex flex-col h-full">
           {/* Logo */}
-          <div className="flex items-center h-[72px] px-6 border-b border-gray-200">
-            <div>
-              <h1 className="text-2xl font-bold text-brand-500 leading-tight">
-                Financeiro
-              </h1>
-              <p className="text-xs text-gray-500 mt-1">Controle Pessoal</p>
-            </div>
+          <div className={`flex items-center h-[72px] border-b border-gray-200 ${isCollapsed ? 'justify-center px-4' : 'px-6'}`}>
+            {!isCollapsed ? (
+              <div>
+                <h1 className="text-2xl font-bold text-brand-500 leading-tight">
+                  Financeiro
+                </h1>
+                <p className="text-xs text-gray-500 mt-1">Controle Pessoal</p>
+              </div>
+            ) : (
+              <div className="text-2xl font-bold text-brand-500">F</div>
+            )}
           </div>
 
           {/* Menu items */}
@@ -100,28 +105,32 @@ export default function Sidebar() {
                   to={item.path}
                   onClick={() => setIsOpen(false)}
                   className={`
-                    flex items-center gap-3 px-4 py-3 rounded-lg
+                    flex items-center gap-3 rounded-lg
                     transition-colors duration-200
+                    ${isCollapsed ? 'justify-center px-4 py-3' : 'px-4 py-3'}
                     ${active
                       ? 'bg-brand-50 text-brand-600 font-medium'
                       : 'text-gray-700 hover:bg-gray-50'
                     }
                   `}
                   aria-current={active ? 'page' : undefined}
+                  title={isCollapsed ? item.label : ''}
                 >
-                  <Icon className="w-5 h-5" />
-                  <span>{item.label}</span>
+                  <Icon className="w-5 h-5 flex-shrink-0" />
+                  {!isCollapsed && <span>{item.label}</span>}
                 </Link>
               );
             })}
           </nav>
 
           {/* Footer */}
-          <div className="p-4 border-t border-gray-200">
-            <p className="text-xs text-gray-500 text-center">
-              © 2025 Financeiro SaaS
-            </p>
-          </div>
+          {!isCollapsed && (
+            <div className="p-4 border-t border-gray-200">
+              <p className="text-xs text-gray-500 text-center">
+                © 2025 Financeiro SaaS
+              </p>
+            </div>
+          )}
         </div>
       </aside>
     </>
