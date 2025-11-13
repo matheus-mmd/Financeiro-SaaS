@@ -42,9 +42,22 @@ export default function Sidebar() {
           transition-all duration-300 ease-in-out
           ${isOpen ? 'left-60' : 'left-4'}
         `}
-        aria-label="Menu"
+        aria-label={isOpen ? 'Fechar menu' : 'Abrir menu'}
       >
-        {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+        <div className="relative w-6 h-6">
+          <Menu
+            className={`
+              absolute inset-0 w-6 h-6 transition-opacity duration-200
+              ${isOpen ? 'opacity-0' : 'opacity-100'}
+            `}
+          />
+          <X
+            className={`
+              absolute inset-0 w-6 h-6 transition-opacity duration-200
+              ${isOpen ? 'opacity-100' : 'opacity-0'}
+            `}
+          />
+        </div>
       </button>
 
       {/* Overlay para mobile */}
