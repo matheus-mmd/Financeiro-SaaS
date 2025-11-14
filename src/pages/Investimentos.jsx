@@ -116,7 +116,7 @@ export default function Investimentos() {
           <p className="text-gray-500 mt-1">Gerencie seus ativos e acompanhe rendimentos</p>
         </div>
         <Button onClick={() => setNewInvestmentModalOpen(true)}>
-          <Plus className="w-5 h-5 mr-2" />
+          <Plus className="w-5 h-5" />
           Novo Investimento
         </Button>
       </div>

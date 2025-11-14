@@ -195,11 +195,11 @@ export default function Despesas() {
         actions={
           <>
             <Button variant="secondary" onClick={() => setCategoryModalOpen(true)}>
-              <PieChart className="w-4 h-4 mr-2" />
+              <PieChart className="w-4 h-4" />
               Categorias
             </Button>
             <Button onClick={handleAddExpense}>
-              <Plus className="w-4 h-4 mr-2" />
+              <Plus className="w-4 h-4" />
               Nova Despesa
             </Button>
           </>

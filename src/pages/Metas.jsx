@@ -123,7 +123,7 @@ export default function Metas() {
           <p className="text-gray-500 mt-1">Defina e acompanhe suas metas</p>
         </div>
         <Button onClick={handleAddTarget}>
-          <Plus className="w-4 h-4 mr-2" />
+          <Plus className="w-4 h-4" />
           Nova Meta
         </Button>
       </div>
@@ -281,7 +281,7 @@ export default function Metas() {
             Comece definindo suas metas financeiras e acompanhe seu progresso.
           </p>
           <Button onClick={handleAddTarget}>
-            <Plus className="w-4 h-4 mr-2" />
+            <Plus className="w-4 h-4" />
             Criar Primeira Meta
           </Button>
         </Card>

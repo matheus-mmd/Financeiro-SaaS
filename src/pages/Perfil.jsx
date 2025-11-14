@@ -92,7 +92,7 @@ export default function Perfil() {
           </div>
 
           <Button variant="ghost" size="sm">
-            <Settings className="w-4 h-4 mr-2" />
+            <Settings className="w-4 h-4" />
             Editar Perfil
           </Button>
         </div>
@@ -186,7 +186,7 @@ export default function Perfil() {
           >
             {editing ? (
               <>
-                <Save className="w-4 h-4 mr-2" />
+                <Save className="w-4 h-4" />
                 Salvar
               </>
             ) : (

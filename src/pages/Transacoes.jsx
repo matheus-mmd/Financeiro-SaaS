@@ -199,11 +199,11 @@ export default function Transacoes() {
         actions={
           <>
             <Button variant="secondary">
-              <Download className="w-4 h-4 mr-2" />
+              <Download className="w-4 h-4" />
               Exportar
             </Button>
             <Button onClick={handleAddTransaction}>
-              <Plus className="w-4 h-4 mr-2" />
+              <Plus className="w-4 h-4" />
               Nova Transação
             </Button>
           </>
