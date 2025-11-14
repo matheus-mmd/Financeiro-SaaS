@@ -19,6 +19,7 @@ import { Wallet, TrendingDown, ArrowUpRight, Target, Eye } from 'lucide-react';
 export default function Dashboard() {
   const [summary, setSummary] = useState(null);
   const [expenses, setExpenses] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [transactions, setTransactions] = useState([]);
   const [targets, setTargets] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -26,15 +27,17 @@ export default function Dashboard() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [summaryRes, expensesRes, transactionsRes, targetsRes] = await Promise.all([
+        const [summaryRes, expensesRes, categoriesRes, transactionsRes, targetsRes] = await Promise.all([
           fetchMock('/api/summary'),
           fetchMock('/api/expenses'),
+          fetchMock('/api/categories'),
           fetchMock('/api/transactions'),
           fetchMock('/api/targets'),
         ]);
 
         setSummary(summaryRes.data);
         setExpenses(expensesRes.data);
+        setCategories(categoriesRes.data);
         setTransactions(transactionsRes.data);
         setTargets(targetsRes.data.filter(t => t.status === 'in_progress').slice(0, 2));
       } catch (error) {
@@ -61,7 +64,13 @@ export default function Dashboard() {
     if (existing) {
       existing.value += expense.amount;
     } else {
-      acc.push({ name: expense.category, value: expense.amount });
+      // Buscar cor da categoria
+      const category = categories.find(c => c.name === expense.category || c.id === expense.category.toLowerCase());
+      acc.push({
+        name: expense.category,
+        value: expense.amount,
+        color: category?.color || '#64748b'
+      });
     }
     return acc;
   }, []);
@@ -160,7 +169,9 @@ export default function Dashboard() {
           <h2 className="text-lg font-semibold text-gray-900 mb-4">
             Despesas por Categoria
           </h2>
-          <DoughnutChart data={expensesByCategory} />
+          <div className="h-[300px] sm:h-[350px]">
+            <DoughnutChart data={expensesByCategory} />
+          </div>
         </Card>
 
         {/* Gráfico de evolução de saldo */}
@@ -168,7 +179,9 @@ export default function Dashboard() {
           <h2 className="text-lg font-semibold text-gray-900 mb-4">
             Evolução do Saldo
           </h2>
-          <LineChart data={balanceEvolution} />
+          <div className="h-[300px] sm:h-[350px]">
+            <LineChart data={balanceEvolution} />
+          </div>
         </Card>
       </div>
 

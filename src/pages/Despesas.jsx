@@ -124,7 +124,13 @@ export default function Despesas() {
     if (existing) {
       existing.value += expense.amount;
     } else {
-      acc.push({ name: expense.category, value: expense.amount });
+      // Buscar cor da categoria
+      const category = categories.find(c => c.name === expense.category || c.id === expense.category.toLowerCase());
+      acc.push({
+        name: expense.category,
+        value: expense.amount,
+        color: category?.color || '#64748b'
+      });
     }
     return acc;
   }, []);
@@ -240,7 +246,9 @@ export default function Despesas() {
           <h2 className="text-lg font-semibold text-gray-900 mb-4">
             Distribuição por Categoria
           </h2>
-          <DoughnutChart data={expensesByCategory} />
+          <div className="h-[300px] sm:h-[350px]">
+            <DoughnutChart data={expensesByCategory} />
+          </div>
         </Card>
 
         {/* Lista de categorias */}

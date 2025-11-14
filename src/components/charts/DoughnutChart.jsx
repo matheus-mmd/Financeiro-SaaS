@@ -3,11 +3,11 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recha
 
 /**
  * Componente DoughnutChart - Gráfico de rosca para categorias
- * @param {Array} data - Dados no formato [{ name, value }]
+ * @param {Array} data - Dados no formato [{ name, value, color? }]
  */
 export default function DoughnutChart({ data }) {
-  // Cores para cada categoria
-  const COLORS = ['#0ea5a4', '#06b6d4', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#6366f1', '#ef4444'];
+  // Cores padrão (fallback se não houver cor nos dados)
+  const DEFAULT_COLORS = ['#0ea5a4', '#06b6d4', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#6366f1', '#ef4444'];
 
   // Custom tooltip
   const CustomTooltip = ({ active, payload }) => {
@@ -43,19 +43,22 @@ export default function DoughnutChart({ data }) {
   };
 
   return (
-    <ResponsiveContainer width="100%" height={300}>
+    <ResponsiveContainer width="100%" height="100%" minHeight={250}>
       <PieChart>
         <Pie
           data={data}
           cx="50%"
           cy="50%"
-          innerRadius={60}
-          outerRadius={100}
+          innerRadius="40%"
+          outerRadius="70%"
           paddingAngle={5}
           dataKey="value"
         >
           {data.map((entry, index) => (
-            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+            <Cell
+              key={`cell-${index}`}
+              fill={entry.color || DEFAULT_COLORS[index % DEFAULT_COLORS.length]}
+            />
           ))}
         </Pie>
         <Tooltip content={<CustomTooltip />} />

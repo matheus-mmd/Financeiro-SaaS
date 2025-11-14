@@ -33,8 +33,8 @@ export default function LineChart({ data, dataKey = 'value', color = '#0ea5a4' }
   };
 
   return (
-    <ResponsiveContainer width="100%" height={300}>
-      <RechartsLineChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+    <ResponsiveContainer width="100%" height="100%" minHeight={250}>
+      <RechartsLineChart data={data} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
         <XAxis
           dataKey="date"
@@ -43,17 +43,18 @@ export default function LineChart({ data, dataKey = 'value', color = '#0ea5a4' }
         />
         <YAxis
           stroke="#6b7280"
-          style={{ fontSize: '12px' }}
-          tickFormatter={(value) => `R$ ${value.toLocaleString('pt-BR')}`}
+          style={{ fontSize: '11px' }}
+          tickFormatter={(value) => `R$ ${(value / 1000).toFixed(0)}k`}
+          width={55}
         />
         <Tooltip content={<CustomTooltip />} />
         <Line
           type="monotone"
           dataKey={dataKey}
           stroke={color}
-          strokeWidth={3}
-          dot={{ fill: color, r: 4 }}
-          activeDot={{ r: 6 }}
+          strokeWidth={2}
+          dot={{ fill: color, r: 3 }}
+          activeDot={{ r: 5 }}
         />
       </RechartsLineChart>
     </ResponsiveContainer>
