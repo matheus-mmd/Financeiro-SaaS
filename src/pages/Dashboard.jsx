@@ -84,10 +84,13 @@ export default function Dashboard() {
 
   // Dados mockados para evolução de saldo (linha do tempo)
   const balanceEvolution = [
+    { date: 'Jun', value: 12500 },
+    { date: 'Jul', value: 14200 },
     { date: 'Ago', value: 15000 },
     { date: 'Set', value: 16200 },
     { date: 'Out', value: 17500 },
     { date: 'Nov', value: 18252 },
+    { date: 'Dez', value: 19800 },
   ];
 
   // Configuração de colunas da tabela de transações
@@ -186,9 +189,18 @@ export default function Dashboard() {
         {/* Gráfico de evolução de saldo */}
         <Card>
           <CardContent className="p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">
-              Evolução do Saldo
-            </h2>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-2">
+              <h2 className="text-lg font-semibold text-gray-900">
+                Evolução do Saldo
+              </h2>
+              <div className="flex items-center gap-2 text-sm">
+                <span className="text-gray-500">Últimos 7 meses</span>
+                <div className="flex items-center gap-1 text-green-600 font-semibold">
+                  <ArrowUpRight className="w-4 h-4" />
+                  <span>+58,4%</span>
+                </div>
+              </div>
+            </div>
             <div className="h-[300px] sm:h-[350px]">
               <LineChart data={balanceEvolution} />
             </div>
