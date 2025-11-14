@@ -2,11 +2,18 @@ import React, { useState, useEffect } from 'react';
 import PageHeader from '../components/PageHeader';
 import StatsCard from '../components/StatsCard';
 import Select from '../components/Select';
-import Card from '../components/Card';
-import Badge from '../components/Badge';
-import Button from '../components/Button';
-import Input from '../components/Input';
-import Modal from '../components/Modal';
+import { Card, CardContent } from '../components/ui/card';
+import { Badge } from '../components/ui/badge';
+import { Button } from '../components/ui/button';
+import { Input } from '../components/ui/input';
+import { Label } from '../components/ui/label';
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '../components/ui/dialog';
 import Spinner from '../components/Spinner';
 import Table from '../components/Table';
 import DoughnutChart from '../components/charts/DoughnutChart';
@@ -242,17 +249,20 @@ export default function Despesas() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Gráfico de despesas por categoria */}
-        <Card className="p-6 lg:col-span-1">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">
-            Distribuição por Categoria
-          </h2>
-          <div className="h-[300px] sm:h-[350px]">
-            <DoughnutChart data={expensesByCategory} />
-          </div>
+        <Card className="lg:col-span-1">
+          <CardContent className="p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">
+              Distribuição por Categoria
+            </h2>
+            <div className="h-[300px] sm:h-[350px]">
+              <DoughnutChart data={expensesByCategory} />
+            </div>
+          </CardContent>
         </Card>
 
         {/* Lista de categorias */}
-        <Card className="p-6 lg:col-span-2">
+        <Card className="lg:col-span-2">
+          <CardContent className="p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">
             Despesas por Categoria
           </h2>
@@ -280,11 +290,13 @@ export default function Despesas() {
                 );
               })}
           </div>
+          </CardContent>
         </Card>
       </div>
 
       {/* Filtro por categoria */}
-      <Card className="p-4 sm:p-6">
+      <Card>
+        <CardContent className="p-4 sm:p-6">
         <div className="flex flex-col sm:flex-row sm:items-center gap-4">
           <div className="flex items-center gap-2 min-w-fit">
             <Filter className="w-5 h-5 text-gray-500" />
@@ -304,10 +316,12 @@ export default function Despesas() {
             />
           </div>
         </div>
+        </CardContent>
       </Card>
 
       {/* Tabela de despesas */}
-      <Card className="p-6">
+      <Card>
+        <CardContent className="p-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">
           {selectedCategory === 'all' ? 'Todas as Despesas' : `Despesas - ${selectedCategory}`}
           {' '}({filteredExpenses.length})
@@ -317,83 +331,86 @@ export default function Despesas() {
           data={filteredExpenses}
           pageSize={10}
         />
+        </CardContent>
       </Card>
 
-      {/* Modal de adicionar/editar despesa */}
-      <Modal
-        isOpen={modalOpen}
-        onClose={() => setModalOpen(false)}
-        title={editingExpense ? 'Editar Despesa' : 'Nova Despesa'}
-        footer={
-          <>
-            <Button variant="secondary" onClick={() => setModalOpen(false)}>
+      {/* Dialog de adicionar/editar despesa */}
+      <Dialog open={modalOpen} onOpenChange={setModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{editingExpense ? 'Editar Despesa' : 'Nova Despesa'}</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="title">Descrição</Label>
+              <Input
+                id="title"
+                placeholder="Ex: Conta de luz, Mercado..."
+                value={formData.title}
+                onChange={(e) => handleInputChange('title', e.target.value)}
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="category">Categoria</Label>
+              <select
+                id="category"
+                value={formData.category}
+                onChange={(e) => handleInputChange('category', e.target.value)}
+                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring md:text-sm"
+                required
+              >
+                <option value="">Selecione uma categoria</option>
+                {categories.map((cat) => (
+                  <option key={cat.id} value={cat.name}>
+                    {cat.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="amount">Valor (R$)</Label>
+              <Input
+                id="amount"
+                type="number"
+                step="0.01"
+                placeholder="0,00"
+                value={formData.amount}
+                onChange={(e) => handleInputChange('amount', e.target.value)}
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="date">Data</Label>
+              <Input
+                id="date"
+                type="date"
+                value={formData.date}
+                onChange={(e) => handleInputChange('date', e.target.value)}
+                required
+              />
+            </div>
+          </form>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setModalOpen(false)}>
               Cancelar
             </Button>
-            <Button onClick={handleSubmit}>
+            <Button type="submit" onClick={handleSubmit}>
               {editingExpense ? 'Salvar' : 'Adicionar Despesa'}
             </Button>
-          </>
-        }
-      >
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <Input
-            label="Descrição"
-            placeholder="Ex: Conta de luz, Mercado..."
-            value={formData.title}
-            onChange={(e) => handleInputChange('title', e.target.value)}
-            required
-          />
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Categoria
-            </label>
-            <select
-              value={formData.category}
-              onChange={(e) => handleInputChange('category', e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
-              required
-            >
-              <option value="">Selecione uma categoria</option>
-              {categories.map((cat) => (
-                <option key={cat.id} value={cat.name}>
-                  {cat.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <Input
-            label="Valor (R$)"
-            type="number"
-            step="0.01"
-            placeholder="0,00"
-            value={formData.amount}
-            onChange={(e) => handleInputChange('amount', e.target.value)}
-            required
-          />
-
-          <Input
-            label="Data"
-            type="date"
-            value={formData.date}
-            onChange={(e) => handleInputChange('date', e.target.value)}
-            required
-          />
-        </form>
-      </Modal>
-
-      {/* Modal de categorias */}
-      <Modal
-        isOpen={categoryModalOpen}
-        onClose={() => setCategoryModalOpen(false)}
-        title="Categorias de Despesas"
-        footer={
-          <Button onClick={() => setCategoryModalOpen(false)}>
-            Fechar
-          </Button>
-        }
-      >
+      {/* Dialog de categorias */}
+      <Dialog open={categoryModalOpen} onOpenChange={setCategoryModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Categorias de Despesas</DialogTitle>
+          </DialogHeader>
         <div className="space-y-2">
           {categories.map((cat) => (
             <div
@@ -408,7 +425,13 @@ export default function Despesas() {
             </div>
           ))}
         </div>
-      </Modal>
+          <DialogFooter>
+            <Button onClick={() => setCategoryModalOpen(false)}>
+              Fechar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

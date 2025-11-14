@@ -3,7 +3,7 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recha
 
 /**
  * Componente DoughnutChart - Gráfico de rosca para categorias
- * @param {Array} data - Dados no formato [{ name, value, color? }]
+ * Componente de gráfico usando Recharts
  */
 export default function DoughnutChart({ data }) {
   // Cores padrão (fallback se não houver cor nos dados)

@@ -1,19 +1,16 @@
 import React from 'react';
-import Card from './Card';
+import { Card, CardContent } from './ui/card';
 import { formatCurrency } from '../utils/mockApi';
 import { TrendingUp, TrendingDown } from 'lucide-react';
 
 /**
  * Componente BalanceCard - Exibe informação de saldo/valor monetário
- * @param {string} title - Título do card
- * @param {number} amount - Valor a exibir
- * @param {string} trend - Tendência: 'up' | 'down' (opcional)
- * @param {string} subtitle - Subtítulo opcional
- * @param {string} icon - Ícone opcional (componente Lucide)
+ * Usa Card do shadcn/ui
  */
 export default function BalanceCard({ title, amount, trend, subtitle, icon: Icon, className = '' }) {
   return (
-    <Card className={`p-6 ${className}`}>
+    <Card className={className}>
+      <CardContent className="p-6">
       <div className="flex items-start justify-between">
         <div className="flex-1">
           <p className="text-sm text-gray-500 mb-1">{title}</p>
@@ -39,6 +36,7 @@ export default function BalanceCard({ title, amount, trend, subtitle, icon: Icon
           </span>
         </div>
       )}
+      </CardContent>
     </Card>
   );
 }

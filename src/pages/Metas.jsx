@@ -1,9 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import Card from '../components/Card';
-import Badge from '../components/Badge';
-import Button from '../components/Button';
-import Input from '../components/Input';
-import Modal from '../components/Modal';
+import { Card, CardContent } from '../components/ui/card';
+import { Badge } from '../components/ui/badge';
+import { Button } from '../components/ui/button';
+import { Input } from '../components/ui/input';
+import { Label } from '../components/ui/label';
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '../components/ui/dialog';
 import Spinner from '../components/Spinner';
 import ProgressBar from '../components/ProgressBar';
 import { fetchMock, formatCurrency } from '../utils/mockApi';
@@ -130,34 +137,40 @@ export default function Metas() {
 
       {/* Estatísticas */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="p-6">
-          <div className="flex items-center gap-3">
-            <Target className="w-8 h-8 text-brand-500" />
-            <div>
-              <p className="text-sm text-gray-500">Total de Metas</p>
-              <p className="text-2xl font-bold text-gray-900">{targets.length}</p>
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center gap-3">
+              <Target className="w-8 h-8 text-brand-500" />
+              <div>
+                <p className="text-sm text-gray-500">Total de Metas</p>
+                <p className="text-2xl font-bold text-gray-900">{targets.length}</p>
+              </div>
             </div>
-          </div>
+          </CardContent>
         </Card>
 
-        <Card className="p-6">
-          <div className="flex items-center gap-3">
-            <CheckCircle className="w-8 h-8 text-green-500" />
-            <div>
-              <p className="text-sm text-gray-500">Concluídas</p>
-              <p className="text-2xl font-bold text-green-600">{completedTargets.length}</p>
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center gap-3">
+              <CheckCircle className="w-8 h-8 text-green-500" />
+              <div>
+                <p className="text-sm text-gray-500">Concluídas</p>
+                <p className="text-2xl font-bold text-green-600">{completedTargets.length}</p>
+              </div>
             </div>
-          </div>
+          </CardContent>
         </Card>
 
-        <Card className="p-6">
-          <div className="flex items-center gap-3">
-            <Target className="w-8 h-8 text-yellow-500" />
-            <div>
-              <p className="text-sm text-gray-500">Em Andamento</p>
-              <p className="text-2xl font-bold text-yellow-600">{inProgressTargets.length}</p>
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center gap-3">
+              <Target className="w-8 h-8 text-yellow-500" />
+              <div>
+                <p className="text-sm text-gray-500">Em Andamento</p>
+                <p className="text-2xl font-bold text-yellow-600">{inProgressTargets.length}</p>
+              </div>
             </div>
-          </div>
+          </CardContent>
         </Card>
       </div>
 
@@ -167,65 +180,67 @@ export default function Metas() {
           <h2 className="text-xl font-semibold text-gray-900 mb-4">Em Andamento</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {inProgressTargets.map((target) => (
-              <Card key={target.id} className="p-6">
-                <div className="flex items-start justify-between mb-4">
-                  <div>
-                    <Badge variant="warning">Em andamento</Badge>
-                    <h3 className="font-semibold text-gray-900 text-lg mt-2">
-                      {target.title}
-                    </h3>
+              <Card key={target.id}>
+                <CardContent className="p-6">
+                  <div className="flex items-start justify-between mb-4">
+                    <div>
+                      <Badge variant="default">Em andamento</Badge>
+                      <h3 className="font-semibold text-gray-900 text-lg mt-2">
+                        {target.title}
+                      </h3>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleEditTarget(target)}
+                        className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                        aria-label="Editar meta"
+                      >
+                        <Edit className="w-4 h-4 text-gray-600" />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteTarget(target.id)}
+                        className="p-2 hover:bg-red-50 rounded-lg transition-colors"
+                        aria-label="Excluir meta"
+                      >
+                        <Trash2 className="w-4 h-4 text-red-600" />
+                      </button>
+                    </div>
                   </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => handleEditTarget(target)}
-                      className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                      aria-label="Editar meta"
-                    >
-                      <Edit className="w-4 h-4 text-gray-600" />
-                    </button>
-                    <button
-                      onClick={() => handleDeleteTarget(target.id)}
-                      className="p-2 hover:bg-red-50 rounded-lg transition-colors"
-                      aria-label="Excluir meta"
-                    >
-                      <Trash2 className="w-4 h-4 text-red-600" />
-                    </button>
-                  </div>
-                </div>
 
-                <ProgressBar
-                  progress={target.progress}
-                  goal={target.goal}
-                  variant="brand"
-                />
+                  <ProgressBar
+                    progress={target.progress}
+                    goal={target.goal}
+                    variant="brand"
+                  />
 
-                <div className="mt-4 pt-4 border-t border-gray-100 space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Faltam</span>
-                    <span className="font-semibold text-gray-900">
-                      {formatCurrency(target.goal - target.progress)}
-                    </span>
+                  <div className="mt-4 pt-4 border-t border-gray-100 space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Faltam</span>
+                      <span className="font-semibold text-gray-900">
+                        {formatCurrency(target.goal - target.progress)}
+                      </span>
+                    </div>
+                    {target.monthlyAmount > 0 && (
+                      <>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-600">Guardar por mês</span>
+                          <span className="font-semibold text-brand-600">
+                            {formatCurrency(target.monthlyAmount)}
+                          </span>
+                        </div>
+                        {(() => {
+                          const months = calculateMonthsToGoal(target.goal, target.progress, target.monthlyAmount);
+                          const targetDate = getTargetDate(months);
+                          return targetDate && (
+                            <div className="text-sm text-gray-600 mt-2 p-2 bg-brand-50 rounded">
+                              Assim você alcança o seu objetivo em <span className="font-semibold text-brand-600">{targetDate}</span>
+                            </div>
+                          );
+                        })()}
+                      </>
+                    )}
                   </div>
-                  {target.monthlyAmount > 0 && (
-                    <>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-600">Guardar por mês</span>
-                        <span className="font-semibold text-brand-600">
-                          {formatCurrency(target.monthlyAmount)}
-                        </span>
-                      </div>
-                      {(() => {
-                        const months = calculateMonthsToGoal(target.goal, target.progress, target.monthlyAmount);
-                        const targetDate = getTargetDate(months);
-                        return targetDate && (
-                          <div className="text-sm text-gray-600 mt-2 p-2 bg-brand-50 rounded">
-                            Assim você alcança o seu objetivo em <span className="font-semibold text-brand-600">{targetDate}</span>
-                          </div>
-                        );
-                      })()}
-                    </>
-                  )}
-                </div>
+                </CardContent>
               </Card>
             ))}
           </div>
@@ -238,32 +253,34 @@ export default function Metas() {
           <h2 className="text-xl font-semibold text-gray-900 mb-4">Concluídas</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {completedTargets.map((target) => (
-              <Card key={target.id} className="p-6 bg-green-50 border-green-200">
-                <div className="flex items-start justify-between mb-3">
-                  <Badge variant="success">Concluída</Badge>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => handleEditTarget(target)}
-                      className="p-1 hover:bg-green-100 rounded transition-colors"
-                      aria-label="Editar meta"
-                    >
-                      <Edit className="w-4 h-4 text-gray-600" />
-                    </button>
-                    <button
-                      onClick={() => handleDeleteTarget(target.id)}
-                      className="p-1 hover:bg-green-100 rounded transition-colors"
-                      aria-label="Excluir meta"
-                    >
-                      <Trash2 className="w-4 h-4 text-gray-600" />
-                    </button>
+              <Card key={target.id} className="bg-green-50 border-green-200">
+                <CardContent className="p-6">
+                  <div className="flex items-start justify-between mb-3">
+                    <Badge variant="default">Concluída</Badge>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleEditTarget(target)}
+                        className="p-1 hover:bg-green-100 rounded transition-colors"
+                        aria-label="Editar meta"
+                      >
+                        <Edit className="w-4 h-4 text-gray-600" />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteTarget(target.id)}
+                        className="p-1 hover:bg-green-100 rounded transition-colors"
+                        aria-label="Excluir meta"
+                      >
+                        <Trash2 className="w-4 h-4 text-gray-600" />
+                      </button>
+                    </div>
                   </div>
-                </div>
 
-                <h3 className="font-semibold text-gray-900 mb-2">{target.title}</h3>
-                <div className="flex items-center gap-2 text-green-700">
-                  <CheckCircle className="w-5 h-5" />
-                  <span className="font-semibold">{formatCurrency(target.goal)}</span>
-                </div>
+                  <h3 className="font-semibold text-gray-900 mb-2">{target.title}</h3>
+                  <div className="flex items-center gap-2 text-green-700">
+                    <CheckCircle className="w-5 h-5" />
+                    <span className="font-semibold">{formatCurrency(target.goal)}</span>
+                  </div>
+                </CardContent>
               </Card>
             ))}
           </div>
@@ -272,127 +289,140 @@ export default function Metas() {
 
       {/* Empty state */}
       {targets.length === 0 && (
-        <Card className="p-12 text-center">
-          <Target className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">
-            Nenhuma meta cadastrada
-          </h3>
-          <p className="text-gray-500 mb-6">
-            Comece definindo suas metas financeiras e acompanhe seu progresso.
-          </p>
-          <Button onClick={handleAddTarget}>
-            <Plus className="w-4 h-4" />
-            Criar Primeira Meta
-          </Button>
+        <Card>
+          <CardContent className="p-12 text-center">
+            <Target className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              Nenhuma meta cadastrada
+            </h3>
+            <p className="text-gray-500 mb-6">
+              Comece definindo suas metas financeiras e acompanhe seu progresso.
+            </p>
+            <Button onClick={handleAddTarget}>
+              <Plus className="w-4 h-4" />
+              Criar Primeira Meta
+            </Button>
+          </CardContent>
         </Card>
       )}
 
-      {/* Modal de adicionar/editar */}
-      <Modal
-        isOpen={modalOpen}
-        onClose={() => setModalOpen(false)}
-        title={editingTarget ? 'Editar Meta' : 'Nova Meta'}
-        footer={
-          <>
-            <Button variant="secondary" onClick={() => setModalOpen(false)}>
-              Cancelar
-            </Button>
-            <Button onClick={handleSubmit}>
-              {editingTarget ? 'Salvar' : 'Criar Meta'}
-            </Button>
-          </>
-        }
-      >
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <Input
-            label="Título da Meta"
-            placeholder="Ex: Reserva de emergência"
-            value={formData.title}
-            onChange={(e) => handleInputChange('title', e.target.value)}
-            required
-          />
+      {/* Dialog de adicionar/editar */}
+      <Dialog open={modalOpen} onOpenChange={setModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{editingTarget ? 'Editar Meta' : 'Nova Meta'}</DialogTitle>
+          </DialogHeader>
 
-          <Input
-            label="Valor Objetivo (R$)"
-            type="number"
-            step="0.01"
-            placeholder="0,00"
-            value={formData.goal}
-            onChange={(e) => handleInputChange('goal', e.target.value)}
-            required
-          />
-
-          <Input
-            label="Valor Atual (R$)"
-            type="number"
-            step="0.01"
-            placeholder="0,00"
-            value={formData.progress}
-            onChange={(e) => handleInputChange('progress', e.target.value)}
-          />
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Guardar por mês (R$) <span className="text-gray-400 font-normal">(opcional)</span>
-            </label>
-            <div className="flex items-center gap-3">
-              <button
-                type="button"
-                onClick={() => {
-                  const current = parseFloat(formData.monthlyAmount) || 0;
-                  const newValue = Math.max(0, current - 100);
-                  handleInputChange('monthlyAmount', newValue.toString());
-                }}
-                className="p-3 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-              >
-                <Minus className="w-5 h-5 text-gray-700" />
-              </button>
-
-              <input
-                type="number"
-                step="0.01"
-                min="0"
-                placeholder="0,00"
-                value={formData.monthlyAmount}
-                onChange={(e) => handleInputChange('monthlyAmount', e.target.value)}
-                className="flex-1 px-4 py-3 text-center text-lg font-semibold border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="title">Título da Meta</Label>
+              <Input
+                id="title"
+                placeholder="Ex: Reserva de emergência"
+                value={formData.title}
+                onChange={(e) => handleInputChange('title', e.target.value)}
+                required
               />
-
-              <button
-                type="button"
-                onClick={() => {
-                  const current = parseFloat(formData.monthlyAmount) || 0;
-                  const newValue = current + 100;
-                  handleInputChange('monthlyAmount', newValue.toString());
-                }}
-                className="p-3 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-              >
-                <Plus className="w-5 h-5 text-gray-700" />
-              </button>
             </div>
 
-            {formData.monthlyAmount && parseFloat(formData.monthlyAmount) > 0 && formData.goal && (
-              <div className="mt-3 p-3 bg-brand-50 rounded-lg text-sm">
-                {(() => {
-                  const months = calculateMonthsToGoal(
-                    parseFloat(formData.goal),
-                    parseFloat(formData.progress || 0),
-                    parseFloat(formData.monthlyAmount)
-                  );
-                  const targetDate = getTargetDate(months);
-                  return targetDate ? (
-                    <p className="text-gray-700">
-                      Assim você alcança o seu objetivo em <span className="font-semibold text-brand-600">{targetDate}</span>
-                    </p>
-                  ) : (
-                    <p className="text-green-600 font-semibold">Meta já alcançada!</p>
-                  );
-                })()}
+            <div className="space-y-2">
+              <Label htmlFor="goal">Valor Objetivo (R$)</Label>
+              <Input
+                id="goal"
+                type="number"
+                step="0.01"
+                placeholder="0,00"
+                value={formData.goal}
+                onChange={(e) => handleInputChange('goal', e.target.value)}
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="progress">Valor Atual (R$)</Label>
+              <Input
+                id="progress"
+                type="number"
+                step="0.01"
+                placeholder="0,00"
+                value={formData.progress}
+                onChange={(e) => handleInputChange('progress', e.target.value)}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="monthlyAmount" className="block mb-2">
+                Guardar por mês (R$) <span className="text-gray-400 font-normal">(opcional)</span>
+              </Label>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const current = parseFloat(formData.monthlyAmount) || 0;
+                    const newValue = Math.max(0, current - 100);
+                    handleInputChange('monthlyAmount', newValue.toString());
+                  }}
+                  className="p-3 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                >
+                  <Minus className="w-5 h-5 text-gray-700" />
+                </button>
+
+                <input
+                  id="monthlyAmount"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  placeholder="0,00"
+                  value={formData.monthlyAmount}
+                  onChange={(e) => handleInputChange('monthlyAmount', e.target.value)}
+                  className="flex-1 px-4 py-3 text-center text-lg font-semibold border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
+                />
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    const current = parseFloat(formData.monthlyAmount) || 0;
+                    const newValue = current + 100;
+                    handleInputChange('monthlyAmount', newValue.toString());
+                  }}
+                  className="p-3 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                >
+                  <Plus className="w-5 h-5 text-gray-700" />
+                </button>
               </div>
-            )}
-          </div>
-        </form>
-      </Modal>
+
+              {formData.monthlyAmount && parseFloat(formData.monthlyAmount) > 0 && formData.goal && (
+                <div className="mt-3 p-3 bg-brand-50 rounded-lg text-sm">
+                  {(() => {
+                    const months = calculateMonthsToGoal(
+                      parseFloat(formData.goal),
+                      parseFloat(formData.progress || 0),
+                      parseFloat(formData.monthlyAmount)
+                    );
+                    const targetDate = getTargetDate(months);
+                    return targetDate ? (
+                      <p className="text-gray-700">
+                        Assim você alcança o seu objetivo em <span className="font-semibold text-brand-600">{targetDate}</span>
+                      </p>
+                    ) : (
+                      <p className="text-green-600 font-semibold">Meta já alcançada!</p>
+                    );
+                  })()}
+                </div>
+              )}
+            </div>
+          </form>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setModalOpen(false)} type="button">
+              Cancelar
+            </Button>
+            <Button onClick={handleSubmit} type="button">
+              {editingTarget ? 'Salvar' : 'Criar Meta'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

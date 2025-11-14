@@ -2,15 +2,22 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import PageHeader from '../components/PageHeader';
 import BalanceCard from '../components/BalanceCard';
-import Card from '../components/Card';
-import Table from '../components/Table';
-import Badge from '../components/Badge';
+import { Card, CardContent } from '../components/ui/card';
+import { Badge } from '../components/ui/badge';
 import Spinner from '../components/Spinner';
 import DoughnutChart from '../components/charts/DoughnutChart';
 import LineChart from '../components/charts/LineChart';
 import ProgressBar from '../components/ProgressBar';
 import { fetchMock, formatCurrency, formatDate } from '../utils/mockApi';
 import { Wallet, TrendingDown, ArrowUpRight, Target, Eye } from 'lucide-react';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '../components/ui/table';
 
 /**
  * Página Dashboard - Visão geral do controle financeiro
@@ -100,7 +107,7 @@ export default function Dashboard() {
       key: 'type',
       label: 'Tipo',
       render: (row) => (
-        <Badge variant={row.type === 'credit' ? 'success' : 'error'}>
+        <Badge variant={row.type === 'credit' ? 'default' : 'destructive'}>
           {row.type === 'credit' ? 'Crédito' : 'Débito'}
         </Badge>
       ),
@@ -165,64 +172,72 @@ export default function Dashboard() {
       {/* Gráficos */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Gráfico de despesas por categoria */}
-        <Card className="p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">
-            Despesas por Categoria
-          </h2>
-          <div className="h-[300px] sm:h-[350px]">
-            <DoughnutChart data={expensesByCategory} />
-          </div>
+        <Card>
+          <CardContent className="p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">
+              Despesas por Categoria
+            </h2>
+            <div className="h-[300px] sm:h-[350px]">
+              <DoughnutChart data={expensesByCategory} />
+            </div>
+          </CardContent>
         </Card>
 
         {/* Gráfico de evolução de saldo */}
-        <Card className="p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">
-            Evolução do Saldo
-          </h2>
-          <div className="h-[300px] sm:h-[350px]">
-            <LineChart data={balanceEvolution} />
-          </div>
+        <Card>
+          <CardContent className="p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">
+              Evolução do Saldo
+            </h2>
+            <div className="h-[300px] sm:h-[350px]">
+              <LineChart data={balanceEvolution} />
+            </div>
+          </CardContent>
         </Card>
       </div>
 
       {/* Metas em andamento (preview) */}
       {targets.length > 0 && (
-        <Card className="p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-              <Target className="w-5 h-5 text-brand-500" />
-              Metas em Andamento
-            </h2>
-            <Link to="/metas" className="text-sm text-brand-500 hover:text-brand-600 font-medium">
-              Ver todas →
-            </Link>
-          </div>
-          <div className="space-y-4">
-            {targets.map(target => (
-              <div key={target.id}>
-                <div className="flex justify-between items-center mb-2">
-                  <h3 className="font-medium text-gray-900">{target.title}</h3>
-                  <span className="text-sm text-gray-600">
-                    {formatCurrency(target.progress)} / {formatCurrency(target.goal)}
-                  </span>
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                <Target className="w-5 h-5 text-brand-500" />
+                Metas em Andamento
+              </h2>
+              <Link to="/metas" className="text-sm text-brand-500 hover:text-brand-600 font-medium">
+                Ver todas →
+              </Link>
+            </div>
+            <div className="space-y-4">
+              {targets.map(target => (
+                <div key={target.id}>
+                  <div className="flex justify-between items-center mb-2">
+                    <h3 className="font-medium text-gray-900">{target.title}</h3>
+                    <span className="text-sm text-gray-600">
+                      {formatCurrency(target.progress)} / {formatCurrency(target.goal)}
+                    </span>
+                  </div>
+                  <ProgressBar progress={target.progress} goal={target.goal} />
                 </div>
-                <ProgressBar progress={target.progress} goal={target.goal} />
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          </CardContent>
         </Card>
       )}
 
       {/* Tabela de transações */}
-      <Card className="p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">
-          Transações Recentes
-        </h2>
-        <Table
-          columns={transactionColumns}
-          data={transactions}
-          pageSize={5}
-        />
+      <Card>
+        <CardContent className="p-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">
+            Transações Recentes
+          </h2>
+          <Table
+            columns={transactionColumns}
+            data={transactions}
+            pageSize={5}
+          />
+        </CardContent>
       </Card>
     </div>
   );

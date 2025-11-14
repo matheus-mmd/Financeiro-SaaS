@@ -1,11 +1,8 @@
 import React from 'react';
 
 /**
- * Componente PageHeader - Cabeçalho reutilizável para páginas
- * @param {string} title - Título principal da página
- * @param {string} description - Descrição/subtítulo da página
- * @param {ReactNode} actions - Botões ou ações do lado direito
- * @param {string} className - Classes adicionais
+ * Componente PageHeader - Cabeçalho de página reutilizável
+ * Componente simples sem dependência de shadcn/ui
  */
 export default function PageHeader({ title, description, actions, className = '' }) {
   return (

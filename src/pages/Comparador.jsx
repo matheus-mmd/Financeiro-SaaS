@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import Card from '../components/Card';
-import Button from '../components/Button';
-import Badge from '../components/Badge';
+import { Card, CardContent } from '../components/ui/card';
+import { Button } from '../components/ui/button';
+import { Badge } from '../components/ui/badge';
 import Spinner from '../components/Spinner';
 import MultiLineChart from '../components/charts/MultiLineChart';
 import { fetchMock } from '../utils/mockApi';
@@ -105,187 +105,195 @@ export default function Comparador() {
       {/* Seletores de ativos */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {[0, 1].map((index) => (
-          <Card key={index} className="p-6">
-            <div className="flex items-center gap-2 mb-4">
-              <BarChart3 className="w-5 h-5 text-brand-500" />
-              <h3 className="font-semibold text-gray-900">
-                Ativo {index + 1}
-              </h3>
-            </div>
-
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Selecione um ativo
-            </label>
-            <select
-              value={selectedAssets[index]?.symbol || ''}
-              onChange={(e) => handleSelectAsset(index, e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent"
-            >
-              <option value="">-- Selecionar --</option>
-              {assets.map((asset) => (
-                <option
-                  key={asset.symbol}
-                  value={asset.symbol}
-                  disabled={selectedAssets[1-index]?.symbol === asset.symbol}
-                >
-                  {asset.name}
-                </option>
-              ))}
-            </select>
-
-            {selectedAssets[index] && (
-              <div className="mt-4">
-                <Badge variant="info">{selectedAssets[index].symbol}</Badge>
+          <Card key={index}>
+            <CardContent className="p-6">
+              <div className="flex items-center gap-2 mb-4">
+                <BarChart3 className="w-5 h-5 text-brand-500" />
+                <h3 className="font-semibold text-gray-900">
+                  Ativo {index + 1}
+                </h3>
               </div>
-            )}
+
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Selecione um ativo
+              </label>
+              <select
+                value={selectedAssets[index]?.symbol || ''}
+                onChange={(e) => handleSelectAsset(index, e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+              >
+                <option value="">-- Selecionar --</option>
+                {assets.map((asset) => (
+                  <option
+                    key={asset.symbol}
+                    value={asset.symbol}
+                    disabled={selectedAssets[1-index]?.symbol === asset.symbol}
+                  >
+                    {asset.name}
+                  </option>
+                ))}
+              </select>
+
+              {selectedAssets[index] && (
+                <div className="mt-4">
+                  <Badge variant="default">{selectedAssets[index].symbol}</Badge>
+                </div>
+              )}
+            </CardContent>
           </Card>
         ))}
       </div>
 
       {/* Gráfico comparativo */}
       {showComparison && (
-        <Card className="p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">
-            Comparação de Desempenho
-          </h2>
-          <MultiLineChart
-            data={getChartData()}
-            lines={[
-              {
-                dataKey: selectedAssets[0].symbol,
-                color: '#0ea5a4',
-                name: selectedAssets[0].name,
-              },
-              {
-                dataKey: selectedAssets[1].symbol,
-                color: '#8b5cf6',
-                name: selectedAssets[1].name,
-              },
-            ]}
-          />
+        <Card>
+          <CardContent className="p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">
+              Comparação de Desempenho
+            </h2>
+            <MultiLineChart
+              data={getChartData()}
+              lines={[
+                {
+                  dataKey: selectedAssets[0].symbol,
+                  color: '#0ea5a4',
+                  name: selectedAssets[0].name,
+                },
+                {
+                  dataKey: selectedAssets[1].symbol,
+                  color: '#8b5cf6',
+                  name: selectedAssets[1].name,
+                },
+              ]}
+            />
+          </CardContent>
         </Card>
       )}
 
       {/* Tabela de métricas */}
       {showComparison && (
-        <Card className="p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">
-            Métricas Comparativas
-          </h2>
+        <Card>
+          <CardContent className="p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">
+              Métricas Comparativas
+            </h2>
 
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Métrica
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    {selectedAssets[0].name}
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    {selectedAssets[1].name}
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                <tr>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center gap-2">
-                      <TrendingUp className="w-4 h-4 text-gray-400" />
-                      <span className="text-sm font-medium text-gray-900">
-                        Retorno Acumulado
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                      Métrica
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                      {selectedAssets[0].name}
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                      {selectedAssets[1].name}
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  <tr>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center gap-2">
+                        <TrendingUp className="w-4 h-4 text-gray-400" />
+                        <span className="text-sm font-medium text-gray-900">
+                          Retorno Acumulado
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`text-sm font-semibold ${parseFloat(metrics1.returns) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        {metrics1.returns}%
                       </span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`text-sm font-semibold ${parseFloat(metrics1.returns) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                      {metrics1.returns}%
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`text-sm font-semibold ${parseFloat(metrics2.returns) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                      {metrics2.returns}%
-                    </span>
-                  </td>
-                </tr>
-
-                <tr>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center gap-2">
-                      <Activity className="w-4 h-4 text-gray-400" />
-                      <span className="text-sm font-medium text-gray-900">
-                        Volatilidade
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`text-sm font-semibold ${parseFloat(metrics2.returns) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        {metrics2.returns}%
                       </span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="text-sm font-semibold text-gray-900">
-                      {metrics1.volatility}%
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="text-sm font-semibold text-gray-900">
-                      {metrics2.volatility}%
-                    </span>
-                  </td>
-                </tr>
+                    </td>
+                  </tr>
 
-                <tr>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center gap-2">
-                      <TrendingDown className="w-4 h-4 text-gray-400" />
-                      <span className="text-sm font-medium text-gray-900">
-                        Drawdown Máximo
+                  <tr>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center gap-2">
+                        <Activity className="w-4 h-4 text-gray-400" />
+                        <span className="text-sm font-medium text-gray-900">
+                          Volatilidade
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="text-sm font-semibold text-gray-900">
+                        {metrics1.volatility}%
                       </span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="text-sm font-semibold text-red-600">
-                      {metrics1.drawdown}%
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="text-sm font-semibold text-red-600">
-                      {metrics2.drawdown}%
-                    </span>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="text-sm font-semibold text-gray-900">
+                        {metrics2.volatility}%
+                      </span>
+                    </td>
+                  </tr>
 
-          {/* Análise resumida */}
-          <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-            <h3 className="font-medium text-blue-900 mb-2">💡 Análise Resumida</h3>
-            <p className="text-sm text-blue-800">
-              {parseFloat(metrics1.returns) > parseFloat(metrics2.returns) ? (
-                <>
-                  <strong>{selectedAssets[0].name}</strong> apresentou melhor retorno (+{metrics1.returns}%)
-                  comparado a <strong>{selectedAssets[1].name}</strong> (+{metrics2.returns}%).
-                </>
-              ) : (
-                <>
-                  <strong>{selectedAssets[1].name}</strong> apresentou melhor retorno (+{metrics2.returns}%)
-                  comparado a <strong>{selectedAssets[0].name}</strong> (+{metrics1.returns}%).
-                </>
-              )}
-              {' '}A volatilidade indica o risco de oscilação dos ativos no período.
-            </p>
-          </div>
+                  <tr>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center gap-2">
+                        <TrendingDown className="w-4 h-4 text-gray-400" />
+                        <span className="text-sm font-medium text-gray-900">
+                          Drawdown Máximo
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="text-sm font-semibold text-red-600">
+                        {metrics1.drawdown}%
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="text-sm font-semibold text-red-600">
+                        {metrics2.drawdown}%
+                      </span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            {/* Análise resumida */}
+            <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+              <h3 className="font-medium text-blue-900 mb-2">Análise Resumida</h3>
+              <p className="text-sm text-blue-800">
+                {parseFloat(metrics1.returns) > parseFloat(metrics2.returns) ? (
+                  <>
+                    <strong>{selectedAssets[0].name}</strong> apresentou melhor retorno (+{metrics1.returns}%)
+                    comparado a <strong>{selectedAssets[1].name}</strong> (+{metrics2.returns}%).
+                  </>
+                ) : (
+                  <>
+                    <strong>{selectedAssets[1].name}</strong> apresentou melhor retorno (+{metrics2.returns}%)
+                    comparado a <strong>{selectedAssets[0].name}</strong> (+{metrics1.returns}%).
+                  </>
+                )}
+                {' '}A volatilidade indica o risco de oscilação dos ativos no período.
+              </p>
+            </div>
+          </CardContent>
         </Card>
       )}
 
       {/* Empty state */}
       {!showComparison && (
-        <Card className="p-12 text-center">
-          <BarChart3 className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">
-            Selecione dois ativos para comparar
-          </h3>
-          <p className="text-gray-500">
-            Escolha os ativos acima para visualizar gráficos e métricas comparativas.
-          </p>
+        <Card>
+          <CardContent className="p-12 text-center">
+            <BarChart3 className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              Selecione dois ativos para comparar
+            </h3>
+            <p className="text-gray-500">
+              Escolha os ativos acima para visualizar gráficos e métricas comparativas.
+            </p>
+          </CardContent>
         </Card>
       )}
     </div>

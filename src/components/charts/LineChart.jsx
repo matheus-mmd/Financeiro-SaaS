@@ -12,9 +12,7 @@ import {
 
 /**
  * Componente LineChart - Gráfico de linha para evolução temporal
- * @param {Array} data - Dados no formato [{ date, value }]
- * @param {string} dataKey - Chave do valor a ser plotado
- * @param {string} color - Cor da linha
+ * Componente de gráfico usando Recharts
  */
 export default function LineChart({ data, dataKey = 'value', color = '#0ea5a4' }) {
   // Custom tooltip

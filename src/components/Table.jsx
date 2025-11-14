@@ -1,8 +1,19 @@
 import React, { useState } from 'react';
 import { ChevronUp, ChevronDown } from 'lucide-react';
+import {
+  Table as ShadcnTable,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from './ui/table';
+import { Button } from './ui/button';
+import { Card, CardContent } from './ui/card';
 
 /**
  * Componente Table - Tabela com ordenação e paginação
+ * Usa componentes do shadcn/ui internamente
  * @param {Array} columns - Configuração das colunas: [{ key, label, sortable, render }]
  * @param {Array} data - Dados a serem exibidos
  * @param {number} pageSize - Itens por página
@@ -40,19 +51,17 @@ export default function Table({ columns, data, pageSize = 10 }) {
   return (
     <div className="w-full">
       {/* Desktop Table View - Hidden on mobile */}
-      <div className="hidden md:block overflow-x-auto rounded-lg border border-gray-200">
-        <table className="w-full">
-          <thead className="bg-gray-50">
-            <tr>
+      <div className="hidden md:block rounded-lg border">
+        <ShadcnTable>
+          <TableHeader>
+            <TableRow>
               {columns.map((column) => (
-                <th
+                <TableHead
                   key={column.key}
-                  className={`px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${
-                    column.sortable ? 'cursor-pointer hover:bg-gray-100' : ''
-                  }`}
+                  className={column.sortable ? 'cursor-pointer select-none' : ''}
                   onClick={() => column.sortable && handleSort(column.key)}
                 >
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 uppercase">
                     {column.label}
                     {column.sortable && sortConfig.key === column.key && (
                       sortConfig.direction === 'asc' ?
@@ -60,66 +69,70 @@ export default function Table({ columns, data, pageSize = 10 }) {
                         <ChevronDown className="w-4 h-4" />
                     )}
                   </div>
-                </th>
+                </TableHead>
               ))}
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {paginatedData.map((row, index) => (
-              <tr key={index} className="hover:bg-gray-50 transition-colors">
+              <TableRow key={index}>
                 {columns.map((column) => (
-                  <td key={column.key} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <TableCell key={column.key}>
                     {column.render ? column.render(row) : row[column.key]}
-                  </td>
+                  </TableCell>
                 ))}
-              </tr>
+              </TableRow>
             ))}
-          </tbody>
-        </table>
+          </TableBody>
+        </ShadcnTable>
       </div>
 
       {/* Mobile Card View - Visible only on mobile */}
       <div className="md:hidden space-y-3">
         {paginatedData.map((row, index) => (
-          <div key={index} className="bg-white border border-gray-200 rounded-lg p-4 space-y-2">
-            {columns.map((column) => (
-              <div key={column.key} className="flex justify-between items-start gap-2">
-                <span className="text-xs font-medium text-gray-500 uppercase">
-                  {column.label}
-                </span>
-                <span className="text-sm text-gray-900 text-right">
-                  {column.render ? column.render(row) : row[column.key]}
-                </span>
-              </div>
-            ))}
-          </div>
+          <Card key={index}>
+            <CardContent className="p-4 space-y-2">
+              {columns.map((column) => (
+                <div key={column.key} className="flex justify-between items-start gap-2">
+                  <span className="text-xs font-medium text-muted-foreground uppercase">
+                    {column.label}
+                  </span>
+                  <span className="text-sm text-right">
+                    {column.render ? column.render(row) : row[column.key]}
+                  </span>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
         ))}
       </div>
 
       {/* Paginação */}
       {totalPages > 1 && (
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mt-4">
-          <p className="text-xs sm:text-sm text-gray-600 order-2 sm:order-1">
+          <p className="text-xs sm:text-sm text-muted-foreground order-2 sm:order-1">
             Mostrando {startIndex + 1} a {Math.min(startIndex + pageSize, sortedData.length)} de {sortedData.length} resultados
           </p>
           <div className="flex gap-2 order-1 sm:order-2">
-            <button
+            <Button
+              variant="outline"
+              size="sm"
               onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
               disabled={currentPage === 1}
-              className="px-3 py-1 text-sm rounded border border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               Anterior
-            </button>
-            <span className="px-3 py-1 text-sm">
+            </Button>
+            <span className="px-3 py-1 text-sm flex items-center">
               Página {currentPage} de {totalPages}
             </span>
-            <button
+            <Button
+              variant="outline"
+              size="sm"
               onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
-              className="px-3 py-1 text-sm rounded border border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               Próxima
-            </button>
+            </Button>
           </div>
         </div>
       )}
