@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import PageHeader from '../components/PageHeader';
 import StatsCard from '../components/StatsCard';
+import Select from '../components/Select';
 import Card from '../components/Card';
 import Badge from '../components/Badge';
 import Button from '../components/Button';
@@ -238,41 +239,22 @@ export default function Transacoes() {
       </div>
 
       {/* Filtros */}
-      <Card className="p-4">
-        <div className="flex items-center gap-3">
-          <Filter className="w-5 h-5 text-gray-500" />
-          <span className="text-sm font-medium text-gray-700">Filtrar por:</span>
-          <div className="flex gap-2">
-            <button
-              onClick={() => setFilterType('all')}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                filterType === 'all'
-                  ? 'bg-brand-500 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              Todas
-            </button>
-            <button
-              onClick={() => setFilterType('credit')}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                filterType === 'credit'
-                  ? 'bg-green-500 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              Créditos
-            </button>
-            <button
-              onClick={() => setFilterType('debit')}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                filterType === 'debit'
-                  ? 'bg-red-500 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              Débitos
-            </button>
+      <Card className="p-4 sm:p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+          <div className="flex items-center gap-2 min-w-fit">
+            <Filter className="w-5 h-5 text-gray-500" />
+            <span className="text-sm font-medium text-gray-700">Filtrar por:</span>
+          </div>
+          <div className="flex-1 max-w-xs">
+            <Select
+              value={filterType}
+              onChange={setFilterType}
+              options={[
+                { value: 'all', label: 'Todas as transações' },
+                { value: 'credit', label: 'Apenas créditos' },
+                { value: 'debit', label: 'Apenas débitos' },
+              ]}
+            />
           </div>
         </div>
       </Card>

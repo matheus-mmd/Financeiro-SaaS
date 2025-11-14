@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import PageHeader from '../components/PageHeader';
 import StatsCard from '../components/StatsCard';
+import Select from '../components/Select';
 import Card from '../components/Card';
 import Badge from '../components/Badge';
 import Button from '../components/Button';
@@ -10,7 +11,7 @@ import Spinner from '../components/Spinner';
 import Table from '../components/Table';
 import DoughnutChart from '../components/charts/DoughnutChart';
 import { fetchMock, formatCurrency, formatDate } from '../utils/mockApi';
-import { Receipt, Plus, Edit, Trash2, TrendingDown, PieChart } from 'lucide-react';
+import { Receipt, Plus, Edit, Trash2, TrendingDown, PieChart, Filter } from 'lucide-react';
 
 /**
  * Página Despesas - Gerenciamento detalhado de despesas por categoria
@@ -275,34 +276,25 @@ export default function Despesas() {
       </div>
 
       {/* Filtro por categoria */}
-      <Card className="p-4">
-        <div className="flex items-center gap-3 flex-wrap">
-          <Receipt className="w-5 h-5 text-gray-500" />
-          <span className="text-sm font-medium text-gray-700">Filtrar por categoria:</span>
-          <button
-            onClick={() => setSelectedCategory('all')}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              selectedCategory === 'all'
-                ? 'bg-brand-500 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            Todas
-          </button>
-          {categories.slice(0, 8).map((cat) => (
-            <button
-              key={cat.id}
-              onClick={() => setSelectedCategory(cat.name)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                selectedCategory === cat.name
-                  ? 'text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-              style={selectedCategory === cat.name ? { backgroundColor: cat.color } : {}}
-            >
-              {cat.name}
-            </button>
-          ))}
+      <Card className="p-4 sm:p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+          <div className="flex items-center gap-2 min-w-fit">
+            <Filter className="w-5 h-5 text-gray-500" />
+            <span className="text-sm font-medium text-gray-700">Filtrar por categoria:</span>
+          </div>
+          <div className="flex-1 max-w-xs">
+            <Select
+              value={selectedCategory}
+              onChange={setSelectedCategory}
+              options={[
+                { value: 'all', label: 'Todas as categorias' },
+                ...categories.map((cat) => ({
+                  value: cat.name,
+                  label: cat.name,
+                })),
+              ]}
+            />
+          </div>
         </div>
       </Card>
 
