@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import PageHeader from '../components/PageHeader';
+import StatsCard from '../components/StatsCard';
 import Card from '../components/Card';
 import Badge from '../components/Badge';
 import Button from '../components/Button';
@@ -187,61 +189,48 @@ export default function Despesas() {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Despesas</h1>
-          <p className="text-gray-500 mt-1">Gerencie suas despesas por categoria</p>
-        </div>
-        <div className="flex gap-3">
-          <Button variant="secondary" onClick={() => setCategoryModalOpen(true)}>
-            <PieChart className="w-4 h-4 mr-2" />
-            Categorias
-          </Button>
-          <Button onClick={handleAddExpense}>
-            <Plus className="w-4 h-4 mr-2" />
-            Nova Despesa
-          </Button>
-        </div>
-      </div>
+      <PageHeader
+        title="Despesas"
+        description="Gerencie suas despesas por categoria"
+        actions={
+          <>
+            <Button variant="secondary" onClick={() => setCategoryModalOpen(true)}>
+              <PieChart className="w-4 h-4 mr-2" />
+              Categorias
+            </Button>
+            <Button onClick={handleAddExpense}>
+              <Plus className="w-4 h-4 mr-2" />
+              Nova Despesa
+            </Button>
+          </>
+        }
+      />
 
       {/* Cards de resumo */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="p-6">
-          <div className="flex items-center gap-3">
-            <div className="p-3 bg-red-100 rounded-lg">
-              <TrendingDown className="w-6 h-6 text-red-600" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-500">Total de Despesas</p>
-              <p className="text-2xl font-bold text-red-600">{formatCurrency(totalExpenses)}</p>
-            </div>
-          </div>
-        </Card>
+        <StatsCard
+          icon={TrendingDown}
+          label="Total de Despesas"
+          value={formatCurrency(totalExpenses)}
+          iconColor="red"
+          valueColor="text-red-600"
+        />
 
-        <Card className="p-6">
-          <div className="flex items-center gap-3">
-            <div className="p-3 bg-blue-100 rounded-lg">
-              <Receipt className="w-6 h-6 text-blue-600" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-500">Total de Itens</p>
-              <p className="text-2xl font-bold text-blue-600">{expenses.length}</p>
-            </div>
-          </div>
-        </Card>
+        <StatsCard
+          icon={Receipt}
+          label="Total de Itens"
+          value={expenses.length}
+          iconColor="blue"
+          valueColor="text-blue-600"
+        />
 
-        <Card className="p-6">
-          <div className="flex items-center gap-3">
-            <div className="p-3 bg-purple-100 rounded-lg">
-              <PieChart className="w-6 h-6 text-purple-600" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-500">Categorias Ativas</p>
-              <p className="text-2xl font-bold text-purple-600">{expensesByCategory.length}</p>
-            </div>
-          </div>
-        </Card>
+        <StatsCard
+          icon={PieChart}
+          label="Categorias Ativas"
+          value={expensesByCategory.length}
+          iconColor="purple"
+          valueColor="text-purple-600"
+        />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import PageHeader from '../components/PageHeader';
 import BalanceCard from '../components/BalanceCard';
 import Card from '../components/Card';
 import Table from '../components/Table';
@@ -9,7 +10,7 @@ import DoughnutChart from '../components/charts/DoughnutChart';
 import LineChart from '../components/charts/LineChart';
 import ProgressBar from '../components/ProgressBar';
 import { fetchMock, formatCurrency, formatDate } from '../utils/mockApi';
-import { Wallet, TrendingDown, ArrowUpRight, Target } from 'lucide-react';
+import { Wallet, TrendingDown, ArrowUpRight, Target, Eye } from 'lucide-react';
 
 /**
  * Página Dashboard - Visão geral do controle financeiro
@@ -105,15 +106,27 @@ export default function Dashboard() {
         </span>
       ),
     },
+    {
+      key: 'actions',
+      label: 'Ações',
+      render: (row) => (
+        <Link
+          to="/transacoes"
+          className="p-1 hover:bg-gray-100 rounded transition-colors inline-block"
+          aria-label="Ver transação"
+        >
+          <Eye className="w-4 h-4 text-gray-600" />
+        </Link>
+      ),
+    },
   ];
 
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-gray-500 mt-1">Visão geral do seu controle financeiro</p>
-      </div>
+      <PageHeader
+        title="Dashboard"
+        description="Visão geral do seu controle financeiro"
+      />
 
       {/* Cards de resumo */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

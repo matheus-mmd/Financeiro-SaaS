@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import PageHeader from '../components/PageHeader';
+import StatsCard from '../components/StatsCard';
 import Card from '../components/Card';
 import Badge from '../components/Badge';
 import Button from '../components/Button';
@@ -7,7 +9,7 @@ import Modal from '../components/Modal';
 import Spinner from '../components/Spinner';
 import Table from '../components/Table';
 import { fetchMock, formatCurrency, formatDate } from '../utils/mockApi';
-import { ArrowUpRight, ArrowDownRight, Plus, Filter, Download } from 'lucide-react';
+import { ArrowUpRight, ArrowDownRight, Plus, Filter, Download, Edit, Trash2 } from 'lucide-react';
 
 /**
  * Página Transações - Gerenciamento de todas as transações financeiras
@@ -18,6 +20,7 @@ export default function Transacoes() {
   const [filteredTransactions, setFilteredTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
+  const [editingTransaction, setEditingTransaction] = useState(null);
   const [filterType, setFilterType] = useState('all'); // all, credit, debit
   const [formData, setFormData] = useState({
     description: '',
@@ -51,6 +54,7 @@ export default function Transacoes() {
   }, [filterType, transactions]);
 
   const handleAddTransaction = () => {
+    setEditingTransaction(null);
     setFormData({
       description: '',
       amount: '',
@@ -60,18 +64,40 @@ export default function Transacoes() {
     setModalOpen(true);
   };
 
+  const handleEditTransaction = (transaction) => {
+    setEditingTransaction(transaction);
+    setFormData({
+      description: transaction.description,
+      amount: Math.abs(transaction.amount).toString(),
+      type: transaction.type,
+      date: transaction.date,
+    });
+    setModalOpen(true);
+  };
+
+  const handleDeleteTransaction = (id) => {
+    if (confirm('Deseja realmente excluir esta transação?')) {
+      setTransactions(transactions.filter(t => t.id !== id));
+    }
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    const newTransaction = {
-      id: Date.now(),
+    const transactionData = {
+      id: editingTransaction?.id || Date.now(),
       description: formData.description,
       amount: formData.type === 'debit' ? -Math.abs(parseFloat(formData.amount)) : Math.abs(parseFloat(formData.amount)),
       type: formData.type,
       date: formData.date,
     };
 
-    setTransactions([newTransaction, ...transactions]);
+    if (editingTransaction) {
+      setTransactions(transactions.map(t => t.id === editingTransaction.id ? transactionData : t));
+    } else {
+      setTransactions([transactionData, ...transactions]);
+    }
+
     setModalOpen(false);
     setFormData({ description: '', amount: '', type: 'debit', date: new Date().toISOString().split('T')[0] });
   };
@@ -141,67 +167,74 @@ export default function Transacoes() {
         </span>
       ),
     },
+    {
+      key: 'actions',
+      label: 'Ações',
+      render: (row) => (
+        <div className="flex gap-2">
+          <button
+            onClick={() => handleEditTransaction(row)}
+            className="p-1 hover:bg-gray-100 rounded transition-colors"
+            aria-label="Editar transação"
+          >
+            <Edit className="w-4 h-4 text-gray-600" />
+          </button>
+          <button
+            onClick={() => handleDeleteTransaction(row.id)}
+            className="p-1 hover:bg-red-50 rounded transition-colors"
+            aria-label="Excluir transação"
+          >
+            <Trash2 className="w-4 h-4 text-red-600" />
+          </button>
+        </div>
+      ),
+    },
   ];
 
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Transações</h1>
-          <p className="text-gray-500 mt-1">Gerencie todas as suas transações financeiras</p>
-        </div>
-        <div className="flex gap-3">
-          <Button variant="secondary">
-            <Download className="w-4 h-4 mr-2" />
-            Exportar
-          </Button>
-          <Button onClick={handleAddTransaction}>
-            <Plus className="w-4 h-4 mr-2" />
-            Nova Transação
-          </Button>
-        </div>
-      </div>
+      <PageHeader
+        title="Transações"
+        description="Gerencie todas as suas transações financeiras"
+        actions={
+          <>
+            <Button variant="secondary">
+              <Download className="w-4 h-4 mr-2" />
+              Exportar
+            </Button>
+            <Button onClick={handleAddTransaction}>
+              <Plus className="w-4 h-4 mr-2" />
+              Nova Transação
+            </Button>
+          </>
+        }
+      />
 
       {/* Cards de resumo */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="p-6">
-          <div className="flex items-center gap-3">
-            <div className="p-3 bg-green-100 rounded-lg">
-              <ArrowUpRight className="w-6 h-6 text-green-600" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-500">Total de Créditos</p>
-              <p className="text-2xl font-bold text-green-600">{formatCurrency(totalCredit)}</p>
-            </div>
-          </div>
-        </Card>
+        <StatsCard
+          icon={ArrowUpRight}
+          label="Total de Créditos"
+          value={formatCurrency(totalCredit)}
+          iconColor="green"
+          valueColor="text-green-600"
+        />
 
-        <Card className="p-6">
-          <div className="flex items-center gap-3">
-            <div className="p-3 bg-red-100 rounded-lg">
-              <ArrowDownRight className="w-6 h-6 text-red-600" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-500">Total de Débitos</p>
-              <p className="text-2xl font-bold text-red-600">{formatCurrency(totalDebit)}</p>
-            </div>
-          </div>
-        </Card>
+        <StatsCard
+          icon={ArrowDownRight}
+          label="Total de Débitos"
+          value={formatCurrency(totalDebit)}
+          iconColor="red"
+          valueColor="text-red-600"
+        />
 
-        <Card className="p-6">
-          <div className="flex items-center gap-3">
-            <div className={`p-3 rounded-lg ${balance >= 0 ? 'bg-blue-100' : 'bg-orange-100'}`}>
-              <ArrowUpRight className={`w-6 h-6 ${balance >= 0 ? 'text-blue-600' : 'text-orange-600'}`} />
-            </div>
-            <div>
-              <p className="text-sm text-gray-500">Saldo</p>
-              <p className={`text-2xl font-bold ${balance >= 0 ? 'text-blue-600' : 'text-orange-600'}`}>
-                {formatCurrency(balance)}
-              </p>
-            </div>
-          </div>
-        </Card>
+        <StatsCard
+          icon={ArrowUpRight}
+          label="Saldo"
+          value={formatCurrency(balance)}
+          iconColor={balance >= 0 ? 'blue' : 'yellow'}
+          valueColor={balance >= 0 ? 'text-blue-600' : 'text-orange-600'}
+        />
       </div>
 
       {/* Filtros */}
@@ -256,18 +289,18 @@ export default function Transacoes() {
         />
       </Card>
 
-      {/* Modal de adicionar transação */}
+      {/* Modal de adicionar/editar transação */}
       <Modal
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
-        title="Nova Transação"
+        title={editingTransaction ? 'Editar Transação' : 'Nova Transação'}
         footer={
           <>
             <Button variant="secondary" onClick={() => setModalOpen(false)}>
               Cancelar
             </Button>
             <Button onClick={handleSubmit}>
-              Adicionar Transação
+              {editingTransaction ? 'Salvar' : 'Adicionar Transação'}
             </Button>
           </>
         }

@@ -39,7 +39,8 @@ export default function Table({ columns, data, pageSize = 10 }) {
 
   return (
     <div className="w-full">
-      <div className="overflow-x-auto rounded-lg border border-gray-200">
+      {/* Desktop Table View - Hidden on mobile */}
+      <div className="hidden md:block overflow-x-auto rounded-lg border border-gray-200">
         <table className="w-full">
           <thead className="bg-gray-50">
             <tr>
@@ -77,17 +78,35 @@ export default function Table({ columns, data, pageSize = 10 }) {
         </table>
       </div>
 
+      {/* Mobile Card View - Visible only on mobile */}
+      <div className="md:hidden space-y-3">
+        {paginatedData.map((row, index) => (
+          <div key={index} className="bg-white border border-gray-200 rounded-lg p-4 space-y-2">
+            {columns.map((column) => (
+              <div key={column.key} className="flex justify-between items-start gap-2">
+                <span className="text-xs font-medium text-gray-500 uppercase">
+                  {column.label}
+                </span>
+                <span className="text-sm text-gray-900 text-right">
+                  {column.render ? column.render(row) : row[column.key]}
+                </span>
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
+
       {/* Paginação */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-between mt-4">
-          <p className="text-sm text-gray-600">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mt-4">
+          <p className="text-xs sm:text-sm text-gray-600 order-2 sm:order-1">
             Mostrando {startIndex + 1} a {Math.min(startIndex + pageSize, sortedData.length)} de {sortedData.length} resultados
           </p>
-          <div className="flex gap-2">
+          <div className="flex gap-2 order-1 sm:order-2">
             <button
               onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
               disabled={currentPage === 1}
-              className="px-3 py-1 rounded border border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-3 py-1 text-sm rounded border border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               Anterior
             </button>
@@ -97,7 +116,7 @@ export default function Table({ columns, data, pageSize = 10 }) {
             <button
               onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
-              className="px-3 py-1 rounded border border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-3 py-1 text-sm rounded border border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               Próxima
             </button>

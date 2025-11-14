@@ -13,7 +13,6 @@
     { "id": "lazer", "name": "Lazer", "color": "#ec4899" },
     { "id": "assinaturas", "name": "Assinaturas", "color": "#06b6d4" },
     { "id": "familia", "name": "Família", "color": "#f97316" },
-    { "id": "poupanca", "name": "Poupança", "color": "#14b8a6" },
     { "id": "credito", "name": "Crédito", "color": "#6366f1" },
     { "id": "utilities", "name": "Utilities", "color": "#84cc16" },
     { "id": "outros", "name": "Outros", "color": "#64748b" }
@@ -26,7 +25,7 @@
       "total": 1057.00
     },
     "income_net": 7707.50,
-    "monthly_expenses_total": 7675.00,
+    "monthly_expenses_total": 6525.00,
     "available_balance": 18252.00
   },
   "expenses": [
@@ -39,8 +38,7 @@
     {"id": 7, "category": "Crédito", "title": "Cartão de crédito", "amount": 1000.00, "date": "2025-11-07"},
     {"id": 8, "category": "Assinaturas", "title": "Internet móvel & Spotify", "amount": 200.00, "date": "2025-11-08"},
     {"id": 9, "category": "Família", "title": "Ajudar", "amount": 550.00, "date": "2025-11-09"},
-    {"id": 10, "category": "Poupança", "title": "Guardar", "amount": 1150.00, "date": "2025-11-10"},
-    {"id": 11, "category": "Lazer", "title": "Lazer casal", "amount": 1500.00, "date": "2025-11-11"}
+    {"id": 10, "category": "Lazer", "title": "Lazer casal", "amount": 1500.00, "date": "2025-11-10"}
   ],
   "assets": [
     {"id": "a1", "name": "Poupança Matheus", "type": "Poupança", "value": 52752.00, "yield": 0.005, "currency": "BRL"},
