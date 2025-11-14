@@ -14,6 +14,7 @@ export default function Layout() {
   const [balance, setBalance] = useState(0);
   const [loading, setLoading] = useState(true);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   useEffect(() => {
     const loadData = async () => {
@@ -44,7 +45,11 @@ export default function Layout() {
 
   return (
     <div className="flex h-screen bg-bg overflow-hidden">
-      <Sidebar isCollapsed={isSidebarCollapsed} />
+      <Sidebar
+        isCollapsed={isSidebarCollapsed}
+        isOpen={isMobileSidebarOpen}
+        onClose={() => setIsMobileSidebarOpen(false)}
+      />
 
       <div className="flex-1 flex flex-col overflow-hidden">
         <Topbar
@@ -52,6 +57,8 @@ export default function Layout() {
           balance={balance}
           isSidebarCollapsed={isSidebarCollapsed}
           onToggleSidebar={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+          isMobileSidebarOpen={isMobileSidebarOpen}
+          onToggleMobileSidebar={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
         />
 
         <main className="flex-1 overflow-y-auto p-6">

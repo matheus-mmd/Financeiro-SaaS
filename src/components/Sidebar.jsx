@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -8,7 +8,6 @@ import {
   Target,
   BarChart3,
   User,
-  Menu,
   X
 } from 'lucide-react';
 
@@ -16,8 +15,7 @@ import {
  * Componente Sidebar - Menu lateral de navegação
  * Responsivo: colapsável em mobile, comprimível em desktop
  */
-export default function Sidebar({ isCollapsed = false }) {
-  const [isOpen, setIsOpen] = useState(false);
+export default function Sidebar({ isCollapsed = false, isOpen = false, onClose }) {
   const location = useLocation();
 
   const menuItems = [
@@ -34,37 +32,24 @@ export default function Sidebar({ isCollapsed = false }) {
 
   return (
     <>
-      {/* Mobile menu button */}
+      {/* Botão X que acompanha o menu lateral mobile */}
       <button
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={onClose}
         className={`
           lg:hidden fixed top-4 z-50 p-2 bg-white rounded-lg shadow-lg
           transition-all duration-300 ease-in-out
-          ${isOpen ? 'left-60' : 'left-4'}
+          ${isOpen ? 'left-60' : '-left-20'}
         `}
-        aria-label={isOpen ? 'Fechar menu' : 'Abrir menu'}
+        aria-label="Fechar menu"
       >
-        <div className="relative w-6 h-6">
-          <Menu
-            className={`
-              absolute inset-0 w-6 h-6 transition-opacity duration-200
-              ${isOpen ? 'opacity-0' : 'opacity-100'}
-            `}
-          />
-          <X
-            className={`
-              absolute inset-0 w-6 h-6 transition-opacity duration-200
-              ${isOpen ? 'opacity-100' : 'opacity-0'}
-            `}
-          />
-        </div>
+        <X className="w-6 h-6 text-gray-600" />
       </button>
 
       {/* Overlay para mobile */}
       {isOpen && (
         <div
           className="lg:hidden fixed inset-0 bg-black/50 z-30"
-          onClick={() => setIsOpen(false)}
+          onClick={onClose}
         />
       )}
 
@@ -103,7 +88,7 @@ export default function Sidebar({ isCollapsed = false }) {
                 <Link
                   key={item.path}
                   to={item.path}
-                  onClick={() => setIsOpen(false)}
+                  onClick={onClose}
                   className={`
                     flex items-center gap-3 rounded-lg
                     transition-colors duration-200

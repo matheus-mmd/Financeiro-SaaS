@@ -8,11 +8,22 @@ import { Menu, X } from 'lucide-react';
  * @param {number} balance - Saldo disponível
  * @param {boolean} isSidebarCollapsed - Estado do menu lateral
  * @param {function} onToggleSidebar - Função para alternar menu lateral
+ * @param {boolean} isMobileSidebarOpen - Estado do menu mobile
+ * @param {function} onToggleMobileSidebar - Função para alternar menu mobile
  */
-export default function Topbar({ user, balance, isSidebarCollapsed, onToggleSidebar }) {
+export default function Topbar({ user, balance, isSidebarCollapsed, onToggleSidebar, isMobileSidebarOpen, onToggleMobileSidebar }) {
   return (
-    <header className="bg-white border-b border-gray-200 px-6 py-4">
+    <header className="bg-white border-b border-gray-200 px-4 sm:px-6 py-4">
       <div className="flex items-center justify-between">
+        {/* Mobile menu button - Sempre visível */}
+        <button
+          onClick={onToggleMobileSidebar}
+          className="lg:hidden p-2 text-gray-600 hover:text-brand-500 hover:bg-brand-50 rounded-lg transition-colors"
+          aria-label="Abrir menu"
+        >
+          <Menu className="w-6 h-6" />
+        </button>
+
         {/* Sidebar toggle button - Desktop only */}
         <button
           onClick={onToggleSidebar}
