@@ -54,6 +54,7 @@
   "transactions": [
     {"id": 1001, "date": "2025-11-01", "description": "Salário Matheus", "amount": 3107.30, "type": "credit"},
     {"id": 1002, "date": "2025-11-01", "description": "Salário Nayanna", "amount": 4307.20, "type": "credit"},
+    {"id": 1001, "date": "2025-11-01", "description": "Poupança", "amount": 1150.00, "type": "investment"},
     {"id": 2001, "date": "2025-11-02", "description": "Parcela apartamento", "amount": -1805.00, "type": "debit"}
   ],
   "comparison_sample": {

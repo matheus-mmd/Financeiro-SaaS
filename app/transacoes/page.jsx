@@ -27,7 +27,7 @@ import {
 import Spinner from '../../src/components/Spinner';
 import Table from '../../src/components/Table';
 import { fetchMock, formatCurrency, formatDate } from '../../src/utils/mockApi';
-import { ArrowUpRight, ArrowDownRight, Plus, Filter, Download, Edit, Trash2 } from 'lucide-react';
+import { ArrowUpRight, ArrowDownRight, TrendingUp, Plus, Filter, Download, Edit, Trash2 } from 'lucide-react';
 
 /**
  * Página Transações - Gerenciamento de todas as transações financeiras
@@ -134,10 +134,18 @@ export default function Transacoes() {
   const handleSubmit = (e) => {
     e.preventDefault();
 
+    // Investimentos e débitos são negativos (saída), créditos são positivos (entrada)
+    let amount = parseFloat(formData.amount);
+    if (formData.type === 'debit' || formData.type === 'investment') {
+      amount = -Math.abs(amount);
+    } else {
+      amount = Math.abs(amount);
+    }
+
     const transactionData = {
       id: editingTransaction?.id || Date.now(),
       description: formData.description,
-      amount: formData.type === 'debit' ? -Math.abs(parseFloat(formData.amount)) : Math.abs(parseFloat(formData.amount)),
+      amount: amount,
       type: formData.type,
       date: formData.date,
     };
@@ -173,7 +181,11 @@ export default function Transacoes() {
     .filter(t => t.type === 'debit')
     .reduce((sum, t) => sum + Math.abs(t.amount), 0);
 
-  const balance = totalCredit - totalDebit;
+  const totalInvestment = filteredTransactions
+    .filter(t => t.type === 'investment')
+    .reduce((sum, t) => sum + Math.abs(t.amount), 0);
+
+  const balance = totalCredit - totalDebit - totalInvestment;
 
   // Configuração de colunas da tabela
   const transactionColumns = [
@@ -191,31 +203,54 @@ export default function Transacoes() {
     {
       key: 'type',
       label: 'Tipo',
-      render: (row) => (
-        <Badge variant={row.type === 'credit' ? 'default' : 'destructive'}>
-          {row.type === 'credit' ? (
-            <span className="flex items-center gap-1">
-              <ArrowUpRight className="w-3 h-3" />
-              Crédito
-            </span>
-          ) : (
-            <span className="flex items-center gap-1">
-              <ArrowDownRight className="w-3 h-3" />
-              Débito
-            </span>
-          )}
-        </Badge>
-      ),
+      render: (row) => {
+        if (row.type === 'credit') {
+          return (
+            <Badge variant="default" className="bg-green-500">
+              <span className="flex items-center gap-1">
+                <ArrowUpRight className="w-3 h-3" />
+                Crédito
+              </span>
+            </Badge>
+          );
+        } else if (row.type === 'investment') {
+          return (
+            <Badge variant="default" className="bg-blue-500">
+              <span className="flex items-center gap-1">
+                <TrendingUp className="w-3 h-3" />
+                Investimento
+              </span>
+            </Badge>
+          );
+        } else {
+          return (
+            <Badge variant="destructive">
+              <span className="flex items-center gap-1">
+                <ArrowDownRight className="w-3 h-3" />
+                Débito
+              </span>
+            </Badge>
+          );
+        }
+      },
     },
     {
       key: 'amount',
       label: 'Valor',
       sortable: true,
-      render: (row) => (
-        <span className={row.type === 'credit' ? 'text-green-600 font-semibold' : 'text-red-600 font-semibold'}>
-          {formatCurrency(Math.abs(row.amount))}
-        </span>
-      ),
+      render: (row) => {
+        let colorClass = 'text-red-600';
+        if (row.type === 'credit') {
+          colorClass = 'text-green-600';
+        } else if (row.type === 'investment') {
+          colorClass = 'text-blue-600';
+        }
+        return (
+          <span className={`${colorClass} font-semibold`}>
+            {formatCurrency(Math.abs(row.amount))}
+          </span>
+        );
+      },
     },
     {
       key: 'actions',
@@ -261,7 +296,7 @@ export default function Transacoes() {
       />
 
       {/* Cards de resumo */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatsCard
           icon={ArrowUpRight}
           label="Total de Créditos"
@@ -279,11 +314,19 @@ export default function Transacoes() {
         />
 
         <StatsCard
+          icon={TrendingUp}
+          label="Total de Investimentos"
+          value={formatCurrency(totalInvestment)}
+          iconColor="blue"
+          valueColor="text-blue-600"
+        />
+
+        <StatsCard
           icon={ArrowUpRight}
           label="Saldo"
           value={formatCurrency(balance)}
-          iconColor={balance >= 0 ? 'blue' : 'yellow'}
-          valueColor={balance >= 0 ? 'text-blue-600' : 'text-orange-600'}
+          iconColor={balance >= 0 ? 'purple' : 'yellow'}
+          valueColor={balance >= 0 ? 'text-purple-600' : 'text-orange-600'}
         />
       </div>
 
@@ -310,6 +353,7 @@ export default function Transacoes() {
                     <SelectItem value="all">Todas as transações</SelectItem>
                     <SelectItem value="credit">Apenas créditos</SelectItem>
                     <SelectItem value="debit">Apenas débitos</SelectItem>
+                    <SelectItem value="investment">Apenas investimentos</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -380,7 +424,7 @@ export default function Transacoes() {
 
             <div className="space-y-2">
               <Label>Tipo de Transação</Label>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-3 gap-3">
                 <button
                   type="button"
                   onClick={() => handleInputChange('type', 'credit')}
@@ -392,7 +436,7 @@ export default function Transacoes() {
                 >
                   <ArrowUpRight className="w-6 h-6 text-green-600 mx-auto mb-2" />
                   <span className="block text-sm font-medium text-gray-900">Crédito</span>
-                  <span className="block text-xs text-gray-500">Entrada de dinheiro</span>
+                  <span className="block text-xs text-gray-500">Entrada</span>
                 </button>
                 <button
                   type="button"
@@ -405,7 +449,20 @@ export default function Transacoes() {
                 >
                   <ArrowDownRight className="w-6 h-6 text-red-600 mx-auto mb-2" />
                   <span className="block text-sm font-medium text-gray-900">Débito</span>
-                  <span className="block text-xs text-gray-500">Saída de dinheiro</span>
+                  <span className="block text-xs text-gray-500">Saída</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleInputChange('type', 'investment')}
+                  className={`p-4 rounded-lg border-2 transition-all ${
+                    formData.type === 'investment'
+                      ? 'border-blue-500 bg-blue-50'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <TrendingUp className="w-6 h-6 text-blue-600 mx-auto mb-2" />
+                  <span className="block text-sm font-medium text-gray-900">Investimento</span>
+                  <span className="block text-xs text-gray-500">Aplicação</span>
                 </button>
               </div>
             </div>
