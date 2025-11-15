@@ -50,8 +50,8 @@ export default function Table({ columns, data, pageSize = 10 }) {
 
   return (
     <div className="w-full">
-      {/* Desktop Table View - Hidden on mobile */}
-      <div className="hidden md:block rounded-lg border">
+      {/* Table View - mantém formato de linhas em todas as telas */}
+      <div className="rounded-lg border overflow-x-auto">
         <ShadcnTable>
           <TableHeader>
             <TableRow>
@@ -85,26 +85,6 @@ export default function Table({ columns, data, pageSize = 10 }) {
             ))}
           </TableBody>
         </ShadcnTable>
-      </div>
-
-      {/* Mobile Card View - Visible only on mobile */}
-      <div className="md:hidden space-y-3">
-        {paginatedData.map((row, index) => (
-          <Card key={index}>
-            <CardContent className="p-4 space-y-2">
-              {columns.map((column) => (
-                <div key={column.key} className="flex justify-between items-start gap-2">
-                  <span className="text-xs font-medium text-muted-foreground uppercase">
-                    {column.label}
-                  </span>
-                  <span className="text-sm text-right">
-                    {column.render ? column.render(row) : row[column.key]}
-                  </span>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        ))}
       </div>
 
       {/* Paginação */}
