@@ -1,11 +1,21 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import PageHeader from '../../src/components/PageHeader';
+import StatsCard from '../../src/components/StatsCard';
+import MonthPicker from '../../src/components/MonthPicker';
 import { Card, CardContent } from '../../src/components/ui/card';
 import { Badge } from '../../src/components/ui/badge';
 import { Button } from '../../src/components/ui/button';
 import { Input } from '../../src/components/ui/input';
 import { Label } from '../../src/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../../src/components/ui/select';
 import {
   Dialog,
   DialogContent,
@@ -14,31 +24,51 @@ import {
   DialogTitle,
 } from '../../src/components/ui/dialog';
 import Spinner from '../../src/components/Spinner';
+import Table from '../../src/components/Table';
 import ProgressBar from '../../src/components/ProgressBar';
-import { fetchMock, formatCurrency } from '../../src/utils/mockApi';
-import { Target, Plus, Edit, Trash2, CheckCircle, Minus } from 'lucide-react';
+import { fetchMock, formatCurrency, formatDate } from '../../src/utils/mockApi';
+import { Target, Plus, Edit, Trash2, CheckCircle, Minus, Download, Filter, TrendingUp } from 'lucide-react';
 
 /**
- * Página Metas - CRUD de metas financeiras
- * Permite criar, editar, deletar e acompanhar progresso de metas
+ * Página Metas - Gerenciamento de metas financeiras
+ * Permite visualizar, filtrar, adicionar e acompanhar progresso de metas
  */
 export default function Metas() {
   const [targets, setTargets] = useState([]);
+  const [filteredTargets, setFilteredTargets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingTarget, setEditingTarget] = useState(null);
+  const [filterStatus, setFilterStatus] = useState('all');
+
+  // Inicializa com primeiro e último dia do mês atual
+  const getCurrentMonthRange = () => {
+    const now = new Date();
+    const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+    const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    return { from: firstDay, to: lastDay };
+  };
+
+  const [filterMonth, setFilterMonth] = useState(getCurrentMonthRange());
   const [formData, setFormData] = useState({
     title: '',
     goal: '',
     progress: '',
     monthlyAmount: '',
+    date: new Date().toISOString().split('T')[0],
   });
 
   useEffect(() => {
     const loadData = async () => {
       try {
         const response = await fetchMock('/api/targets');
-        setTargets(response.data);
+        // Adicionar data às metas se não tiver
+        const targetsWithDate = response.data.map(target => ({
+          ...target,
+          date: target.date || new Date().toISOString().split('T')[0]
+        }));
+        setTargets(targetsWithDate);
+        setFilteredTargets(targetsWithDate);
       } catch (error) {
         console.error('Erro ao carregar metas:', error);
       } finally {
@@ -49,9 +79,43 @@ export default function Metas() {
     loadData();
   }, []);
 
+  useEffect(() => {
+    let filtered = targets;
+
+    // Filtrar por status
+    if (filterStatus !== 'all') {
+      filtered = filtered.filter(t => t.status === filterStatus);
+    }
+
+    // Filtrar por intervalo de datas
+    if (filterMonth?.from && filterMonth?.to) {
+      filtered = filtered.filter(t => {
+        const [year, month, day] = t.date.split('-');
+        const targetDate = new Date(year, month - 1, day);
+        targetDate.setHours(0, 0, 0, 0);
+
+        const from = new Date(filterMonth.from);
+        from.setHours(0, 0, 0, 0);
+
+        const to = new Date(filterMonth.to);
+        to.setHours(23, 59, 59, 999);
+
+        return targetDate >= from && targetDate <= to;
+      });
+    }
+
+    setFilteredTargets(filtered);
+  }, [filterStatus, filterMonth, targets]);
+
   const handleAddTarget = () => {
     setEditingTarget(null);
-    setFormData({ title: '', goal: '', progress: '', monthlyAmount: '' });
+    setFormData({
+      title: '',
+      goal: '',
+      progress: '',
+      monthlyAmount: '',
+      date: new Date().toISOString().split('T')[0],
+    });
     setModalOpen(true);
   };
 
@@ -62,6 +126,7 @@ export default function Metas() {
       goal: target.goal.toString(),
       progress: target.progress.toString(),
       monthlyAmount: target.monthlyAmount?.toString() || '',
+      date: target.date,
     });
     setModalOpen(true);
   };
@@ -82,16 +147,17 @@ export default function Metas() {
       progress: parseFloat(formData.progress || 0),
       monthlyAmount: formData.monthlyAmount ? parseFloat(formData.monthlyAmount) : 0,
       status: parseFloat(formData.progress || 0) >= parseFloat(formData.goal) ? 'completed' : 'in_progress',
+      date: formData.date,
     };
 
     if (editingTarget) {
       setTargets(targets.map(t => t.id === editingTarget.id ? newTarget : t));
     } else {
-      setTargets([...targets, newTarget]);
+      setTargets([newTarget, ...targets]);
     }
 
     setModalOpen(false);
-    setFormData({ title: '', goal: '', progress: '', monthlyAmount: '' });
+    setFormData({ title: '', goal: '', progress: '', monthlyAmount: '', date: new Date().toISOString().split('T')[0] });
   };
 
   const calculateMonthsToGoal = (goal, progress, monthlyAmount) => {
@@ -112,6 +178,21 @@ export default function Metas() {
     setFormData({ ...formData, [field]: value });
   };
 
+  // Calcular estatísticas baseadas nas metas filtradas
+  const completedTargets = filteredTargets.filter(t => t.status === 'completed');
+  const inProgressTargets = filteredTargets.filter(t => t.status === 'in_progress');
+  const totalGoalAmount = filteredTargets.reduce((sum, t) => sum + t.goal, 0);
+  const totalProgressAmount = filteredTargets.reduce((sum, t) => sum + t.progress, 0);
+
+  // Ordenar metas por progresso percentual (maior primeiro)
+  const sortedTargets = useMemo(() => {
+    return [...filteredTargets].sort((a, b) => {
+      const percentA = (a.progress / a.goal) * 100;
+      const percentB = (b.progress / b.goal) * 100;
+      return percentB - percentA;
+    });
+  }, [filteredTargets]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -120,193 +201,227 @@ export default function Metas() {
     );
   }
 
-  const completedTargets = targets.filter(t => t.status === 'completed');
-  const inProgressTargets = targets.filter(t => t.status === 'in_progress');
+  // Configuração de colunas da tabela
+  const targetColumns = [
+    {
+      key: 'date',
+      label: 'Data',
+      sortable: true,
+      render: (row) => formatDate(row.date),
+    },
+    {
+      key: 'title',
+      label: 'Meta',
+      sortable: true,
+    },
+    {
+      key: 'status',
+      label: 'Status',
+      render: (row) => {
+        if (row.status === 'completed') {
+          return (
+            <Badge variant="default" className="bg-green-500">
+              <span className="flex items-center gap-1">
+                <CheckCircle className="w-3 h-3" />
+                Concluída
+              </span>
+            </Badge>
+          );
+        } else {
+          return (
+            <Badge variant="default" className="bg-yellow-500">
+              <span className="flex items-center gap-1">
+                <TrendingUp className="w-3 h-3" />
+                Em Andamento
+              </span>
+            </Badge>
+          );
+        }
+      },
+    },
+    {
+      key: 'progress',
+      label: 'Progresso',
+      render: (row) => (
+        <div className="min-w-[200px]">
+          <ProgressBar
+            progress={row.progress}
+            goal={row.goal}
+            variant="brand"
+          />
+        </div>
+      ),
+    },
+    {
+      key: 'goal',
+      label: 'Objetivo',
+      sortable: true,
+      render: (row) => (
+        <span className="font-semibold text-gray-900">
+          {formatCurrency(row.goal)}
+        </span>
+      ),
+    },
+    {
+      key: 'current',
+      label: 'Atual',
+      sortable: true,
+      render: (row) => (
+        <span className="text-blue-600 font-semibold">
+          {formatCurrency(row.progress)}
+        </span>
+      ),
+    },
+    {
+      key: 'actions',
+      label: 'Ações',
+      render: (row) => (
+        <div className="flex gap-2">
+          <button
+            onClick={() => handleEditTarget(row)}
+            className="p-1 hover:bg-gray-100 rounded transition-colors"
+            aria-label="Editar meta"
+          >
+            <Edit className="w-4 h-4 text-gray-600" />
+          </button>
+          <button
+            onClick={() => handleDeleteTarget(row.id)}
+            className="p-1 hover:bg-red-50 rounded transition-colors"
+            aria-label="Excluir meta"
+          >
+            <Trash2 className="w-4 h-4 text-red-600" />
+          </button>
+        </div>
+      ),
+    },
+  ];
 
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Metas Financeiras</h1>
-          <p className="text-gray-500 mt-1">Defina e acompanhe suas metas</p>
-        </div>
-        <Button onClick={handleAddTarget}>
-          <Plus className="w-4 h-4" />
-          Nova Meta
-        </Button>
-      </div>
-
-      {/* Estatísticas */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center gap-3">
-              <Target className="w-8 h-8 text-brand-500" />
-              <div>
-                <p className="text-sm text-gray-500">Total de Metas</p>
-                <p className="text-2xl font-bold text-gray-900">{targets.length}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center gap-3">
-              <CheckCircle className="w-8 h-8 text-green-500" />
-              <div>
-                <p className="text-sm text-gray-500">Concluídas</p>
-                <p className="text-2xl font-bold text-green-600">{completedTargets.length}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center gap-3">
-              <Target className="w-8 h-8 text-yellow-500" />
-              <div>
-                <p className="text-sm text-gray-500">Em Andamento</p>
-                <p className="text-2xl font-bold text-yellow-600">{inProgressTargets.length}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Metas em andamento */}
-      {inProgressTargets.length > 0 && (
-        <div>
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Em Andamento</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {inProgressTargets.map((target) => (
-              <Card key={target.id}>
-                <CardContent className="p-6">
-                  <div className="flex items-start justify-between mb-4">
-                    <div>
-                      <Badge variant="default">Em andamento</Badge>
-                      <h3 className="font-semibold text-gray-900 text-lg mt-2">
-                        {target.title}
-                      </h3>
-                    </div>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => handleEditTarget(target)}
-                        className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                        aria-label="Editar meta"
-                      >
-                        <Edit className="w-4 h-4 text-gray-600" />
-                      </button>
-                      <button
-                        onClick={() => handleDeleteTarget(target.id)}
-                        className="p-2 hover:bg-red-50 rounded-lg transition-colors"
-                        aria-label="Excluir meta"
-                      >
-                        <Trash2 className="w-4 h-4 text-red-600" />
-                      </button>
-                    </div>
-                  </div>
-
-                  <ProgressBar
-                    progress={target.progress}
-                    goal={target.goal}
-                    variant="brand"
-                  />
-
-                  <div className="mt-4 pt-4 border-t border-gray-100 space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Faltam</span>
-                      <span className="font-semibold text-gray-900">
-                        {formatCurrency(target.goal - target.progress)}
-                      </span>
-                    </div>
-                    {target.monthlyAmount > 0 && (
-                      <>
-                        <div className="flex justify-between text-sm">
-                          <span className="text-gray-600">Guardar por mês</span>
-                          <span className="font-semibold text-brand-600">
-                            {formatCurrency(target.monthlyAmount)}
-                          </span>
-                        </div>
-                        {(() => {
-                          const months = calculateMonthsToGoal(target.goal, target.progress, target.monthlyAmount);
-                          const targetDate = getTargetDate(months);
-                          return targetDate && (
-                            <div className="text-sm text-gray-600 mt-2 p-2 bg-brand-50 rounded">
-                              Assim você alcança o seu objetivo em <span className="font-semibold text-brand-600">{targetDate}</span>
-                            </div>
-                          );
-                        })()}
-                      </>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Metas concluídas */}
-      {completedTargets.length > 0 && (
-        <div>
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Concluídas</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {completedTargets.map((target) => (
-              <Card key={target.id} className="bg-green-50 border-green-200">
-                <CardContent className="p-6">
-                  <div className="flex items-start justify-between mb-3">
-                    <Badge variant="default">Concluída</Badge>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => handleEditTarget(target)}
-                        className="p-1 hover:bg-green-100 rounded transition-colors"
-                        aria-label="Editar meta"
-                      >
-                        <Edit className="w-4 h-4 text-gray-600" />
-                      </button>
-                      <button
-                        onClick={() => handleDeleteTarget(target.id)}
-                        className="p-1 hover:bg-green-100 rounded transition-colors"
-                        aria-label="Excluir meta"
-                      >
-                        <Trash2 className="w-4 h-4 text-gray-600" />
-                      </button>
-                    </div>
-                  </div>
-
-                  <h3 className="font-semibold text-gray-900 mb-2">{target.title}</h3>
-                  <div className="flex items-center gap-2 text-green-700">
-                    <CheckCircle className="w-5 h-5" />
-                    <span className="font-semibold">{formatCurrency(target.goal)}</span>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Empty state */}
-      {targets.length === 0 && (
-        <Card>
-          <CardContent className="p-12 text-center">
-            <Target className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              Nenhuma meta cadastrada
-            </h3>
-            <p className="text-gray-500 mb-6">
-              Comece definindo suas metas financeiras e acompanhe seu progresso.
-            </p>
+      <PageHeader
+        title="Metas Financeiras"
+        description="Defina e acompanhe suas metas"
+        actions={
+          <>
+            <Button variant="secondary">
+              <Download className="w-4 h-4" />
+              Exportar
+            </Button>
             <Button onClick={handleAddTarget}>
               <Plus className="w-4 h-4" />
-              Criar Primeira Meta
+              Nova Meta
             </Button>
-          </CardContent>
-        </Card>
-      )}
+          </>
+        }
+      />
+
+      {/* Cards de resumo */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <StatsCard
+          icon={Target}
+          label="Total de Metas"
+          value={filteredTargets.length}
+          iconColor="blue"
+          valueColor="text-blue-600"
+        />
+
+        <StatsCard
+          icon={CheckCircle}
+          label="Concluídas"
+          value={completedTargets.length}
+          iconColor="green"
+          valueColor="text-green-600"
+        />
+
+        <StatsCard
+          icon={TrendingUp}
+          label="Em Andamento"
+          value={inProgressTargets.length}
+          iconColor="yellow"
+          valueColor="text-yellow-600"
+        />
+
+        <StatsCard
+          icon={Target}
+          label="Total Objetivos"
+          value={formatCurrency(totalGoalAmount)}
+          iconColor="purple"
+          valueColor="text-purple-600"
+        />
+      </div>
+
+      {/* Filtros */}
+      <Card>
+        <CardContent className="p-4 sm:p-6">
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <Filter className="w-5 h-5 text-gray-500" />
+              <span className="text-sm font-medium text-gray-700">Filtrar por:</span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Filtro por status */}
+              <div className="space-y-2">
+                <Label htmlFor="filter-status" className="text-sm font-medium text-gray-700">
+                  Status
+                </Label>
+                <Select value={filterStatus} onValueChange={setFilterStatus}>
+                  <SelectTrigger id="filter-status">
+                    <SelectValue placeholder="Selecione o status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todas as metas</SelectItem>
+                    <SelectItem value="in_progress">Em andamento</SelectItem>
+                    <SelectItem value="completed">Concluídas</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Filtro por mês/ano */}
+              <div className="space-y-2">
+                <Label className="text-sm font-medium text-gray-700">
+                  Mês e Ano
+                </Label>
+                <MonthPicker
+                  value={filterMonth}
+                  onChange={setFilterMonth}
+                  placeholder="Selecione o período"
+                />
+              </div>
+            </div>
+
+            {/* Limpar filtros */}
+            {(filterStatus !== 'all' || filterMonth) && (
+              <div className="flex justify-end">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setFilterStatus('all');
+                    setFilterMonth(getCurrentMonthRange());
+                  }}
+                >
+                  Limpar Filtros
+                </Button>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Tabela de metas */}
+      <Card>
+        <CardContent className="p-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">
+            Todas as Metas ({filteredTargets.length})
+          </h2>
+          <Table
+            columns={targetColumns}
+            data={sortedTargets}
+            pageSize={10}
+          />
+        </CardContent>
+      </Card>
 
       {/* Dialog de adicionar/editar */}
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
@@ -412,6 +527,17 @@ export default function Metas() {
                   })()}
                 </div>
               )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="date">Data</Label>
+              <Input
+                id="date"
+                type="date"
+                value={formData.date}
+                onChange={(e) => handleInputChange('date', e.target.value)}
+                required
+              />
             </div>
           </form>
 
