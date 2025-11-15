@@ -3,13 +3,19 @@
 import React, { useState, useEffect } from 'react';
 import PageHeader from '../../src/components/PageHeader';
 import StatsCard from '../../src/components/StatsCard';
-import Select from '../../src/components/Select';
 import MonthPicker from '../../src/components/MonthPicker';
 import { Card, CardContent } from '../../src/components/ui/card';
 import { Badge } from '../../src/components/ui/badge';
 import { Button } from '../../src/components/ui/button';
 import { Input } from '../../src/components/ui/input';
 import { Label } from '../../src/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../../src/components/ui/select';
 import {
   Dialog,
   DialogContent,
@@ -296,16 +302,16 @@ export default function Transacoes() {
                 <Label htmlFor="filter-type" className="text-sm font-medium text-gray-700">
                   Tipo de Transação
                 </Label>
-                <Select
-                  id="filter-type"
-                  value={filterType}
-                  onChange={setFilterType}
-                  options={[
-                    { value: 'all', label: 'Todas as transações' },
-                    { value: 'credit', label: 'Apenas créditos' },
-                    { value: 'debit', label: 'Apenas débitos' },
-                  ]}
-                />
+                <Select value={filterType} onValueChange={setFilterType}>
+                  <SelectTrigger id="filter-type">
+                    <SelectValue placeholder="Selecione o tipo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todas as transações</SelectItem>
+                    <SelectItem value="credit">Apenas créditos</SelectItem>
+                    <SelectItem value="debit">Apenas débitos</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               {/* Filtro por mês/ano */}

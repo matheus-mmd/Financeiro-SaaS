@@ -3,12 +3,18 @@
 import React, { useState, useEffect } from 'react';
 import PageHeader from '../../src/components/PageHeader';
 import StatsCard from '../../src/components/StatsCard';
-import Select from '../../src/components/Select';
 import { Card, CardContent } from '../../src/components/ui/card';
 import { Badge } from '../../src/components/ui/badge';
 import { Button } from '../../src/components/ui/button';
 import { Input } from '../../src/components/ui/input';
 import { Label } from '../../src/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../../src/components/ui/select';
 import {
   Dialog,
   DialogContent,
@@ -305,17 +311,19 @@ export default function Despesas() {
             <span className="text-sm font-medium text-gray-700">Filtrar por categoria:</span>
           </div>
           <div className="flex-1 max-w-xs">
-            <Select
-              value={selectedCategory}
-              onChange={setSelectedCategory}
-              options={[
-                { value: 'all', label: 'Todas as categorias' },
-                ...categories.map((cat) => ({
-                  value: cat.name,
-                  label: cat.name,
-                })),
-              ]}
-            />
+            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione uma categoria" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas as categorias</SelectItem>
+                {categories.map((cat) => (
+                  <SelectItem key={cat.id} value={cat.name}>
+                    {cat.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
         </CardContent>
@@ -356,20 +364,21 @@ export default function Despesas() {
 
             <div className="space-y-2">
               <Label htmlFor="category">Categoria</Label>
-              <select
-                id="category"
+              <Select
                 value={formData.category}
-                onChange={(e) => handleInputChange('category', e.target.value)}
-                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring md:text-sm"
-                required
+                onValueChange={(value) => handleInputChange('category', value)}
               >
-                <option value="">Selecione uma categoria</option>
-                {categories.map((cat) => (
-                  <option key={cat.id} value={cat.name}>
-                    {cat.name}
-                  </option>
-                ))}
-              </select>
+                <SelectTrigger id="category">
+                  <SelectValue placeholder="Selecione uma categoria" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map((cat) => (
+                    <SelectItem key={cat.id} value={cat.name}>
+                      {cat.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">
