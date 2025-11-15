@@ -1,5 +1,6 @@
+'use client';
+
 import React, { useState, useEffect } from 'react';
-import { Outlet } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Topbar from './Topbar';
 import Spinner from './Spinner';
@@ -9,7 +10,7 @@ import { fetchMock } from '../utils/mockApi';
  * Componente Layout - Layout principal da aplicação
  * Carrega dados do usuário e saldo para Topbar
  */
-export default function Layout() {
+export default function Layout({ children }) {
   const [user, setUser] = useState(null);
   const [balance, setBalance] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -63,7 +64,7 @@ export default function Layout() {
 
         <main className="flex-1 overflow-y-auto p-6">
           <div className="max-w-7xl mx-auto">
-            <Outlet />
+            {children}
           </div>
         </main>
       </div>

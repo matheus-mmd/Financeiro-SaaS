@@ -1,174 +1,225 @@
 # Financeiro SaaS - Controle Financeiro Pessoal/Familiar
 
-SaaS completo de controle financeiro desenvolvido com React, Vite, Tailwind CSS e Recharts. Interface moderna, responsiva e acessível para gerenciar finanças pessoais e familiares.
+SaaS completo de controle financeiro desenvolvido com **Next.js 14**, **React 18**, **Tailwind CSS** e **Recharts**. Interface moderna, responsiva e acessível para gerenciar finanças pessoais e familiares.
 
-## Funcionalidades
+## ✨ Funcionalidades
 
-### Dashboard
+### 📊 Dashboard
 - Resumo mensal de receitas, despesas e saldo
-- Gráfico de rosca (donut) para despesas por categoria
-- Gráfico de linha para evolução do saldo
+- Gráfico de rosca (donut) interativo para despesas por categoria
+- Gráfico de área com gradiente para evolução do saldo
 - Tabela de transações com ordenação e paginação
-- Preview de metas em andamento
+- Preview de metas em andamento com barra de progresso
 
-### Transações
+### 💰 Transações
 - Visualização completa de todas as transações (créditos e débitos)
 - Cards com estatísticas: Total de Créditos, Total de Débitos e Saldo
-- Filtros por tipo de transação (Todas, Créditos, Débitos)
-- Formulário para adicionar novas transações
+- Filtros por tipo de transação (Todas, Créditos, Débitos) e intervalo de datas
+- CRUD completo: Adicionar, editar e excluir transações
 - Tabela com todas as transações ordenáveis por data, descrição e valor
 - Interface preparada para exportação de dados
 
-### Despesas
+### 🧾 Despesas
 - Gerenciamento detalhado de despesas por categoria
 - 12 categorias predefinidas com cores distintas
-- Gráfico de pizza mostrando distribuição por categoria
+- Gráfico de pizza interativo mostrando distribuição por categoria
 - Listagem de despesas com porcentagens por categoria
-- Filtros por categoria
+- Filtros por categoria e intervalo de datas
 - CRUD completo (Criar, Editar, Excluir despesas)
 - Modal para visualizar todas as categorias disponíveis
 - Cards com estatísticas: Total de Despesas, Total de Itens e Categorias Ativas
 
-### Investimentos
+### 📈 Investimentos
 - Lista de ativos com valores e rendimentos
 - Modal de detalhes com histórico de evolução
 - Gráficos de performance individual
+- Funcionalidade de aporte e retirada em investimentos
 - Comparação com indicadores de referência (CDI)
 
-### Metas
+### 🎯 Metas
 - CRUD completo de metas financeiras
-- Barra de progresso visual
+- Barra de progresso visual animada
 - Separação entre metas concluídas e em andamento
-- Estatísticas de metas
+- Cálculo automático de prazo para alcançar meta
+- Campo para definir contribuição mensal
+- Estimativa de data de conclusão baseada na contribuição
+- Estatísticas de metas (Total, Concluídas, Em andamento)
 
-### Comparador de Ativos
-- Seleção de 2 ativos para comparação
-- Gráfico comparativo de desempenho
-- Métricas: retorno acumulado, volatilidade, drawdown
+### 🔄 Comparador de Ativos
+- Seleção de 2 ativos para comparação lado a lado
+- Gráfico comparativo de desempenho histórico
+- Métricas detalhadas: retorno acumulado, volatilidade, drawdown
 - Análise resumida automática
+- Comparação visual com cores distintas
 
-### Perfil
+### 👤 Perfil
 - Informações do usuário e conta familiar
 - Resumo patrimonial completo
 - Distribuição de ativos com gráficos
-- Configuração de perfil de risco
+- Configuração de perfil de risco (Conservador, Moderado, Arrojado)
 - Dados de receita mensal
+- Avatar personalizável
 
-## Stack Tecnológica
+## 🚀 Stack Tecnológica
 
-- **React 18** - Biblioteca UI
-- **Vite** - Build tool e dev server
+- **Next.js 14** - Framework React com App Router
+- **React 18** - Biblioteca UI com Server e Client Components
 - **Tailwind CSS** - Framework CSS utilitário
-- **React Router v6** - Roteamento
-- **Recharts** - Biblioteca de gráficos
-- **Lucide React** - Ícones
-- **TypeScript** - (opcional, preparado para migração)
+- **shadcn/ui** - Componentes acessíveis baseados em Radix UI
+- **Recharts** - Biblioteca de gráficos interativos
+- **Lucide React** - Ícones modernos e customizáveis
+- **TypeScript Ready** - Preparado para migração
 
-## Estrutura do Projeto
+## 📁 Estrutura do Projeto
 
 ```
 financeiro-saas/
+├── app/                         # Next.js App Router
+│   ├── layout.jsx              # Layout raiz da aplicação
+│   ├── page.jsx                # Dashboard (página inicial)
+│   ├── globals.css             # Estilos globais
+│   ├── transacoes/
+│   │   └── page.jsx            # Página de Transações
+│   ├── despesas/
+│   │   └── page.jsx            # Página de Despesas
+│   ├── investimentos/
+│   │   └── page.jsx            # Página de Investimentos
+│   ├── metas/
+│   │   └── page.jsx            # Página de Metas
+│   ├── comparador/
+│   │   └── page.jsx            # Comparador de Ativos
+│   └── perfil/
+│       └── page.jsx            # Perfil do Usuário
 ├── src/
-│   ├── components/          # Componentes reutilizáveis
+│   ├── components/             # Componentes reutilizáveis
+│   │   ├── ui/                 # shadcn/ui components
+│   │   │   ├── badge.jsx
+│   │   │   ├── button.jsx
+│   │   │   ├── card.jsx
+│   │   │   ├── dialog.jsx
+│   │   │   ├── dropdown-menu.jsx
+│   │   │   ├── input.jsx
+│   │   │   ├── label.jsx
+│   │   │   ├── select.jsx
+│   │   │   └── table.jsx
 │   │   ├── Avatar.jsx
-│   │   ├── Badge.jsx
 │   │   ├── BalanceCard.jsx
-│   │   ├── Button.jsx
-│   │   ├── Card.jsx
-│   │   ├── Input.jsx
-│   │   ├── Layout.jsx
-│   │   ├── Modal.jsx
+│   │   ├── EmptyState.jsx
+│   │   ├── Layout.jsx          # Layout com Sidebar/Topbar
+│   │   ├── PageHeader.jsx
 │   │   ├── ProgressBar.jsx
-│   │   ├── Sidebar.jsx
+│   │   ├── Select.jsx
+│   │   ├── Sidebar.jsx         # Menu lateral de navegação
 │   │   ├── Spinner.jsx
+│   │   ├── StatsCard.jsx
 │   │   ├── Table.jsx
 │   │   ├── Topbar.jsx
-│   │   └── charts/          # Componentes de gráficos
-│   │       ├── DoughnutChart.jsx
-│   │       ├── LineChart.jsx
-│   │       └── MultiLineChart.jsx
-│   ├── pages/               # Páginas da aplicação
-│   │   ├── Dashboard.jsx
-│   │   ├── Transacoes.jsx
-│   │   ├── Despesas.jsx
-│   │   ├── Investimentos.jsx
-│   │   ├── Metas.jsx
-│   │   ├── Comparador.jsx
-│   │   └── Perfil.jsx
-│   ├── data/                # Dados mock
+│   │   └── charts/             # Componentes de gráficos
+│   │       ├── DoughnutChart.jsx    # Gráfico de rosca interativo
+│   │       ├── LineChart.jsx        # Gráfico de área/linha
+│   │       └── MultiLineChart.jsx   # Múltiplas linhas
+│   ├── data/                   # Dados mock
 │   │   └── mockData.json
-│   ├── utils/               # Utilitários
-│   │   └── mockApi.js
-│   ├── routes/              # Configuração de rotas
-│   │   └── index.jsx
-│   ├── styles/              # Estilos globais
-│   │   └── index.css
-│   ├── App.jsx
-│   └── main.jsx
-├── index.html
-├── package.json
-├── vite.config.js
-├── tailwind.config.js
-├── postcss.config.js
-└── README.md
+│   ├── utils/                  # Utilitários
+│   │   ├── cn.js              # Utility para merge de classes
+│   │   ├── mockApi.js         # API simulada
+│   │   └── index.js           # Exports
+├── next.config.js              # Configuração do Next.js
+├── tailwind.config.js          # Configuração do Tailwind
+├── postcss.config.js           # Configuração do PostCSS
+└── package.json
 ```
 
-## Design System
+## 🎨 Design System
 
 ### Tokens de Cores
 
 ```css
---brand-500: #0ea5a4  /* Cor primária */
+--brand-500: #0ea5a4  /* Cor primária (Teal) */
 --brand-600: #0d8f8e  /* Hover primário */
 --brand-700: #0f766e  /* Ativo primário */
 --muted: #6b7280      /* Texto secundário */
 --bg: #f8fafc         /* Background da aplicação */
 ```
 
-### Componentes Atômicos
+### Componentes UI (shadcn/ui + Radix UI)
+
+Todos os componentes foram migrados para usar a biblioteca **shadcn/ui**, garantindo:
+- ✅ Acessibilidade completa (ARIA, navegação por teclado)
+- ✅ Consistência visual
+- ✅ Personalização via Tailwind CSS
+- ✅ Componentes compostos e extensíveis
 
 #### Button
-Variantes: `primary`, `secondary`, `ghost`, `danger`
-Tamanhos: `sm`, `md`, `lg`
+Variantes: `default`, `secondary`, `outline`, `ghost`, `destructive`
+Tamanhos: `sm`, `md` (default), `lg`, `icon`
 
 ```jsx
-<Button variant="primary" size="md">Clique aqui</Button>
+<Button variant="default" size="md">Clique aqui</Button>
 ```
 
 #### Input
-Campo de entrada com label, validação e erro
+Campo de entrada acessível com label
 
 ```jsx
-<Input label="Email" type="email" required error="Email inválido" />
+<Label htmlFor="email">Email</Label>
+<Input id="email" type="email" placeholder="seu@email.com" />
 ```
 
 #### Card
 Container com sombra e border radius
 
 ```jsx
-<Card hover onClick={handleClick}>Conteúdo</Card>
+<Card>
+  <CardContent>Conteúdo do card</CardContent>
+</Card>
 ```
 
 #### Badge
 Tags para status e categorias
 
 ```jsx
-<Badge variant="success">Ativo</Badge>
+<Badge variant="default">Ativo</Badge>
+<Badge variant="destructive">Excluído</Badge>
 ```
 
-#### Modal
-Diálogo modal acessível
+#### Dialog
+Modal acessível e responsivo
 
 ```jsx
-<Modal isOpen={open} onClose={close} title="Título">Conteúdo</Modal>
+<Dialog open={isOpen} onOpenChange={setIsOpen}>
+  <DialogContent>
+    <DialogHeader>
+      <DialogTitle>Título</DialogTitle>
+    </DialogHeader>
+    <DialogFooter>
+      <Button>Confirmar</Button>
+    </DialogFooter>
+  </DialogContent>
+</Dialog>
 ```
 
 #### Table
-Tabela com ordenação e paginação
+Tabela acessível com ordenação e paginação
 
 ```jsx
 <Table columns={columns} data={data} pageSize={10} />
 ```
+
+### Gráficos Interativos
+
+#### DoughnutChart
+- Hover com destaque e ampliação do setor
+- Labels com percentuais dentro dos setores
+- Legenda interativa sincronizada
+- Tooltip com informações detalhadas
+- Animações suaves
+
+#### LineChart/AreaChart
+- Gráfico de área com gradiente
+- Tooltip mostrando variação entre períodos
+- Eixos formatados (K, M para milhares/milhões)
+- Indicadores de tendência (alta/baixa)
 
 ### Responsividade
 
@@ -177,21 +228,25 @@ Breakpoints Tailwind:
 - `md`: ≥768px
 - `lg`: ≥1024px
 - `xl`: ≥1280px
+- `2xl`: ≥1400px (container máximo)
 
-Layout mobile-first com sidebar colapsável e cards empilhados.
+Layout mobile-first com:
+- Sidebar colapsável em desktop
+- Menu lateral deslizante em mobile
+- Cards empilhados em telas pequenas
+- Gráficos responsivos
 
-## Instalação e Execução
+## 📦 Instalação e Execução
 
 ### Pré-requisitos
 
-- Node.js 16+ e npm/yarn
+- Node.js 18+ e npm
 
 ### Passos
 
 1. **Instalar dependências**
 
 ```bash
-cd financeiro-saas
 npm install
 ```
 
@@ -201,9 +256,23 @@ npm install
 npm run dev
 ```
 
-Acesse: `http://localhost:5173`
+Acesse: `http://localhost:3000`
 
-### Rotas Disponíveis
+3. **Build para produção**
+
+```bash
+npm run build
+```
+
+4. **Iniciar servidor de produção**
+
+```bash
+npm start
+```
+
+## 🗺️ Rotas Disponíveis
+
+O projeto usa **Next.js App Router** com as seguintes rotas:
 
 - `/` - Dashboard (página inicial)
 - `/transacoes` - Gerenciamento de transações
@@ -213,19 +282,7 @@ Acesse: `http://localhost:5173`
 - `/comparador` - Comparador de ativos
 - `/perfil` - Perfil do usuário
 
-3. **Build para produção**
-
-```bash
-npm run build
-```
-
-4. **Preview do build**
-
-```bash
-npm run preview
-```
-
-## Dados Mock
+## 📊 Dados Mock
 
 Os dados mock estão em `src/data/mockData.json` e incluem:
 
@@ -241,18 +298,18 @@ Os dados mock estão em `src/data/mockData.json` e incluem:
 
 O sistema inclui 12 categorias predefinidas com cores distintas:
 
-- **Moradia** - Aluguel, financiamento, condomínio
-- **Transporte** - Combustível, transporte público, manutenção
-- **Alimentação** - Supermercado, restaurantes
-- **Saúde** - Plano de saúde, medicamentos, consultas
-- **Educação** - Cursos, livros, material escolar
-- **Lazer** - Cinema, passeios, hobbies
-- **Assinaturas** - Streaming, software, serviços
-- **Família** - Ajuda familiar, presentes
-- **Poupança** - Investimentos mensais
-- **Crédito** - Cartão de crédito, empréstimos
-- **Utilities** - Água, luz, internet, telefone
-- **Outros** - Despesas diversas
+1. **Moradia** (#0ea5a4) - Aluguel, financiamento, condomínio
+2. **Transporte** (#3b82f6) - Combustível, transporte público
+3. **Alimentação** (#10b981) - Supermercado, restaurantes
+4. **Saúde** (#ef4444) - Plano de saúde, medicamentos
+5. **Educação** (#8b5cf6) - Cursos, livros, material
+6. **Lazer** (#f59e0b) - Cinema, passeios, hobbies
+7. **Assinaturas** (#ec4899) - Streaming, software
+8. **Família** (#14b8a6) - Ajuda familiar, presentes
+9. **Poupança** (#06b6d4) - Investimentos mensais
+10. **Crédito** (#f97316) - Cartão de crédito, empréstimos
+11. **Utilities** (#6366f1) - Água, luz, internet
+12. **Outros** (#64748b) - Despesas diversas
 
 ### Modificar Dados Mock
 
@@ -265,7 +322,7 @@ const response = await fetchMock('/api/expenses');
 console.log(response.data); // Array de despesas
 ```
 
-## Funções Utilitárias
+## 🛠️ Funções Utilitárias
 
 ### formatCurrency(value)
 Formata valores em BRL
@@ -288,15 +345,24 @@ Calcula porcentagem de progresso
 calculateProgress(5000, 10000) // 50
 ```
 
-## Acessibilidade
+### cn(...inputs)
+Utilitário para merge de classes Tailwind (clsx + tailwind-merge)
 
-- Semantic HTML em todos os componentes
-- Atributos ARIA onde necessário (`aria-label`, `aria-current`, `role`)
-- Navegação por teclado (Tab, Enter, Esc)
-- Contraste WCAG AA
-- Focus visível em elementos interativos
+```js
+cn('px-4 py-2', someCondition && 'bg-blue-500') // Merge inteligente de classes
+```
 
-## Customização
+## ♿ Acessibilidade
+
+- ✅ Semantic HTML em todos os componentes
+- ✅ Atributos ARIA completos (`aria-label`, `aria-current`, `role`)
+- ✅ Navegação por teclado (Tab, Enter, Esc, Arrow keys)
+- ✅ Contraste WCAG AA em todos os elementos
+- ✅ Focus visível e bem definido
+- ✅ Screen reader friendly
+- ✅ Componentes Radix UI com acessibilidade nativa
+
+## 🎨 Customização
 
 ### Trocar Cores
 
@@ -318,96 +384,116 @@ theme: {
 
 ### Adicionar Nova Página
 
-1. Crie o componente em `src/pages/MinhaPage.jsx`
-2. Adicione a rota em `src/routes/index.jsx`:
+1. Crie o diretório e arquivo em `app/minha-pagina/page.jsx`:
 
 ```jsx
-{
-  path: 'minha-pagina',
-  element: <MinhaPage />,
+'use client';
+
+export default function MinhaPagina() {
+  return (
+    <div>
+      <h1>Minha Página</h1>
+    </div>
+  );
 }
 ```
 
-3. Adicione o item no menu em `src/components/Sidebar.jsx`
+2. Adicione o item no menu em `src/components/Sidebar.jsx`:
+
+```jsx
+const menuItems = [
+  // ... outros itens
+  { path: '/minha-pagina', icon: SeuIcone, label: 'Minha Página' },
+];
+```
+
+### Adicionar Componente shadcn/ui
+
+Para adicionar novos componentes shadcn/ui:
+
+```bash
+npx shadcn-ui@latest add [component-name]
+```
+
+Exemplo:
+```bash
+npx shadcn-ui@latest add avatar
+npx shadcn-ui@latest add switch
+```
 
 ### Integrar com Backend Real
 
-Substitua `fetchMock()` por chamadas reais:
+Substitua `fetchMock()` por chamadas reais à API:
 
 ```js
-// Antes
+// Antes (Mock)
 const response = await fetchMock('/api/expenses');
 
-// Depois
-const response = await fetch('https://api.exemplo.com/expenses');
+// Depois (API Real)
+const response = await fetch('/api/expenses');
 const data = await response.json();
 ```
 
-## Funcionalidades Implementadas
+Para APIs externas, configure em `next.config.js`:
 
-- [x] Dashboard com resumo financeiro e gráficos
+```js
+async rewrites() {
+  return [
+    {
+      source: '/api/:path*',
+      destination: 'https://api.exemplo.com/:path*',
+    },
+  ];
+}
+```
+
+## ✅ Funcionalidades Implementadas
+
+- [x] Next.js 14 com App Router
+- [x] Componentes shadcn/ui para toda interface
+- [x] Dashboard com resumo financeiro e gráficos interativos
 - [x] Gerenciamento completo de Transações (CRUD)
 - [x] Gerenciamento completo de Despesas por categoria (CRUD)
-- [x] Sistema de Metas financeiras (CRUD)
-- [x] Portfolio de Investimentos
+- [x] Sistema de Metas financeiras (CRUD) com cálculo de prazo
+- [x] Portfolio de Investimentos com aporte/retirada
 - [x] Comparador de Ativos
 - [x] Perfil do usuário
-- [x] Filtros por categoria nas Despesas
-- [x] Filtros por tipo nas Transações
-- [x] Gráficos interativos com Recharts
-- [x] Sistema de categorias com cores
+- [x] Filtros avançados (tipo, categoria, intervalo de datas)
+- [x] Gráficos interativos e responsivos com Recharts
+- [x] Sistema de categorias com cores personalizadas
+- [x] Sidebar comprimível/expansível
+- [x] Layout responsivo mobile-first
+- [x] Acessibilidade completa (WCAG AA)
 
-## Próximos Passos (Sugestões)
+## 🔮 Próximos Passos (Sugestões)
 
-- [ ] Integrar com API backend real
-- [ ] Adicionar autenticação (JWT, OAuth)
-- [ ] Implementar filtros avançados de data (data range picker)
-- [ ] Exportar dados (PDF, CSV, Excel) - UI já preparada
-- [ ] Notificações e alertas de metas
-- [ ] Adicionar funcionalidade de busca nas transações
-- [ ] Criar relatórios mensais e anuais
-- [ ] Gráficos de tendência de gastos
+- [ ] Migrar para TypeScript
+- [ ] Integrar com API backend real (Supabase, Firebase, ou REST)
+- [ ] Adicionar autenticação (NextAuth, Clerk)
+- [ ] Implementar filtros avançados com date range picker
+- [ ] Exportar dados (PDF, CSV, Excel)
+- [ ] Notificações push e alertas de metas
+- [ ] Busca global nas transações
+- [ ] Relatórios mensais e anuais automatizados
+- [ ] Gráficos de tendência e previsão
 - [ ] Dark mode
 - [ ] Internacionalização (i18n)
-- [ ] Testes (Jest, Testing Library)
-- [ ] PWA (service workers, offline)
+- [ ] Testes (Jest, Testing Library, Playwright)
+- [ ] PWA (service workers, offline-first)
 - [ ] Animações com Framer Motion
+- [ ] Dashboard personalizável (drag-and-drop widgets)
+- [ ] Integrações bancárias (Open Finance)
 
-## Storybook (Opcional)
-
-Para adicionar Storybook:
-
-```bash
-npx storybook@latest init
-```
-
-Exemplo de story para Button:
-
-```jsx
-// src/components/Button.stories.jsx
-export default {
-  title: 'Components/Button',
-  component: Button,
-};
-
-export const Primary = {
-  args: {
-    variant: 'primary',
-    children: 'Button',
-  },
-};
-```
-
-## Comandos Úteis
+## 📝 Comandos Úteis
 
 ```bash
-npm run dev          # Desenvolvimento
-npm run build        # Build produção
-npm run preview      # Preview do build
-npm run lint         # (se configurado) Lint do código
+npm run dev          # Desenvolvimento (http://localhost:3000)
+npm run build        # Build para produção
+npm start            # Servidor de produção
+npm run lint         # Lint com ESLint (Next.js)
 ```
 
-## Troubleshooting
+## 🐛 Troubleshooting
 
 ### Erro: "Cannot find module"
 
@@ -425,28 +511,22 @@ Verifique se o Recharts foi instalado:
 npm install recharts
 ```
 
+### Erro de import de componentes shadcn/ui
+
+Verifique se os componentes foram instalados e se os paths estão corretos em `tsconfig.json` ou `jsconfig.json`.
+
 ### Erro de CORS ao integrar com API
 
-Configure o proxy no `vite.config.js`:
+Use as `rewrites` do Next.js para proxy (ver seção de Integração com Backend).
 
-```js
-export default defineConfig({
-  server: {
-    proxy: {
-      '/api': 'http://localhost:3000'
-    }
-  }
-})
-```
-
-## Licença
+## 📄 Licença
 
 Este projeto é de uso livre para fins educacionais e comerciais.
 
-## Contato e Suporte
+## 💬 Contato e Suporte
 
 Para dúvidas e sugestões, abra uma issue no repositório do projeto.
 
 ---
 
-**Desenvolvido com React + Vite + Tailwind CSS**
+**Desenvolvido com ❤️ usando Next.js 14 + React 18 + Tailwind CSS + shadcn/ui**

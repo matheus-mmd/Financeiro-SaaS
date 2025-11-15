@@ -1,0 +1,9 @@
+{
+  "/page": "app/page.js",
+  "/despesas/page": "app/despesas/page.js",
+  "/transacoes/page": "app/transacoes/page.js",
+  "/investimentos/page": "app/investimentos/page.js",
+  "/metas/page": "app/metas/page.js",
+  "/perfil/page": "app/perfil/page.js",
+  "/comparador/page": "app/comparador/page.js"
+}

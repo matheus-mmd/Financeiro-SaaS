@@ -1,5 +1,8 @@
+'use client';
+
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard,
   ArrowLeftRight,
@@ -16,7 +19,7 @@ import {
  * Responsivo: colapsável em mobile, comprimível em desktop
  */
 export default function Sidebar({ isCollapsed = false, isOpen = false, onClose }) {
-  const location = useLocation();
+  const pathname = usePathname();
 
   const menuItems = [
     { path: '/', icon: LayoutDashboard, label: 'Dashboard' },
@@ -28,7 +31,7 @@ export default function Sidebar({ isCollapsed = false, isOpen = false, onClose }
     { path: '/perfil', icon: User, label: 'Perfil' },
   ];
 
-  const isActive = (path) => location.pathname === path;
+  const isActive = (path) => pathname === path;
 
   return (
     <>
@@ -87,7 +90,7 @@ export default function Sidebar({ isCollapsed = false, isOpen = false, onClose }
               return (
                 <Link
                   key={item.path}
-                  to={item.path}
+                  href={item.path}
                   onClick={onClose}
                   className={`
                     flex items-center gap-3 rounded-lg
