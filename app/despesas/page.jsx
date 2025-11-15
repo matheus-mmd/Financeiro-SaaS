@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import PageHeader from '../../src/components/PageHeader';
 import StatsCard from '../../src/components/StatsCard';
+import MonthPicker from '../../src/components/MonthPicker';
 import { Card, CardContent } from '../../src/components/ui/card';
 import { Badge } from '../../src/components/ui/badge';
 import { Button } from '../../src/components/ui/button';
@@ -34,12 +35,23 @@ import { Receipt, Plus, Edit, Trash2, TrendingDown, PieChart, Filter } from 'luc
  */
 export default function Despesas() {
   const [expenses, setExpenses] = useState([]);
+  const [filteredExpenses, setFilteredExpenses] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [categoryModalOpen, setCategoryModalOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState('all');
+
+  // Função para obter intervalo do mês atual
+  const getCurrentMonthRange = () => {
+    const now = new Date();
+    const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+    const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    return { from: firstDay, to: lastDay };
+  };
+
+  const [filterMonth, setFilterMonth] = useState(getCurrentMonthRange());
   const [formData, setFormData] = useState({
     title: '',
     category: '',
@@ -55,6 +67,7 @@ export default function Despesas() {
           fetchMock('/api/categories'),
         ]);
         setExpenses(expensesRes.data);
+        setFilteredExpenses(expensesRes.data);
         setCategories(categoriesRes.data);
       } catch (error) {
         console.error('Erro ao carregar dados:', error);
@@ -65,6 +78,36 @@ export default function Despesas() {
 
     loadData();
   }, []);
+
+  // Aplicar filtros
+  useEffect(() => {
+    let filtered = expenses;
+
+    // Filtrar por categoria
+    if (selectedCategory !== 'all') {
+      filtered = filtered.filter(e => e.category === selectedCategory);
+    }
+
+    // Filtrar por intervalo de datas
+    if (filterMonth?.from && filterMonth?.to) {
+      filtered = filtered.filter(e => {
+        // Separar a string de data para evitar problemas com timezone
+        const [year, month, day] = e.date.split('-');
+        const expenseDate = new Date(year, month - 1, day);
+        expenseDate.setHours(0, 0, 0, 0);
+
+        const from = new Date(filterMonth.from);
+        from.setHours(0, 0, 0, 0);
+
+        const to = new Date(filterMonth.to);
+        to.setHours(23, 59, 59, 999);
+
+        return expenseDate >= from && expenseDate <= to;
+      });
+    }
+
+    setFilteredExpenses(filtered);
+  }, [selectedCategory, filterMonth, expenses]);
 
   const handleAddExpense = () => {
     setEditingExpense(null);
@@ -127,14 +170,9 @@ export default function Despesas() {
     );
   }
 
-  // Filtrar despesas
-  const filteredExpenses = selectedCategory === 'all'
-    ? expenses
-    : expenses.filter(e => e.category === selectedCategory);
-
-  // Calcular estatísticas
-  const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
-  const expensesByCategory = expenses.reduce((acc, expense) => {
+  // Calcular estatísticas baseadas nas despesas filtradas
+  const totalExpenses = filteredExpenses.reduce((sum, e) => sum + e.amount, 0);
+  const expensesByCategory = filteredExpenses.reduce((acc, expense) => {
     const existing = acc.find(item => item.name === expense.category);
     if (existing) {
       existing.value += expense.amount;
@@ -255,6 +293,68 @@ export default function Despesas() {
         />
       </div>
 
+      {/* Filtros */}
+      <Card>
+        <CardContent className="p-4 sm:p-6">
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <Filter className="w-5 h-5 text-gray-500" />
+              <span className="text-sm font-medium text-gray-700">Filtrar por:</span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Filtro por categoria */}
+              <div className="space-y-2">
+                <Label htmlFor="filter-category" className="text-sm font-medium text-gray-700">
+                  Categoria
+                </Label>
+                <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                  <SelectTrigger id="filter-category">
+                    <SelectValue placeholder="Selecione uma categoria" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todas as categorias</SelectItem>
+                    {categories.map((cat) => (
+                      <SelectItem key={cat.id} value={cat.name}>
+                        {cat.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Filtro por mês/ano */}
+              <div className="space-y-2">
+                <Label className="text-sm font-medium text-gray-700">
+                  Mês e Ano
+                </Label>
+                <MonthPicker
+                  value={filterMonth}
+                  onChange={setFilterMonth}
+                  placeholder="Selecione o período"
+                />
+              </div>
+            </div>
+
+            {/* Limpar filtros */}
+            {(selectedCategory !== 'all' || filterMonth) && (
+              <div className="flex justify-end">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setSelectedCategory('all');
+                    setFilterMonth(getCurrentMonthRange());
+                  }}
+                >
+                  Limpar Filtros
+                </Button>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Gráfico de despesas por categoria */}
         <Card className="lg:col-span-1">
@@ -301,33 +401,6 @@ export default function Despesas() {
           </CardContent>
         </Card>
       </div>
-
-      {/* Filtro por categoria */}
-      <Card>
-        <CardContent className="p-4 sm:p-6">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-          <div className="flex items-center gap-2 min-w-fit">
-            <Filter className="w-5 h-5 text-gray-500" />
-            <span className="text-sm font-medium text-gray-700">Filtrar por categoria:</span>
-          </div>
-          <div className="flex-1 max-w-xs">
-            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione uma categoria" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todas as categorias</SelectItem>
-                {categories.map((cat) => (
-                  <SelectItem key={cat.id} value={cat.name}>
-                    {cat.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-        </CardContent>
-      </Card>
 
       {/* Tabela de despesas */}
       <Card>
