@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import PageHeader from '../../src/components/PageHeader';
 import StatsCard from '../../src/components/StatsCard';
 import MonthPicker from '../../src/components/MonthPicker';
@@ -164,15 +164,7 @@ export default function Transacoes() {
     setFormData({ ...formData, [field]: value });
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Spinner size="lg" />
-      </div>
-    );
-  }
-
-  // Calcular estatísticas baseadas nas transações filtradas
+  // Calcular estatísticas baseadas nas transações filtradas (antes do if loading)
   const totalCredit = filteredTransactions
     .filter(t => t.type === 'credit')
     .reduce((sum, t) => sum + t.amount, 0);
@@ -186,6 +178,28 @@ export default function Transacoes() {
     .reduce((sum, t) => sum + Math.abs(t.amount), 0);
 
   const balance = totalCredit - totalDebit - totalInvestment;
+
+  // Ordenar transações por data (mais recente primeiro) e depois por valor (maior primeiro)
+  const sortedTransactions = useMemo(() => {
+    return [...filteredTransactions].sort((a, b) => {
+      // Primeiro ordenar por data (descendente - mais recente primeiro)
+      const dateA = new Date(a.date);
+      const dateB = new Date(b.date);
+      if (dateB - dateA !== 0) {
+        return dateB - dateA;
+      }
+      // Se as datas forem iguais, ordenar por valor (maior primeiro)
+      return Math.abs(b.amount) - Math.abs(a.amount);
+    });
+  }, [filteredTransactions]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Spinner size="lg" />
+      </div>
+    );
+  }
 
   // Configuração de colunas da tabela
   const transactionColumns = [
@@ -398,7 +412,7 @@ export default function Transacoes() {
           </h2>
           <Table
             columns={transactionColumns}
-            data={filteredTransactions}
+            data={sortedTransactions}
             pageSize={10}
           />
         </CardContent>
