@@ -44,11 +44,13 @@ export const formatCurrency = (value) => {
 
 /**
  * Formata datas para pt-BR
- * @param {string} dateString - Data em formato ISO
+ * @param {string} dateString - Data em formato ISO (YYYY-MM-DD)
  * @returns {string} - Data formatada
  */
 export const formatDate = (dateString) => {
-  const date = new Date(dateString);
+  // Separar a string de data para evitar problemas com timezone
+  const [year, month, day] = dateString.split('-');
+  const date = new Date(year, month - 1, day);
   return date.toLocaleDateString('pt-BR');
 };
 
