@@ -164,12 +164,12 @@ export default function Transacoes() {
     );
   }
 
-  // Calcular estatísticas
-  const totalCredit = transactions
+  // Calcular estatísticas baseadas nas transações filtradas
+  const totalCredit = filteredTransactions
     .filter(t => t.type === 'credit')
     .reduce((sum, t) => sum + t.amount, 0);
 
-  const totalDebit = transactions
+  const totalDebit = filteredTransactions
     .filter(t => t.type === 'debit')
     .reduce((sum, t) => sum + Math.abs(t.amount), 0);
 
