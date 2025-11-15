@@ -32,6 +32,8 @@ dist-ssr
 # Build files
 build/
 .cache/
+.next/
+out/
 
 # Testing
 coverage/
