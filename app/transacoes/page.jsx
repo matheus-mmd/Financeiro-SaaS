@@ -78,7 +78,9 @@ export default function Transacoes() {
     // Filtrar por intervalo de datas
     if (filterMonth?.from && filterMonth?.to) {
       filtered = filtered.filter(t => {
-        const transactionDate = new Date(t.date);
+        // Separar a string de data para evitar problemas com timezone
+        const [year, month, day] = t.date.split('-');
+        const transactionDate = new Date(year, month - 1, day);
         // Remove a parte de hora para comparar apenas datas
         transactionDate.setHours(0, 0, 0, 0);
 
