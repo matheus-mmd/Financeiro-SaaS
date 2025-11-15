@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import PageHeader from '../../src/components/PageHeader';
 import StatsCard from '../../src/components/StatsCard';
 import Select from '../../src/components/Select';
+import MonthPicker from '../../src/components/MonthPicker';
 import { Card, CardContent } from '../../src/components/ui/card';
 import { Badge } from '../../src/components/ui/badge';
 import { Button } from '../../src/components/ui/button';
@@ -33,8 +34,16 @@ export default function Transacoes() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState(null);
   const [filterType, setFilterType] = useState('all'); // all, credit, debit
-  const [filterDateStart, setFilterDateStart] = useState('');
-  const [filterDateEnd, setFilterDateEnd] = useState('');
+
+  // Inicializa com primeiro e último dia do mês atual
+  const getCurrentMonthRange = () => {
+    const now = new Date();
+    const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+    const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    return { from: firstDay, to: lastDay };
+  };
+
+  const [filterMonth, setFilterMonth] = useState(getCurrentMonthRange());
   const [formData, setFormData] = useState({
     description: '',
     amount: '',
@@ -66,18 +75,25 @@ export default function Transacoes() {
       filtered = filtered.filter(t => t.type === filterType);
     }
 
-    // Filtrar por data inicial
-    if (filterDateStart) {
-      filtered = filtered.filter(t => t.date >= filterDateStart);
-    }
+    // Filtrar por intervalo de datas
+    if (filterMonth?.from && filterMonth?.to) {
+      filtered = filtered.filter(t => {
+        const transactionDate = new Date(t.date);
+        // Remove a parte de hora para comparar apenas datas
+        transactionDate.setHours(0, 0, 0, 0);
 
-    // Filtrar por data final
-    if (filterDateEnd) {
-      filtered = filtered.filter(t => t.date <= filterDateEnd);
+        const from = new Date(filterMonth.from);
+        from.setHours(0, 0, 0, 0);
+
+        const to = new Date(filterMonth.to);
+        to.setHours(23, 59, 59, 999);
+
+        return transactionDate >= from && transactionDate <= to;
+      });
     }
 
     setFilteredTransactions(filtered);
-  }, [filterType, filterDateStart, filterDateEnd, transactions]);
+  }, [filterType, filterMonth, transactions]);
 
   const handleAddTransaction = () => {
     setEditingTransaction(null);
@@ -272,7 +288,7 @@ export default function Transacoes() {
               <span className="text-sm font-medium text-gray-700">Filtrar por:</span>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {/* Filtro por tipo */}
               <div className="space-y-2">
                 <Label htmlFor="filter-type" className="text-sm font-medium text-gray-700">
@@ -290,45 +306,28 @@ export default function Transacoes() {
                 />
               </div>
 
-              {/* Filtro por data inicial */}
+              {/* Filtro por mês/ano */}
               <div className="space-y-2">
-                <Label htmlFor="filter-date-start" className="text-sm font-medium text-gray-700">
-                  Data Inicial
+                <Label className="text-sm font-medium text-gray-700">
+                  Mês e Ano
                 </Label>
-                <Input
-                  id="filter-date-start"
-                  type="date"
-                  value={filterDateStart}
-                  onChange={(e) => setFilterDateStart(e.target.value)}
-                  placeholder="Selecione a data inicial"
-                />
-              </div>
-
-              {/* Filtro por data final */}
-              <div className="space-y-2">
-                <Label htmlFor="filter-date-end" className="text-sm font-medium text-gray-700">
-                  Data Final
-                </Label>
-                <Input
-                  id="filter-date-end"
-                  type="date"
-                  value={filterDateEnd}
-                  onChange={(e) => setFilterDateEnd(e.target.value)}
-                  placeholder="Selecione a data final"
+                <MonthPicker
+                  value={filterMonth}
+                  onChange={setFilterMonth}
+                  placeholder="Selecione o período"
                 />
               </div>
             </div>
 
             {/* Limpar filtros */}
-            {(filterType !== 'all' || filterDateStart || filterDateEnd) && (
+            {(filterType !== 'all' || filterMonth) && (
               <div className="flex justify-end">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => {
                     setFilterType('all');
-                    setFilterDateStart('');
-                    setFilterDateEnd('');
+                    setFilterMonth(getCurrentMonthRange());
                   }}
                 >
                   Limpar Filtros
