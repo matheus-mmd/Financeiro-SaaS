@@ -2,13 +2,26 @@
 
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '../../src/components/ui/card';
-import Avatar from '../../src/components/Avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '../../src/components/ui/avatar';
 import { Badge } from '../../src/components/ui/badge';
 import { Button } from '../../src/components/ui/button';
 import { Input } from '../../src/components/ui/input';
 import Spinner from '../../src/components/Spinner';
 import { fetchMock, formatCurrency } from '../../src/utils/mockApi';
 import { User, Users, DollarSign, TrendingUp, Settings, Save } from 'lucide-react';
+
+/**
+ * Gera iniciais a partir do nome
+ */
+const getInitials = (name) => {
+  if (!name) return '??';
+  return name
+    .split(' ')
+    .map(word => word[0])
+    .slice(0, 2)
+    .join('')
+    .toUpperCase();
+};
 
 /**
  * Página Perfil - Dados do usuário e configurações
@@ -73,7 +86,11 @@ export default function Perfil() {
       <Card>
         <CardContent className="p-6">
           <div className="flex items-start gap-6">
-            <Avatar name={user.name} size="xl" />
+            <Avatar className="h-16 w-16">
+              <AvatarFallback className="bg-brand-500 text-white text-lg">
+                {getInitials(user.name)}
+              </AvatarFallback>
+            </Avatar>
 
             <div className="flex-1">
               <h2 className="text-2xl font-bold text-gray-900">{user.name}</h2>

@@ -1,6 +1,19 @@
 import React from 'react';
-import Avatar from './Avatar';
+import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Menu, X } from 'lucide-react';
+
+/**
+ * Gera iniciais a partir do nome
+ */
+const getInitials = (name) => {
+  if (!name) return '??';
+  return name
+    .split(' ')
+    .map(word => word[0])
+    .slice(0, 2)
+    .join('')
+    .toUpperCase();
+};
 
 /**
  * Componente Topbar - Barra superior com resumo rápido
@@ -50,7 +63,11 @@ export default function Topbar({ user, balance, isSidebarCollapsed, onToggleSide
               <p className="text-xs text-gray-500">& {user.partner}</p>
             )}
           </div>
-          <Avatar name={user.name} size="md" />
+          <Avatar>
+            <AvatarFallback className="bg-brand-500 text-white">
+              {getInitials(user.name)}
+            </AvatarFallback>
+          </Avatar>
         </div>
       </div>
     </header>

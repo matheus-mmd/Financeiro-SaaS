@@ -1,4 +1,6 @@
 import React from 'react';
+import { Progress } from './ui/progress';
+import { cn } from '../utils/index';
 
 /**
  * Componente ProgressBar - Barra de progresso para metas
@@ -6,33 +8,30 @@ import React from 'react';
  * @param {number} goal - Valor objetivo
  * @param {string} variant - Cor: 'brand' | 'success' | 'warning'
  */
-export default function ProgressBar({ progress, goal, variant = 'brand', showPercentage = true }) {
+export default function ProgressBar({ progress, goal, variant = 'brand', showPercentage = true, className }) {
   const percentage = Math.min(Math.round((progress / goal) * 100), 100);
 
-  const variants = {
-    brand: 'bg-brand-500',
-    success: 'bg-green-500',
-    warning: 'bg-yellow-500',
+  const variantClasses = {
+    brand: '[&>div]:bg-brand-500',
+    success: '[&>div]:bg-green-500',
+    warning: '[&>div]:bg-yellow-500',
   };
 
   return (
-    <div>
+    <div className={className}>
       {showPercentage && (
         <div className="flex justify-between text-sm text-gray-600 mb-2">
           <span>{percentage}% completo</span>
           <span>{progress.toLocaleString('pt-BR')} / {goal.toLocaleString('pt-BR')}</span>
         </div>
       )}
-      <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
-        <div
-          className={`h-full ${variants[variant]} transition-all duration-500 rounded-full`}
-          style={{ width: `${percentage}%` }}
-          role="progressbar"
-          aria-valuenow={percentage}
-          aria-valuemin="0"
-          aria-valuemax="100"
-        />
-      </div>
+      <Progress
+        value={percentage}
+        className={cn(
+          'h-3 bg-gray-200',
+          variantClasses[variant]
+        )}
+      />
     </div>
   );
 }
