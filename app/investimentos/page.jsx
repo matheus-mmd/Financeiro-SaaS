@@ -1,42 +1,74 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import PageHeader from '../../src/components/PageHeader';
+import StatsCard from '../../src/components/StatsCard';
+import MonthPicker from '../../src/components/MonthPicker';
 import { Card, CardContent } from '../../src/components/ui/card';
 import { Badge } from '../../src/components/ui/badge';
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '../../src/components/ui/dialog';
 import { Button } from '../../src/components/ui/button';
 import { Input } from '../../src/components/ui/input';
 import { Label } from '../../src/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../../src/components/ui/select';
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '../../src/components/ui/dialog';
 import Spinner from '../../src/components/Spinner';
-import { fetchMock, formatCurrency } from '../../src/utils/mockApi';
-import { TrendingUp, DollarSign, Percent, Plus } from 'lucide-react';
+import Table from '../../src/components/Table';
+import { fetchMock, formatCurrency, formatDate } from '../../src/utils/mockApi';
+import { TrendingUp, DollarSign, Percent, Plus, Filter, Download, Edit, Trash2, Wallet } from 'lucide-react';
 
 /**
- * Página Investimentos - Lista de ativos e detalhamento
- * Permite visualizar detalhes de cada investimento com histórico
+ * Página Investimentos - Gerenciamento de ativos e investimentos
+ * Permite visualizar, filtrar, adicionar e gerenciar investimentos
  */
 export default function Investimentos() {
   const [assets, setAssets] = useState([]);
+  const [filteredAssets, setFilteredAssets] = useState([]);
   const [selectedAsset, setSelectedAsset] = useState(null);
-  const [newInvestmentModalOpen, setNewInvestmentModalOpen] = useState(false);
-  const [contributeModalOpen, setContributeModalOpen] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editingAsset, setEditingAsset] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [filterType, setFilterType] = useState('all');
 
-  // Form states
-  const [newInvestment, setNewInvestment] = useState({
+  // Inicializa com primeiro e último dia do mês atual
+  const getCurrentMonthRange = () => {
+    const now = new Date();
+    const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+    const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    return { from: firstDay, to: lastDay };
+  };
+
+  const [filterMonth, setFilterMonth] = useState(getCurrentMonthRange());
+  const [formData, setFormData] = useState({
     name: '',
     type: 'Poupança',
     value: '',
-    yield: ''
+    yield: '',
+    date: new Date().toISOString().split('T')[0],
   });
-  const [contributeAmount, setContributeAmount] = useState('');
-  const [editYield, setEditYield] = useState('');
 
   useEffect(() => {
     const loadData = async () => {
       try {
         const response = await fetchMock('/api/assets');
-        setAssets(response.data);
+        // Adicionar data aos ativos se não tiver
+        const assetsWithDate = response.data.map(asset => ({
+          ...asset,
+          date: asset.date || new Date().toISOString().split('T')[0]
+        }));
+        setAssets(assetsWithDate);
+        setFilteredAssets(assetsWithDate);
       } catch (error) {
         console.error('Erro ao carregar investimentos:', error);
       } finally {
@@ -47,61 +79,105 @@ export default function Investimentos() {
     loadData();
   }, []);
 
-  const totalInvestments = assets.reduce((sum, asset) => sum + asset.value, 0);
+  useEffect(() => {
+    let filtered = assets;
 
-  // Criar novo investimento
-  const handleCreateInvestment = () => {
-    if (!newInvestment.name || !newInvestment.value) {
-      alert('Por favor, preencha os campos obrigatórios');
-      return;
+    // Filtrar por tipo
+    if (filterType !== 'all') {
+      filtered = filtered.filter(a => a.type === filterType);
     }
 
-    const investment = {
-      id: Date.now(),
-      name: newInvestment.name,
-      type: newInvestment.type,
-      value: parseFloat(newInvestment.value),
-      yield: newInvestment.yield ? parseFloat(newInvestment.yield) / 100 : 0,
+    // Filtrar por intervalo de datas
+    if (filterMonth?.from && filterMonth?.to) {
+      filtered = filtered.filter(a => {
+        const [year, month, day] = a.date.split('-');
+        const assetDate = new Date(year, month - 1, day);
+        assetDate.setHours(0, 0, 0, 0);
+
+        const from = new Date(filterMonth.from);
+        from.setHours(0, 0, 0, 0);
+
+        const to = new Date(filterMonth.to);
+        to.setHours(23, 59, 59, 999);
+
+        return assetDate >= from && assetDate <= to;
+      });
+    }
+
+    setFilteredAssets(filtered);
+  }, [filterType, filterMonth, assets]);
+
+  const totalInvestments = filteredAssets.reduce((sum, asset) => sum + asset.value, 0);
+
+  const handleAddAsset = () => {
+    setEditingAsset(null);
+    setFormData({
+      name: '',
+      type: 'Poupança',
+      value: '',
+      yield: '',
+      date: new Date().toISOString().split('T')[0],
+    });
+    setModalOpen(true);
+  };
+
+  const handleEditAsset = (asset) => {
+    setEditingAsset(asset);
+    setFormData({
+      name: asset.name,
+      type: asset.type,
+      value: asset.value.toString(),
+      yield: asset.yield ? (asset.yield * 100).toString() : '',
+      date: asset.date,
+    });
+    setModalOpen(true);
+  };
+
+  const handleDeleteAsset = (id) => {
+    if (confirm('Deseja realmente excluir este investimento?')) {
+      setAssets(assets.filter(a => a.id !== id));
+    }
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+
+    const assetData = {
+      id: editingAsset?.id || Date.now(),
+      name: formData.name,
+      type: formData.type,
+      value: parseFloat(formData.value),
+      yield: formData.yield ? parseFloat(formData.yield) / 100 : 0,
+      date: formData.date,
       currency: 'BRL'
     };
 
-    setAssets([...assets, investment]);
-    setNewInvestmentModalOpen(false);
-    setNewInvestment({ name: '', type: 'Poupança', value: '', yield: '' });
-  };
-
-  // Fazer aporte/retirada em investimento existente
-  const handleContribute = () => {
-    const amount = contributeAmount ? parseFloat(contributeAmount) : 0;
-    const newValue = selectedAsset.value + amount;
-
-    if (newValue < 0) {
-      alert('O saldo do investimento não pode ficar negativo');
-      return;
+    if (editingAsset) {
+      setAssets(assets.map(a => a.id === editingAsset.id ? assetData : a));
+    } else {
+      setAssets([assetData, ...assets]);
     }
 
-    const updatedAssets = assets.map(asset => {
-      if (asset.id === selectedAsset.id) {
-        return {
-          ...asset,
-          value: newValue,
-          yield: editYield !== '' ? parseFloat(editYield) / 100 : 0
-        };
-      }
-      return asset;
+    setModalOpen(false);
+    setFormData({ name: '', type: 'Poupança', value: '', yield: '', date: new Date().toISOString().split('T')[0] });
+  };
+
+  const handleInputChange = (field, value) => {
+    setFormData({ ...formData, [field]: value });
+  };
+
+  // Calcular estatísticas baseadas nos investimentos filtrados
+  const averageYield = filteredAssets.length > 0
+    ? filteredAssets.reduce((sum, a) => sum + (a.yield || 0), 0) / filteredAssets.length
+    : 0;
+
+  // Ordenar investimentos por valor (maior primeiro)
+  const sortedAssets = useMemo(() => {
+    return [...filteredAssets].sort((a, b) => {
+      // Ordenar por valor (descendente - maior primeiro)
+      return b.value - a.value;
     });
-
-    setAssets(updatedAssets);
-    setContributeModalOpen(false);
-    setContributeAmount('');
-    setEditYield('');
-  };
-
-  const handleOpenContribute = (asset) => {
-    setSelectedAsset(asset);
-    setEditYield(asset.yield > 0 ? (asset.yield * 100).toFixed(2) : '');
-    setContributeModalOpen(true);
-  };
+  }, [filteredAssets]);
 
   if (loading) {
     return (
@@ -111,223 +187,281 @@ export default function Investimentos() {
     );
   }
 
+  // Tipos de investimento únicos
+  const investmentTypes = ['Poupança', 'CDB', 'Tesouro Direto', 'Ações', 'Fundos', 'Criptomoedas', 'Outros'];
+
+  // Configuração de colunas da tabela
+  const assetColumns = [
+    {
+      key: 'date',
+      label: 'Data',
+      sortable: true,
+      render: (row) => formatDate(row.date),
+    },
+    {
+      key: 'name',
+      label: 'Nome',
+      sortable: true,
+    },
+    {
+      key: 'type',
+      label: 'Tipo',
+      render: (row) => (
+        <Badge variant="default" className="bg-blue-500">
+          {row.type}
+        </Badge>
+      ),
+    },
+    {
+      key: 'value',
+      label: 'Valor',
+      sortable: true,
+      render: (row) => (
+        <span className="text-green-600 font-semibold">
+          {formatCurrency(row.value)}
+        </span>
+      ),
+    },
+    {
+      key: 'yield',
+      label: 'Rendimento',
+      sortable: true,
+      render: (row) => (
+        <span className="text-gray-600">
+          {(row.yield * 100).toFixed(2)}% a.m.
+        </span>
+      ),
+    },
+    {
+      key: 'actions',
+      label: 'Ações',
+      render: (row) => (
+        <div className="flex gap-2">
+          <button
+            onClick={() => handleEditAsset(row)}
+            className="p-1 hover:bg-gray-100 rounded transition-colors"
+            aria-label="Editar investimento"
+          >
+            <Edit className="w-4 h-4 text-gray-600" />
+          </button>
+          <button
+            onClick={() => handleDeleteAsset(row.id)}
+            className="p-1 hover:bg-red-50 rounded transition-colors"
+            aria-label="Excluir investimento"
+          >
+            <Trash2 className="w-4 h-4 text-red-600" />
+          </button>
+        </div>
+      ),
+    },
+  ];
+
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Investimentos</h1>
-          <p className="text-gray-500 mt-1">Gerencie seus ativos e acompanhe rendimentos</p>
-        </div>
-        <Button onClick={() => setNewInvestmentModalOpen(true)}>
-          <Plus className="w-5 h-5" />
-          Novo Investimento
-        </Button>
-      </div>
+      <PageHeader
+        title="Investimentos"
+        description="Gerencie seus ativos e acompanhe rendimentos"
+        actions={
+          <>
+            <Button variant="secondary">
+              <Download className="w-4 h-4" />
+              Exportar
+            </Button>
+            <Button onClick={handleAddAsset}>
+              <Plus className="w-4 h-4" />
+              Novo Investimento
+            </Button>
+          </>
+        }
+      />
 
-      {/* Total investido */}
-      <Card>
-        <CardContent className="p-6 bg-gradient-to-br from-brand-500 to-brand-700 text-white">
-          <div className="flex items-center gap-3 mb-2">
-            <DollarSign className="w-8 h-8" />
-            <h2 className="text-lg font-medium opacity-90">Total Investido</h2>
-          </div>
-          <p className="text-4xl font-bold">{formatCurrency(totalInvestments)}</p>
-          <p className="text-sm opacity-75 mt-2">
-            {assets.length} {assets.length === 1 ? 'ativo' : 'ativos'} na carteira
-          </p>
-        </CardContent>
-      </Card>
-
-      {/* Grid de ativos */}
+      {/* Cards de resumo */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {assets.map((asset) => (
-          <Card
-            key={asset.id}
-            className="cursor-pointer hover:shadow-lg transition-shadow"
-            onClick={() => handleOpenContribute(asset)}
-          >
-            <CardContent className="p-6">
-              <div className="flex items-start justify-between mb-4">
-                <div>
-                  <Badge variant="default" className="mb-2">
-                    {asset.type}
-                  </Badge>
-                  <h3 className="font-semibold text-gray-900 text-lg">{asset.name}</h3>
-                </div>
-                <TrendingUp className="w-5 h-5 text-green-500" />
-              </div>
+        <StatsCard
+          icon={DollarSign}
+          label="Total Investido"
+          value={formatCurrency(totalInvestments)}
+          iconColor="green"
+          valueColor="text-green-600"
+        />
 
-              <div className="space-y-3">
-                <div>
-                  <p className="text-sm text-gray-500">Valor Atual</p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {formatCurrency(asset.value)}
-                  </p>
-                </div>
+        <StatsCard
+          icon={Wallet}
+          label="Total de Ativos"
+          value={filteredAssets.length}
+          iconColor="blue"
+          valueColor="text-blue-600"
+        />
 
-                <div className="flex items-center gap-2 text-sm">
-                  <Percent className="w-4 h-4 text-gray-400" />
-                  <span className="text-gray-600">
-                    Rendimento: {(asset.yield * 100).toFixed(2)}% a.m.
-                  </span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+        <StatsCard
+          icon={Percent}
+          label="Rendimento Médio"
+          value={`${(averageYield * 100).toFixed(2)}% a.m.`}
+          iconColor="purple"
+          valueColor="text-purple-600"
+        />
       </div>
 
-      {/* Modal de novo investimento */}
-      <Dialog open={newInvestmentModalOpen} onOpenChange={setNewInvestmentModalOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Novo Investimento</DialogTitle>
-          </DialogHeader>
+      {/* Filtros */}
+      <Card>
+        <CardContent className="p-4 sm:p-6">
           <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="investment-name">Nome do Investimento</Label>
-              <Input
-                id="investment-name"
-                type="text"
-                value={newInvestment.name}
-                onChange={(e) => setNewInvestment({ ...newInvestment, name: e.target.value })}
-                placeholder="Ex: Poupança Banco X, CDB, Tesouro Direto"
-              />
+            <div className="flex items-center gap-2">
+              <Filter className="w-5 h-5 text-gray-500" />
+              <span className="text-sm font-medium text-gray-700">Filtrar por:</span>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="investment-type">Tipo</Label>
-              <select
-                id="investment-type"
-                value={newInvestment.type}
-                onChange={(e) => setNewInvestment({ ...newInvestment, type: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
-              >
-                <option value="Poupança">Poupança</option>
-                <option value="CDB">CDB</option>
-                <option value="Tesouro Direto">Tesouro Direto</option>
-                <option value="Ações">Ações</option>
-                <option value="Fundos">Fundos de Investimento</option>
-                <option value="Criptomoedas">Criptomoedas</option>
-                <option value="Outros">Outros</option>
-              </select>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Filtro por tipo */}
+              <div className="space-y-2">
+                <Label htmlFor="filter-type" className="text-sm font-medium text-gray-700">
+                  Tipo de Investimento
+                </Label>
+                <Select value={filterType} onValueChange={setFilterType}>
+                  <SelectTrigger id="filter-type">
+                    <SelectValue placeholder="Selecione o tipo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos os tipos</SelectItem>
+                    {investmentTypes.map((type) => (
+                      <SelectItem key={type} value={type}>
+                        {type}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Filtro por mês/ano */}
+              <div className="space-y-2">
+                <Label className="text-sm font-medium text-gray-700">
+                  Mês e Ano
+                </Label>
+                <MonthPicker
+                  value={filterMonth}
+                  onChange={setFilterMonth}
+                  placeholder="Selecione o período"
+                />
+              </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="investment-value">Valor Inicial (R$)</Label>
-              <Input
-                id="investment-value"
-                type="number"
-                value={newInvestment.value}
-                onChange={(e) => setNewInvestment({ ...newInvestment, value: e.target.value })}
-                placeholder="0,00"
-                step="0.01"
-                min="0"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="investment-yield">
-                Rendimento Mensal (%) <span className="text-gray-400 font-normal">(opcional)</span>
-              </Label>
-              <Input
-                id="investment-yield"
-                type="number"
-                value={newInvestment.yield}
-                onChange={(e) => setNewInvestment({ ...newInvestment, yield: e.target.value })}
-                placeholder="0,00"
-                step="0.01"
-                min="0"
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                Ex: Para 0,7% ao mês, digite 0.7. Deixe em branco se não souber.
-              </p>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button
-              variant="ghost"
-              onClick={() => setNewInvestmentModalOpen(false)}
-            >
-              Cancelar
-            </Button>
-            <Button
-              onClick={handleCreateInvestment}
-            >
-              Criar Investimento
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Modal de aporte/retirada */}
-      <Dialog open={contributeModalOpen} onOpenChange={setContributeModalOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{selectedAsset?.name}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label>Valor Atual</Label>
-              <p className="text-2xl font-bold text-gray-900">
-                {formatCurrency(selectedAsset?.value || 0)}
-              </p>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="contribute-amount">Adicionar ou Retirar (R$)</Label>
-              <Input
-                id="contribute-amount"
-                type="number"
-                value={contributeAmount}
-                onChange={(e) => setContributeAmount(e.target.value)}
-                placeholder="0,00"
-                step="0.01"
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                Use valores positivos para adicionar e negativos para retirar (ex: -500)
-              </p>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="edit-yield">Rendimento Mensal (%)</Label>
-              <Input
-                id="edit-yield"
-                type="number"
-                value={editYield}
-                onChange={(e) => setEditYield(e.target.value)}
-                placeholder="0,00"
-                step="0.01"
-                min="0"
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                Atualize o rendimento ou deixe vazio para 0%
-              </p>
-            </div>
-
-            {contributeAmount && contributeAmount !== '0' && (
-              <div className={`p-3 rounded-lg ${parseFloat(contributeAmount) >= 0 ? 'bg-green-50' : 'bg-red-50'}`}>
-                <p className="text-sm text-gray-600">
-                  {parseFloat(contributeAmount) >= 0 ? 'Novo valor total:' : 'Novo valor após retirada:'}
-                </p>
-                <p className={`text-xl font-bold ${parseFloat(contributeAmount) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                  {formatCurrency((selectedAsset?.value || 0) + parseFloat(contributeAmount))}
-                </p>
+            {/* Limpar filtros */}
+            {(filterType !== 'all' || filterMonth) && (
+              <div className="flex justify-end">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setFilterType('all');
+                    setFilterMonth(getCurrentMonthRange());
+                  }}
+                >
+                  Limpar Filtros
+                </Button>
               </div>
             )}
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Tabela de investimentos */}
+      <Card>
+        <CardContent className="p-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">
+            Todos os Investimentos ({filteredAssets.length})
+          </h2>
+          <Table
+            columns={assetColumns}
+            data={sortedAssets}
+            pageSize={10}
+          />
+        </CardContent>
+      </Card>
+
+      {/* Dialog de adicionar/editar investimento */}
+      <Dialog open={modalOpen} onOpenChange={setModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{editingAsset ? 'Editar Investimento' : 'Novo Investimento'}</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Nome do Investimento</Label>
+              <Input
+                id="name"
+                placeholder="Ex: Poupança Banco X, CDB, Tesouro Direto"
+                value={formData.name}
+                onChange={(e) => handleInputChange('name', e.target.value)}
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="type">Tipo</Label>
+              <Select
+                value={formData.type}
+                onValueChange={(value) => handleInputChange('type', value)}
+              >
+                <SelectTrigger id="type">
+                  <SelectValue placeholder="Selecione o tipo" />
+                </SelectTrigger>
+                <SelectContent>
+                  {investmentTypes.map((type) => (
+                    <SelectItem key={type} value={type}>
+                      {type}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="value">Valor (R$)</Label>
+              <Input
+                id="value"
+                type="number"
+                step="0.01"
+                placeholder="0,00"
+                value={formData.value}
+                onChange={(e) => handleInputChange('value', e.target.value)}
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="yield">
+                Rendimento Mensal (%) <span className="text-gray-400 font-normal">(opcional)</span>
+              </Label>
+              <Input
+                id="yield"
+                type="number"
+                step="0.01"
+                placeholder="0,00"
+                value={formData.yield}
+                onChange={(e) => handleInputChange('yield', e.target.value)}
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Ex: Para 0,7% ao mês, digite 0.7
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="date">Data</Label>
+              <Input
+                id="date"
+                type="date"
+                value={formData.date}
+                onChange={(e) => handleInputChange('date', e.target.value)}
+                required
+              />
+            </div>
+          </form>
           <DialogFooter>
-            <Button
-              variant="ghost"
-              onClick={() => setContributeModalOpen(false)}
-            >
+            <Button type="button" variant="outline" onClick={() => setModalOpen(false)}>
               Cancelar
             </Button>
-            <Button
-              onClick={handleContribute}
-            >
-              Confirmar
+            <Button type="submit" onClick={handleSubmit}>
+              {editingAsset ? 'Salvar' : 'Adicionar Investimento'}
             </Button>
           </DialogFooter>
         </DialogContent>
