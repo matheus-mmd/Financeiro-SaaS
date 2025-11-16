@@ -1,54 +1,43 @@
 'use client';
 
 import React, { useState } from 'react';
+import { ChevronDownIcon } from 'lucide-react';
+import { Button } from './ui/button';
 import { Calendar } from './ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
-import { Button } from './ui/button';
-import { CalendarIcon } from 'lucide-react';
-import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 /**
- * DatePicker - Seletor de data única usando shadcn/ui Calendar
+ * DatePicker - Seletor de data com calendário e dropdowns
  * @param {Date} value - Data selecionada
  * @param {Function} onChange - Callback quando data é selecionada
  * @param {string} placeholder - Texto placeholder
  */
 export default function DatePicker({ value, onChange, placeholder = "Selecione a data" }) {
-  const [isOpen, setIsOpen] = useState(false);
-
-  const handleSelect = (date) => {
-    onChange(date);
-    setIsOpen(false);
-  };
-
-  const formatDate = () => {
-    if (!value) {
-      return <span className="text-muted-foreground">{placeholder}</span>;
-    }
-    return format(value, "dd/MM/yyyy", { locale: ptBR });
-  };
+  const [open, setOpen] = useState(false);
 
   return (
-    <Popover open={isOpen} onOpenChange={setIsOpen}>
+    <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
           variant="outline"
-          className="w-full justify-start text-left font-normal"
+          className="w-full justify-between font-normal"
         >
-          <CalendarIcon className="mr-2 h-4 w-4" />
-          {formatDate()}
+          {value ? value.toLocaleDateString('pt-BR') : placeholder}
+          <ChevronDownIcon className="h-4 w-4" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-auto p-0" align="start">
+      <PopoverContent className="w-auto overflow-hidden p-0" align="start">
         <Calendar
           mode="single"
           selected={value}
-          onSelect={handleSelect}
-          initialFocus
+          captionLayout="dropdown"
+          onSelect={(date) => {
+            onChange(date);
+            setOpen(false);
+          }}
           locale={ptBR}
           defaultMonth={value || new Date()}
-          className="rounded-md border"
         />
       </PopoverContent>
     </Popover>
