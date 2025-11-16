@@ -36,7 +36,6 @@ import {
 import Spinner from '../../src/components/Spinner';
 import Table from '../../src/components/Table';
 import DatePicker from '../../src/components/DatePicker';
-import DoughnutChart from '../../src/components/charts/DoughnutChart';
 import { fetchMock, formatCurrency, formatDate } from '../../src/utils/mockApi';
 import { exportToCSV } from '../../src/utils/exportData';
 import { TrendingUp, DollarSign, Percent, Plus, Filter, Download, Edit, Trash2, Wallet } from 'lucide-react';
@@ -445,52 +444,37 @@ export default function Investimentos() {
         </CardContent>
       </Card>
 
-      {/* Gráfico e lista de investimentos por tipo */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Gráfico de investimentos por tipo */}
-        <Card className="lg:col-span-1">
-          <CardContent className="p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">
-              Distribuição por Tipo
-            </h2>
-            <div className="h-[300px] sm:h-[350px]">
-              <DoughnutChart data={assetsByType} />
-            </div>
-          </CardContent>
-        </Card>
+      {/* Lista de investimentos por tipo */}
+      <Card>
+        <CardContent className="p-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">
+            Investimentos por Tipo
+          </h2>
+          <div className="space-y-3">
+            {assetsByType
+              .sort((a, b) => b.value - a.value)
+              .map((item) => {
+                const percentage = ((item.value / totalInvestments) * 100).toFixed(1);
 
-        {/* Lista de investimentos por tipo */}
-        <Card className="lg:col-span-2">
-          <CardContent className="p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">
-              Investimentos por Tipo
-            </h2>
-            <div className="space-y-3">
-              {assetsByType
-                .sort((a, b) => b.value - a.value)
-                .map((item) => {
-                  const percentage = ((item.value / totalInvestments) * 100).toFixed(1);
-
-                  return (
-                    <div key={item.name} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                      <div className="flex items-center gap-3">
-                        <div
-                          className="w-4 h-4 rounded-full"
-                          style={{ backgroundColor: item.color }}
-                        />
-                        <span className="font-medium text-gray-900">{item.name}</span>
-                      </div>
-                      <div className="flex items-center gap-4">
-                        <span className="text-sm text-gray-500">{percentage}%</span>
-                        <span className="font-semibold text-green-600">{formatCurrency(item.value)}</span>
-                      </div>
+                return (
+                  <div key={item.name} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                    <div className="flex items-center gap-3">
+                      <div
+                        className="w-4 h-4 rounded-full"
+                        style={{ backgroundColor: item.color }}
+                      />
+                      <span className="font-medium text-gray-900">{item.name}</span>
                     </div>
-                  );
-                })}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+                    <div className="flex items-center gap-4">
+                      <span className="text-sm text-gray-500">{percentage}%</span>
+                      <span className="font-semibold text-green-600">{formatCurrency(item.value)}</span>
+                    </div>
+                  </div>
+                );
+              })}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Tabela de investimentos */}
       <Card>

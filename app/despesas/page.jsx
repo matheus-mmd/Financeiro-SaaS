@@ -35,7 +35,6 @@ import {
 } from '../../src/components/ui/alert-dialog';
 import Spinner from '../../src/components/Spinner';
 import Table from '../../src/components/Table';
-import DoughnutChart from '../../src/components/charts/DoughnutChart';
 import DatePicker from '../../src/components/DatePicker';
 import { fetchMock, formatCurrency, formatDate } from '../../src/utils/mockApi';
 import { exportToCSV } from '../../src/utils/exportData';
@@ -409,22 +408,9 @@ export default function Despesas() {
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Gráfico de despesas por categoria */}
-        <Card className="lg:col-span-1">
-          <CardContent className="p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">
-              Distribuição por Categoria
-            </h2>
-            <div className="h-[300px] sm:h-[350px]">
-              <DoughnutChart data={expensesByCategory} />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Lista de categorias */}
-        <Card className="lg:col-span-2">
-          <CardContent className="p-6">
+      {/* Lista de despesas por categoria */}
+      <Card>
+        <CardContent className="p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">
             Despesas por Categoria
           </h2>
@@ -452,9 +438,8 @@ export default function Despesas() {
                 );
               })}
           </div>
-          </CardContent>
-        </Card>
-      </div>
+        </CardContent>
+      </Card>
 
       {/* Tabela de despesas */}
       <Card>
