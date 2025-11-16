@@ -414,6 +414,7 @@ export default function Transacoes() {
             columns={transactionColumns}
             data={sortedTransactions}
             pageSize={10}
+            onRowClick={handleEditTransaction}
           />
         </CardContent>
       </Card>

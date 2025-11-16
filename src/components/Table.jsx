@@ -17,8 +17,9 @@ import { Card, CardContent } from './ui/card';
  * @param {Array} columns - Configuração das colunas: [{ key, label, sortable, render }]
  * @param {Array} data - Dados a serem exibidos
  * @param {number} pageSize - Itens por página
+ * @param {Function} onRowClick - Função opcional chamada ao clicar em uma linha
  */
-export default function Table({ columns, data, pageSize = 10 }) {
+export default function Table({ columns, data, pageSize = 10, onRowClick }) {
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -48,6 +49,21 @@ export default function Table({ columns, data, pageSize = 10 }) {
     });
   };
 
+  const handleRowClick = (row, event) => {
+    // Não aciona clique se clicar em botões ou elementos interativos
+    if (
+      event.target.closest('button') ||
+      event.target.closest('a') ||
+      event.target.closest('[role="button"]')
+    ) {
+      return;
+    }
+
+    if (onRowClick) {
+      onRowClick(row);
+    }
+  };
+
   return (
     <div className="w-full">
       {/* Table View - mantém formato de linhas em todas as telas */}
@@ -75,7 +91,11 @@ export default function Table({ columns, data, pageSize = 10 }) {
           </TableHeader>
           <TableBody>
             {paginatedData.map((row, index) => (
-              <TableRow key={index}>
+              <TableRow
+                key={index}
+                onClick={(e) => handleRowClick(row, e)}
+                className={onRowClick ? 'cursor-pointer hover:bg-gray-50' : ''}
+              >
                 {columns.map((column) => (
                   <TableCell key={column.key}>
                     {column.render ? column.render(row) : row[column.key]}

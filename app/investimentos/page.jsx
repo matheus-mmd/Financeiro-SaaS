@@ -374,6 +374,7 @@ export default function Investimentos() {
             columns={assetColumns}
             data={sortedAssets}
             pageSize={10}
+            onRowClick={handleEditAsset}
           />
         </CardContent>
       </Card>

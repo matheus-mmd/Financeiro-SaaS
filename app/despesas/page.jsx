@@ -413,6 +413,7 @@ export default function Despesas() {
           columns={expenseColumns}
           data={filteredExpenses}
           pageSize={10}
+          onRowClick={handleEditExpense}
         />
         </CardContent>
       </Card>
