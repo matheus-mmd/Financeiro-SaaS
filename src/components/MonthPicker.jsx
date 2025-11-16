@@ -1,78 +1,96 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Calendar } from './ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
-import { Button } from './ui/button';
+import React, { useState, useEffect } from 'react';
 import { CalendarIcon } from 'lucide-react';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from './ui/select';
 
 /**
- * MonthPicker - Seletor de intervalo de datas usando shadcn/ui Calendar
+ * MonthPicker - Seletor de mês e ano com dropdowns
  * @param {Object} value - Range de datas { from: Date, to: Date }
  * @param {Function} onChange - Callback quando range é selecionado
- * @param {string} placeholder - Texto placeholder
+ * @param {string} placeholder - Texto placeholder (não usado, mantido para compatibilidade)
  */
 export default function MonthPicker({ value, onChange, placeholder = "Selecione o período" }) {
-  const [isOpen, setIsOpen] = useState(false);
+  const currentDate = value?.from || new Date();
+  const [selectedMonth, setSelectedMonth] = useState(currentDate.getMonth());
+  const [selectedYear, setSelectedYear] = useState(currentDate.getFullYear());
 
-  const handleSelect = (range) => {
-    onChange(range);
-    // Fecha apenas se ambas as datas foram selecionadas
-    if (range?.from && range?.to) {
-      setIsOpen(false);
+  const months = [
+    'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+    'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+  ];
+
+  // Gerar lista de anos (5 anos atrás até 2 anos à frente)
+  const currentYear = new Date().getFullYear();
+  const years = Array.from({ length: 8 }, (_, i) => currentYear - 5 + i);
+
+  // Atualizar quando o valor externo mudar
+  useEffect(() => {
+    if (value?.from) {
+      setSelectedMonth(value.from.getMonth());
+      setSelectedYear(value.from.getFullYear());
     }
+  }, [value]);
+
+  const handleMonthChange = (month) => {
+    const monthIndex = parseInt(month);
+    setSelectedMonth(monthIndex);
+    updateDateRange(monthIndex, selectedYear);
   };
 
-  const formatDateRange = () => {
-    if (!value?.from) {
-      return <span>{placeholder}</span>;
-    }
+  const handleYearChange = (year) => {
+    const yearValue = parseInt(year);
+    setSelectedYear(yearValue);
+    updateDateRange(selectedMonth, yearValue);
+  };
 
-    if (value.from && !value.to) {
-      return format(value.from, "dd 'de' MMMM", { locale: ptBR });
-    }
-
-    if (value.from && value.to) {
-      // Se é o mesmo mês, mostra apenas o mês
-      const sameMonth = value.from.getMonth() === value.to.getMonth() &&
-                       value.from.getFullYear() === value.to.getFullYear();
-
-      if (sameMonth) {
-        return format(value.from, "MMMM 'de' yyyy", { locale: ptBR });
-      }
-
-      // Caso contrário, mostra o range completo
-      return `${format(value.from, "dd/MM/yy", { locale: ptBR })} - ${format(value.to, "dd/MM/yy", { locale: ptBR })}`;
-    }
+  const updateDateRange = (month, year) => {
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    onChange({ from: firstDay, to: lastDay });
   };
 
   return (
-    <Popover open={isOpen} onOpenChange={setIsOpen}>
-      <PopoverTrigger asChild>
-        <Button
-          variant="outline"
-          className={`w-full justify-start text-left font-normal ${
-            !value?.from && "text-muted-foreground"
-          }`}
-        >
-          <CalendarIcon className="mr-2 h-4 w-4" />
-          {formatDateRange()}
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-auto p-0" align="start">
-        <Calendar
-          mode="range"
-          selected={value}
-          onSelect={handleSelect}
-          initialFocus
-          locale={ptBR}
-          defaultMonth={value?.from || new Date()}
-          numberOfMonths={2}
-          className="rounded-md border"
-        />
-      </PopoverContent>
-    </Popover>
+    <div className="flex gap-2 w-full">
+      <div className="flex-1">
+        <Select value={selectedMonth.toString()} onValueChange={handleMonthChange}>
+          <SelectTrigger>
+            <SelectValue>
+              <div className="flex items-center">
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {months[selectedMonth]}
+              </div>
+            </SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            {months.map((month, index) => (
+              <SelectItem key={index} value={index.toString()}>
+                {month}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="w-[120px]">
+        <Select value={selectedYear.toString()} onValueChange={handleYearChange}>
+          <SelectTrigger>
+            <SelectValue>{selectedYear}</SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            {years.map((year) => (
+              <SelectItem key={year} value={year.toString()}>
+                {year}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+    </div>
   );
 }
