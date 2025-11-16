@@ -43,8 +43,8 @@
   "assets": [
     {"id": "a1", "name": "Poupança Matheus", "type": "Poupança", "value": 52752.00, "yield": 0.005, "currency": "BRL"},
     {"id": "a2", "name": "Poupança Nayanna", "type": "Poupança", "value": 64500.00, "yield": 0.005, "currency": "BRL"},
-    {"id": "a3", "name": "FGTS Matheus", "type": "FGTS", "value": 5000.00, "yield": 0.003},
-    {"id": "a4", "name": "FGTS Nayanna", "type": "FGTS", "value": 1000.00, "yield": 0.003}
+    {"id": "a3", "name": "FGTS Matheus", "type": "Outros", "value": 5000.00, "yield": 0.003},
+    {"id": "a4", "name": "FGTS Nayanna", "type": "Outros", "value": 1000.00, "yield": 0.003}
   ],
   "targets": [
     {"id": "t1", "title": "Entrada + Documentação (imóvel)", "goal": 80000.00, "progress": 80000.00, "status": "completed"},

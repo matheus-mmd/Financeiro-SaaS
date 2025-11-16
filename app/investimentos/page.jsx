@@ -38,7 +38,7 @@ import Table from '../../src/components/Table';
 import DatePicker from '../../src/components/DatePicker';
 import { fetchMock, formatCurrency, formatDate } from '../../src/utils/mockApi';
 import { exportToCSV } from '../../src/utils/exportData';
-import { TrendingUp, DollarSign, Percent, Plus, Filter, Download, Edit, Trash2, Wallet } from 'lucide-react';
+import { TrendingUp, DollarSign, Percent, Plus, Filter, Download, Edit, Trash2, Wallet, PieChart } from 'lucide-react';
 
 /**
  * Página Investimentos - Gerenciamento de ativos e investimentos
@@ -56,6 +56,7 @@ export default function Investimentos() {
   const [assetToDelete, setAssetToDelete] = useState(null);
   const [selectedAssets, setSelectedAssets] = useState([]);
   const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
+  const [typeModalOpen, setTypeModalOpen] = useState(false);
 
   // Inicializa com primeiro e último dia do mês atual
   const getCurrentMonthRange = () => {
@@ -286,11 +287,23 @@ export default function Investimentos() {
     {
       key: 'type',
       label: 'Tipo',
-      render: (row) => (
-        <Badge variant="default" className="bg-blue-500">
-          {row.type}
-        </Badge>
-      ),
+      render: (row) => {
+        // Cores para cada tipo de investimento
+        const typeColors = {
+          'Poupança': '#22c55e',
+          'CDB': '#3b82f6',
+          'Tesouro Direto': '#f59e0b',
+          'Ações': '#ef4444',
+          'Fundos': '#8b5cf6',
+          'Criptomoedas': '#ec4899',
+          'Outros': '#64748b'
+        };
+        return (
+          <Badge variant="default" style={{ backgroundColor: typeColors[row.type] || '#64748b', color: 'white' }}>
+            {row.type}
+          </Badge>
+        );
+      },
     },
     {
       key: 'value',
@@ -346,6 +359,10 @@ export default function Investimentos() {
             <Button variant="secondary" onClick={handleExport}>
               <Download className="w-4 h-4" />
               Exportar
+            </Button>
+            <Button variant="secondary" onClick={() => setTypeModalOpen(true)}>
+              <PieChart className="w-4 h-4" />
+              Tipos
             </Button>
             <Button onClick={handleAddAsset}>
               <Plus className="w-4 h-4" />
@@ -597,6 +614,46 @@ export default function Investimentos() {
             </Button>
             <Button type="submit" onClick={handleSubmit}>
               {editingAsset ? 'Salvar' : 'Adicionar Investimento'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog de tipos de investimentos */}
+      <Dialog open={typeModalOpen} onOpenChange={setTypeModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Tipos de Investimentos</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2">
+            {investmentTypes.map((type) => {
+              // Cores para cada tipo de investimento
+              const typeColors = {
+                'Poupança': '#22c55e',
+                'CDB': '#3b82f6',
+                'Tesouro Direto': '#f59e0b',
+                'Ações': '#ef4444',
+                'Fundos': '#8b5cf6',
+                'Criptomoedas': '#ec4899',
+                'Outros': '#64748b'
+              };
+              return (
+                <div
+                  key={type}
+                  className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg"
+                >
+                  <div
+                    className="w-6 h-6 rounded-full"
+                    style={{ backgroundColor: typeColors[type] || '#64748b' }}
+                  />
+                  <span className="font-medium text-gray-900">{type}</span>
+                </div>
+              );
+            })}
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setTypeModalOpen(false)}>
+              Fechar
             </Button>
           </DialogFooter>
         </DialogContent>
