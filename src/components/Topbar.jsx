@@ -1,6 +1,7 @@
 import React from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Menu, X } from 'lucide-react';
+import GlobalSearch from './GlobalSearch';
 
 /**
  * Gera iniciais a partir do nome
@@ -27,7 +28,7 @@ const getInitials = (name) => {
 export default function Topbar({ user, balance, isSidebarCollapsed, onToggleSidebar, isMobileSidebarOpen, onToggleMobileSidebar }) {
   return (
     <header className="bg-white border-b border-gray-200 px-4 sm:px-6 py-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-4">
         {/* Mobile menu button - Sempre visível */}
         <button
           onClick={onToggleMobileSidebar}
@@ -54,6 +55,9 @@ export default function Topbar({ user, balance, isSidebarCollapsed, onToggleSide
             </>
           )}
         </button>
+
+        {/* Global Search */}
+        <GlobalSearch />
 
         {/* User info */}
         <div className="flex items-center gap-4">
