@@ -487,49 +487,21 @@ export default function Metas() {
               />
             </div>
 
-            <div>
-              <Label htmlFor="monthlyAmount" className="block mb-2">
+            <div className="space-y-2">
+              <Label htmlFor="monthlyAmount">
                 Guardar por mês (R$) <span className="text-gray-400 font-normal">(opcional)</span>
               </Label>
-              <div className="flex items-center gap-3">
-                <button
-                  type="button"
-                  onClick={() => {
-                    const current = parseFloat(formData.monthlyAmount) || 0;
-                    const newValue = Math.max(0, current - 100);
-                    handleInputChange('monthlyAmount', newValue.toString());
-                  }}
-                  className="p-3 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-                >
-                  <Minus className="w-5 h-5 text-gray-700" />
-                </button>
-
-                <input
-                  id="monthlyAmount"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  placeholder="0,00"
-                  value={formData.monthlyAmount}
-                  onChange={(e) => handleInputChange('monthlyAmount', e.target.value)}
-                  className="flex-1 px-4 py-3 text-center text-lg font-semibold border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
-                />
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    const current = parseFloat(formData.monthlyAmount) || 0;
-                    const newValue = current + 100;
-                    handleInputChange('monthlyAmount', newValue.toString());
-                  }}
-                  className="p-3 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-                >
-                  <Plus className="w-5 h-5 text-gray-700" />
-                </button>
-              </div>
-
+              <Input
+                id="monthlyAmount"
+                type="number"
+                step="0.01"
+                min="0"
+                placeholder="0,00"
+                value={formData.monthlyAmount}
+                onChange={(e) => handleInputChange('monthlyAmount', e.target.value)}
+              />
               {formData.monthlyAmount && parseFloat(formData.monthlyAmount) > 0 && formData.goal && (
-                <div className="mt-3 p-3 bg-brand-50 rounded-lg text-sm">
+                <p className="text-xs text-gray-500 mt-1">
                   {(() => {
                     const months = calculateMonthsToGoal(
                       parseFloat(formData.goal),
@@ -538,14 +510,14 @@ export default function Metas() {
                     );
                     const targetDate = getTargetDate(months);
                     return targetDate ? (
-                      <p className="text-gray-700">
-                        Assim você alcança o seu objetivo em <span className="font-semibold text-brand-600">{targetDate}</span>
-                      </p>
+                      <>
+                        Você alcançará o objetivo em <span className="font-semibold text-brand-600">{targetDate}</span>
+                      </>
                     ) : (
-                      <p className="text-green-600 font-semibold">Meta já alcançada!</p>
+                      <span className="font-semibold text-green-600">Meta já alcançada!</span>
                     );
                   })()}
-                </div>
+                </p>
               )}
             </div>
 
