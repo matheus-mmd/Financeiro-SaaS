@@ -24,6 +24,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from '../../src/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '../../src/components/ui/alert-dialog';
 import Spinner from '../../src/components/Spinner';
 import Table from '../../src/components/Table';
 import { fetchMock, formatCurrency, formatDate } from '../../src/utils/mockApi';
@@ -40,6 +50,8 @@ export default function Transacoes() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState(null);
   const [filterType, setFilterType] = useState('all'); // all, credit, debit
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [transactionToDelete, setTransactionToDelete] = useState(null);
 
   // Inicializa com primeiro e último dia do mês atual
   const getCurrentMonthRange = () => {
@@ -125,9 +137,16 @@ export default function Transacoes() {
     setModalOpen(true);
   };
 
-  const handleDeleteTransaction = (id) => {
-    if (confirm('Deseja realmente excluir esta transação?')) {
-      setTransactions(transactions.filter(t => t.id !== id));
+  const handleDeleteTransaction = (transaction) => {
+    setTransactionToDelete(transaction);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (transactionToDelete) {
+      setTransactions(transactions.filter(t => t.id !== transactionToDelete.id));
+      setDeleteDialogOpen(false);
+      setTransactionToDelete(null);
     }
   };
 
@@ -279,7 +298,7 @@ export default function Transacoes() {
             <Edit className="w-4 h-4 text-gray-600" />
           </button>
           <button
-            onClick={() => handleDeleteTransaction(row.id)}
+            onClick={() => handleDeleteTransaction(row)}
             className="p-1 hover:bg-red-50 rounded transition-colors"
             aria-label="Excluir transação"
           >
@@ -516,6 +535,28 @@ export default function Transacoes() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* AlertDialog de confirmação de exclusão */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir a transação "{transactionToDelete?.description}"?
+              Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

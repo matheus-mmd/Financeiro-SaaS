@@ -23,6 +23,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from '../../src/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '../../src/components/ui/alert-dialog';
 import Spinner from '../../src/components/Spinner';
 import Table from '../../src/components/Table';
 import DoughnutChart from '../../src/components/charts/DoughnutChart';
@@ -42,6 +52,8 @@ export default function Despesas() {
   const [categoryModalOpen, setCategoryModalOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [expenseToDelete, setExpenseToDelete] = useState(null);
 
   // Função para obter intervalo do mês atual
   const getCurrentMonthRange = () => {
@@ -131,9 +143,16 @@ export default function Despesas() {
     setModalOpen(true);
   };
 
-  const handleDeleteExpense = (id) => {
-    if (confirm('Deseja realmente excluir esta despesa?')) {
-      setExpenses(expenses.filter(e => e.id !== id));
+  const handleDeleteExpense = (expense) => {
+    setExpenseToDelete(expense);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (expenseToDelete) {
+      setExpenses(expenses.filter(e => e.id !== expenseToDelete.id));
+      setDeleteDialogOpen(false);
+      setExpenseToDelete(null);
     }
   };
 
@@ -236,7 +255,7 @@ export default function Despesas() {
             <Edit className="w-4 h-4 text-gray-600" />
           </button>
           <button
-            onClick={() => handleDeleteExpense(row.id)}
+            onClick={() => handleDeleteExpense(row)}
             className="p-1 hover:bg-red-50 rounded transition-colors"
             aria-label="Excluir despesa"
           >
@@ -517,6 +536,28 @@ export default function Despesas() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* AlertDialog de confirmação de exclusão */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir a despesa "{expenseToDelete?.title}"?
+              Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

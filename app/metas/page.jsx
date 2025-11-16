@@ -23,6 +23,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from '../../src/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '../../src/components/ui/alert-dialog';
 import Spinner from '../../src/components/Spinner';
 import Table from '../../src/components/Table';
 import ProgressBar from '../../src/components/ProgressBar';
@@ -40,6 +50,8 @@ export default function Metas() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingTarget, setEditingTarget] = useState(null);
   const [filterStatus, setFilterStatus] = useState('all');
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [targetToDelete, setTargetToDelete] = useState(null);
 
   // Inicializa com primeiro e último dia do mês atual
   const getCurrentMonthRange = () => {
@@ -131,9 +143,16 @@ export default function Metas() {
     setModalOpen(true);
   };
 
-  const handleDeleteTarget = (id) => {
-    if (confirm('Deseja realmente excluir esta meta?')) {
-      setTargets(targets.filter(t => t.id !== id));
+  const handleDeleteTarget = (target) => {
+    setTargetToDelete(target);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (targetToDelete) {
+      setTargets(targets.filter(t => t.id !== targetToDelete.id));
+      setDeleteDialogOpen(false);
+      setTargetToDelete(null);
     }
   };
 
@@ -285,7 +304,7 @@ export default function Metas() {
             <Edit className="w-4 h-4 text-gray-600" />
           </button>
           <button
-            onClick={() => handleDeleteTarget(row.id)}
+            onClick={() => handleDeleteTarget(row)}
             className="p-1 hover:bg-red-50 rounded transition-colors"
             aria-label="Excluir meta"
           >
@@ -552,6 +571,28 @@ export default function Metas() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* AlertDialog de confirmação de exclusão */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir a meta "{targetToDelete?.title}"?
+              Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

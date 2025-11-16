@@ -23,6 +23,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from '../../src/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '../../src/components/ui/alert-dialog';
 import Spinner from '../../src/components/Spinner';
 import Table from '../../src/components/Table';
 import { fetchMock, formatCurrency, formatDate } from '../../src/utils/mockApi';
@@ -40,6 +50,8 @@ export default function Investimentos() {
   const [editingAsset, setEditingAsset] = useState(null);
   const [loading, setLoading] = useState(true);
   const [filterType, setFilterType] = useState('all');
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [assetToDelete, setAssetToDelete] = useState(null);
 
   // Inicializa com primeiro e último dia do mês atual
   const getCurrentMonthRange = () => {
@@ -133,9 +145,16 @@ export default function Investimentos() {
     setModalOpen(true);
   };
 
-  const handleDeleteAsset = (id) => {
-    if (confirm('Deseja realmente excluir este investimento?')) {
-      setAssets(assets.filter(a => a.id !== id));
+  const handleDeleteAsset = (asset) => {
+    setAssetToDelete(asset);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (assetToDelete) {
+      setAssets(assets.filter(a => a.id !== assetToDelete.id));
+      setDeleteDialogOpen(false);
+      setAssetToDelete(null);
     }
   };
 
@@ -245,7 +264,7 @@ export default function Investimentos() {
             <Edit className="w-4 h-4 text-gray-600" />
           </button>
           <button
-            onClick={() => handleDeleteAsset(row.id)}
+            onClick={() => handleDeleteAsset(row)}
             className="p-1 hover:bg-red-50 rounded transition-colors"
             aria-label="Excluir investimento"
           >
@@ -467,6 +486,28 @@ export default function Investimentos() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* AlertDialog de confirmação de exclusão */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir o investimento "{assetToDelete?.name}"?
+              Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
