@@ -36,6 +36,7 @@ import {
 import Spinner from '../../src/components/Spinner';
 import Table from '../../src/components/Table';
 import DoughnutChart from '../../src/components/charts/DoughnutChart';
+import DatePicker from '../../src/components/DatePicker';
 import { fetchMock, formatCurrency, formatDate } from '../../src/utils/mockApi';
 import { Receipt, Plus, Edit, Trash2, TrendingDown, PieChart, Filter } from 'lucide-react';
 
@@ -68,7 +69,7 @@ export default function Despesas() {
     title: '',
     category: '',
     amount: '',
-    date: new Date().toISOString().split('T')[0],
+    date: new Date(),
   });
 
   useEffect(() => {
@@ -127,18 +128,21 @@ export default function Despesas() {
       title: '',
       category: '',
       amount: '',
-      date: new Date().toISOString().split('T')[0],
+      date: new Date(),
     });
     setModalOpen(true);
   };
 
   const handleEditExpense = (expense) => {
     setEditingExpense(expense);
+    // Converter string de data para Date object
+    const [year, month, day] = expense.date.split('-');
+    const dateObj = new Date(year, month - 1, day);
     setFormData({
       title: expense.title,
       category: expense.category,
       amount: expense.amount.toString(),
-      date: expense.date,
+      date: dateObj,
     });
     setModalOpen(true);
   };
@@ -159,12 +163,15 @@ export default function Despesas() {
   const handleSubmit = (e) => {
     e.preventDefault();
 
+    // Converter Date object para string YYYY-MM-DD
+    const dateString = formData.date.toISOString().split('T')[0];
+
     const newExpense = {
       id: editingExpense?.id || Date.now(),
       title: formData.title,
       category: formData.category,
       amount: parseFloat(formData.amount),
-      date: formData.date,
+      date: dateString,
     };
 
     if (editingExpense) {
@@ -174,7 +181,7 @@ export default function Despesas() {
     }
 
     setModalOpen(false);
-    setFormData({ title: '', category: '', amount: '', date: new Date().toISOString().split('T')[0] });
+    setFormData({ title: '', category: '', amount: '', date: new Date() });
   };
 
   const handleInputChange = (field, value) => {
@@ -489,12 +496,9 @@ export default function Despesas() {
 
             <div className="space-y-2">
               <Label htmlFor="date">Data</Label>
-              <Input
-                id="date"
-                type="date"
+              <DatePicker
                 value={formData.date}
-                onChange={(e) => handleInputChange('date', e.target.value)}
-                required
+                onChange={(date) => handleInputChange('date', date)}
               />
             </div>
           </form>

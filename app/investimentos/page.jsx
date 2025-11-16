@@ -35,6 +35,7 @@ import {
 } from '../../src/components/ui/alert-dialog';
 import Spinner from '../../src/components/Spinner';
 import Table from '../../src/components/Table';
+import DatePicker from '../../src/components/DatePicker';
 import { fetchMock, formatCurrency, formatDate } from '../../src/utils/mockApi';
 import { TrendingUp, DollarSign, Percent, Plus, Filter, Download, Edit, Trash2, Wallet } from 'lucide-react';
 
@@ -67,7 +68,7 @@ export default function Investimentos() {
     type: 'Poupança',
     value: '',
     yield: '',
-    date: new Date().toISOString().split('T')[0],
+    date: new Date(),
   });
 
   useEffect(() => {
@@ -128,19 +129,22 @@ export default function Investimentos() {
       type: 'Poupança',
       value: '',
       yield: '',
-      date: new Date().toISOString().split('T')[0],
+      date: new Date(),
     });
     setModalOpen(true);
   };
 
   const handleEditAsset = (asset) => {
     setEditingAsset(asset);
+    // Converter string de data para Date object
+    const [year, month, day] = asset.date.split('-');
+    const dateObj = new Date(year, month - 1, day);
     setFormData({
       name: asset.name,
       type: asset.type,
       value: asset.value.toString(),
       yield: asset.yield ? (asset.yield * 100).toString() : '',
-      date: asset.date,
+      date: dateObj,
     });
     setModalOpen(true);
   };
@@ -161,13 +165,16 @@ export default function Investimentos() {
   const handleSubmit = (e) => {
     e.preventDefault();
 
+    // Converter Date object para string YYYY-MM-DD
+    const dateString = formData.date.toISOString().split('T')[0];
+
     const assetData = {
       id: editingAsset?.id || Date.now(),
       name: formData.name,
       type: formData.type,
       value: parseFloat(formData.value),
       yield: formData.yield ? parseFloat(formData.yield) / 100 : 0,
-      date: formData.date,
+      date: dateString,
       currency: 'BRL'
     };
 
@@ -178,7 +185,7 @@ export default function Investimentos() {
     }
 
     setModalOpen(false);
-    setFormData({ name: '', type: 'Poupança', value: '', yield: '', date: new Date().toISOString().split('T')[0] });
+    setFormData({ name: '', type: 'Poupança', value: '', yield: '', date: new Date() });
   };
 
   const handleInputChange = (field, value) => {
@@ -467,12 +474,9 @@ export default function Investimentos() {
 
             <div className="space-y-2">
               <Label htmlFor="date">Data</Label>
-              <Input
-                id="date"
-                type="date"
+              <DatePicker
                 value={formData.date}
-                onChange={(e) => handleInputChange('date', e.target.value)}
-                required
+                onChange={(date) => handleInputChange('date', date)}
               />
             </div>
           </form>

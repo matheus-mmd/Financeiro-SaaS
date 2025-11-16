@@ -36,6 +36,7 @@ import {
 import Spinner from '../../src/components/Spinner';
 import Table from '../../src/components/Table';
 import ProgressBar from '../../src/components/ProgressBar';
+import DatePicker from '../../src/components/DatePicker';
 import { fetchMock, formatCurrency, formatDate } from '../../src/utils/mockApi';
 import { Target, Plus, Edit, Trash2, CheckCircle, Minus, Download, Filter, TrendingUp } from 'lucide-react';
 
@@ -67,7 +68,7 @@ export default function Metas() {
     goal: '',
     progress: '',
     monthlyAmount: '',
-    date: new Date().toISOString().split('T')[0],
+    date: new Date(),
   });
 
   useEffect(() => {
@@ -126,19 +127,22 @@ export default function Metas() {
       goal: '',
       progress: '',
       monthlyAmount: '',
-      date: new Date().toISOString().split('T')[0],
+      date: new Date(),
     });
     setModalOpen(true);
   };
 
   const handleEditTarget = (target) => {
     setEditingTarget(target);
+    // Converter string de data para Date object
+    const [year, month, day] = target.date.split('-');
+    const dateObj = new Date(year, month - 1, day);
     setFormData({
       title: target.title,
       goal: target.goal.toString(),
       progress: target.progress.toString(),
       monthlyAmount: target.monthlyAmount?.toString() || '',
-      date: target.date,
+      date: dateObj,
     });
     setModalOpen(true);
   };
@@ -159,6 +163,9 @@ export default function Metas() {
   const handleSubmit = (e) => {
     e.preventDefault();
 
+    // Converter Date object para string YYYY-MM-DD
+    const dateString = formData.date.toISOString().split('T')[0];
+
     const newTarget = {
       id: editingTarget?.id || `t${Date.now()}`,
       title: formData.title,
@@ -166,7 +173,7 @@ export default function Metas() {
       progress: parseFloat(formData.progress || 0),
       monthlyAmount: formData.monthlyAmount ? parseFloat(formData.monthlyAmount) : 0,
       status: parseFloat(formData.progress || 0) >= parseFloat(formData.goal) ? 'completed' : 'in_progress',
-      date: formData.date,
+      date: dateString,
     };
 
     if (editingTarget) {
@@ -176,7 +183,7 @@ export default function Metas() {
     }
 
     setModalOpen(false);
-    setFormData({ title: '', goal: '', progress: '', monthlyAmount: '', date: new Date().toISOString().split('T')[0] });
+    setFormData({ title: '', goal: '', progress: '', monthlyAmount: '', date: new Date() });
   };
 
   const calculateMonthsToGoal = (goal, progress, monthlyAmount) => {
@@ -523,12 +530,9 @@ export default function Metas() {
 
             <div className="space-y-2">
               <Label htmlFor="date">Data</Label>
-              <Input
-                id="date"
-                type="date"
+              <DatePicker
                 value={formData.date}
-                onChange={(e) => handleInputChange('date', e.target.value)}
-                required
+                onChange={(date) => handleInputChange('date', date)}
               />
             </div>
           </form>

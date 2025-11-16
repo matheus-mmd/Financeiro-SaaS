@@ -36,6 +36,7 @@ import {
 } from '../../src/components/ui/alert-dialog';
 import Spinner from '../../src/components/Spinner';
 import Table from '../../src/components/Table';
+import DatePicker from '../../src/components/DatePicker';
 import { fetchMock, formatCurrency, formatDate } from '../../src/utils/mockApi';
 import { ArrowUpRight, ArrowDownRight, TrendingUp, Plus, Filter, Download, Edit, Trash2 } from 'lucide-react';
 
@@ -66,7 +67,7 @@ export default function Transacoes() {
     description: '',
     amount: '',
     type: 'debit',
-    date: new Date().toISOString().split('T')[0],
+    date: new Date(),
   });
 
   useEffect(() => {
@@ -121,18 +122,21 @@ export default function Transacoes() {
       description: '',
       amount: '',
       type: 'debit',
-      date: new Date().toISOString().split('T')[0],
+      date: new Date(),
     });
     setModalOpen(true);
   };
 
   const handleEditTransaction = (transaction) => {
     setEditingTransaction(transaction);
+    // Converter string de data para Date object
+    const [year, month, day] = transaction.date.split('-');
+    const dateObj = new Date(year, month - 1, day);
     setFormData({
       description: transaction.description,
       amount: Math.abs(transaction.amount).toString(),
       type: transaction.type,
-      date: transaction.date,
+      date: dateObj,
     });
     setModalOpen(true);
   };
@@ -161,12 +165,15 @@ export default function Transacoes() {
       amount = Math.abs(amount);
     }
 
+    // Converter Date object para string YYYY-MM-DD
+    const dateString = formData.date.toISOString().split('T')[0];
+
     const transactionData = {
       id: editingTransaction?.id || Date.now(),
       description: formData.description,
       amount: amount,
       type: formData.type,
-      date: formData.date,
+      date: dateString,
     };
 
     if (editingTransaction) {
@@ -176,7 +183,7 @@ export default function Transacoes() {
     }
 
     setModalOpen(false);
-    setFormData({ description: '', amount: '', type: 'debit', date: new Date().toISOString().split('T')[0] });
+    setFormData({ description: '', amount: '', type: 'debit', date: new Date() });
   };
 
   const handleInputChange = (field, value) => {
@@ -516,12 +523,9 @@ export default function Transacoes() {
 
             <div className="space-y-2">
               <Label htmlFor="date">Data</Label>
-              <Input
-                id="date"
-                type="date"
+              <DatePicker
                 value={formData.date}
-                onChange={(e) => handleInputChange('date', e.target.value)}
-                required
+                onChange={(date) => handleInputChange('date', date)}
               />
             </div>
           </form>
