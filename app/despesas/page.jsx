@@ -487,7 +487,7 @@ export default function Despesas() {
             <Table
               columns={expenseColumns}
               data={filteredExpenses}
-              pageSize={10}
+              pageSize={15}
               onRowClick={handleEditExpense}
               selectable={true}
               selectedRows={selectedExpenses}

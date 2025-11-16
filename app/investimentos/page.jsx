@@ -449,7 +449,7 @@ export default function Investimentos() {
             <Table
               columns={assetColumns}
               data={sortedAssets}
-              pageSize={10}
+              pageSize={15}
               onRowClick={handleEditAsset}
               selectable={true}
               selectedRows={selectedAssets}

@@ -488,7 +488,7 @@ export default function Transacoes() {
             <Table
               columns={transactionColumns}
               data={sortedTransactions}
-              pageSize={10}
+              pageSize={15}
               onRowClick={handleEditTransaction}
               selectable={true}
               selectedRows={selectedTransactions}

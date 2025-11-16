@@ -499,7 +499,7 @@ export default function Metas() {
             <Table
               columns={targetColumns}
               data={sortedTargets}
-              pageSize={10}
+              pageSize={15}
               onRowClick={handleEditTarget}
               selectable={true}
               selectedRows={selectedTargets}
