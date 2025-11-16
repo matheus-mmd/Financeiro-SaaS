@@ -38,6 +38,7 @@ import Table from '../../src/components/Table';
 import ProgressBar from '../../src/components/ProgressBar';
 import DatePicker from '../../src/components/DatePicker';
 import { fetchMock, formatCurrency, formatDate } from '../../src/utils/mockApi';
+import { exportToCSV } from '../../src/utils/exportData';
 import { Target, Plus, Edit, Trash2, CheckCircle, Minus, Download, Filter, TrendingUp } from 'lucide-react';
 
 /**
@@ -204,6 +205,27 @@ export default function Metas() {
     setFormData({ ...formData, [field]: value });
   };
 
+  const handleExport = () => {
+    const columns = [
+      { key: 'date', label: 'Data', format: (row) => formatDate(row.date) },
+      { key: 'title', label: 'Meta' },
+      {
+        key: 'status',
+        label: 'Status',
+        format: (row) => row.status === 'completed' ? 'Concluída' : 'Em Andamento'
+      },
+      { key: 'goal', label: 'Objetivo', format: (row) => formatCurrency(row.goal) },
+      { key: 'progress', label: 'Atual', format: (row) => formatCurrency(row.progress) },
+      {
+        key: 'percentage',
+        label: 'Progresso (%)',
+        format: (row) => `${((row.progress / row.goal) * 100).toFixed(1)}%`
+      },
+    ];
+
+    exportToCSV(filteredTargets, columns, 'metas');
+  };
+
   // Calcular estatísticas baseadas nas metas filtradas
   const completedTargets = filteredTargets.filter(t => t.status === 'completed');
   const inProgressTargets = filteredTargets.filter(t => t.status === 'in_progress');
@@ -329,7 +351,7 @@ export default function Metas() {
         description="Defina e acompanhe suas metas"
         actions={
           <>
-            <Button variant="secondary">
+            <Button variant="secondary" onClick={handleExport}>
               <Download className="w-4 h-4" />
               Exportar
             </Button>

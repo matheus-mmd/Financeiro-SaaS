@@ -38,7 +38,8 @@ import Table from '../../src/components/Table';
 import DoughnutChart from '../../src/components/charts/DoughnutChart';
 import DatePicker from '../../src/components/DatePicker';
 import { fetchMock, formatCurrency, formatDate } from '../../src/utils/mockApi';
-import { Receipt, Plus, Edit, Trash2, TrendingDown, PieChart, Filter } from 'lucide-react';
+import { exportToCSV } from '../../src/utils/exportData';
+import { Receipt, Plus, Edit, Trash2, TrendingDown, PieChart, Filter, Download } from 'lucide-react';
 
 /**
  * Página Despesas - Gerenciamento detalhado de despesas por categoria
@@ -188,6 +189,17 @@ export default function Despesas() {
     setFormData({ ...formData, [field]: value });
   };
 
+  const handleExport = () => {
+    const columns = [
+      { key: 'date', label: 'Data', format: (row) => formatDate(row.date) },
+      { key: 'title', label: 'Descrição' },
+      { key: 'category', label: 'Categoria' },
+      { key: 'amount', label: 'Valor', format: (row) => formatCurrency(row.amount) },
+    ];
+
+    exportToCSV(filteredExpenses, columns, 'despesas');
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -280,6 +292,10 @@ export default function Despesas() {
         description="Gerencie suas despesas por categoria"
         actions={
           <>
+            <Button variant="secondary" onClick={handleExport}>
+              <Download className="w-4 h-4" />
+              Exportar
+            </Button>
             <Button variant="secondary" onClick={() => setCategoryModalOpen(true)}>
               <PieChart className="w-4 h-4" />
               Categorias

@@ -37,6 +37,7 @@ import Spinner from '../../src/components/Spinner';
 import Table from '../../src/components/Table';
 import DatePicker from '../../src/components/DatePicker';
 import { fetchMock, formatCurrency, formatDate } from '../../src/utils/mockApi';
+import { exportToCSV } from '../../src/utils/exportData';
 import { TrendingUp, DollarSign, Percent, Plus, Filter, Download, Edit, Trash2, Wallet } from 'lucide-react';
 
 /**
@@ -192,6 +193,22 @@ export default function Investimentos() {
     setFormData({ ...formData, [field]: value });
   };
 
+  const handleExport = () => {
+    const columns = [
+      { key: 'date', label: 'Data', format: (row) => formatDate(row.date) },
+      { key: 'name', label: 'Nome' },
+      { key: 'type', label: 'Tipo' },
+      { key: 'value', label: 'Valor', format: (row) => formatCurrency(row.value) },
+      {
+        key: 'yield',
+        label: 'Rendimento (% a.m.)',
+        format: (row) => `${(row.yield * 100).toFixed(2)}%`
+      },
+    ];
+
+    exportToCSV(filteredAssets, columns, 'investimentos');
+  };
+
   // Calcular estatísticas baseadas nos investimentos filtrados
   const averageYield = filteredAssets.length > 0
     ? filteredAssets.reduce((sum, a) => sum + (a.yield || 0), 0) / filteredAssets.length
@@ -289,7 +306,7 @@ export default function Investimentos() {
         description="Gerencie seus ativos e acompanhe rendimentos"
         actions={
           <>
-            <Button variant="secondary">
+            <Button variant="secondary" onClick={handleExport}>
               <Download className="w-4 h-4" />
               Exportar
             </Button>

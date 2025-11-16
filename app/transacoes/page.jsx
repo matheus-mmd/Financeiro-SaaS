@@ -38,6 +38,7 @@ import Spinner from '../../src/components/Spinner';
 import Table from '../../src/components/Table';
 import DatePicker from '../../src/components/DatePicker';
 import { fetchMock, formatCurrency, formatDate } from '../../src/utils/mockApi';
+import { exportToCSV } from '../../src/utils/exportData';
 import { ArrowUpRight, ArrowDownRight, TrendingUp, Plus, Filter, Download, Edit, Trash2 } from 'lucide-react';
 
 /**
@@ -190,6 +191,21 @@ export default function Transacoes() {
     setFormData({ ...formData, [field]: value });
   };
 
+  const handleExport = () => {
+    const columns = [
+      { key: 'date', label: 'Data', format: (row) => formatDate(row.date) },
+      { key: 'description', label: 'Descrição' },
+      {
+        key: 'type',
+        label: 'Tipo',
+        format: (row) => row.type === 'credit' ? 'Crédito' : row.type === 'investment' ? 'Investimento' : 'Débito'
+      },
+      { key: 'amount', label: 'Valor', format: (row) => formatCurrency(Math.abs(row.amount)) },
+    ];
+
+    exportToCSV(filteredTransactions, columns, 'transacoes');
+  };
+
   // Calcular estatísticas baseadas nas transações filtradas (antes do if loading)
   const totalCredit = filteredTransactions
     .filter(t => t.type === 'credit')
@@ -323,7 +339,7 @@ export default function Transacoes() {
         description="Gerencie todas as suas transações financeiras"
         actions={
           <>
-            <Button variant="secondary">
+            <Button variant="secondary" onClick={handleExport}>
               <Download className="w-4 h-4" />
               Exportar
             </Button>
