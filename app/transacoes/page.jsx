@@ -472,15 +472,29 @@ export default function Transacoes() {
               </Button>
             )}
           </div>
-          <Table
-            columns={transactionColumns}
-            data={sortedTransactions}
-            pageSize={10}
-            onRowClick={handleEditTransaction}
-            selectable={true}
-            selectedRows={selectedTransactions}
-            onSelectionChange={setSelectedTransactions}
-          />
+          {sortedTransactions.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-gray-500 mb-4">
+                Nenhuma transação encontrada.{' '}
+                <button
+                  onClick={handleAddTransaction}
+                  className="text-brand-600 hover:text-brand-700 font-medium underline"
+                >
+                  Adicionar nova transação
+                </button>
+              </p>
+            </div>
+          ) : (
+            <Table
+              columns={transactionColumns}
+              data={sortedTransactions}
+              pageSize={10}
+              onRowClick={handleEditTransaction}
+              selectable={true}
+              selectedRows={selectedTransactions}
+              onSelectionChange={setSelectedTransactions}
+            />
+          )}
         </CardContent>
       </Card>
 

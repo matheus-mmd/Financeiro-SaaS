@@ -471,15 +471,29 @@ export default function Despesas() {
               </Button>
             )}
           </div>
-          <Table
-            columns={expenseColumns}
-            data={filteredExpenses}
-            pageSize={10}
-            onRowClick={handleEditExpense}
-            selectable={true}
-            selectedRows={selectedExpenses}
-            onSelectionChange={setSelectedExpenses}
-          />
+          {filteredExpenses.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-gray-500 mb-4">
+                Nenhuma despesa encontrada.{' '}
+                <button
+                  onClick={handleAddExpense}
+                  className="text-brand-600 hover:text-brand-700 font-medium underline"
+                >
+                  Adicionar nova despesa
+                </button>
+              </p>
+            </div>
+          ) : (
+            <Table
+              columns={expenseColumns}
+              data={filteredExpenses}
+              pageSize={10}
+              onRowClick={handleEditExpense}
+              selectable={true}
+              selectedRows={selectedExpenses}
+              onSelectionChange={setSelectedExpenses}
+            />
+          )}
         </CardContent>
       </Card>
 

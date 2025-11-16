@@ -483,15 +483,29 @@ export default function Metas() {
               </Button>
             )}
           </div>
-          <Table
-            columns={targetColumns}
-            data={sortedTargets}
-            pageSize={10}
-            onRowClick={handleEditTarget}
-            selectable={true}
-            selectedRows={selectedTargets}
-            onSelectionChange={setSelectedTargets}
-          />
+          {sortedTargets.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-gray-500 mb-4">
+                Nenhuma meta encontrada.{' '}
+                <button
+                  onClick={handleAddTarget}
+                  className="text-brand-600 hover:text-brand-700 font-medium underline"
+                >
+                  Criar nova meta
+                </button>
+              </p>
+            </div>
+          ) : (
+            <Table
+              columns={targetColumns}
+              data={sortedTargets}
+              pageSize={10}
+              onRowClick={handleEditTarget}
+              selectable={true}
+              selectedRows={selectedTargets}
+              onSelectionChange={setSelectedTargets}
+            />
+          )}
         </CardContent>
       </Card>
 

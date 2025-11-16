@@ -433,15 +433,29 @@ export default function Investimentos() {
               </Button>
             )}
           </div>
-          <Table
-            columns={assetColumns}
-            data={sortedAssets}
-            pageSize={10}
-            onRowClick={handleEditAsset}
-            selectable={true}
-            selectedRows={selectedAssets}
-            onSelectionChange={setSelectedAssets}
-          />
+          {sortedAssets.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-gray-500 mb-4">
+                Nenhum investimento encontrado.{' '}
+                <button
+                  onClick={handleAddAsset}
+                  className="text-brand-600 hover:text-brand-700 font-medium underline"
+                >
+                  Adicionar novo investimento
+                </button>
+              </p>
+            </div>
+          ) : (
+            <Table
+              columns={assetColumns}
+              data={sortedAssets}
+              pageSize={10}
+              onRowClick={handleEditAsset}
+              selectable={true}
+              selectedRows={selectedAssets}
+              onSelectionChange={setSelectedAssets}
+            />
+          )}
         </CardContent>
       </Card>
 
