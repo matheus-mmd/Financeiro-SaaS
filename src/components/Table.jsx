@@ -18,8 +18,19 @@ import { Card, CardContent } from './ui/card';
  * @param {Array} data - Dados a serem exibidos
  * @param {number} pageSize - Itens por página
  * @param {Function} onRowClick - Função opcional chamada ao clicar em uma linha
+ * @param {boolean} selectable - Habilita seleção múltipla
+ * @param {Array} selectedRows - Array de IDs das linhas selecionadas
+ * @param {Function} onSelectionChange - Callback quando seleção muda
  */
-export default function Table({ columns, data, pageSize = 10, onRowClick }) {
+export default function Table({
+  columns,
+  data,
+  pageSize = 10,
+  onRowClick,
+  selectable = false,
+  selectedRows = [],
+  onSelectionChange
+}) {
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -50,11 +61,12 @@ export default function Table({ columns, data, pageSize = 10, onRowClick }) {
   };
 
   const handleRowClick = (row, event) => {
-    // Não aciona clique se clicar em botões ou elementos interativos
+    // Não aciona clique se clicar em botões, checkboxes ou elementos interativos
     if (
       event.target.closest('button') ||
       event.target.closest('a') ||
-      event.target.closest('[role="button"]')
+      event.target.closest('[role="button"]') ||
+      event.target.closest('input[type="checkbox"]')
     ) {
       return;
     }
@@ -64,6 +76,28 @@ export default function Table({ columns, data, pageSize = 10, onRowClick }) {
     }
   };
 
+  // Funções de seleção
+  const handleSelectAll = (e) => {
+    if (e.target.checked) {
+      const allIds = paginatedData.map(row => row.id);
+      onSelectionChange([...new Set([...selectedRows, ...allIds])]);
+    } else {
+      const pageIds = paginatedData.map(row => row.id);
+      onSelectionChange(selectedRows.filter(id => !pageIds.includes(id)));
+    }
+  };
+
+  const handleSelectRow = (rowId) => {
+    if (selectedRows.includes(rowId)) {
+      onSelectionChange(selectedRows.filter(id => id !== rowId));
+    } else {
+      onSelectionChange([...selectedRows, rowId]);
+    }
+  };
+
+  const isAllSelected = paginatedData.length > 0 && paginatedData.every(row => selectedRows.includes(row.id));
+  const isSomeSelected = paginatedData.some(row => selectedRows.includes(row.id)) && !isAllSelected;
+
   return (
     <div className="w-full">
       {/* Table View - mantém formato de linhas em todas as telas */}
@@ -71,6 +105,17 @@ export default function Table({ columns, data, pageSize = 10, onRowClick }) {
         <ShadcnTable>
           <TableHeader>
             <TableRow>
+              {selectable && (
+                <TableHead className="w-12">
+                  <input
+                    type="checkbox"
+                    checked={isAllSelected}
+                    ref={(el) => el && (el.indeterminate = isSomeSelected)}
+                    onChange={handleSelectAll}
+                    className="w-4 h-4 cursor-pointer"
+                  />
+                </TableHead>
+              )}
               {columns.map((column) => (
                 <TableHead
                   key={column.key}
@@ -96,6 +141,16 @@ export default function Table({ columns, data, pageSize = 10, onRowClick }) {
                 onClick={(e) => handleRowClick(row, e)}
                 className={onRowClick ? 'cursor-pointer hover:bg-gray-50' : ''}
               >
+                {selectable && (
+                  <TableCell className="w-12">
+                    <input
+                      type="checkbox"
+                      checked={selectedRows.includes(row.id)}
+                      onChange={() => handleSelectRow(row.id)}
+                      className="w-4 h-4 cursor-pointer"
+                    />
+                  </TableCell>
+                )}
                 {columns.map((column) => (
                   <TableCell key={column.key}>
                     {column.render ? column.render(row) : row[column.key]}

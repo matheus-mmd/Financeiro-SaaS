@@ -54,6 +54,8 @@ export default function Metas() {
   const [filterStatus, setFilterStatus] = useState('all');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [targetToDelete, setTargetToDelete] = useState(null);
+  const [selectedTargets, setSelectedTargets] = useState([]);
+  const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
 
   // Inicializa com primeiro e último dia do mês atual
   const getCurrentMonthRange = () => {
@@ -159,6 +161,16 @@ export default function Metas() {
       setDeleteDialogOpen(false);
       setTargetToDelete(null);
     }
+  };
+
+  const handleBulkDelete = () => {
+    setBulkDeleteDialogOpen(true);
+  };
+
+  const confirmBulkDelete = () => {
+    setTargets(targets.filter(t => !selectedTargets.includes(t.id)));
+    setSelectedTargets([]);
+    setBulkDeleteDialogOpen(false);
   };
 
   const handleSubmit = (e) => {
@@ -460,14 +472,25 @@ export default function Metas() {
       {/* Tabela de metas */}
       <Card>
         <CardContent className="p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">
-            Todas as Metas ({filteredTargets.length})
-          </h2>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+            <h2 className="text-lg font-semibold text-gray-900">
+              Todas as Metas ({filteredTargets.length})
+            </h2>
+            {selectedTargets.length > 0 && (
+              <Button variant="destructive" size="sm" onClick={handleBulkDelete} className="w-full sm:w-auto">
+                <Trash2 className="w-4 h-4" />
+                Excluir {selectedTargets.length} selecionada(s)
+              </Button>
+            )}
+          </div>
           <Table
             columns={targetColumns}
             data={sortedTargets}
             pageSize={10}
             onRowClick={handleEditTarget}
+            selectable={true}
+            selectedRows={selectedTargets}
+            onSelectionChange={setSelectedTargets}
           />
         </CardContent>
       </Card>
@@ -587,6 +610,28 @@ export default function Metas() {
               className="bg-red-600 hover:bg-red-700"
             >
               Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* AlertDialog de confirmação de exclusão em lote */}
+      <AlertDialog open={bulkDeleteDialogOpen} onOpenChange={setBulkDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar Exclusão em Lote</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir {selectedTargets.length} meta(s) selecionada(s)?
+              Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmBulkDelete}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Excluir Todas
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

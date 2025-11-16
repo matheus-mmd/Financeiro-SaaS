@@ -54,6 +54,8 @@ export default function Investimentos() {
   const [filterType, setFilterType] = useState('all');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [assetToDelete, setAssetToDelete] = useState(null);
+  const [selectedAssets, setSelectedAssets] = useState([]);
+  const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
 
   // Inicializa com primeiro e último dia do mês atual
   const getCurrentMonthRange = () => {
@@ -161,6 +163,16 @@ export default function Investimentos() {
       setDeleteDialogOpen(false);
       setAssetToDelete(null);
     }
+  };
+
+  const handleBulkDelete = () => {
+    setBulkDeleteDialogOpen(true);
+  };
+
+  const confirmBulkDelete = () => {
+    setAssets(assets.filter(a => !selectedAssets.includes(a.id)));
+    setSelectedAssets([]);
+    setBulkDeleteDialogOpen(false);
   };
 
   const handleSubmit = (e) => {
@@ -410,14 +422,25 @@ export default function Investimentos() {
       {/* Tabela de investimentos */}
       <Card>
         <CardContent className="p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">
-            Todos os Investimentos ({filteredAssets.length})
-          </h2>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+            <h2 className="text-lg font-semibold text-gray-900">
+              Todos os Investimentos ({filteredAssets.length})
+            </h2>
+            {selectedAssets.length > 0 && (
+              <Button variant="destructive" size="sm" onClick={handleBulkDelete} className="w-full sm:w-auto">
+                <Trash2 className="w-4 h-4" />
+                Excluir {selectedAssets.length} selecionado(s)
+              </Button>
+            )}
+          </div>
           <Table
             columns={assetColumns}
             data={sortedAssets}
             pageSize={10}
             onRowClick={handleEditAsset}
+            selectable={true}
+            selectedRows={selectedAssets}
+            onSelectionChange={setSelectedAssets}
           />
         </CardContent>
       </Card>
@@ -525,6 +548,28 @@ export default function Investimentos() {
               className="bg-red-600 hover:bg-red-700"
             >
               Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* AlertDialog de confirmação de exclusão em lote */}
+      <AlertDialog open={bulkDeleteDialogOpen} onOpenChange={setBulkDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar Exclusão em Lote</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir {selectedAssets.length} investimento(s) selecionado(s)?
+              Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmBulkDelete}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Excluir Todos
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

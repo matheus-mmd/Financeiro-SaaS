@@ -56,6 +56,8 @@ export default function Despesas() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [expenseToDelete, setExpenseToDelete] = useState(null);
+  const [selectedExpenses, setSelectedExpenses] = useState([]);
+  const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
 
   // Função para obter intervalo do mês atual
   const getCurrentMonthRange = () => {
@@ -159,6 +161,16 @@ export default function Despesas() {
       setDeleteDialogOpen(false);
       setExpenseToDelete(null);
     }
+  };
+
+  const handleBulkDelete = () => {
+    setBulkDeleteDialogOpen(true);
+  };
+
+  const confirmBulkDelete = () => {
+    setExpenses(expenses.filter(e => !selectedExpenses.includes(e.id)));
+    setSelectedExpenses([]);
+    setBulkDeleteDialogOpen(false);
   };
 
   const handleSubmit = (e) => {
@@ -447,16 +459,27 @@ export default function Despesas() {
       {/* Tabela de despesas */}
       <Card>
         <CardContent className="p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">
-          {selectedCategory === 'all' ? 'Todas as Despesas' : `Despesas - ${selectedCategory}`}
-          {' '}({filteredExpenses.length})
-        </h2>
-        <Table
-          columns={expenseColumns}
-          data={filteredExpenses}
-          pageSize={10}
-          onRowClick={handleEditExpense}
-        />
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+            <h2 className="text-lg font-semibold text-gray-900">
+              {selectedCategory === 'all' ? 'Todas as Despesas' : `Despesas - ${selectedCategory}`}
+              {' '}({filteredExpenses.length})
+            </h2>
+            {selectedExpenses.length > 0 && (
+              <Button variant="destructive" size="sm" onClick={handleBulkDelete} className="w-full sm:w-auto">
+                <Trash2 className="w-4 h-4" />
+                Excluir {selectedExpenses.length} selecionada(s)
+              </Button>
+            )}
+          </div>
+          <Table
+            columns={expenseColumns}
+            data={filteredExpenses}
+            pageSize={10}
+            onRowClick={handleEditExpense}
+            selectable={true}
+            selectedRows={selectedExpenses}
+            onSelectionChange={setSelectedExpenses}
+          />
         </CardContent>
       </Card>
 
@@ -574,6 +597,28 @@ export default function Despesas() {
               className="bg-red-600 hover:bg-red-700"
             >
               Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* AlertDialog de confirmação de exclusão em lote */}
+      <AlertDialog open={bulkDeleteDialogOpen} onOpenChange={setBulkDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar Exclusão em Lote</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir {selectedExpenses.length} despesa(s) selecionada(s)?
+              Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmBulkDelete}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Excluir Todas
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

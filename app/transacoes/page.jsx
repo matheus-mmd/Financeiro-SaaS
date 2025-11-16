@@ -54,6 +54,8 @@ export default function Transacoes() {
   const [filterType, setFilterType] = useState('all'); // all, credit, debit
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [transactionToDelete, setTransactionToDelete] = useState(null);
+  const [selectedTransactions, setSelectedTransactions] = useState([]);
+  const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
 
   // Inicializa com primeiro e último dia do mês atual
   const getCurrentMonthRange = () => {
@@ -153,6 +155,16 @@ export default function Transacoes() {
       setDeleteDialogOpen(false);
       setTransactionToDelete(null);
     }
+  };
+
+  const handleBulkDelete = () => {
+    setBulkDeleteDialogOpen(true);
+  };
+
+  const confirmBulkDelete = () => {
+    setTransactions(transactions.filter(t => !selectedTransactions.includes(t.id)));
+    setSelectedTransactions([]);
+    setBulkDeleteDialogOpen(false);
   };
 
   const handleSubmit = (e) => {
@@ -449,14 +461,25 @@ export default function Transacoes() {
       {/* Tabela de transações */}
       <Card>
         <CardContent className="p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">
-            Todas as Transações ({filteredTransactions.length})
-          </h2>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+            <h2 className="text-lg font-semibold text-gray-900">
+              Todas as Transações ({filteredTransactions.length})
+            </h2>
+            {selectedTransactions.length > 0 && (
+              <Button variant="destructive" size="sm" onClick={handleBulkDelete} className="w-full sm:w-auto">
+                <Trash2 className="w-4 h-4" />
+                Excluir {selectedTransactions.length} selecionada(s)
+              </Button>
+            )}
+          </div>
           <Table
             columns={transactionColumns}
             data={sortedTransactions}
             pageSize={10}
             onRowClick={handleEditTransaction}
+            selectable={true}
+            selectedRows={selectedTransactions}
+            onSelectionChange={setSelectedTransactions}
           />
         </CardContent>
       </Card>
@@ -573,6 +596,28 @@ export default function Transacoes() {
               className="bg-red-600 hover:bg-red-700"
             >
               Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* AlertDialog de confirmação de exclusão em lote */}
+      <AlertDialog open={bulkDeleteDialogOpen} onOpenChange={setBulkDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar Exclusão em Lote</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir {selectedTransactions.length} transação(ões) selecionada(s)?
+              Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmBulkDelete}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Excluir Todas
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
