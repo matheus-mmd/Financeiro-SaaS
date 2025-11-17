@@ -1,28 +1,28 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect, useMemo } from 'react';
-import PageHeader from '../../src/components/PageHeader';
-import StatsCard from '../../src/components/StatsCard';
-import MonthPicker from '../../src/components/MonthPicker';
-import { Card, CardContent } from '../../src/components/ui/card';
-import { Badge } from '../../src/components/ui/badge';
-import { Button } from '../../src/components/ui/button';
-import { Input } from '../../src/components/ui/input';
-import { Label } from '../../src/components/ui/label';
+import React, { useState, useEffect, useMemo } from "react";
+import PageHeader from "../../src/components/PageHeader";
+import StatsCard from "../../src/components/StatsCard";
+import MonthPicker from "../../src/components/MonthPicker";
+import { Card, CardContent } from "../../src/components/ui/card";
+import { Badge } from "../../src/components/ui/badge";
+import { Button } from "../../src/components/ui/button";
+import { Input } from "../../src/components/ui/input";
+import { Label } from "../../src/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../../src/components/ui/select';
+} from "../../src/components/ui/select";
 import {
   Dialog,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '../../src/components/ui/dialog';
+} from "../../src/components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -32,14 +32,24 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '../../src/components/ui/alert-dialog';
-import Spinner from '../../src/components/Spinner';
-import Table from '../../src/components/Table';
-import ProgressBar from '../../src/components/ProgressBar';
-import DatePicker from '../../src/components/DatePicker';
-import { fetchMock, formatCurrency, formatDate } from '../../src/utils/mockApi';
-import { exportToCSV } from '../../src/utils/exportData';
-import { Target, Plus, Edit, Trash2, CheckCircle, Minus, Download, Filter, TrendingUp } from 'lucide-react';
+} from "../../src/components/ui/alert-dialog";
+import Spinner from "../../src/components/Spinner";
+import Table from "../../src/components/Table";
+import ProgressBar from "../../src/components/ProgressBar";
+import DatePicker from "../../src/components/DatePicker";
+import { fetchMock, formatCurrency, formatDate } from "../../src/utils/mockApi";
+import { exportToCSV } from "../../src/utils/exportData";
+import {
+  Target,
+  Plus,
+  Edit,
+  Trash2,
+  CheckCircle,
+  Minus,
+  Download,
+  Filter,
+  TrendingUp,
+} from "lucide-react";
 
 /**
  * Página Metas - Gerenciamento de metas financeiras
@@ -51,7 +61,7 @@ export default function Metas() {
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingTarget, setEditingTarget] = useState(null);
-  const [filterStatus, setFilterStatus] = useState('all');
+  const [filterStatus, setFilterStatus] = useState("all");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [targetToDelete, setTargetToDelete] = useState(null);
   const [selectedTargets, setSelectedTargets] = useState([]);
@@ -67,26 +77,26 @@ export default function Metas() {
 
   const [filterMonth, setFilterMonth] = useState(getCurrentMonthRange());
   const [formData, setFormData] = useState({
-    title: '',
-    goal: '',
-    progress: '',
-    monthlyAmount: '',
+    title: "",
+    goal: "",
+    progress: "",
+    monthlyAmount: "",
     date: new Date(),
   });
 
   useEffect(() => {
     const loadData = async () => {
       try {
-        const response = await fetchMock('/api/targets');
+        const response = await fetchMock("/api/targets");
         // Adicionar data às metas se não tiver
-        const targetsWithDate = response.data.map(target => ({
+        const targetsWithDate = response.data.map((target) => ({
           ...target,
-          date: target.date || new Date().toISOString().split('T')[0]
+          date: target.date || new Date().toISOString().split("T")[0],
         }));
         setTargets(targetsWithDate);
         setFilteredTargets(targetsWithDate);
       } catch (error) {
-        console.error('Erro ao carregar metas:', error);
+        console.error("Erro ao carregar metas:", error);
       } finally {
         setLoading(false);
       }
@@ -99,14 +109,14 @@ export default function Metas() {
     let filtered = targets;
 
     // Filtrar por status
-    if (filterStatus !== 'all') {
-      filtered = filtered.filter(t => t.status === filterStatus);
+    if (filterStatus !== "all") {
+      filtered = filtered.filter((t) => t.status === filterStatus);
     }
 
     // Filtrar por intervalo de datas
     if (filterMonth?.from && filterMonth?.to) {
-      filtered = filtered.filter(t => {
-        const [year, month, day] = t.date.split('-');
+      filtered = filtered.filter((t) => {
+        const [year, month, day] = t.date.split("-");
         const targetDate = new Date(year, month - 1, day);
         targetDate.setHours(0, 0, 0, 0);
 
@@ -126,10 +136,10 @@ export default function Metas() {
   const handleAddTarget = () => {
     setEditingTarget(null);
     setFormData({
-      title: '',
-      goal: '',
-      progress: '',
-      monthlyAmount: '',
+      title: "",
+      goal: "",
+      progress: "",
+      monthlyAmount: "",
       date: new Date(),
     });
     setModalOpen(true);
@@ -138,13 +148,13 @@ export default function Metas() {
   const handleEditTarget = (target) => {
     setEditingTarget(target);
     // Converter string de data para Date object
-    const [year, month, day] = target.date.split('-');
+    const [year, month, day] = target.date.split("-");
     const dateObj = new Date(year, month - 1, day);
     setFormData({
       title: target.title,
       goal: target.goal.toString(),
       progress: target.progress.toString(),
-      monthlyAmount: target.monthlyAmount?.toString() || '',
+      monthlyAmount: target.monthlyAmount?.toString() || "",
       date: dateObj,
     });
     setModalOpen(true);
@@ -157,7 +167,7 @@ export default function Metas() {
 
   const confirmDelete = () => {
     if (targetToDelete) {
-      setTargets(targets.filter(t => t.id !== targetToDelete.id));
+      setTargets(targets.filter((t) => t.id !== targetToDelete.id));
       setDeleteDialogOpen(false);
       setTargetToDelete(null);
     }
@@ -168,7 +178,7 @@ export default function Metas() {
   };
 
   const confirmBulkDelete = () => {
-    setTargets(targets.filter(t => !selectedTargets.includes(t.id)));
+    setTargets(targets.filter((t) => !selectedTargets.includes(t.id)));
     setSelectedTargets([]);
     setBulkDeleteDialogOpen(false);
   };
@@ -177,26 +187,39 @@ export default function Metas() {
     e.preventDefault();
 
     // Converter Date object para string YYYY-MM-DD
-    const dateString = formData.date.toISOString().split('T')[0];
+    const dateString = formData.date.toISOString().split("T")[0];
 
     const newTarget = {
       id: editingTarget?.id || `t${Date.now()}`,
       title: formData.title,
       goal: parseFloat(formData.goal),
       progress: parseFloat(formData.progress || 0),
-      monthlyAmount: formData.monthlyAmount ? parseFloat(formData.monthlyAmount) : 0,
-      status: parseFloat(formData.progress || 0) >= parseFloat(formData.goal) ? 'completed' : 'in_progress',
+      monthlyAmount: formData.monthlyAmount
+        ? parseFloat(formData.monthlyAmount)
+        : 0,
+      status:
+        parseFloat(formData.progress || 0) >= parseFloat(formData.goal)
+          ? "completed"
+          : "in_progress",
       date: dateString,
     };
 
     if (editingTarget) {
-      setTargets(targets.map(t => t.id === editingTarget.id ? newTarget : t));
+      setTargets(
+        targets.map((t) => (t.id === editingTarget.id ? newTarget : t))
+      );
     } else {
       setTargets([newTarget, ...targets]);
     }
 
     setModalOpen(false);
-    setFormData({ title: '', goal: '', progress: '', monthlyAmount: '', date: new Date() });
+    setFormData({
+      title: "",
+      goal: "",
+      progress: "",
+      monthlyAmount: "",
+      date: new Date(),
+    });
   };
 
   const calculateMonthsToGoal = (goal, progress, monthlyAmount) => {
@@ -210,7 +233,7 @@ export default function Metas() {
     if (months === null || months === 0) return null;
     const date = new Date();
     date.setMonth(date.getMonth() + months);
-    return date.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+    return date.toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
   };
 
   const handleInputChange = (field, value) => {
@@ -219,30 +242,46 @@ export default function Metas() {
 
   const handleExport = () => {
     const columns = [
-      { key: 'date', label: 'Data', format: (row) => formatDate(row.date) },
-      { key: 'title', label: 'Meta' },
+      { key: "date", label: "Data", format: (row) => formatDate(row.date) },
+      { key: "title", label: "Meta" },
       {
-        key: 'status',
-        label: 'Status',
-        format: (row) => row.status === 'completed' ? 'Concluída' : 'Em Andamento'
+        key: "status",
+        label: "Status",
+        format: (row) =>
+          row.status === "completed" ? "Concluída" : "Em Andamento",
       },
-      { key: 'goal', label: 'Objetivo', format: (row) => formatCurrency(row.goal) },
-      { key: 'progress', label: 'Atual', format: (row) => formatCurrency(row.progress) },
       {
-        key: 'percentage',
-        label: 'Progresso (%)',
-        format: (row) => `${((row.progress / row.goal) * 100).toFixed(1)}%`
+        key: "goal",
+        label: "Objetivo",
+        format: (row) => formatCurrency(row.goal),
+      },
+      {
+        key: "progress",
+        label: "Atual",
+        format: (row) => formatCurrency(row.progress),
+      },
+      {
+        key: "percentage",
+        label: "Progresso (%)",
+        format: (row) => `${((row.progress / row.goal) * 100).toFixed(1)}%`,
       },
     ];
 
-    exportToCSV(filteredTargets, columns, 'metas');
+    exportToCSV(filteredTargets, columns, "metas");
   };
 
   // Calcular estatísticas baseadas nas metas filtradas
-  const completedTargets = filteredTargets.filter(t => t.status === 'completed');
-  const inProgressTargets = filteredTargets.filter(t => t.status === 'in_progress');
+  const completedTargets = filteredTargets.filter(
+    (t) => t.status === "completed"
+  );
+  const inProgressTargets = filteredTargets.filter(
+    (t) => t.status === "in_progress"
+  );
   const totalGoalAmount = filteredTargets.reduce((sum, t) => sum + t.goal, 0);
-  const totalProgressAmount = filteredTargets.reduce((sum, t) => sum + t.progress, 0);
+  const totalProgressAmount = filteredTargets.reduce(
+    (sum, t) => sum + t.progress,
+    0
+  );
 
   // Ordenar metas por progresso percentual (maior primeiro)
   const sortedTargets = useMemo(() => {
@@ -264,21 +303,21 @@ export default function Metas() {
   // Configuração de colunas da tabela
   const targetColumns = [
     {
-      key: 'date',
-      label: 'Data',
+      key: "date",
+      label: "Data",
       sortable: true,
       render: (row) => formatDate(row.date),
     },
     {
-      key: 'title',
-      label: 'Meta',
+      key: "title",
+      label: "Meta",
       sortable: true,
     },
     {
-      key: 'status',
-      label: 'Status',
+      key: "status",
+      label: "Status",
       render: (row) => {
-        if (row.status === 'completed') {
+        if (row.status === "completed") {
           return (
             <Badge variant="default" className="bg-green-500">
               <span className="flex items-center gap-1">
@@ -300,8 +339,8 @@ export default function Metas() {
       },
     },
     {
-      key: 'progress',
-      label: 'Progresso',
+      key: "progress",
+      label: "Progresso",
       render: (row) => (
         <div className="min-w-[200px]">
           <ProgressBar
@@ -313,8 +352,8 @@ export default function Metas() {
       ),
     },
     {
-      key: 'goal',
-      label: 'Objetivo',
+      key: "goal",
+      label: "Objetivo",
       sortable: true,
       render: (row) => (
         <span className="font-semibold text-gray-900">
@@ -323,8 +362,8 @@ export default function Metas() {
       ),
     },
     {
-      key: 'current',
-      label: 'Atual',
+      key: "current",
+      label: "Atual",
       sortable: true,
       render: (row) => (
         <span className="text-blue-600 font-semibold">
@@ -333,8 +372,8 @@ export default function Metas() {
       ),
     },
     {
-      key: 'actions',
-      label: 'Ações',
+      key: "actions",
+      label: "Ações",
       render: (row) => (
         <div className="flex gap-2">
           <button
@@ -376,7 +415,7 @@ export default function Metas() {
       />
 
       {/* Cards de resumo */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
         <StatsCard
           icon={Target}
           label="Total de Metas"
@@ -416,13 +455,18 @@ export default function Metas() {
           <div className="space-y-4">
             <div className="flex items-center gap-2">
               <Filter className="w-5 h-5 text-gray-500" />
-              <span className="text-sm font-medium text-gray-700">Filtrar por:</span>
+              <span className="text-sm font-medium text-gray-700">
+                Filtrar por:
+              </span>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {/* Filtro por status */}
               <div className="space-y-2">
-                <Label htmlFor="filter-status" className="text-sm font-medium text-gray-700">
+                <Label
+                  htmlFor="filter-status"
+                  className="text-sm font-medium text-gray-700"
+                >
                   Status
                 </Label>
                 <Select value={filterStatus} onValueChange={setFilterStatus}>
@@ -451,13 +495,13 @@ export default function Metas() {
             </div>
 
             {/* Limpar filtros */}
-            {(filterStatus !== 'all' || filterMonth) && (
+            {(filterStatus !== "all" || filterMonth) && (
               <div className="flex justify-end">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => {
-                    setFilterStatus('all');
+                    setFilterStatus("all");
                     setFilterMonth(getCurrentMonthRange());
                   }}
                 >
@@ -477,7 +521,12 @@ export default function Metas() {
               Todas as Metas ({filteredTargets.length})
             </h2>
             {selectedTargets.length > 0 && (
-              <Button variant="destructive" size="sm" onClick={handleBulkDelete} className="w-full sm:w-auto">
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={handleBulkDelete}
+                className="w-full sm:w-auto"
+              >
                 <Trash2 className="w-4 h-4" />
                 Excluir {selectedTargets.length} selecionada(s)
               </Button>
@@ -486,7 +535,7 @@ export default function Metas() {
           {sortedTargets.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-gray-500 mb-4">
-                Nenhuma meta encontrada.{' '}
+                Nenhuma meta encontrada.{" "}
                 <button
                   onClick={handleAddTarget}
                   className="text-brand-600 hover:text-brand-700 font-medium underline"
@@ -513,7 +562,9 @@ export default function Metas() {
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{editingTarget ? 'Editar Meta' : 'Nova Meta'}</DialogTitle>
+            <DialogTitle>
+              {editingTarget ? "Editar Meta" : "Nova Meta"}
+            </DialogTitle>
           </DialogHeader>
 
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -523,7 +574,7 @@ export default function Metas() {
                 id="title"
                 placeholder="Ex: Reserva de emergência"
                 value={formData.title}
-                onChange={(e) => handleInputChange('title', e.target.value)}
+                onChange={(e) => handleInputChange("title", e.target.value)}
                 required
               />
             </div>
@@ -536,7 +587,7 @@ export default function Metas() {
                 step="0.01"
                 placeholder="0,00"
                 value={formData.goal}
-                onChange={(e) => handleInputChange('goal', e.target.value)}
+                onChange={(e) => handleInputChange("goal", e.target.value)}
                 required
               />
             </div>
@@ -549,13 +600,14 @@ export default function Metas() {
                 step="0.01"
                 placeholder="0,00"
                 value={formData.progress}
-                onChange={(e) => handleInputChange('progress', e.target.value)}
+                onChange={(e) => handleInputChange("progress", e.target.value)}
               />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="monthlyAmount">
-                Guardar por mês (R$) <span className="text-gray-400 font-normal">(opcional)</span>
+                Guardar por mês (R$){" "}
+                <span className="text-gray-400 font-normal">(opcional)</span>
               </Label>
               <Input
                 id="monthlyAmount"
@@ -564,44 +616,57 @@ export default function Metas() {
                 min="0"
                 placeholder="0,00"
                 value={formData.monthlyAmount}
-                onChange={(e) => handleInputChange('monthlyAmount', e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("monthlyAmount", e.target.value)
+                }
               />
-              {formData.monthlyAmount && parseFloat(formData.monthlyAmount) > 0 && formData.goal && (
-                <p className="text-xs text-gray-500 mt-1">
-                  {(() => {
-                    const months = calculateMonthsToGoal(
-                      parseFloat(formData.goal),
-                      parseFloat(formData.progress || 0),
-                      parseFloat(formData.monthlyAmount)
-                    );
-                    const targetDate = getTargetDate(months);
-                    return targetDate ? (
-                      <>
-                        Você alcançará o objetivo em <span className="font-semibold text-brand-600">{targetDate}</span>
-                      </>
-                    ) : (
-                      <span className="font-semibold text-green-600">Meta já alcançada!</span>
-                    );
-                  })()}
-                </p>
-              )}
+              {formData.monthlyAmount &&
+                parseFloat(formData.monthlyAmount) > 0 &&
+                formData.goal && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    {(() => {
+                      const months = calculateMonthsToGoal(
+                        parseFloat(formData.goal),
+                        parseFloat(formData.progress || 0),
+                        parseFloat(formData.monthlyAmount)
+                      );
+                      const targetDate = getTargetDate(months);
+                      return targetDate ? (
+                        <>
+                          Você alcançará o objetivo em{" "}
+                          <span className="font-semibold text-brand-600">
+                            {targetDate}
+                          </span>
+                        </>
+                      ) : (
+                        <span className="font-semibold text-green-600">
+                          Meta já alcançada!
+                        </span>
+                      );
+                    })()}
+                  </p>
+                )}
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="date">Data</Label>
               <DatePicker
                 value={formData.date}
-                onChange={(date) => handleInputChange('date', date)}
+                onChange={(date) => handleInputChange("date", date)}
               />
             </div>
           </form>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setModalOpen(false)} type="button">
+            <Button
+              variant="outline"
+              onClick={() => setModalOpen(false)}
+              type="button"
+            >
               Cancelar
             </Button>
             <Button onClick={handleSubmit} type="button">
-              {editingTarget ? 'Salvar' : 'Criar Meta'}
+              {editingTarget ? "Salvar" : "Criar Meta"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -630,13 +695,16 @@ export default function Metas() {
       </AlertDialog>
 
       {/* AlertDialog de confirmação de exclusão em lote */}
-      <AlertDialog open={bulkDeleteDialogOpen} onOpenChange={setBulkDeleteDialogOpen}>
+      <AlertDialog
+        open={bulkDeleteDialogOpen}
+        onOpenChange={setBulkDeleteDialogOpen}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Confirmar Exclusão em Lote</AlertDialogTitle>
             <AlertDialogDescription>
-              Tem certeza que deseja excluir {selectedTargets.length} meta(s) selecionada(s)?
-              Esta ação não pode ser desfeita.
+              Tem certeza que deseja excluir {selectedTargets.length} meta(s)
+              selecionada(s)? Esta ação não pode ser desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

@@ -1,21 +1,21 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect, useMemo } from 'react';
-import PageHeader from '../../src/components/PageHeader';
-import StatsCard from '../../src/components/StatsCard';
-import MonthPicker from '../../src/components/MonthPicker';
-import { Card, CardContent } from '../../src/components/ui/card';
-import { Badge } from '../../src/components/ui/badge';
-import { Button } from '../../src/components/ui/button';
-import { Input } from '../../src/components/ui/input';
-import { Label } from '../../src/components/ui/label';
+import React, { useState, useEffect, useMemo } from "react";
+import PageHeader from "../../src/components/PageHeader";
+import StatsCard from "../../src/components/StatsCard";
+import MonthPicker from "../../src/components/MonthPicker";
+import { Card, CardContent } from "../../src/components/ui/card";
+import { Badge } from "../../src/components/ui/badge";
+import { Button } from "../../src/components/ui/button";
+import { Input } from "../../src/components/ui/input";
+import { Label } from "../../src/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../../src/components/ui/select';
+} from "../../src/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -23,7 +23,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '../../src/components/ui/dialog';
+} from "../../src/components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -33,13 +33,22 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '../../src/components/ui/alert-dialog';
-import Spinner from '../../src/components/Spinner';
-import Table from '../../src/components/Table';
-import DatePicker from '../../src/components/DatePicker';
-import { fetchMock, formatCurrency, formatDate } from '../../src/utils/mockApi';
-import { exportToCSV } from '../../src/utils/exportData';
-import { ArrowUpRight, ArrowDownRight, TrendingUp, Plus, Filter, Download, Edit, Trash2 } from 'lucide-react';
+} from "../../src/components/ui/alert-dialog";
+import Spinner from "../../src/components/Spinner";
+import Table from "../../src/components/Table";
+import DatePicker from "../../src/components/DatePicker";
+import { fetchMock, formatCurrency, formatDate } from "../../src/utils/mockApi";
+import { exportToCSV } from "../../src/utils/exportData";
+import {
+  ArrowUpRight,
+  ArrowDownRight,
+  TrendingUp,
+  Plus,
+  Filter,
+  Download,
+  Edit,
+  Trash2,
+} from "lucide-react";
 
 /**
  * Página Transações - Gerenciamento de todas as transações financeiras
@@ -51,7 +60,7 @@ export default function Transacoes() {
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState(null);
-  const [filterType, setFilterType] = useState('all'); // all, credit, debit
+  const [filterType, setFilterType] = useState("all"); // all, credit, debit
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [transactionToDelete, setTransactionToDelete] = useState(null);
   const [selectedTransactions, setSelectedTransactions] = useState([]);
@@ -67,20 +76,20 @@ export default function Transacoes() {
 
   const [filterMonth, setFilterMonth] = useState(getCurrentMonthRange());
   const [formData, setFormData] = useState({
-    description: '',
-    amount: '',
-    type: 'debit',
+    description: "",
+    amount: "",
+    type: "debit",
     date: new Date(),
   });
 
   useEffect(() => {
     const loadData = async () => {
       try {
-        const response = await fetchMock('/api/transactions');
+        const response = await fetchMock("/api/transactions");
         setTransactions(response.data);
         setFilteredTransactions(response.data);
       } catch (error) {
-        console.error('Erro ao carregar transações:', error);
+        console.error("Erro ao carregar transações:", error);
       } finally {
         setLoading(false);
       }
@@ -93,15 +102,15 @@ export default function Transacoes() {
     let filtered = transactions;
 
     // Filtrar por tipo
-    if (filterType !== 'all') {
-      filtered = filtered.filter(t => t.type === filterType);
+    if (filterType !== "all") {
+      filtered = filtered.filter((t) => t.type === filterType);
     }
 
     // Filtrar por intervalo de datas
     if (filterMonth?.from && filterMonth?.to) {
-      filtered = filtered.filter(t => {
+      filtered = filtered.filter((t) => {
         // Separar a string de data para evitar problemas com timezone
-        const [year, month, day] = t.date.split('-');
+        const [year, month, day] = t.date.split("-");
         const transactionDate = new Date(year, month - 1, day);
         // Remove a parte de hora para comparar apenas datas
         transactionDate.setHours(0, 0, 0, 0);
@@ -122,9 +131,9 @@ export default function Transacoes() {
   const handleAddTransaction = () => {
     setEditingTransaction(null);
     setFormData({
-      description: '',
-      amount: '',
-      type: 'debit',
+      description: "",
+      amount: "",
+      type: "debit",
       date: new Date(),
     });
     setModalOpen(true);
@@ -133,7 +142,7 @@ export default function Transacoes() {
   const handleEditTransaction = (transaction) => {
     setEditingTransaction(transaction);
     // Converter string de data para Date object
-    const [year, month, day] = transaction.date.split('-');
+    const [year, month, day] = transaction.date.split("-");
     const dateObj = new Date(year, month - 1, day);
     setFormData({
       description: transaction.description,
@@ -151,7 +160,9 @@ export default function Transacoes() {
 
   const confirmDelete = () => {
     if (transactionToDelete) {
-      setTransactions(transactions.filter(t => t.id !== transactionToDelete.id));
+      setTransactions(
+        transactions.filter((t) => t.id !== transactionToDelete.id)
+      );
       setDeleteDialogOpen(false);
       setTransactionToDelete(null);
     }
@@ -162,7 +173,9 @@ export default function Transacoes() {
   };
 
   const confirmBulkDelete = () => {
-    setTransactions(transactions.filter(t => !selectedTransactions.includes(t.id)));
+    setTransactions(
+      transactions.filter((t) => !selectedTransactions.includes(t.id))
+    );
     setSelectedTransactions([]);
     setBulkDeleteDialogOpen(false);
   };
@@ -172,14 +185,14 @@ export default function Transacoes() {
 
     // Investimentos e débitos são negativos (saída), créditos são positivos (entrada)
     let amount = parseFloat(formData.amount);
-    if (formData.type === 'debit' || formData.type === 'investment') {
+    if (formData.type === "debit" || formData.type === "investment") {
       amount = -Math.abs(amount);
     } else {
       amount = Math.abs(amount);
     }
 
     // Converter Date object para string YYYY-MM-DD
-    const dateString = formData.date.toISOString().split('T')[0];
+    const dateString = formData.date.toISOString().split("T")[0];
 
     const transactionData = {
       id: editingTransaction?.id || Date.now(),
@@ -190,13 +203,22 @@ export default function Transacoes() {
     };
 
     if (editingTransaction) {
-      setTransactions(transactions.map(t => t.id === editingTransaction.id ? transactionData : t));
+      setTransactions(
+        transactions.map((t) =>
+          t.id === editingTransaction.id ? transactionData : t
+        )
+      );
     } else {
       setTransactions([transactionData, ...transactions]);
     }
 
     setModalOpen(false);
-    setFormData({ description: '', amount: '', type: 'debit', date: new Date() });
+    setFormData({
+      description: "",
+      amount: "",
+      type: "debit",
+      date: new Date(),
+    });
   };
 
   const handleInputChange = (field, value) => {
@@ -205,30 +227,39 @@ export default function Transacoes() {
 
   const handleExport = () => {
     const columns = [
-      { key: 'date', label: 'Data', format: (row) => formatDate(row.date) },
-      { key: 'description', label: 'Descrição' },
+      { key: "date", label: "Data", format: (row) => formatDate(row.date) },
+      { key: "description", label: "Descrição" },
       {
-        key: 'type',
-        label: 'Tipo',
-        format: (row) => row.type === 'credit' ? 'Crédito' : row.type === 'investment' ? 'Investimento' : 'Débito'
+        key: "type",
+        label: "Tipo",
+        format: (row) =>
+          row.type === "credit"
+            ? "Crédito"
+            : row.type === "investment"
+            ? "Investimento"
+            : "Débito",
       },
-      { key: 'amount', label: 'Valor', format: (row) => formatCurrency(Math.abs(row.amount)) },
+      {
+        key: "amount",
+        label: "Valor",
+        format: (row) => formatCurrency(Math.abs(row.amount)),
+      },
     ];
 
-    exportToCSV(filteredTransactions, columns, 'transacoes');
+    exportToCSV(filteredTransactions, columns, "transacoes");
   };
 
   // Calcular estatísticas baseadas nas transações filtradas (antes do if loading)
   const totalCredit = filteredTransactions
-    .filter(t => t.type === 'credit')
+    .filter((t) => t.type === "credit")
     .reduce((sum, t) => sum + t.amount, 0);
 
   const totalDebit = filteredTransactions
-    .filter(t => t.type === 'debit')
+    .filter((t) => t.type === "debit")
     .reduce((sum, t) => sum + Math.abs(t.amount), 0);
 
   const totalInvestment = filteredTransactions
-    .filter(t => t.type === 'investment')
+    .filter((t) => t.type === "investment")
     .reduce((sum, t) => sum + Math.abs(t.amount), 0);
 
   const balance = totalCredit - totalDebit - totalInvestment;
@@ -258,21 +289,21 @@ export default function Transacoes() {
   // Configuração de colunas da tabela
   const transactionColumns = [
     {
-      key: 'date',
-      label: 'Data',
+      key: "date",
+      label: "Data",
       sortable: true,
       render: (row) => formatDate(row.date),
     },
     {
-      key: 'description',
-      label: 'Descrição',
+      key: "description",
+      label: "Descrição",
       sortable: true,
     },
     {
-      key: 'type',
-      label: 'Tipo',
+      key: "type",
+      label: "Tipo",
       render: (row) => {
-        if (row.type === 'credit') {
+        if (row.type === "credit") {
           return (
             <Badge variant="default" className="bg-green-500">
               <span className="flex items-center gap-1">
@@ -281,7 +312,7 @@ export default function Transacoes() {
               </span>
             </Badge>
           );
-        } else if (row.type === 'investment') {
+        } else if (row.type === "investment") {
           return (
             <Badge variant="default" className="bg-blue-500">
               <span className="flex items-center gap-1">
@@ -303,15 +334,15 @@ export default function Transacoes() {
       },
     },
     {
-      key: 'amount',
-      label: 'Valor',
+      key: "amount",
+      label: "Valor",
       sortable: true,
       render: (row) => {
-        let colorClass = 'text-red-600';
-        if (row.type === 'credit') {
-          colorClass = 'text-green-600';
-        } else if (row.type === 'investment') {
-          colorClass = 'text-blue-600';
+        let colorClass = "text-red-600";
+        if (row.type === "credit") {
+          colorClass = "text-green-600";
+        } else if (row.type === "investment") {
+          colorClass = "text-blue-600";
         }
         return (
           <span className={`${colorClass} font-semibold`}>
@@ -321,8 +352,8 @@ export default function Transacoes() {
       },
     },
     {
-      key: 'actions',
-      label: 'Ações',
+      key: "actions",
+      label: "Ações",
       render: (row) => (
         <div className="flex gap-2">
           <button
@@ -364,7 +395,7 @@ export default function Transacoes() {
       />
 
       {/* Cards de resumo */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
         <StatsCard
           icon={ArrowUpRight}
           label="Total de Créditos"
@@ -393,8 +424,8 @@ export default function Transacoes() {
           icon={ArrowUpRight}
           label="Saldo"
           value={formatCurrency(balance)}
-          iconColor={balance >= 0 ? 'purple' : 'yellow'}
-          valueColor={balance >= 0 ? 'text-purple-600' : 'text-orange-600'}
+          iconColor={balance >= 0 ? "purple" : "yellow"}
+          valueColor={balance >= 0 ? "text-purple-600" : "text-orange-600"}
         />
       </div>
 
@@ -404,13 +435,18 @@ export default function Transacoes() {
           <div className="space-y-4">
             <div className="flex items-center gap-2">
               <Filter className="w-5 h-5 text-gray-500" />
-              <span className="text-sm font-medium text-gray-700">Filtrar por:</span>
+              <span className="text-sm font-medium text-gray-700">
+                Filtrar por:
+              </span>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {/* Filtro por tipo */}
               <div className="space-y-2">
-                <Label htmlFor="filter-type" className="text-sm font-medium text-gray-700">
+                <Label
+                  htmlFor="filter-type"
+                  className="text-sm font-medium text-gray-700"
+                >
                   Tipo de Transação
                 </Label>
                 <Select value={filterType} onValueChange={setFilterType}>
@@ -421,7 +457,9 @@ export default function Transacoes() {
                     <SelectItem value="all">Todas as transações</SelectItem>
                     <SelectItem value="credit">Apenas créditos</SelectItem>
                     <SelectItem value="debit">Apenas débitos</SelectItem>
-                    <SelectItem value="investment">Apenas investimentos</SelectItem>
+                    <SelectItem value="investment">
+                      Apenas investimentos
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -440,13 +478,13 @@ export default function Transacoes() {
             </div>
 
             {/* Limpar filtros */}
-            {(filterType !== 'all' || filterMonth) && (
+            {(filterType !== "all" || filterMonth) && (
               <div className="flex justify-end">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => {
-                    setFilterType('all');
+                    setFilterType("all");
                     setFilterMonth(getCurrentMonthRange());
                   }}
                 >
@@ -466,7 +504,12 @@ export default function Transacoes() {
               Todas as Transações ({filteredTransactions.length})
             </h2>
             {selectedTransactions.length > 0 && (
-              <Button variant="destructive" size="sm" onClick={handleBulkDelete} className="w-full sm:w-auto">
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={handleBulkDelete}
+                className="w-full sm:w-auto"
+              >
                 <Trash2 className="w-4 h-4" />
                 Excluir {selectedTransactions.length} selecionada(s)
               </Button>
@@ -475,7 +518,7 @@ export default function Transacoes() {
           {sortedTransactions.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-gray-500 mb-4">
-                Nenhuma transação encontrada.{' '}
+                Nenhuma transação encontrada.{" "}
                 <button
                   onClick={handleAddTransaction}
                   className="text-brand-600 hover:text-brand-700 font-medium underline"
@@ -502,7 +545,9 @@ export default function Transacoes() {
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{editingTransaction ? 'Editar Transação' : 'Nova Transação'}</DialogTitle>
+            <DialogTitle>
+              {editingTransaction ? "Editar Transação" : "Nova Transação"}
+            </DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
@@ -511,7 +556,9 @@ export default function Transacoes() {
                 id="description"
                 placeholder="Ex: Salário, Compra de mercado..."
                 value={formData.description}
-                onChange={(e) => handleInputChange('description', e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("description", e.target.value)
+                }
                 required
               />
             </div>
@@ -521,41 +568,47 @@ export default function Transacoes() {
               <div className="grid grid-cols-3 gap-3">
                 <button
                   type="button"
-                  onClick={() => handleInputChange('type', 'credit')}
+                  onClick={() => handleInputChange("type", "credit")}
                   className={`p-4 rounded-lg border-2 transition-all ${
-                    formData.type === 'credit'
-                      ? 'border-green-500 bg-green-50'
-                      : 'border-gray-200 hover:border-gray-300'
+                    formData.type === "credit"
+                      ? "border-green-500 bg-green-50"
+                      : "border-gray-200 hover:border-gray-300"
                   }`}
                 >
                   <ArrowUpRight className="w-6 h-6 text-green-600 mx-auto mb-2" />
-                  <span className="block text-sm font-medium text-gray-900">Crédito</span>
+                  <span className="block text-sm font-medium text-gray-900">
+                    Crédito
+                  </span>
                   <span className="block text-xs text-gray-500">Entrada</span>
                 </button>
                 <button
                   type="button"
-                  onClick={() => handleInputChange('type', 'debit')}
+                  onClick={() => handleInputChange("type", "debit")}
                   className={`p-4 rounded-lg border-2 transition-all ${
-                    formData.type === 'debit'
-                      ? 'border-red-500 bg-red-50'
-                      : 'border-gray-200 hover:border-gray-300'
+                    formData.type === "debit"
+                      ? "border-red-500 bg-red-50"
+                      : "border-gray-200 hover:border-gray-300"
                   }`}
                 >
                   <ArrowDownRight className="w-6 h-6 text-red-600 mx-auto mb-2" />
-                  <span className="block text-sm font-medium text-gray-900">Débito</span>
+                  <span className="block text-sm font-medium text-gray-900">
+                    Débito
+                  </span>
                   <span className="block text-xs text-gray-500">Saída</span>
                 </button>
                 <button
                   type="button"
-                  onClick={() => handleInputChange('type', 'investment')}
+                  onClick={() => handleInputChange("type", "investment")}
                   className={`p-4 rounded-lg border-2 transition-all ${
-                    formData.type === 'investment'
-                      ? 'border-blue-500 bg-blue-50'
-                      : 'border-gray-200 hover:border-gray-300'
+                    formData.type === "investment"
+                      ? "border-blue-500 bg-blue-50"
+                      : "border-gray-200 hover:border-gray-300"
                   }`}
                 >
                   <TrendingUp className="w-6 h-6 text-blue-600 mx-auto mb-2" />
-                  <span className="block text-sm font-medium text-gray-900">Investimento</span>
+                  <span className="block text-sm font-medium text-gray-900">
+                    Investimento
+                  </span>
                   <span className="block text-xs text-gray-500">Aplicação</span>
                 </button>
               </div>
@@ -569,7 +622,7 @@ export default function Transacoes() {
                 step="0.01"
                 placeholder="0,00"
                 value={formData.amount}
-                onChange={(e) => handleInputChange('amount', e.target.value)}
+                onChange={(e) => handleInputChange("amount", e.target.value)}
                 required
               />
             </div>
@@ -578,16 +631,20 @@ export default function Transacoes() {
               <Label htmlFor="date">Data</Label>
               <DatePicker
                 value={formData.date}
-                onChange={(date) => handleInputChange('date', date)}
+                onChange={(date) => handleInputChange("date", date)}
               />
             </div>
           </form>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setModalOpen(false)}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setModalOpen(false)}
+            >
               Cancelar
             </Button>
             <Button type="submit" onClick={handleSubmit}>
-              {editingTransaction ? 'Salvar' : 'Adicionar Transação'}
+              {editingTransaction ? "Salvar" : "Adicionar Transação"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -599,8 +656,9 @@ export default function Transacoes() {
           <AlertDialogHeader>
             <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
             <AlertDialogDescription>
-              Tem certeza que deseja excluir a transação "{transactionToDelete?.description}"?
-              Esta ação não pode ser desfeita.
+              Tem certeza que deseja excluir a transação "
+              {transactionToDelete?.description}"? Esta ação não pode ser
+              desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -616,13 +674,16 @@ export default function Transacoes() {
       </AlertDialog>
 
       {/* AlertDialog de confirmação de exclusão em lote */}
-      <AlertDialog open={bulkDeleteDialogOpen} onOpenChange={setBulkDeleteDialogOpen}>
+      <AlertDialog
+        open={bulkDeleteDialogOpen}
+        onOpenChange={setBulkDeleteDialogOpen}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Confirmar Exclusão em Lote</AlertDialogTitle>
             <AlertDialogDescription>
-              Tem certeza que deseja excluir {selectedTransactions.length} transação(ões) selecionada(s)?
-              Esta ação não pode ser desfeita.
+              Tem certeza que deseja excluir {selectedTransactions.length}{" "}
+              transação(ões) selecionada(s)? Esta ação não pode ser desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

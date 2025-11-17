@@ -1,17 +1,17 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import Link from 'next/link';
-import PageHeader from '../src/components/PageHeader';
-import BalanceCard from '../src/components/BalanceCard';
-import { Card, CardContent } from '../src/components/ui/card';
-import { Badge } from '../src/components/ui/badge';
-import Spinner from '../src/components/Spinner';
-import DoughnutChart from '../src/components/charts/DoughnutChart';
-import LineChart from '../src/components/charts/LineChart';
-import ProgressBar from '../src/components/ProgressBar';
-import { fetchMock, formatCurrency, formatDate } from '../src/utils/mockApi';
-import { Wallet, TrendingDown, ArrowUpRight, Target, Eye } from 'lucide-react';
+import React, { useState, useEffect } from "react";
+import Link from "next/link";
+import PageHeader from "../src/components/PageHeader";
+import BalanceCard from "../src/components/BalanceCard";
+import { Card, CardContent } from "../src/components/ui/card";
+import { Badge } from "../src/components/ui/badge";
+import Spinner from "../src/components/Spinner";
+import DoughnutChart from "../src/components/charts/DoughnutChart";
+import LineChart from "../src/components/charts/LineChart";
+import ProgressBar from "../src/components/ProgressBar";
+import { fetchMock, formatCurrency, formatDate } from "../src/utils/mockApi";
+import { Wallet, TrendingDown, ArrowUpRight, Target, Eye } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -19,7 +19,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '../src/components/ui/table';
+} from "../src/components/ui/table";
 
 /**
  * Página Dashboard - Visão geral do controle financeiro
@@ -36,21 +36,29 @@ export default function Dashboard() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [summaryRes, expensesRes, categoriesRes, transactionsRes, targetsRes] = await Promise.all([
-          fetchMock('/api/summary'),
-          fetchMock('/api/expenses'),
-          fetchMock('/api/categories'),
-          fetchMock('/api/transactions'),
-          fetchMock('/api/targets'),
+        const [
+          summaryRes,
+          expensesRes,
+          categoriesRes,
+          transactionsRes,
+          targetsRes,
+        ] = await Promise.all([
+          fetchMock("/api/summary"),
+          fetchMock("/api/expenses"),
+          fetchMock("/api/categories"),
+          fetchMock("/api/transactions"),
+          fetchMock("/api/targets"),
         ]);
 
         setSummary(summaryRes.data);
         setExpenses(expensesRes.data);
         setCategories(categoriesRes.data);
         setTransactions(transactionsRes.data);
-        setTargets(targetsRes.data.filter(t => t.status === 'in_progress').slice(0, 2));
+        setTargets(
+          targetsRes.data.filter((t) => t.status === "in_progress").slice(0, 2)
+        );
       } catch (error) {
-        console.error('Erro ao carregar dashboard:', error);
+        console.error("Erro ao carregar dashboard:", error);
       } finally {
         setLoading(false);
       }
@@ -69,16 +77,19 @@ export default function Dashboard() {
 
   // Preparar dados para gráfico de despesas por categoria
   const expensesByCategory = expenses.reduce((acc, expense) => {
-    const existing = acc.find(item => item.name === expense.category);
+    const existing = acc.find((item) => item.name === expense.category);
     if (existing) {
       existing.value += expense.amount;
     } else {
       // Buscar cor da categoria
-      const category = categories.find(c => c.name === expense.category || c.id === expense.category.toLowerCase());
+      const category = categories.find(
+        (c) =>
+          c.name === expense.category || c.id === expense.category.toLowerCase()
+      );
       acc.push({
         name: expense.category,
         value: expense.amount,
-        color: category?.color || '#64748b'
+        color: category?.color || "#64748b",
       });
     }
     return acc;
@@ -86,50 +97,56 @@ export default function Dashboard() {
 
   // Dados mockados para evolução de saldo (linha do tempo)
   const balanceEvolution = [
-    { date: 'Jun', value: 12500 },
-    { date: 'Jul', value: 14200 },
-    { date: 'Ago', value: 15000 },
-    { date: 'Set', value: 16200 },
-    { date: 'Out', value: 17500 },
-    { date: 'Nov', value: 18252 },
-    { date: 'Dez', value: 19800 },
+    { date: "Jun", value: 12500 },
+    { date: "Jul", value: 14200 },
+    { date: "Ago", value: 15000 },
+    { date: "Set", value: 16200 },
+    { date: "Out", value: 17500 },
+    { date: "Nov", value: 18252 },
+    { date: "Dez", value: 19800 },
   ];
 
   // Configuração de colunas da tabela de transações
   const transactionColumns = [
     {
-      key: 'date',
-      label: 'Data',
+      key: "date",
+      label: "Data",
       sortable: true,
       render: (row) => formatDate(row.date),
     },
     {
-      key: 'description',
-      label: 'Descrição',
+      key: "description",
+      label: "Descrição",
       sortable: true,
     },
     {
-      key: 'type',
-      label: 'Tipo',
+      key: "type",
+      label: "Tipo",
       render: (row) => (
-        <Badge variant={row.type === 'credit' ? 'default' : 'destructive'}>
-          {row.type === 'credit' ? 'Crédito' : 'Débito'}
+        <Badge variant={row.type === "credit" ? "default" : "destructive"}>
+          {row.type === "credit" ? "Crédito" : "Débito"}
         </Badge>
       ),
     },
     {
-      key: 'amount',
-      label: 'Valor',
+      key: "amount",
+      label: "Valor",
       sortable: true,
       render: (row) => (
-        <span className={row.type === 'credit' ? 'text-green-600 font-medium' : 'text-red-600 font-medium'}>
+        <span
+          className={
+            row.type === "credit"
+              ? "text-green-600 font-medium"
+              : "text-red-600 font-medium"
+          }
+        >
           {formatCurrency(Math.abs(row.amount))}
         </span>
       ),
     },
     {
-      key: 'actions',
-      label: 'Ações',
+      key: "actions",
+      label: "Ações",
       render: (row) => (
         <Link
           href="/transacoes"
@@ -150,7 +167,7 @@ export default function Dashboard() {
       />
 
       {/* Cards de resumo */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
         <BalanceCard
           title="Receita Líquida"
           amount={summary.income_net}
@@ -170,7 +187,9 @@ export default function Dashboard() {
         <BalanceCard
           title="Descontos Totais"
           amount={summary.discounts.total}
-          subtitle={`Matheus: ${formatCurrency(summary.discounts.matheus)} | Nayanna: ${formatCurrency(summary.discounts.nayanna)}`}
+          subtitle={`Matheus: ${formatCurrency(
+            summary.discounts.matheus
+          )} | Nayanna: ${formatCurrency(summary.discounts.nayanna)}`}
         />
       </div>
 
@@ -219,17 +238,23 @@ export default function Dashboard() {
                 <Target className="w-5 h-5 text-brand-500" />
                 Metas em Andamento
               </h2>
-              <Link href="/metas" className="text-sm text-brand-500 hover:text-brand-600 font-medium">
+              <Link
+                href="/metas"
+                className="text-sm text-brand-500 hover:text-brand-600 font-medium"
+              >
                 Ver todas →
               </Link>
             </div>
             <div className="space-y-4">
-              {targets.map(target => (
+              {targets.map((target) => (
                 <div key={target.id}>
                   <div className="flex justify-between items-center mb-2">
-                    <h3 className="font-medium text-gray-900">{target.title}</h3>
+                    <h3 className="font-medium text-gray-900">
+                      {target.title}
+                    </h3>
                     <span className="text-sm text-gray-600">
-                      {formatCurrency(target.progress)} / {formatCurrency(target.goal)}
+                      {formatCurrency(target.progress)} /{" "}
+                      {formatCurrency(target.goal)}
                     </span>
                   </div>
                   <ProgressBar progress={target.progress} goal={target.goal} />
