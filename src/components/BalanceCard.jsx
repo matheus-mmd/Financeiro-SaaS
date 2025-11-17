@@ -9,7 +9,7 @@ import { TrendingUp, TrendingDown } from 'lucide-react';
  */
 export default function BalanceCard({ title, amount, trend, subtitle, icon: Icon, className = '' }) {
   return (
-    <Card className={className}>
+    <Card className={`min-w-[285px] ${className}`}>
       <CardContent className="p-6">
       <div className="flex items-start justify-between">
         <div className="flex-1">

@@ -34,7 +34,7 @@ export default function StatsCard({
   };
 
   return (
-    <Card className={className}>
+    <Card className={`min-w-[285px] ${className}`}>
       <CardContent className="p-4 sm:p-6">
         <div className="flex items-center gap-3 sm:gap-4">
           <div className={`p-2 sm:p-3 ${iconBgColors[iconColor]} rounded-lg flex-shrink-0`}>
