@@ -1,28 +1,28 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect, useMemo } from 'react';
-import PageHeader from '../../src/components/PageHeader';
-import StatsCard from '../../src/components/StatsCard';
-import MonthPicker from '../../src/components/MonthPicker';
-import { Card, CardContent } from '../../src/components/ui/card';
-import { Badge } from '../../src/components/ui/badge';
-import { Button } from '../../src/components/ui/button';
-import { Input } from '../../src/components/ui/input';
-import { Label } from '../../src/components/ui/label';
+import React, { useState, useEffect, useMemo } from "react";
+import PageHeader from "../../src/components/PageHeader";
+import StatsCard from "../../src/components/StatsCard";
+import MonthPicker from "../../src/components/MonthPicker";
+import { Card, CardContent } from "../../src/components/ui/card";
+import { Badge } from "../../src/components/ui/badge";
+import { Button } from "../../src/components/ui/button";
+import { Input } from "../../src/components/ui/input";
+import { Label } from "../../src/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../../src/components/ui/select';
+} from "../../src/components/ui/select";
 import {
   Dialog,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '../../src/components/ui/dialog';
+} from "../../src/components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -32,13 +32,24 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '../../src/components/ui/alert-dialog';
-import Spinner from '../../src/components/Spinner';
-import Table from '../../src/components/Table';
-import DatePicker from '../../src/components/DatePicker';
-import { fetchMock, formatCurrency, formatDate } from '../../src/utils/mockApi';
-import { exportToCSV } from '../../src/utils/exportData';
-import { TrendingUp, DollarSign, Percent, Plus, Filter, Download, Edit, Trash2, Wallet, PieChart } from 'lucide-react';
+} from "../../src/components/ui/alert-dialog";
+import Spinner from "../../src/components/Spinner";
+import Table from "../../src/components/Table";
+import DatePicker from "../../src/components/DatePicker";
+import { fetchMock, formatCurrency, formatDate } from "../../src/utils/mockApi";
+import { exportToCSV } from "../../src/utils/exportData";
+import {
+  TrendingUp,
+  DollarSign,
+  Percent,
+  Plus,
+  Filter,
+  Download,
+  Edit,
+  Trash2,
+  Wallet,
+  PieChart,
+} from "lucide-react";
 
 /**
  * Página Investimentos - Gerenciamento de ativos e investimentos
@@ -51,7 +62,7 @@ export default function Investimentos() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingAsset, setEditingAsset] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [filterType, setFilterType] = useState('all');
+  const [filterType, setFilterType] = useState("all");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [assetToDelete, setAssetToDelete] = useState(null);
   const [selectedAssets, setSelectedAssets] = useState([]);
@@ -68,26 +79,26 @@ export default function Investimentos() {
 
   const [filterMonth, setFilterMonth] = useState(getCurrentMonthRange());
   const [formData, setFormData] = useState({
-    name: '',
-    type: 'Poupança',
-    value: '',
-    yield: '',
+    name: "",
+    type: "Poupança",
+    value: "",
+    yield: "",
     date: new Date(),
   });
 
   useEffect(() => {
     const loadData = async () => {
       try {
-        const response = await fetchMock('/api/assets');
+        const response = await fetchMock("/api/assets");
         // Adicionar data aos ativos se não tiver
-        const assetsWithDate = response.data.map(asset => ({
+        const assetsWithDate = response.data.map((asset) => ({
           ...asset,
-          date: asset.date || new Date().toISOString().split('T')[0]
+          date: asset.date || new Date().toISOString().split("T")[0],
         }));
         setAssets(assetsWithDate);
         setFilteredAssets(assetsWithDate);
       } catch (error) {
-        console.error('Erro ao carregar investimentos:', error);
+        console.error("Erro ao carregar investimentos:", error);
       } finally {
         setLoading(false);
       }
@@ -100,14 +111,14 @@ export default function Investimentos() {
     let filtered = assets;
 
     // Filtrar por tipo
-    if (filterType !== 'all') {
-      filtered = filtered.filter(a => a.type === filterType);
+    if (filterType !== "all") {
+      filtered = filtered.filter((a) => a.type === filterType);
     }
 
     // Filtrar por intervalo de datas
     if (filterMonth?.from && filterMonth?.to) {
-      filtered = filtered.filter(a => {
-        const [year, month, day] = a.date.split('-');
+      filtered = filtered.filter((a) => {
+        const [year, month, day] = a.date.split("-");
         const assetDate = new Date(year, month - 1, day);
         assetDate.setHours(0, 0, 0, 0);
 
@@ -124,15 +135,18 @@ export default function Investimentos() {
     setFilteredAssets(filtered);
   }, [filterType, filterMonth, assets]);
 
-  const totalInvestments = filteredAssets.reduce((sum, asset) => sum + asset.value, 0);
+  const totalInvestments = filteredAssets.reduce(
+    (sum, asset) => sum + asset.value,
+    0
+  );
 
   const handleAddAsset = () => {
     setEditingAsset(null);
     setFormData({
-      name: '',
-      type: 'Poupança',
-      value: '',
-      yield: '',
+      name: "",
+      type: "Poupança",
+      value: "",
+      yield: "",
       date: new Date(),
     });
     setModalOpen(true);
@@ -141,13 +155,13 @@ export default function Investimentos() {
   const handleEditAsset = (asset) => {
     setEditingAsset(asset);
     // Converter string de data para Date object
-    const [year, month, day] = asset.date.split('-');
+    const [year, month, day] = asset.date.split("-");
     const dateObj = new Date(year, month - 1, day);
     setFormData({
       name: asset.name,
       type: asset.type,
       value: asset.value.toString(),
-      yield: asset.yield ? (asset.yield * 100).toString() : '',
+      yield: asset.yield ? (asset.yield * 100).toString() : "",
       date: dateObj,
     });
     setModalOpen(true);
@@ -160,7 +174,7 @@ export default function Investimentos() {
 
   const confirmDelete = () => {
     if (assetToDelete) {
-      setAssets(assets.filter(a => a.id !== assetToDelete.id));
+      setAssets(assets.filter((a) => a.id !== assetToDelete.id));
       setDeleteDialogOpen(false);
       setAssetToDelete(null);
     }
@@ -171,7 +185,7 @@ export default function Investimentos() {
   };
 
   const confirmBulkDelete = () => {
-    setAssets(assets.filter(a => !selectedAssets.includes(a.id)));
+    setAssets(assets.filter((a) => !selectedAssets.includes(a.id)));
     setSelectedAssets([]);
     setBulkDeleteDialogOpen(false);
   };
@@ -180,7 +194,7 @@ export default function Investimentos() {
     e.preventDefault();
 
     // Converter Date object para string YYYY-MM-DD
-    const dateString = formData.date.toISOString().split('T')[0];
+    const dateString = formData.date.toISOString().split("T")[0];
 
     const assetData = {
       id: editingAsset?.id || Date.now(),
@@ -189,17 +203,23 @@ export default function Investimentos() {
       value: parseFloat(formData.value),
       yield: formData.yield ? parseFloat(formData.yield) / 100 : 0,
       date: dateString,
-      currency: 'BRL'
+      currency: "BRL",
     };
 
     if (editingAsset) {
-      setAssets(assets.map(a => a.id === editingAsset.id ? assetData : a));
+      setAssets(assets.map((a) => (a.id === editingAsset.id ? assetData : a)));
     } else {
       setAssets([assetData, ...assets]);
     }
 
     setModalOpen(false);
-    setFormData({ name: '', type: 'Poupança', value: '', yield: '', date: new Date() });
+    setFormData({
+      name: "",
+      type: "Poupança",
+      value: "",
+      yield: "",
+      date: new Date(),
+    });
   };
 
   const handleInputChange = (field, value) => {
@@ -208,45 +228,51 @@ export default function Investimentos() {
 
   const handleExport = () => {
     const columns = [
-      { key: 'date', label: 'Data', format: (row) => formatDate(row.date) },
-      { key: 'name', label: 'Nome' },
-      { key: 'type', label: 'Tipo' },
-      { key: 'value', label: 'Valor', format: (row) => formatCurrency(row.value) },
+      { key: "date", label: "Data", format: (row) => formatDate(row.date) },
+      { key: "name", label: "Nome" },
+      { key: "type", label: "Tipo" },
       {
-        key: 'yield',
-        label: 'Rendimento (% a.m.)',
-        format: (row) => `${(row.yield * 100).toFixed(2)}%`
+        key: "value",
+        label: "Valor",
+        format: (row) => formatCurrency(row.value),
+      },
+      {
+        key: "yield",
+        label: "Rendimento (% a.m.)",
+        format: (row) => `${(row.yield * 100).toFixed(2)}%`,
       },
     ];
 
-    exportToCSV(filteredAssets, columns, 'investimentos');
+    exportToCSV(filteredAssets, columns, "investimentos");
   };
 
   // Calcular estatísticas baseadas nos investimentos filtrados
-  const averageYield = filteredAssets.length > 0
-    ? filteredAssets.reduce((sum, a) => sum + (a.yield || 0), 0) / filteredAssets.length
-    : 0;
+  const averageYield =
+    filteredAssets.length > 0
+      ? filteredAssets.reduce((sum, a) => sum + (a.yield || 0), 0) /
+        filteredAssets.length
+      : 0;
 
   // Agrupar investimentos por tipo
   const assetsByType = filteredAssets.reduce((acc, asset) => {
-    const existing = acc.find(item => item.name === asset.type);
+    const existing = acc.find((item) => item.name === asset.type);
     if (existing) {
       existing.value += asset.value;
     } else {
       // Cores para cada tipo de investimento
       const typeColors = {
-        'Poupança': '#22c55e',
-        'CDB': '#3b82f6',
-        'Tesouro Direto': '#f59e0b',
-        'Ações': '#ef4444',
-        'Fundos': '#8b5cf6',
-        'Criptomoedas': '#ec4899',
-        'Outros': '#64748b'
+        Poupança: "#22c55e",
+        CDB: "#3b82f6",
+        "Tesouro Direto": "#f59e0b",
+        Ações: "#ef4444",
+        Fundos: "#8b5cf6",
+        Criptomoedas: "#ec4899",
+        Outros: "#64748b",
       };
       acc.push({
         name: asset.type,
         value: asset.value,
-        color: typeColors[asset.type] || '#64748b'
+        color: typeColors[asset.type] || "#64748b",
       });
     }
     return acc;
@@ -269,45 +295,59 @@ export default function Investimentos() {
   }
 
   // Tipos de investimento únicos
-  const investmentTypes = ['Poupança', 'CDB', 'Tesouro Direto', 'Ações', 'Fundos', 'Criptomoedas', 'Outros'];
+  const investmentTypes = [
+    "Poupança",
+    "CDB",
+    "Tesouro Direto",
+    "Ações",
+    "Fundos",
+    "Criptomoedas",
+    "Outros",
+  ];
 
   // Configuração de colunas da tabela
   const assetColumns = [
     {
-      key: 'date',
-      label: 'Data',
+      key: "date",
+      label: "Data",
       sortable: true,
       render: (row) => formatDate(row.date),
     },
     {
-      key: 'name',
-      label: 'Nome',
+      key: "name",
+      label: "Nome",
       sortable: true,
     },
     {
-      key: 'type',
-      label: 'Tipo',
+      key: "type",
+      label: "Tipo",
       render: (row) => {
         // Cores para cada tipo de investimento
         const typeColors = {
-          'Poupança': '#22c55e',
-          'CDB': '#3b82f6',
-          'Tesouro Direto': '#f59e0b',
-          'Ações': '#ef4444',
-          'Fundos': '#8b5cf6',
-          'Criptomoedas': '#ec4899',
-          'Outros': '#64748b'
+          Poupança: "#22c55e",
+          CDB: "#3b82f6",
+          "Tesouro Direto": "#f59e0b",
+          Ações: "#ef4444",
+          Fundos: "#8b5cf6",
+          Criptomoedas: "#ec4899",
+          Outros: "#64748b",
         };
         return (
-          <Badge variant="default" style={{ backgroundColor: typeColors[row.type] || '#64748b', color: 'white' }}>
+          <Badge
+            variant="default"
+            style={{
+              backgroundColor: typeColors[row.type] || "#64748b",
+              color: "white",
+            }}
+          >
             {row.type}
           </Badge>
         );
       },
     },
     {
-      key: 'value',
-      label: 'Valor',
+      key: "value",
+      label: "Valor",
       sortable: true,
       render: (row) => (
         <span className="text-green-600 font-semibold">
@@ -316,8 +356,8 @@ export default function Investimentos() {
       ),
     },
     {
-      key: 'yield',
-      label: 'Rendimento',
+      key: "yield",
+      label: "Rendimento",
       sortable: true,
       render: (row) => (
         <span className="text-gray-600">
@@ -326,8 +366,8 @@ export default function Investimentos() {
       ),
     },
     {
-      key: 'actions',
-      label: 'Ações',
+      key: "actions",
+      label: "Ações",
       render: (row) => (
         <div className="flex gap-2">
           <button
@@ -373,7 +413,7 @@ export default function Investimentos() {
       />
 
       {/* Cards de resumo */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 min-w-0">
         <StatsCard
           icon={DollarSign}
           label="Total Investido"
@@ -405,13 +445,18 @@ export default function Investimentos() {
           <div className="space-y-4">
             <div className="flex items-center gap-2">
               <Filter className="w-5 h-5 text-gray-500" />
-              <span className="text-sm font-medium text-gray-700">Filtrar por:</span>
+              <span className="text-sm font-medium text-gray-700">
+                Filtrar por:
+              </span>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {/* Filtro por tipo */}
               <div className="space-y-2">
-                <Label htmlFor="filter-type" className="text-sm font-medium text-gray-700">
+                <Label
+                  htmlFor="filter-type"
+                  className="text-sm font-medium text-gray-700"
+                >
                   Tipo de Investimento
                 </Label>
                 <Select value={filterType} onValueChange={setFilterType}>
@@ -443,13 +488,13 @@ export default function Investimentos() {
             </div>
 
             {/* Limpar filtros */}
-            {(filterType !== 'all' || filterMonth) && (
+            {(filterType !== "all" || filterMonth) && (
               <div className="flex justify-end">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => {
-                    setFilterType('all');
+                    setFilterType("all");
                     setFilterMonth(getCurrentMonthRange());
                   }}
                 >
@@ -471,20 +516,32 @@ export default function Investimentos() {
             {assetsByType
               .sort((a, b) => b.value - a.value)
               .map((item) => {
-                const percentage = ((item.value / totalInvestments) * 100).toFixed(1);
+                const percentage = (
+                  (item.value / totalInvestments) *
+                  100
+                ).toFixed(1);
 
                 return (
-                  <div key={item.name} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                  <div
+                    key={item.name}
+                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                  >
                     <div className="flex items-center gap-3">
                       <div
                         className="w-4 h-4 rounded-full"
                         style={{ backgroundColor: item.color }}
                       />
-                      <span className="font-medium text-gray-900">{item.name}</span>
+                      <span className="font-medium text-gray-900">
+                        {item.name}
+                      </span>
                     </div>
                     <div className="flex items-center gap-4">
-                      <span className="text-sm text-gray-500">{percentage}%</span>
-                      <span className="font-semibold text-green-600">{formatCurrency(item.value)}</span>
+                      <span className="text-sm text-gray-500">
+                        {percentage}%
+                      </span>
+                      <span className="font-semibold text-green-600">
+                        {formatCurrency(item.value)}
+                      </span>
                     </div>
                   </div>
                 );
@@ -501,7 +558,12 @@ export default function Investimentos() {
               Todos os Investimentos ({filteredAssets.length})
             </h2>
             {selectedAssets.length > 0 && (
-              <Button variant="destructive" size="sm" onClick={handleBulkDelete} className="w-full sm:w-auto">
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={handleBulkDelete}
+                className="w-full sm:w-auto"
+              >
                 <Trash2 className="w-4 h-4" />
                 Excluir {selectedAssets.length} selecionado(s)
               </Button>
@@ -510,7 +572,7 @@ export default function Investimentos() {
           {sortedAssets.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-gray-500 mb-4">
-                Nenhum investimento encontrado.{' '}
+                Nenhum investimento encontrado.{" "}
                 <button
                   onClick={handleAddAsset}
                   className="text-brand-600 hover:text-brand-700 font-medium underline"
@@ -537,7 +599,9 @@ export default function Investimentos() {
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{editingAsset ? 'Editar Investimento' : 'Novo Investimento'}</DialogTitle>
+            <DialogTitle>
+              {editingAsset ? "Editar Investimento" : "Novo Investimento"}
+            </DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
@@ -546,7 +610,7 @@ export default function Investimentos() {
                 id="name"
                 placeholder="Ex: Poupança Banco X, CDB, Tesouro Direto"
                 value={formData.name}
-                onChange={(e) => handleInputChange('name', e.target.value)}
+                onChange={(e) => handleInputChange("name", e.target.value)}
                 required
               />
             </div>
@@ -555,7 +619,7 @@ export default function Investimentos() {
               <Label htmlFor="type">Tipo</Label>
               <Select
                 value={formData.type}
-                onValueChange={(value) => handleInputChange('type', value)}
+                onValueChange={(value) => handleInputChange("type", value)}
               >
                 <SelectTrigger id="type">
                   <SelectValue placeholder="Selecione o tipo" />
@@ -578,14 +642,15 @@ export default function Investimentos() {
                 step="0.01"
                 placeholder="0,00"
                 value={formData.value}
-                onChange={(e) => handleInputChange('value', e.target.value)}
+                onChange={(e) => handleInputChange("value", e.target.value)}
                 required
               />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="yield">
-                Rendimento Mensal (%) <span className="text-gray-400 font-normal">(opcional)</span>
+                Rendimento Mensal (%){" "}
+                <span className="text-gray-400 font-normal">(opcional)</span>
               </Label>
               <Input
                 id="yield"
@@ -593,7 +658,7 @@ export default function Investimentos() {
                 step="0.01"
                 placeholder="0,00"
                 value={formData.yield}
-                onChange={(e) => handleInputChange('yield', e.target.value)}
+                onChange={(e) => handleInputChange("yield", e.target.value)}
               />
               <p className="text-xs text-gray-500 mt-1">
                 Ex: Para 0,7% ao mês, digite 0.7
@@ -604,16 +669,20 @@ export default function Investimentos() {
               <Label htmlFor="date">Data</Label>
               <DatePicker
                 value={formData.date}
-                onChange={(date) => handleInputChange('date', date)}
+                onChange={(date) => handleInputChange("date", date)}
               />
             </div>
           </form>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setModalOpen(false)}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setModalOpen(false)}
+            >
               Cancelar
             </Button>
             <Button type="submit" onClick={handleSubmit}>
-              {editingAsset ? 'Salvar' : 'Adicionar Investimento'}
+              {editingAsset ? "Salvar" : "Adicionar Investimento"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -629,13 +698,13 @@ export default function Investimentos() {
             {investmentTypes.map((type) => {
               // Cores para cada tipo de investimento
               const typeColors = {
-                'Poupança': '#22c55e',
-                'CDB': '#3b82f6',
-                'Tesouro Direto': '#f59e0b',
-                'Ações': '#ef4444',
-                'Fundos': '#8b5cf6',
-                'Criptomoedas': '#ec4899',
-                'Outros': '#64748b'
+                Poupança: "#22c55e",
+                CDB: "#3b82f6",
+                "Tesouro Direto": "#f59e0b",
+                Ações: "#ef4444",
+                Fundos: "#8b5cf6",
+                Criptomoedas: "#ec4899",
+                Outros: "#64748b",
               };
               return (
                 <div
@@ -644,7 +713,7 @@ export default function Investimentos() {
                 >
                   <div
                     className="w-6 h-6 rounded-full"
-                    style={{ backgroundColor: typeColors[type] || '#64748b' }}
+                    style={{ backgroundColor: typeColors[type] || "#64748b" }}
                   />
                   <span className="font-medium text-gray-900">{type}</span>
                 </div>
@@ -652,9 +721,7 @@ export default function Investimentos() {
             })}
           </div>
           <DialogFooter>
-            <Button onClick={() => setTypeModalOpen(false)}>
-              Fechar
-            </Button>
+            <Button onClick={() => setTypeModalOpen(false)}>Fechar</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -665,8 +732,8 @@ export default function Investimentos() {
           <AlertDialogHeader>
             <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
             <AlertDialogDescription>
-              Tem certeza que deseja excluir o investimento "{assetToDelete?.name}"?
-              Esta ação não pode ser desfeita.
+              Tem certeza que deseja excluir o investimento "
+              {assetToDelete?.name}"? Esta ação não pode ser desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -682,13 +749,16 @@ export default function Investimentos() {
       </AlertDialog>
 
       {/* AlertDialog de confirmação de exclusão em lote */}
-      <AlertDialog open={bulkDeleteDialogOpen} onOpenChange={setBulkDeleteDialogOpen}>
+      <AlertDialog
+        open={bulkDeleteDialogOpen}
+        onOpenChange={setBulkDeleteDialogOpen}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Confirmar Exclusão em Lote</AlertDialogTitle>
             <AlertDialogDescription>
-              Tem certeza que deseja excluir {selectedAssets.length} investimento(s) selecionado(s)?
-              Esta ação não pode ser desfeita.
+              Tem certeza que deseja excluir {selectedAssets.length}{" "}
+              investimento(s) selecionado(s)? Esta ação não pode ser desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

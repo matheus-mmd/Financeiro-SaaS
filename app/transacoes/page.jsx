@@ -395,7 +395,7 @@ export default function Transacoes() {
       />
 
       {/* Cards de resumo */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 min-w-0">
         <StatsCard
           icon={ArrowUpRight}
           label="Total de Créditos"

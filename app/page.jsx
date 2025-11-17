@@ -167,7 +167,7 @@ export default function Dashboard() {
       />
 
       {/* Cards de resumo */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 min-w-0">
         <BalanceCard
           title="Receita Líquida"
           amount={summary.income_net}
