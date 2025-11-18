@@ -35,6 +35,7 @@ import {
 } from "../../src/components/ui/alert-dialog";
 import Spinner from "../../src/components/Spinner";
 import Table from "../../src/components/Table";
+import TableActions from "../../src/components/TableActions";
 import DatePicker from "../../src/components/DatePicker";
 import { fetchMock, formatCurrency, formatDate } from "../../src/utils/mockApi";
 import { exportToCSV } from "../../src/utils/exportData";
@@ -504,18 +505,19 @@ export default function Despesas() {
                 : `Despesas - ${selectedCategory}`}{" "}
               ({filteredExpenses.length})
             </h2>
-            {selectedExpenses.length > 0 && (
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={handleBulkDelete}
-                className="w-full sm:w-auto"
-              >
-                <Trash2 className="w-4 h-4" />
-                Excluir {selectedExpenses.length} selecionada(s)
-              </Button>
-            )}
           </div>
+
+          {/* Barra de ações da tabela */}
+          <TableActions
+            onAdd={handleAddExpense}
+            onExport={handleExport}
+            onDelete={handleBulkDelete}
+            selectedCount={selectedExpenses.length}
+            addLabel="Nova despesa"
+            exportLabel="Exportar despesas"
+            deleteLabel="Excluir despesas selecionadas"
+          />
+
           {filteredExpenses.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-gray-500 mb-4">

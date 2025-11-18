@@ -36,6 +36,7 @@ import {
 } from "../../src/components/ui/alert-dialog";
 import Spinner from "../../src/components/Spinner";
 import Table from "../../src/components/Table";
+import TableActions from "../../src/components/TableActions";
 import DatePicker from "../../src/components/DatePicker";
 import { fetchMock, formatCurrency, formatDate } from "../../src/utils/mockApi";
 import { exportToCSV } from "../../src/utils/exportData";
@@ -503,18 +504,19 @@ export default function Transacoes() {
             <h2 className="text-lg font-semibold text-gray-900">
               Todas as Transações ({filteredTransactions.length})
             </h2>
-            {selectedTransactions.length > 0 && (
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={handleBulkDelete}
-                className="w-full sm:w-auto"
-              >
-                <Trash2 className="w-4 h-4" />
-                Excluir {selectedTransactions.length} selecionada(s)
-              </Button>
-            )}
           </div>
+
+          {/* Barra de ações da tabela */}
+          <TableActions
+            onAdd={handleAddTransaction}
+            onExport={handleExport}
+            onDelete={handleBulkDelete}
+            selectedCount={selectedTransactions.length}
+            addLabel="Nova transação"
+            exportLabel="Exportar transações"
+            deleteLabel="Excluir transações selecionadas"
+          />
+          
           {sortedTransactions.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-gray-500 mb-4">

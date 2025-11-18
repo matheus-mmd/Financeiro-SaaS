@@ -35,6 +35,7 @@ import {
 } from "../../src/components/ui/alert-dialog";
 import Spinner from "../../src/components/Spinner";
 import Table from "../../src/components/Table";
+import TableActions from "../../src/components/TableActions";
 import ProgressBar from "../../src/components/ProgressBar";
 import DatePicker from "../../src/components/DatePicker";
 import { fetchMock, formatCurrency, formatDate } from "../../src/utils/mockApi";
@@ -520,18 +521,19 @@ export default function Metas() {
             <h2 className="text-lg font-semibold text-gray-900">
               Todas as Metas ({filteredTargets.length})
             </h2>
-            {selectedTargets.length > 0 && (
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={handleBulkDelete}
-                className="w-full sm:w-auto"
-              >
-                <Trash2 className="w-4 h-4" />
-                Excluir {selectedTargets.length} selecionada(s)
-              </Button>
-            )}
           </div>
+
+          {/* Barra de ações da tabela */}
+          <TableActions
+            onAdd={handleAddTarget}
+            onExport={handleExport}
+            onDelete={handleBulkDelete}
+            selectedCount={selectedTargets.length}
+            addLabel="Nova meta"
+            exportLabel="Exportar metas"
+            deleteLabel="Excluir metas selecionadas"
+          />
+
           {sortedTargets.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-gray-500 mb-4">

@@ -35,6 +35,7 @@ import {
 } from "../../src/components/ui/alert-dialog";
 import Spinner from "../../src/components/Spinner";
 import Table from "../../src/components/Table";
+import TableActions from "../../src/components/TableActions";
 import DatePicker from "../../src/components/DatePicker";
 import { fetchMock, formatCurrency, formatDate } from "../../src/utils/mockApi";
 import { exportToCSV } from "../../src/utils/exportData";
@@ -557,18 +558,19 @@ export default function Investimentos() {
             <h2 className="text-lg font-semibold text-gray-900">
               Todos os Investimentos ({filteredAssets.length})
             </h2>
-            {selectedAssets.length > 0 && (
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={handleBulkDelete}
-                className="w-full sm:w-auto"
-              >
-                <Trash2 className="w-4 h-4" />
-                Excluir {selectedAssets.length} selecionado(s)
-              </Button>
-            )}
           </div>
+          
+          {/* Barra de ações da tabela */}
+          <TableActions
+            onAdd={handleAddAsset}
+            onExport={handleExport}
+            onDelete={handleBulkDelete}
+            selectedCount={selectedAssets.length}
+            addLabel="Novo investimento"
+            exportLabel="Exportar investimentos"
+            deleteLabel="Excluir investimentos selecionados"
+          />
+
           {sortedAssets.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-gray-500 mb-4">
