@@ -1,8 +1,5 @@
-import { Inter } from 'next/font/google';
 import './globals.css';
 import Layout from '../src/components/Layout';
-
-const inter = Inter({ subsets: ['latin'] });
 
 export const metadata = {
   title: 'Financeiro SaaS - Controle suas Finanças',
@@ -12,7 +9,7 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="pt-BR">
-      <body className={inter.className}>
+      <body className="font-sans antialiased">
         <Layout>{children}</Layout>
       </body>
     </html>
