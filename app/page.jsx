@@ -3,23 +3,16 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import PageHeader from "../src/components/PageHeader";
-import BalanceCard from "../src/components/BalanceCard";
+import StatsCard from "../src/components/StatsCard";
 import { Card, CardContent } from "../src/components/ui/card";
 import { Badge } from "../src/components/ui/badge";
 import Spinner from "../src/components/Spinner";
+import Table from "../src/components/Table";
 import DoughnutChart from "../src/components/charts/DoughnutChart";
 import LineChart from "../src/components/charts/LineChart";
 import ProgressBar from "../src/components/ProgressBar";
 import { fetchMock, formatCurrency, formatDate } from "../src/utils/mockApi";
 import { Wallet, TrendingDown, ArrowUpRight, Target, Eye } from "lucide-react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "../src/components/ui/table";
 
 /**
  * Página Dashboard - Visão geral do controle financeiro
@@ -31,6 +24,7 @@ export default function Dashboard() {
   const [categories, setCategories] = useState([]);
   const [transactions, setTransactions] = useState([]);
   const [targets, setTargets] = useState([]);
+  const [balanceEvolution, setBalanceEvolution] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -42,12 +36,14 @@ export default function Dashboard() {
           categoriesRes,
           transactionsRes,
           targetsRes,
+          balanceEvolutionRes,
         ] = await Promise.all([
           fetchMock("/api/summary"),
           fetchMock("/api/expenses"),
           fetchMock("/api/categories"),
           fetchMock("/api/transactions"),
           fetchMock("/api/targets"),
+          fetchMock("/api/balance-evolution"),
         ]);
 
         setSummary(summaryRes.data);
@@ -57,6 +53,7 @@ export default function Dashboard() {
         setTargets(
           targetsRes.data.filter((t) => t.status === "in_progress").slice(0, 2)
         );
+        setBalanceEvolution(balanceEvolutionRes.data);
       } catch (error) {
         console.error("Erro ao carregar dashboard:", error);
       } finally {
@@ -94,17 +91,6 @@ export default function Dashboard() {
     }
     return acc;
   }, []);
-
-  // Dados mockados para evolução de saldo (linha do tempo)
-  const balanceEvolution = [
-    { date: "Jun", value: 12500 },
-    { date: "Jul", value: 14200 },
-    { date: "Ago", value: 15000 },
-    { date: "Set", value: 16200 },
-    { date: "Out", value: 17500 },
-    { date: "Nov", value: 18252 },
-    { date: "Dez", value: 19800 },
-  ];
 
   // Configuração de colunas da tabela de transações
   const transactionColumns = [
@@ -168,28 +154,36 @@ export default function Dashboard() {
 
       {/* Cards de resumo */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 min-w-0">
-        <BalanceCard
-          title="Receita Líquida"
-          amount={summary.income_net}
+        <StatsCard
           icon={Wallet}
+          label="Receita Líquida"
+          value={formatCurrency(summary.income_net)}
+          iconColor="green"
+          valueColor="text-green-600"
         />
-        <BalanceCard
-          title="Despesas Mensais"
-          amount={summary.monthly_expenses_total}
+        <StatsCard
           icon={TrendingDown}
+          label="Despesas Mensais"
+          value={formatCurrency(summary.monthly_expenses_total)}
+          iconColor="red"
+          valueColor="text-red-600"
         />
-        <BalanceCard
-          title="Saldo Disponível"
-          amount={summary.available_balance}
-          trend="up"
+        <StatsCard
           icon={ArrowUpRight}
+          label="Saldo Disponível"
+          value={formatCurrency(summary.available_balance)}
+          iconColor="blue"
+          valueColor="text-blue-600"
         />
-        <BalanceCard
-          title="Descontos Totais"
-          amount={summary.discounts.total}
+        <StatsCard
+          icon={Target}
+          label="Descontos Totais"
+          value={formatCurrency(summary.discounts.total)}
           subtitle={`Matheus: ${formatCurrency(
             summary.discounts.matheus
           )} | Nayanna: ${formatCurrency(summary.discounts.nayanna)}`}
+          iconColor="purple"
+          valueColor="text-purple-600"
         />
       </div>
 
@@ -271,11 +265,19 @@ export default function Dashboard() {
           <h2 className="text-lg font-semibold text-gray-900 mb-4">
             Transações Recentes
           </h2>
-          <Table
-            columns={transactionColumns}
-            data={transactions}
-            pageSize={5}
-          />
+          {transactions.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-gray-500">
+                Nenhuma transação encontrada.
+              </p>
+            </div>
+          ) : (
+            <Table
+              columns={transactionColumns}
+              data={transactions}
+              pageSize={5}
+            />
+          )}
         </CardContent>
       </Card>
     </div>

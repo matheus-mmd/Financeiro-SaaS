@@ -63,5 +63,14 @@
       {"symbol": "FII_Y", "name": "FII Y", "history": [{"date":"2025-08-01","value":200},{"date":"2025-09-01","value":202},{"date":"2025-10-01","value":205},{"date":"2025-11-01","value":210}]},
       {"symbol": "CDI", "name": "CDI", "history": [{"date":"2025-08-01","value":0.95},{"date":"2025-09-01","value":0.97},{"date":"2025-10-01","value":0.99},{"date":"2025-11-01","value":1.01}]}
     ]
-  }
+  },
+  "balance_evolution": [
+    {"date": "Jun", "value": 12500},
+    {"date": "Jul", "value": 14200},
+    {"date": "Ago", "value": 15000},
+    {"date": "Set", "value": 16200},
+    {"date": "Out", "value": 17500},
+    {"date": "Nov", "value": 18252},
+    {"date": "Dez", "value": 19800}
+  ]
 }
