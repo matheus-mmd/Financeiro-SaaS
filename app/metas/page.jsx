@@ -43,7 +43,6 @@ import { exportToCSV } from "../../src/utils/exportData";
 import {
   Target,
   Plus,
-  Edit,
   Trash2,
   CheckCircle,
   Minus,
@@ -377,22 +376,13 @@ export default function Metas() {
       key: "actions",
       label: "Ações",
       render: (row) => (
-        <div className="flex gap-2">
-          <button
-            onClick={() => handleEditTarget(row)}
-            className="p-1 hover:bg-gray-100 rounded transition-colors"
-            aria-label="Editar meta"
-          >
-            <Edit className="w-4 h-4 text-gray-600" />
-          </button>
-          <button
-            onClick={() => handleDeleteTarget(row)}
-            className="p-1 hover:bg-red-50 rounded transition-colors"
-            aria-label="Excluir meta"
-          >
-            <Trash2 className="w-4 h-4 text-red-600" />
-          </button>
-        </div>
+        <button
+          onClick={() => handleDeleteTarget(row)}
+          className="p-1 hover:bg-red-50 rounded transition-colors"
+          aria-label="Excluir meta"
+        >
+          <Trash2 className="w-4 h-4 text-red-600" />
+        </button>
       ),
     },
   ];

@@ -46,7 +46,6 @@ import {
   Plus,
   Filter,
   Download,
-  Edit,
   Trash2,
   Wallet,
   PieChart,
@@ -371,22 +370,13 @@ export default function Investimentos() {
       key: "actions",
       label: "Ações",
       render: (row) => (
-        <div className="flex gap-2">
-          <button
-            onClick={() => handleEditAsset(row)}
-            className="p-1 hover:bg-gray-100 rounded transition-colors"
-            aria-label="Editar investimento"
-          >
-            <Edit className="w-4 h-4 text-gray-600" />
-          </button>
-          <button
-            onClick={() => handleDeleteAsset(row)}
-            className="p-1 hover:bg-red-50 rounded transition-colors"
-            aria-label="Excluir investimento"
-          >
-            <Trash2 className="w-4 h-4 text-red-600" />
-          </button>
-        </div>
+        <button
+          onClick={() => handleDeleteAsset(row)}
+          className="p-1 hover:bg-red-50 rounded transition-colors"
+          aria-label="Excluir investimento"
+        >
+          <Trash2 className="w-4 h-4 text-red-600" />
+        </button>
       ),
     },
   ];

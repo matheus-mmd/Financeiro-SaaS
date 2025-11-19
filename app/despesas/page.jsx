@@ -42,7 +42,6 @@ import { exportToCSV } from "../../src/utils/exportData";
 import {
   Receipt,
   Plus,
-  Edit,
   Trash2,
   TrendingDown,
   PieChart,
@@ -304,22 +303,13 @@ export default function Despesas() {
       key: "actions",
       label: "Ações",
       render: (row) => (
-        <div className="flex gap-2">
-          <button
-            onClick={() => handleEditExpense(row)}
-            className="p-1 hover:bg-gray-100 rounded transition-colors"
-            aria-label="Editar despesa"
-          >
-            <Edit className="w-4 h-4 text-gray-600" />
-          </button>
-          <button
-            onClick={() => handleDeleteExpense(row)}
-            className="p-1 hover:bg-red-50 rounded transition-colors"
-            aria-label="Excluir despesa"
-          >
-            <Trash2 className="w-4 h-4 text-red-600" />
-          </button>
-        </div>
+        <button
+          onClick={() => handleDeleteExpense(row)}
+          className="p-1 hover:bg-red-50 rounded transition-colors"
+          aria-label="Excluir despesa"
+        >
+          <Trash2 className="w-4 h-4 text-red-600" />
+        </button>
       ),
     },
   ];
