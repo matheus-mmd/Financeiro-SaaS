@@ -19,7 +19,7 @@ import { Wallet, TrendingDown, ArrowUpRight, Target, Eye, DollarSign, PiggyBank 
  * Exibe resumo mensal, gráficos de despesas e evolução, transações e metas
  */
 export default function Dashboard() {
-  const [summary, setSummary] = useState(null);
+  const [user, setUser] = useState(null);
   const [expenses, setExpenses] = useState([]);
   const [categories, setCategories] = useState([]);
   const [transactions, setTransactions] = useState([]);
@@ -31,14 +31,14 @@ export default function Dashboard() {
     const loadData = async () => {
       try {
         const [
-          summaryRes,
+          userRes,
           expensesRes,
           categoriesRes,
           transactionsRes,
           targetsRes,
           assetsRes,
         ] = await Promise.all([
-          fetchMock("/api/summary"),
+          fetchMock("/api/user"),
           fetchMock("/api/expenses"),
           fetchMock("/api/categories"),
           fetchMock("/api/transactions"),
@@ -46,7 +46,7 @@ export default function Dashboard() {
           fetchMock("/api/assets"),
         ]);
 
-        setSummary(summaryRes.data);
+        setUser(userRes.data);
         setExpenses(expensesRes.data);
         setCategories(categoriesRes.data);
         setTransactions(transactionsRes.data);
@@ -72,14 +72,24 @@ export default function Dashboard() {
     );
   }
 
-  // Calcular total de investimentos do mês atual
+  // Calcular Receita Líquida dinamicamente
+  const income_gross = user.monthly_income.gross;
+  const discounts = user.monthly_income.discounts;
+  const income_net = income_gross - discounts.total;
+
+  // Calcular Despesas Mensais do mês atual
   const currentMonth = "2025-11";
+  const monthly_expenses_total = expenses
+    .filter((e) => e.date.startsWith(currentMonth))
+    .reduce((sum, e) => sum + e.amount, 0);
+
+  // Calcular total de investimentos do mês atual
   const totalInvestments = transactions
     .filter((t) => t.type === "investment" && t.date.startsWith(currentMonth))
     .reduce((sum, t) => sum + t.amount, 0);
 
   // Calcular Saldo Disponível: Receita - Despesas - Investimentos
-  const availableBalance = summary.income_net - summary.monthly_expenses_total - totalInvestments;
+  const availableBalance = income_net - monthly_expenses_total - totalInvestments;
 
   // Calcular Patrimônio Total (soma de todos os assets)
   const totalAssets = assets.reduce((sum, asset) => sum + asset.value, 0);
@@ -226,22 +236,22 @@ export default function Dashboard() {
         <StatsCard
           icon={DollarSign}
           label="Receita Bruta"
-          value={formatCurrency(summary.income_gross)}
+          value={formatCurrency(income_gross)}
           iconColor="green"
           valueColor="text-green-600"
         />
         <StatsCard
           icon={Wallet}
           label="Receita Líquida"
-          value={formatCurrency(summary.income_net)}
-          subtitle={`Descontos: ${formatCurrency(summary.discounts.total)}`}
+          value={formatCurrency(income_net)}
+          subtitle={`Descontos: ${formatCurrency(discounts.total)}`}
           iconColor="green"
           valueColor="text-green-600"
         />
         <StatsCard
           icon={TrendingDown}
           label="Despesas Mensais"
-          value={formatCurrency(summary.monthly_expenses_total)}
+          value={formatCurrency(monthly_expenses_total)}
           iconColor="red"
           valueColor="text-red-600"
         />

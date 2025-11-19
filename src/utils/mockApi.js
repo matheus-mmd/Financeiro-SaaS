@@ -14,7 +14,6 @@ export const fetchMock = async (endpoint) => {
 
   const routes = {
     '/api/user': mockData.user,
-    '/api/summary': mockData.summary,
     '/api/expenses': mockData.expenses,
     '/api/assets': mockData.assets,
     '/api/targets': mockData.targets,

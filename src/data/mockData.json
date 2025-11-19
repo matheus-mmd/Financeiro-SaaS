@@ -1,8 +1,16 @@
 {
   "user": {
     "name": "Matheus Menezes",
-    "partner": "Nayanna Faria",
-    "currency": "BRL"
+    "partner": "Nayanna",
+    "currency": "BRL",
+    "monthly_income": {
+      "gross": 7414.50,
+      "discounts": {
+        "nayanna": 790.00,
+        "matheus": 267.00,
+        "total": 1057.00
+      }
+    }
   },
   "categories": [
     { "id": "moradia", "name": "Moradia", "color": "#3b82f6" },
@@ -17,22 +25,12 @@
     { "id": "utilities", "name": "Utilities", "color": "#84cc16" },
     { "id": "outros", "name": "Outros", "color": "#64748b" }
   ],
-  "summary": {
-    "income_gross": 7414.50,
-    "discounts": {
-      "nayanna": 790.00,
-      "matheus": 267.00,
-      "total": 1057.00
-    },
-    "income_net": 6357.50,
-    "monthly_expenses_total": 7425.00
-  },
   "expenses": [
     {"id": 1, "category": "Moradia", "title": "Parcela do apartamento", "amount": 1805.00, "date": "2025-11-01"},
     {"id": 2, "category": "Moradia", "title": "Condomínio", "amount": 550.00, "date": "2025-11-02"},
     {"id": 3, "category": "Utilities", "title": "Água, luz e internet", "amount": 300.00, "date": "2025-11-03"},
     {"id": 4, "category": "Transporte", "title": "Seguro do carro", "amount": 120.00, "date": "2025-11-04"},
-    {"id": 6, "category": "Outros", "title": "Despesa mês", "amount": 500.00, "date": "2025-11-06"},
+    {"id": 6, "category": "Outros", "title": "Despesa mês (2)", "amount": 500.00, "date": "2025-11-06"},
     {"id": 7, "category": "Crédito", "title": "Cartão de crédito", "amount": 1000.00, "date": "2025-11-07"},
     {"id": 8, "category": "Assinaturas", "title": "Internet móvel & Spotify", "amount": 200.00, "date": "2025-11-08"},
     {"id": 9, "category": "Família", "title": "Ajudar", "amount": 550.00, "date": "2025-11-09"},
@@ -87,7 +85,7 @@
     {"id": 2002, "date": "2025-11-02", "description": "Condomínio", "amount": -550.00, "type": "debit"},
     {"id": 2003, "date": "2025-11-03", "description": "Água, luz e internet", "amount": -300.00, "type": "debit"},
     {"id": 2004, "date": "2025-11-04", "description": "Seguro do carro", "amount": -120.00, "type": "debit"},
-    {"id": 2006, "date": "2025-11-06", "description": "Despesa mês", "amount": -500.00, "type": "debit"},
+    {"id": 2006, "date": "2025-11-06", "description": "Despesa mês (2)", "amount": -500.00, "type": "debit"},
     {"id": 2007, "date": "2025-11-07", "description": "Cartão de crédito", "amount": -1000.00, "type": "debit"},
     {"id": 2008, "date": "2025-11-08", "description": "Internet móvel & Spotify", "amount": -200.00, "type": "debit"},
     {"id": 2009, "date": "2025-11-09", "description": "Ajudar família", "amount": -550.00, "type": "debit"},

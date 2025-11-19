@@ -17,15 +17,14 @@ const getInitials = (name) => {
 };
 
 /**
- * Componente Topbar - Barra superior com resumo rápido
+ * Componente Topbar - Barra superior com informações do usuário
  * @param {object} user - Dados do usuário
- * @param {number} balance - Saldo disponível
  * @param {boolean} isSidebarCollapsed - Estado do menu lateral
  * @param {function} onToggleSidebar - Função para alternar menu lateral
  * @param {boolean} isMobileSidebarOpen - Estado do menu mobile
  * @param {function} onToggleMobileSidebar - Função para alternar menu mobile
  */
-export default function Topbar({ user, balance, isSidebarCollapsed, onToggleSidebar, isMobileSidebarOpen, onToggleMobileSidebar }) {
+export default function Topbar({ user, isSidebarCollapsed, onToggleSidebar, isMobileSidebarOpen, onToggleMobileSidebar }) {
   return (
     <header className="bg-white border-b border-gray-200 px-4 sm:px-6 py-4">
       <div className="flex items-center justify-between gap-4">
@@ -61,17 +60,21 @@ export default function Topbar({ user, balance, isSidebarCollapsed, onToggleSide
 
         {/* User info */}
         <div className="flex items-center gap-4">
-          <div className="hidden sm:block text-right">
-            <p className="text-sm font-medium text-gray-900">{user.name}</p>
-            {user.partner && (
-              <p className="text-xs text-gray-500">& {user.partner}</p>
-            )}
-          </div>
-          <Avatar>
-            <AvatarFallback className="bg-brand-500 text-white">
-              {getInitials(user.name)}
-            </AvatarFallback>
-          </Avatar>
+          {user && (
+            <>
+              <div className="hidden sm:block text-right">
+                <p className="text-sm font-medium text-gray-900">{user.name}</p>
+                {user.partner && (
+                  <p className="text-xs text-gray-500">& {user.partner}</p>
+                )}
+              </div>
+              <Avatar>
+                <AvatarFallback className="bg-brand-500 text-white">
+                  {getInitials(user.name)}
+                </AvatarFallback>
+              </Avatar>
+            </>
+          )}
         </div>
       </div>
     </header>
