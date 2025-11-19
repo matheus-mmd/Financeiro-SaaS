@@ -1,16 +1,8 @@
 {
   "user": {
     "name": "Matheus Menezes",
-    "partner": "Nayanna",
-    "currency": "BRL",
-    "monthly_income": {
-      "gross": 7414.50,
-      "discounts": {
-        "nayanna": 790.00,
-        "matheus": 267.00,
-        "total": 1057.00
-      }
-    }
+    "partner": "Nayanna Farias",
+    "currency": "BRL"
   },
   "categories": [
     { "id": "moradia", "name": "Moradia", "color": "#3b82f6" },
@@ -90,6 +82,6 @@
     {"id": 2008, "date": "2025-11-08", "description": "Internet móvel & Spotify", "amount": -200.00, "type": "debit"},
     {"id": 2009, "date": "2025-11-09", "description": "Ajudar família", "amount": -550.00, "type": "debit"},
     {"id": 2010, "date": "2025-11-10", "description": "Lazer casal", "amount": -1500.00, "type": "debit"},
-    {"id": 2011, "date": "2025-11-09", "description": "PJ`", "amount": 1350.00, "type": "credit"}
+    {"id": 2011, "date": "2025-11-09", "description": "PJ", "amount": 1350.00, "type": "credit"}
   ]
 }

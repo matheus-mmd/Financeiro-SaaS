@@ -72,24 +72,29 @@ export default function Dashboard() {
     );
   }
 
-  // Calcular Receita Líquida dinamicamente
-  const income_gross = user.monthly_income.gross;
-  const discounts = user.monthly_income.discounts;
-  const income_net = income_gross - discounts.total;
-
   // Calcular Despesas Mensais do mês atual
   const currentMonth = "2025-11";
   const monthly_expenses_total = expenses
     .filter((e) => e.date.startsWith(currentMonth))
     .reduce((sum, e) => sum + e.amount, 0);
 
+  // Calcular total de créditos do mês atual
+  const totalCredits = transactions
+    .filter((t) => t.type === "credit" && t.date.startsWith(currentMonth))
+    .reduce((sum, t) => sum + t.amount, 0);
+
+  // Calcular total de débitos do mês atual
+  const totalDebits = transactions
+    .filter((t) => t.type === "debit" && t.date.startsWith(currentMonth))
+    .reduce((sum, t) => sum + Math.abs(t.amount), 0);
+
   // Calcular total de investimentos do mês atual
   const totalInvestments = transactions
     .filter((t) => t.type === "investment" && t.date.startsWith(currentMonth))
-    .reduce((sum, t) => sum + t.amount, 0);
+    .reduce((sum, t) => sum + Math.abs(t.amount), 0);
 
-  // Calcular Saldo Disponível: Receita - Despesas - Investimentos
-  const availableBalance = income_net - monthly_expenses_total - totalInvestments;
+  // Calcular Saldo Disponível: Créditos - Despesas - Investimentos
+  const availableBalance = totalCredits - monthly_expenses_total - totalInvestments;
 
   // Calcular Patrimônio Total (soma de todos os assets)
   const totalAssets = assets.reduce((sum, asset) => sum + asset.value, 0);
@@ -265,19 +270,18 @@ export default function Dashboard() {
       {/* Cards de resumo */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 min-w-0">
         <StatsCard
-          icon={DollarSign}
-          label="Receita Bruta"
-          value={formatCurrency(income_gross)}
+          icon={ArrowUpRight}
+          label="Total de Créditos"
+          value={formatCurrency(totalCredits)}
           iconColor="green"
           valueColor="text-green-600"
         />
         <StatsCard
-          icon={Wallet}
-          label="Receita Líquida"
-          value={formatCurrency(income_net)}
-          subtitle={`Descontos: ${formatCurrency(discounts.total)}`}
-          iconColor="green"
-          valueColor="text-green-600"
+          icon={TrendingDown}
+          label="Total de Débitos"
+          value={formatCurrency(totalDebits)}
+          iconColor="red"
+          valueColor="text-red-600"
         />
         <StatsCard
           icon={TrendingDown}
@@ -287,10 +291,10 @@ export default function Dashboard() {
           valueColor="text-red-600"
         />
         <StatsCard
-          icon={ArrowUpRight}
+          icon={Wallet}
           label="Saldo Disponível"
           value={formatCurrency(availableBalance)}
-          subtitle="Receita - Despesas - Investimentos"
+          subtitle="Créditos - Despesas - Investimentos"
           iconColor={availableBalance >= 0 ? "blue" : "red"}
           valueColor={availableBalance >= 0 ? "text-blue-600" : "text-red-600"}
         />
