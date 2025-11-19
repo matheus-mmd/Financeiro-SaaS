@@ -24,7 +24,6 @@ export default function Dashboard() {
   const [categories, setCategories] = useState([]);
   const [transactions, setTransactions] = useState([]);
   const [targets, setTargets] = useState([]);
-  const [balanceEvolution, setBalanceEvolution] = useState([]);
   const [assets, setAssets] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -37,7 +36,6 @@ export default function Dashboard() {
           categoriesRes,
           transactionsRes,
           targetsRes,
-          balanceEvolutionRes,
           assetsRes,
         ] = await Promise.all([
           fetchMock("/api/summary"),
@@ -45,7 +43,6 @@ export default function Dashboard() {
           fetchMock("/api/categories"),
           fetchMock("/api/transactions"),
           fetchMock("/api/targets"),
-          fetchMock("/api/balance-evolution"),
           fetchMock("/api/assets"),
         ]);
 
@@ -56,7 +53,6 @@ export default function Dashboard() {
         setTargets(
           targetsRes.data.filter((t) => t.status === "in_progress").slice(0, 2)
         );
-        setBalanceEvolution(balanceEvolutionRes.data);
         setAssets(assetsRes.data);
       } catch (error) {
         console.error("Erro ao carregar dashboard:", error);
@@ -76,9 +72,10 @@ export default function Dashboard() {
     );
   }
 
-  // Calcular total de investimentos do mês
+  // Calcular total de investimentos do mês atual
+  const currentMonth = "2025-11";
   const totalInvestments = transactions
-    .filter((t) => t.type === "investment")
+    .filter((t) => t.type === "investment" && t.date.startsWith(currentMonth))
     .reduce((sum, t) => sum + t.amount, 0);
 
   // Calcular Saldo Disponível: Receita - Despesas - Investimentos
@@ -87,11 +84,60 @@ export default function Dashboard() {
   // Calcular Patrimônio Total (soma de todos os assets)
   const totalAssets = assets.reduce((sum, asset) => sum + asset.value, 0);
 
-  // Calcular porcentagem de crescimento do saldo (baseado em balance_evolution)
+  // Calcular evolução do saldo dinamicamente baseado nas transações
+  const calculateBalanceEvolution = () => {
+    const INITIAL_BALANCE = 12500; // Saldo inicial em Junho
+    const monthNames = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+
+    // Agrupar transações por mês
+    const transactionsByMonth = {};
+    transactions.forEach((t) => {
+      const yearMonth = t.date.substring(0, 7); // "2025-06"
+      if (!transactionsByMonth[yearMonth]) {
+        transactionsByMonth[yearMonth] = { credits: 0, debits: 0, investments: 0 };
+      }
+
+      if (t.type === "credit") {
+        transactionsByMonth[yearMonth].credits += t.amount;
+      } else if (t.type === "debit") {
+        transactionsByMonth[yearMonth].debits += Math.abs(t.amount);
+      } else if (t.type === "investment") {
+        transactionsByMonth[yearMonth].investments += t.amount;
+      }
+    });
+
+    // Calcular saldo acumulado mês a mês
+    let accumulatedBalance = INITIAL_BALANCE;
+    const evolution = [];
+
+    // Ordenar meses
+    const sortedMonths = Object.keys(transactionsByMonth).sort();
+
+    sortedMonths.forEach((yearMonth) => {
+      const [year, month] = yearMonth.split("-");
+      const monthIndex = parseInt(month) - 1;
+      const monthData = transactionsByMonth[yearMonth];
+
+      // Calcular variação do mês: receitas - despesas - investimentos
+      const monthlyChange = monthData.credits - monthData.debits - monthData.investments;
+      accumulatedBalance += monthlyChange;
+
+      evolution.push({
+        date: monthNames[monthIndex],
+        value: Math.round(accumulatedBalance)
+      });
+    });
+
+    return evolution;
+  };
+
+  const calculatedBalanceEvolution = calculateBalanceEvolution();
+
+  // Calcular porcentagem de crescimento do saldo (baseado em evolução calculada)
   const balanceGrowthPercentage = (() => {
-    if (balanceEvolution.length < 2) return 0;
-    const firstValue = balanceEvolution[0].value;
-    const lastValue = balanceEvolution[balanceEvolution.length - 1].value;
+    if (calculatedBalanceEvolution.length < 2) return 0;
+    const firstValue = calculatedBalanceEvolution[0].value;
+    const lastValue = calculatedBalanceEvolution[calculatedBalanceEvolution.length - 1].value;
     return ((lastValue - firstValue) / firstValue * 100).toFixed(1);
   })();
 
@@ -246,7 +292,7 @@ export default function Dashboard() {
                 Evolução do Saldo
               </h2>
               <div className="flex items-center gap-2 text-sm">
-                <span className="text-gray-500">Últimos {balanceEvolution.length} meses</span>
+                <span className="text-gray-500">Últimos {calculatedBalanceEvolution.length} meses</span>
                 <div className={`flex items-center gap-1 font-semibold ${balanceGrowthPercentage >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                   <ArrowUpRight className="w-4 h-4" />
                   <span>{balanceGrowthPercentage >= 0 ? '+' : ''}{balanceGrowthPercentage}%</span>
@@ -254,7 +300,7 @@ export default function Dashboard() {
               </div>
             </div>
             <div className="h-[300px] sm:h-[350px]">
-              <LineChart data={balanceEvolution} />
+              <LineChart data={calculatedBalanceEvolution} />
             </div>
           </CardContent>
         </Card>
