@@ -64,13 +64,6 @@
     {"id": 2010, "date": "2025-11-10", "description": "Lazer casal", "amount": -1500.00, "type": "debit"},
     {"id": 2011, "date": "2025-11-10", "description": "PJ", "amount": 1350.00, "type": "credit"}
   ],
-  "comparison_sample": {
-    "assets": [
-      {"symbol": "ACAO_X", "name": "Ação X", "history": [{"date":"2025-08-01","value":100},{"date":"2025-09-01","value":105},{"date":"2025-10-01","value":110},{"date":"2025-11-01","value":115}]},
-      {"symbol": "FII_Y", "name": "FII Y", "history": [{"date":"2025-08-01","value":200},{"date":"2025-09-01","value":202},{"date":"2025-10-01","value":205},{"date":"2025-11-01","value":210}]},
-      {"symbol": "CDI", "name": "CDI", "history": [{"date":"2025-08-01","value":0.95},{"date":"2025-09-01","value":0.97},{"date":"2025-10-01","value":0.99},{"date":"2025-11-01","value":1.01}]}
-    ]
-  },
   "balance_evolution": [
     {"date": "Jun", "value": 12500},
     {"date": "Jul", "value": 14200},

@@ -27,7 +27,6 @@ export default function Sidebar({ isCollapsed = false, isOpen = false, onClose }
     { path: '/despesas', icon: Receipt, label: 'Despesas' },
     { path: '/investimentos', icon: TrendingUp, label: 'Investimentos' },
     { path: '/metas', icon: Target, label: 'Metas' },
-    { path: '/comparador', icon: BarChart3, label: 'Comparador' },
     { path: '/perfil', icon: User, label: 'Perfil' },
   ];
 

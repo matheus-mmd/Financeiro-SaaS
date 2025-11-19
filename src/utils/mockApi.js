@@ -19,7 +19,6 @@ export const fetchMock = async (endpoint) => {
     '/api/assets': mockData.assets,
     '/api/targets': mockData.targets,
     '/api/transactions': mockData.transactions,
-    '/api/comparison': mockData.comparison_sample,
     '/api/categories': mockData.categories,
     '/api/balance-evolution': mockData.balance_evolution,
   };
