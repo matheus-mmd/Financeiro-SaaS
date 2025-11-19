@@ -66,16 +66,7 @@ export default function Despesas() {
   const [expenseToDelete, setExpenseToDelete] = useState(null);
   const [selectedExpenses, setSelectedExpenses] = useState([]);
   const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
-
-  // Função para obter intervalo do mês atual
-  const getCurrentMonthRange = () => {
-    const now = new Date();
-    const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
-    const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-    return { from: firstDay, to: lastDay };
-  };
-
-  const [filterMonth, setFilterMonth] = useState(getCurrentMonthRange());
+  const [filterMonth, setFilterMonth] = useState(null);
   const [formData, setFormData] = useState({
     title: "",
     category: "",
@@ -426,7 +417,7 @@ export default function Despesas() {
                   size="sm"
                   onClick={() => {
                     setSelectedCategory("all");
-                    setFilterMonth(getCurrentMonthRange());
+                    setFilterMonth(null);
                   }}
                 >
                   Limpar Filtros

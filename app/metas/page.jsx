@@ -66,16 +66,7 @@ export default function Metas() {
   const [targetToDelete, setTargetToDelete] = useState(null);
   const [selectedTargets, setSelectedTargets] = useState([]);
   const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
-
-  // Inicializa com primeiro e último dia do mês atual
-  const getCurrentMonthRange = () => {
-    const now = new Date();
-    const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
-    const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-    return { from: firstDay, to: lastDay };
-  };
-
-  const [filterMonth, setFilterMonth] = useState(getCurrentMonthRange());
+  const [filterMonth, setFilterMonth] = useState(null);
   const [formData, setFormData] = useState({
     title: "",
     goal: "",
@@ -494,7 +485,7 @@ export default function Metas() {
                   size="sm"
                   onClick={() => {
                     setFilterStatus("all");
-                    setFilterMonth(getCurrentMonthRange());
+                    setFilterMonth(null);
                   }}
                 >
                   Limpar Filtros

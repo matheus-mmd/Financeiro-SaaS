@@ -68,16 +68,7 @@ export default function Investimentos() {
   const [selectedAssets, setSelectedAssets] = useState([]);
   const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
   const [typeModalOpen, setTypeModalOpen] = useState(false);
-
-  // Inicializa com primeiro e último dia do mês atual
-  const getCurrentMonthRange = () => {
-    const now = new Date();
-    const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
-    const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-    return { from: firstDay, to: lastDay };
-  };
-
-  const [filterMonth, setFilterMonth] = useState(getCurrentMonthRange());
+  const [filterMonth, setFilterMonth] = useState(null);
   const [formData, setFormData] = useState({
     name: "",
     type: "Poupança",
@@ -487,7 +478,7 @@ export default function Investimentos() {
                   size="sm"
                   onClick={() => {
                     setFilterType("all");
-                    setFilterMonth(getCurrentMonthRange());
+                    setFilterMonth(null);
                   }}
                 >
                   Limpar Filtros
