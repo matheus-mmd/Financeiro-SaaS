@@ -498,50 +498,6 @@ export default function Investimentos() {
         </CardContent>
       </Card>
 
-      {/* Lista de investimentos por tipo */}
-      <Card>
-        <CardContent className="p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">
-            Investimentos por Tipo
-          </h2>
-          <div className="space-y-3">
-            {assetsByType
-              .sort((a, b) => b.value - a.value)
-              .map((item) => {
-                const percentage = (
-                  (item.value / totalInvestments) *
-                  100
-                ).toFixed(1);
-
-                return (
-                  <div
-                    key={item.name}
-                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div
-                        className="w-4 h-4 rounded-full"
-                        style={{ backgroundColor: item.color }}
-                      />
-                      <span className="font-medium text-gray-900">
-                        {item.name}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-4">
-                      <span className="text-sm text-gray-500">
-                        {percentage}%
-                      </span>
-                      <span className="font-semibold text-green-600">
-                        {formatCurrency(item.value)}
-                      </span>
-                    </div>
-                  </div>
-                );
-              })}
-          </div>
-        </CardContent>
-      </Card>
-
       {/* Tabela de investimentos */}
       <Card>
         <CardContent className="p-6">

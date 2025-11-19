@@ -171,6 +171,37 @@ export default function Dashboard() {
     return acc;
   }, []);
 
+  // Calcular total de despesas para porcentagens
+  const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
+
+  // Agrupar investimentos por tipo
+  const assetsByType = assets.reduce((acc, asset) => {
+    const existing = acc.find((item) => item.name === asset.type);
+    if (existing) {
+      existing.value += asset.value;
+    } else {
+      // Cores para cada tipo de investimento
+      const typeColors = {
+        Poupança: "#22c55e",
+        CDB: "#3b82f6",
+        "Tesouro Direto": "#f59e0b",
+        Ações: "#ef4444",
+        Fundos: "#8b5cf6",
+        Criptomoedas: "#ec4899",
+        Outros: "#64748b",
+      };
+      acc.push({
+        name: asset.type,
+        value: asset.value,
+        color: typeColors[asset.type] || "#64748b",
+      });
+    }
+    return acc;
+  }, []);
+
+  // Calcular total de investimentos para porcentagens
+  const totalInvestmentsValue = assets.reduce((sum, a) => sum + a.value, 0);
+
   // Configuração de colunas da tabela de transações
   const transactionColumns = [
     {
@@ -311,6 +342,100 @@ export default function Dashboard() {
             </div>
             <div className="h-[300px] sm:h-[350px]">
               <LineChart data={calculatedBalanceEvolution} />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Listas de Despesas e Investimentos */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Lista de despesas por categoria */}
+        <Card>
+          <CardContent className="p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">
+              Despesas por Categoria
+            </h2>
+            <div className="space-y-3">
+              {expensesByCategory
+                .sort((a, b) => b.value - a.value)
+                .map((item) => {
+                  const category = categories.find(
+                    (c) =>
+                      c.name === item.name || c.id === item.name.toLowerCase()
+                  );
+                  const percentage = ((item.value / totalExpenses) * 100).toFixed(1);
+
+                  return (
+                    <div
+                      key={item.name}
+                      className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div
+                          className="w-4 h-4 rounded-full"
+                          style={{
+                            backgroundColor: category?.color || "#64748b",
+                          }}
+                        />
+                        <span className="font-medium text-gray-900">
+                          {item.name}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <span className="text-sm text-gray-500">
+                          {percentage}%
+                        </span>
+                        <span className="font-semibold text-red-600">
+                          {formatCurrency(item.value)}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Lista de investimentos por tipo */}
+        <Card>
+          <CardContent className="p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">
+              Investimentos por Tipo
+            </h2>
+            <div className="space-y-3">
+              {assetsByType
+                .sort((a, b) => b.value - a.value)
+                .map((item) => {
+                  const percentage = (
+                    (item.value / totalInvestmentsValue) *
+                    100
+                  ).toFixed(1);
+
+                  return (
+                    <div
+                      key={item.name}
+                      className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div
+                          className="w-4 h-4 rounded-full"
+                          style={{ backgroundColor: item.color }}
+                        />
+                        <span className="font-medium text-gray-900">
+                          {item.name}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <span className="text-sm text-gray-500">
+                          {percentage}%
+                        </span>
+                        <span className="font-semibold text-green-600">
+                          {formatCurrency(item.value)}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
             </div>
           </CardContent>
         </Card>

@@ -437,55 +437,6 @@ export default function Despesas() {
         </CardContent>
       </Card>
 
-      {/* Lista de despesas por categoria */}
-      <Card>
-        <CardContent className="p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">
-            Despesas por Categoria
-          </h2>
-          <div className="space-y-3">
-            {expensesByCategory
-              .sort((a, b) => b.value - a.value)
-              .map((item) => {
-                const category = categories.find(
-                  (c) =>
-                    c.name === item.name || c.id === item.name.toLowerCase()
-                );
-                const percentage = ((item.value / totalExpenses) * 100).toFixed(
-                  1
-                );
-
-                return (
-                  <div
-                    key={item.name}
-                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div
-                        className="w-4 h-4 rounded-full"
-                        style={{
-                          backgroundColor: category?.color || "#64748b",
-                        }}
-                      />
-                      <span className="font-medium text-gray-900">
-                        {item.name}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-4">
-                      <span className="text-sm text-gray-500">
-                        {percentage}%
-                      </span>
-                      <span className="font-semibold text-red-600">
-                        {formatCurrency(item.value)}
-                      </span>
-                    </div>
-                  </div>
-                );
-              })}
-          </div>
-        </CardContent>
-      </Card>
-
       {/* Tabela de despesas */}
       <Card>
         <CardContent className="p-6">
