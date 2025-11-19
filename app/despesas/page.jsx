@@ -272,6 +272,7 @@ export default function Despesas() {
     {
       key: "category",
       label: "Categoria",
+      sortable: true,
       render: (row) => {
         const category = categories.find(
           (c) => c.name === row.category || c.id === row.category.toLowerCase()

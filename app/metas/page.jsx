@@ -317,6 +317,7 @@ export default function Metas() {
     {
       key: "status",
       label: "Status",
+      sortable: true,
       render: (row) => {
         if (row.status === "completed") {
           return (

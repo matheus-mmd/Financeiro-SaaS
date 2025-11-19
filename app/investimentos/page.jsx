@@ -322,6 +322,7 @@ export default function Investimentos() {
     {
       key: "type",
       label: "Tipo",
+      sortable: true,
       render: (row) => {
         // Cores para cada tipo de investimento
         const typeColors = {

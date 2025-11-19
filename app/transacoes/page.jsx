@@ -303,6 +303,7 @@ export default function Transacoes() {
     {
       key: "type",
       label: "Tipo",
+      sortable: true,
       render: (row) => {
         if (row.type === "credit") {
           return (
