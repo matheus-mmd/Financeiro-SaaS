@@ -4,9 +4,17 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Sector } from 'recha
 /**
  * Componente DoughnutChart - Gráfico de rosca moderno para categorias
  * Componente de gráfico usando Recharts com visual aprimorado
+ * @param {Array} data - Dados para o gráfico
+ * @param {number} externalActiveIndex - Índice ativo controlado externamente
+ * @param {Function} onIndexChange - Callback quando o índice ativo muda
+ * @param {boolean} showLegend - Se deve mostrar a legenda integrada (padrão: true)
  */
-export default function DoughnutChart({ data }) {
-  const [activeIndex, setActiveIndex] = useState(null);
+export default function DoughnutChart({ data, externalActiveIndex, onIndexChange, showLegend = true }) {
+  const [internalActiveIndex, setInternalActiveIndex] = useState(null);
+
+  // Usar índice externo se fornecido, caso contrário usar interno
+  const activeIndex = externalActiveIndex !== undefined ? externalActiveIndex : internalActiveIndex;
+  const setActiveIndex = onIndexChange || setInternalActiveIndex;
 
   // Cores padrão vibrantes
   const DEFAULT_COLORS = ['#0ea5a4', '#06b6d4', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#6366f1', '#ef4444'];
@@ -153,7 +161,7 @@ export default function DoughnutChart({ data }) {
 
   return (
     <div className="w-full h-full flex flex-col">
-      <ResponsiveContainer width="100%" height="60%" minHeight={180}>
+      <ResponsiveContainer width="100%" height={showLegend ? "60%" : "100%"} minHeight={180}>
         <PieChart>
           <Pie
             data={data}
@@ -185,9 +193,11 @@ export default function DoughnutChart({ data }) {
           <Tooltip content={<CustomTooltip />} />
         </PieChart>
       </ResponsiveContainer>
-      <div className="flex-1 overflow-y-auto">
-        {renderLegend()}
-      </div>
+      {showLegend && (
+        <div className="flex-1 overflow-y-auto">
+          {renderLegend()}
+        </div>
+      )}
     </div>
   );
 }

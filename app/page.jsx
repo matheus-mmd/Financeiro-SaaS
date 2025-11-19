@@ -26,6 +26,7 @@ export default function Dashboard() {
   const [targets, setTargets] = useState([]);
   const [assets, setAssets] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [activeExpenseIndex, setActiveExpenseIndex] = useState(null);
 
   useEffect(() => {
     const loadData = async () => {
@@ -347,41 +348,61 @@ export default function Dashboard() {
 
             {/* Gráfico de Pizza */}
             <div className="h-[300px] mb-6">
-              <DoughnutChart data={expensesByCategory} />
+              <DoughnutChart
+                data={expensesByCategory}
+                showLegend={false}
+                externalActiveIndex={activeExpenseIndex}
+                onIndexChange={setActiveExpenseIndex}
+              />
             </div>
 
             {/* Lista de categorias */}
             <div className="space-y-3">
               {expensesByCategory
                 .sort((a, b) => b.value - a.value)
-                .map((item) => {
+                .map((item, index) => {
                   const category = categories.find(
                     (c) =>
                       c.name === item.name || c.id === item.name.toLowerCase()
                   );
                   const percentage = ((item.value / totalExpenses) * 100).toFixed(1);
+                  const isActive = activeExpenseIndex === index;
 
                   return (
                     <div
                       key={item.name}
-                      className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                      className={`flex items-center justify-between p-3 rounded-lg transition-all duration-200 cursor-pointer ${
+                        isActive
+                          ? 'bg-gray-100 shadow-sm scale-105 ring-2 ring-gray-200'
+                          : 'bg-gray-50 hover:bg-gray-100 hover:shadow-sm'
+                      }`}
+                      onMouseEnter={() => setActiveExpenseIndex(index)}
+                      onMouseLeave={() => setActiveExpenseIndex(null)}
                     >
                       <div className="flex items-center gap-3">
                         <div
-                          className="w-4 h-4 rounded-full"
+                          className={`w-4 h-4 rounded-full transition-all duration-200 ${
+                            isActive ? 'shadow-md scale-125' : 'shadow-sm'
+                          }`}
                           style={{
                             backgroundColor: category?.color || "#64748b",
                           }}
                         />
-                        <span className="font-medium text-gray-900">
+                        <span className={`font-medium transition-colors duration-200 ${
+                          isActive ? 'text-gray-900 font-semibold' : 'text-gray-900'
+                        }`}>
                           {item.name}
                         </span>
                       </div>
                       <div className="flex items-center gap-4">
-                        <span className="text-sm text-gray-500">
+                        <span className={`text-sm font-semibold transition-all duration-200 ${
+                          isActive ? 'text-gray-900 scale-110' : 'text-gray-500'
+                        }`}>
                           {percentage}%
                         </span>
-                        <span className="font-semibold text-red-600">
+                        <span className={`font-semibold text-red-600 transition-all duration-200 ${
+                          isActive ? 'scale-105' : ''
+                        }`}>
                           {formatCurrency(item.value)}
                         </span>
                       </div>
