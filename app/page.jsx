@@ -271,7 +271,7 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 min-w-0">
         <StatsCard
           icon={ArrowUpRight}
-          label="Total de Créditos"
+          label="Créditos Mensais"
           value={formatCurrency(totalCredits)}
           iconColor="green"
           valueColor="text-green-600"
@@ -291,6 +291,13 @@ export default function Dashboard() {
           valueColor="text-red-600"
         />
         <StatsCard
+          icon={Target}
+          label="Investimentos Mensais"
+          value={formatCurrency(totalInvestments)}
+          iconColor="blue"
+          valueColor="text-blue-600"
+        />
+        <StatsCard
           icon={Wallet}
           label="Saldo Disponível"
           value={formatCurrency(availableBalance)}
@@ -305,13 +312,6 @@ export default function Dashboard() {
           subtitle={`${assets.length} ativo(s)`}
           iconColor="purple"
           valueColor="text-purple-600"
-        />
-        <StatsCard
-          icon={Target}
-          label="Investimentos Mensais"
-          value={formatCurrency(totalInvestments)}
-          iconColor="blue"
-          valueColor="text-blue-600"
         />
       </div>
 
