@@ -12,7 +12,7 @@ import DoughnutChart from "../src/components/charts/DoughnutChart";
 import LineChart from "../src/components/charts/LineChart";
 import ProgressBar from "../src/components/ProgressBar";
 import { fetchMock, formatCurrency, formatDate } from "../src/utils/mockApi";
-import { Wallet, TrendingDown, ArrowUpRight, Target, Eye } from "lucide-react";
+import { Wallet, TrendingDown, ArrowUpRight, Target, Eye, DollarSign, PiggyBank } from "lucide-react";
 
 /**
  * Página Dashboard - Visão geral do controle financeiro
@@ -25,6 +25,7 @@ export default function Dashboard() {
   const [transactions, setTransactions] = useState([]);
   const [targets, setTargets] = useState([]);
   const [balanceEvolution, setBalanceEvolution] = useState([]);
+  const [assets, setAssets] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -37,6 +38,7 @@ export default function Dashboard() {
           transactionsRes,
           targetsRes,
           balanceEvolutionRes,
+          assetsRes,
         ] = await Promise.all([
           fetchMock("/api/summary"),
           fetchMock("/api/expenses"),
@@ -44,6 +46,7 @@ export default function Dashboard() {
           fetchMock("/api/transactions"),
           fetchMock("/api/targets"),
           fetchMock("/api/balance-evolution"),
+          fetchMock("/api/assets"),
         ]);
 
         setSummary(summaryRes.data);
@@ -54,6 +57,7 @@ export default function Dashboard() {
           targetsRes.data.filter((t) => t.status === "in_progress").slice(0, 2)
         );
         setBalanceEvolution(balanceEvolutionRes.data);
+        setAssets(assetsRes.data);
       } catch (error) {
         console.error("Erro ao carregar dashboard:", error);
       } finally {
@@ -71,6 +75,25 @@ export default function Dashboard() {
       </div>
     );
   }
+
+  // Calcular total de investimentos do mês
+  const totalInvestments = transactions
+    .filter((t) => t.type === "investment")
+    .reduce((sum, t) => sum + t.amount, 0);
+
+  // Calcular Saldo Disponível: Receita - Despesas - Investimentos
+  const availableBalance = summary.income_net - summary.monthly_expenses_total - totalInvestments;
+
+  // Calcular Patrimônio Total (soma de todos os assets)
+  const totalAssets = assets.reduce((sum, asset) => sum + asset.value, 0);
+
+  // Calcular porcentagem de crescimento do saldo (baseado em balance_evolution)
+  const balanceGrowthPercentage = (() => {
+    if (balanceEvolution.length < 2) return 0;
+    const firstValue = balanceEvolution[0].value;
+    const lastValue = balanceEvolution[balanceEvolution.length - 1].value;
+    return ((lastValue - firstValue) / firstValue * 100).toFixed(1);
+  })();
 
   // Preparar dados para gráfico de despesas por categoria
   const expensesByCategory = expenses.reduce((acc, expense) => {
@@ -153,11 +176,19 @@ export default function Dashboard() {
       />
 
       {/* Cards de resumo */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 min-w-0">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 min-w-0">
+        <StatsCard
+          icon={DollarSign}
+          label="Receita Bruta"
+          value={formatCurrency(summary.income_gross)}
+          iconColor="green"
+          valueColor="text-green-600"
+        />
         <StatsCard
           icon={Wallet}
           label="Receita Líquida"
           value={formatCurrency(summary.income_net)}
+          subtitle={`Descontos: ${formatCurrency(summary.discounts.total)}`}
           iconColor="green"
           valueColor="text-green-600"
         />
@@ -171,19 +202,25 @@ export default function Dashboard() {
         <StatsCard
           icon={ArrowUpRight}
           label="Saldo Disponível"
-          value={formatCurrency(summary.available_balance)}
-          iconColor="blue"
-          valueColor="text-blue-600"
+          value={formatCurrency(availableBalance)}
+          subtitle="Receita - Despesas - Investimentos"
+          iconColor={availableBalance >= 0 ? "blue" : "red"}
+          valueColor={availableBalance >= 0 ? "text-blue-600" : "text-red-600"}
+        />
+        <StatsCard
+          icon={PiggyBank}
+          label="Patrimônio Total"
+          value={formatCurrency(totalAssets)}
+          subtitle={`${assets.length} ativo(s)`}
+          iconColor="purple"
+          valueColor="text-purple-600"
         />
         <StatsCard
           icon={Target}
-          label="Descontos Totais"
-          value={formatCurrency(summary.discounts.total)}
-          subtitle={`Matheus: ${formatCurrency(
-            summary.discounts.matheus
-          )} | Nayanna: ${formatCurrency(summary.discounts.nayanna)}`}
-          iconColor="purple"
-          valueColor="text-purple-600"
+          label="Investimentos Mensais"
+          value={formatCurrency(totalInvestments)}
+          iconColor="blue"
+          valueColor="text-blue-600"
         />
       </div>
 
@@ -209,10 +246,10 @@ export default function Dashboard() {
                 Evolução do Saldo
               </h2>
               <div className="flex items-center gap-2 text-sm">
-                <span className="text-gray-500">Últimos 7 meses</span>
-                <div className="flex items-center gap-1 text-green-600 font-semibold">
+                <span className="text-gray-500">Últimos {balanceEvolution.length} meses</span>
+                <div className={`flex items-center gap-1 font-semibold ${balanceGrowthPercentage >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                   <ArrowUpRight className="w-4 h-4" />
-                  <span>+58,4%</span>
+                  <span>{balanceGrowthPercentage >= 0 ? '+' : ''}{balanceGrowthPercentage}%</span>
                 </div>
               </div>
             </div>
@@ -222,6 +259,44 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Ativos e Patrimônio */}
+      {assets.length > 0 && (
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                <PiggyBank className="w-5 h-5 text-purple-500" />
+                Patrimônio e Ativos
+              </h2>
+              <Link
+                href="/investimentos"
+                className="text-sm text-brand-500 hover:text-brand-600 font-medium"
+              >
+                Ver todos →
+              </Link>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {assets.map((asset) => (
+                <div key={asset.id} className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                  <div className="flex justify-between items-start mb-2">
+                    <div>
+                      <h3 className="font-medium text-gray-900">{asset.name}</h3>
+                      <p className="text-sm text-gray-500">{asset.type}</p>
+                    </div>
+                    <Badge variant="outline" className="text-xs">
+                      {(asset.yield * 100).toFixed(2)}% a.m.
+                    </Badge>
+                  </div>
+                  <p className="text-xl font-semibold text-purple-600">
+                    {formatCurrency(asset.value)}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Metas em andamento (preview) */}
       {targets.length > 0 && (
