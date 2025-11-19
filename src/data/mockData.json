@@ -4,9 +4,6 @@
     "partner": "Nayanna Farias",
     "currency": "BRL"
   },
-    "budget": {
-    "monthly_expenses_limit": 6500.00
-  },
   "categories": [
     { "id": "moradia", "name": "Moradia", "color": "#3b82f6" },
     { "id": "transporte", "name": "Transporte", "color": "#ef4444" },
