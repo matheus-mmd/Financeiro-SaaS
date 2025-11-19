@@ -25,6 +25,7 @@ export default function Dashboard() {
   const [transactions, setTransactions] = useState([]);
   const [targets, setTargets] = useState([]);
   const [assets, setAssets] = useState([]);
+  const [budget, setBudget] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -37,6 +38,7 @@ export default function Dashboard() {
           transactionsRes,
           targetsRes,
           assetsRes,
+          budgetRes,
         ] = await Promise.all([
           fetchMock("/api/user"),
           fetchMock("/api/expenses"),
@@ -44,6 +46,7 @@ export default function Dashboard() {
           fetchMock("/api/transactions"),
           fetchMock("/api/targets"),
           fetchMock("/api/assets"),
+          fetchMock("/api/budget"),
         ]);
 
         setUser(userRes.data);
@@ -54,6 +57,7 @@ export default function Dashboard() {
           targetsRes.data.filter((t) => t.status === "in_progress").slice(0, 2)
         );
         setAssets(assetsRes.data);
+        setBudget(budgetRes.data);
       } catch (error) {
         console.error("Erro ao carregar dashboard:", error);
       } finally {
@@ -278,15 +282,15 @@ export default function Dashboard() {
         />
         <StatsCard
           icon={TrendingDown}
-          label="Total de Débitos"
-          value={formatCurrency(totalDebits)}
-          iconColor="red"
-          valueColor="text-red-600"
-        />
-        <StatsCard
-          icon={TrendingDown}
           label="Despesas Mensais"
           value={formatCurrency(monthly_expenses_total)}
+          subtitle={
+            budget && monthly_expenses_total > budget.monthly_expenses_limit
+              ? `⚠️ Acima do previsto (${formatCurrency(budget.monthly_expenses_limit)})`
+              : budget
+              ? `✓ Dentro do previsto (${formatCurrency(budget.monthly_expenses_limit)})`
+              : ""
+          }
           iconColor="red"
           valueColor="text-red-600"
         />
