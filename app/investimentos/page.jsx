@@ -68,7 +68,16 @@ export default function Investimentos() {
   const [selectedAssets, setSelectedAssets] = useState([]);
   const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
   const [typeModalOpen, setTypeModalOpen] = useState(false);
-  const [filterMonth, setFilterMonth] = useState(null);
+
+  // Função para obter intervalo do mês atual
+  const getCurrentMonthRange = () => {
+    const now = new Date();
+    const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+    const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    return { from: firstDay, to: lastDay };
+  };
+
+  const [filterMonth, setFilterMonth] = useState(getCurrentMonthRange());
   const [formData, setFormData] = useState({
     name: "",
     type: "Poupança",
@@ -541,7 +550,7 @@ export default function Investimentos() {
               Todos os Investimentos ({filteredAssets.length})
             </h2>
           </div>
-          
+
           {/* Barra de ações da tabela */}
           <TableActions
             onAdd={handleAddAsset}
