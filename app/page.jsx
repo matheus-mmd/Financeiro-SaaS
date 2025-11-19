@@ -315,50 +315,42 @@ export default function Dashboard() {
         />
       </div>
 
-      {/* Gráficos */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Gráfico de despesas por categoria */}
-        <Card>
-          <CardContent className="p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">
-              Despesas por Categoria
+      {/* Gráfico de Evolução do Saldo */}
+      <Card>
+        <CardContent className="p-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-2">
+            <h2 className="text-lg font-semibold text-gray-900">
+              Evolução do Saldo
             </h2>
-            <div className="h-[300px] sm:h-[350px]">
-              <DoughnutChart data={expensesByCategory} />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Gráfico de evolução de saldo */}
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-2">
-              <h2 className="text-lg font-semibold text-gray-900">
-                Evolução do Saldo
-              </h2>
-              <div className="flex items-center gap-2 text-sm">
-                <span className="text-gray-500">Últimos {calculatedBalanceEvolution.length} meses</span>
-                <div className={`flex items-center gap-1 font-semibold ${balanceGrowthPercentage >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                  <ArrowUpRight className="w-4 h-4" />
-                  <span>{balanceGrowthPercentage >= 0 ? '+' : ''}{balanceGrowthPercentage}%</span>
-                </div>
+            <div className="flex items-center gap-2 text-sm">
+              <span className="text-gray-500">Últimos {calculatedBalanceEvolution.length} meses</span>
+              <div className={`flex items-center gap-1 font-semibold ${balanceGrowthPercentage >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                <ArrowUpRight className="w-4 h-4" />
+                <span>{balanceGrowthPercentage >= 0 ? '+' : ''}{balanceGrowthPercentage}%</span>
               </div>
             </div>
-            <div className="h-[300px] sm:h-[350px]">
-              <LineChart data={calculatedBalanceEvolution} />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+          </div>
+          <div className="h-[300px] sm:h-[350px]">
+            <LineChart data={calculatedBalanceEvolution} />
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Listas de Despesas e Investimentos */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Lista de despesas por categoria */}
+        {/* Despesas por categoria com gráfico e lista */}
         <Card>
           <CardContent className="p-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">
               Despesas por Categoria
             </h2>
+
+            {/* Gráfico de Pizza */}
+            <div className="h-[300px] mb-6">
+              <DoughnutChart data={expensesByCategory} />
+            </div>
+
+            {/* Lista de categorias */}
             <div className="space-y-3">
               {expensesByCategory
                 .sort((a, b) => b.value - a.value)
