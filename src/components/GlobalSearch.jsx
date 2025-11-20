@@ -16,7 +16,7 @@ import { formatCurrency, formatDate, fetchMock } from "../utils/mockApi";
 
 /**
  * GlobalSearch - Componente de busca global na aplicação
- * Busca em transações, metas, investimentos e despesas
+ * Busca em transações, metas, patrimônio e ativos, e despesas
  */
 export default function GlobalSearch() {
   const [open, setOpen] = useState(false);
@@ -235,7 +235,7 @@ export default function GlobalSearch() {
                         {results.assets.map((a) => (
                           <button
                             key={a.id}
-                            onClick={() => handleNavigate("/investimentos")}
+                            onClick={() => handleNavigate("/patrimonio-ativos")}
                             className="w-full flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg transition-colors text-left"
                           >
                             <div className="flex-1">

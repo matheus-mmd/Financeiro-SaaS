@@ -52,10 +52,10 @@ import {
 } from "lucide-react";
 
 /**
- * Página Patrimônio e Ativos - Gerenciamento de ativos e investimentos
+ * Página Patrimônio e Ativos - Gerenciamento de patrimônio e ativos
  * Permite visualizar, filtrar, adicionar e gerenciar patrimônio e ativos
  */
-export default function Investimentos() {
+export default function PatrimonioAtivos() {
   const [assets, setAssets] = useState([]);
   const [filteredAssets, setFilteredAssets] = useState([]);
   const [selectedAsset, setSelectedAsset] = useState(null);
@@ -98,7 +98,7 @@ export default function Investimentos() {
         setAssets(assetsWithDate);
         setFilteredAssets(assetsWithDate);
       } catch (error) {
-        console.error("Erro ao carregar investimentos:", error);
+        console.error("Erro ao carregar patrimônio e ativos:", error);
       } finally {
         setLoading(false);
       }
@@ -135,7 +135,7 @@ export default function Investimentos() {
     setFilteredAssets(filtered);
   }, [filterType, filterMonth, assets]);
 
-  const totalInvestments = filteredAssets.reduce(
+  const totalAssets = filteredAssets.reduce(
     (sum, asset) => sum + asset.value,
     0
   );
@@ -243,23 +243,23 @@ export default function Investimentos() {
       },
     ];
 
-    exportToCSV(filteredAssets, columns, "investimentos");
+    exportToCSV(filteredAssets, columns, "patrimonio-ativos");
   };
 
-  // Calcular estatísticas baseadas nos investimentos filtrados
+  // Calcular estatísticas baseadas no patrimônio e ativos filtrados
   const averageYield =
     filteredAssets.length > 0
       ? filteredAssets.reduce((sum, a) => sum + (a.yield || 0), 0) /
         filteredAssets.length
       : 0;
 
-  // Agrupar investimentos por tipo
+  // Agrupar patrimônio por tipo
   const assetsByType = filteredAssets.reduce((acc, asset) => {
     const existing = acc.find((item) => item.name === asset.type);
     if (existing) {
       existing.value += asset.value;
     } else {
-      // Cores para cada tipo de investimento
+      // Cores para cada tipo de ativo
       const typeColors = {
         Poupança: "#22c55e",
         CDB: "#3b82f6",
@@ -278,7 +278,7 @@ export default function Investimentos() {
     return acc;
   }, []);
 
-  // Ordenar investimentos por valor (maior primeiro)
+  // Ordenar patrimônio por valor (maior primeiro)
   const sortedAssets = useMemo(() => {
     return [...filteredAssets].sort((a, b) => {
       // Ordenar por valor (descendente - maior primeiro)
@@ -294,8 +294,8 @@ export default function Investimentos() {
     );
   }
 
-  // Tipos de investimento únicos
-  const investmentTypes = [
+  // Tipos de ativos únicos
+  const assetTypes = [
     "Poupança",
     "CDB",
     "Tesouro Direto",
@@ -317,7 +317,7 @@ export default function Investimentos() {
       label: "Tipo",
       sortable: true,
       render: (row) => {
-        // Cores para cada tipo de investimento
+        // Cores para cada tipo de ativo
         const typeColors = {
           Poupança: "#22c55e",
           CDB: "#3b82f6",
@@ -373,7 +373,7 @@ export default function Investimentos() {
         <button
           onClick={() => handleDeleteAsset(row)}
           className="p-1 hover:bg-red-50 rounded transition-colors"
-          aria-label="Excluir investimento"
+          aria-label="Excluir ativo"
         >
           <Trash2 className="w-4 h-4 text-red-600" />
         </button>
@@ -398,7 +398,7 @@ export default function Investimentos() {
             </Button>
             <Button onClick={handleAddAsset}>
               <Plus className="w-4 h-4" />
-              Novo Investimento
+              Novo Ativo
             </Button>
           </>
         }
@@ -408,8 +408,8 @@ export default function Investimentos() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 min-w-0">
         <StatsCard
           icon={DollarSign}
-          label="Total Investido"
-          value={formatCurrency(totalInvestments)}
+          label="Total em Patrimônio"
+          value={formatCurrency(totalAssets)}
           iconColor="green"
           valueColor="text-green-600"
         />
@@ -449,7 +449,7 @@ export default function Investimentos() {
                   htmlFor="filter-type"
                   className="text-sm font-medium text-gray-700"
                 >
-                  Tipo de Investimento
+                  Tipo de Ativo
                 </Label>
                 <Select value={filterType} onValueChange={setFilterType}>
                   <SelectTrigger id="filter-type">
@@ -457,7 +457,7 @@ export default function Investimentos() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Todos os tipos</SelectItem>
-                    {investmentTypes.map((type) => (
+                    {assetTypes.map((type) => (
                       <SelectItem key={type} value={type}>
                         {type}
                       </SelectItem>
@@ -498,7 +498,7 @@ export default function Investimentos() {
         </CardContent>
       </Card>
 
-      {/* Tabela de investimentos */}
+      {/* Tabela de patrimônio e ativos */}
       <Card>
         <CardContent className="p-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
@@ -513,20 +513,20 @@ export default function Investimentos() {
             onExport={handleExport}
             onDelete={handleBulkDelete}
             selectedCount={selectedAssets.length}
-            addLabel="Novo investimento"
-            exportLabel="Exportar investimentos"
-            deleteLabel="Excluir investimentos selecionados"
+            addLabel="Novo ativo"
+            exportLabel="Exportar patrimônio"
+            deleteLabel="Excluir ativos selecionados"
           />
 
           {sortedAssets.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-gray-500 mb-4">
-                Nenhum investimento encontrado.{" "}
+                Nenhum ativo encontrado.{" "}
                 <button
                   onClick={handleAddAsset}
                   className="text-brand-600 hover:text-brand-700 font-medium underline"
                 >
-                  Adicionar novo investimento
+                  Adicionar novo ativo
                 </button>
               </p>
             </div>
@@ -544,17 +544,17 @@ export default function Investimentos() {
         </CardContent>
       </Card>
 
-      {/* Dialog de adicionar/editar investimento */}
+      {/* Dialog de adicionar/editar ativo */}
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {editingAsset ? "Editar Investimento" : "Novo Investimento"}
+              {editingAsset ? "Editar Ativo" : "Novo Ativo"}
             </DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Nome do Investimento</Label>
+              <Label htmlFor="name">Nome do Ativo</Label>
               <Input
                 id="name"
                 placeholder="Ex: Poupança Banco X, CDB, Tesouro Direto"
@@ -574,7 +574,7 @@ export default function Investimentos() {
                   <SelectValue placeholder="Selecione o tipo" />
                 </SelectTrigger>
                 <SelectContent>
-                  {investmentTypes.map((type) => (
+                  {assetTypes.map((type) => (
                     <SelectItem key={type} value={type}>
                       {type}
                     </SelectItem>
@@ -631,21 +631,21 @@ export default function Investimentos() {
               Cancelar
             </Button>
             <Button type="submit" onClick={handleSubmit}>
-              {editingAsset ? "Salvar" : "Adicionar Investimento"}
+              {editingAsset ? "Salvar" : "Adicionar Ativo"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Dialog de tipos de investimentos */}
+      {/* Dialog de tipos de ativos */}
       <Dialog open={typeModalOpen} onOpenChange={setTypeModalOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Tipos de Ativos</DialogTitle>
           </DialogHeader>
           <div className="space-y-2">
-            {investmentTypes.map((type) => {
-              // Cores para cada tipo de investimento
+            {assetTypes.map((type) => {
+              // Cores para cada tipo de ativo
               const typeColors = {
                 Poupança: "#22c55e",
                 CDB: "#3b82f6",
@@ -681,7 +681,7 @@ export default function Investimentos() {
           <AlertDialogHeader>
             <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
             <AlertDialogDescription>
-              Tem certeza que deseja excluir o investimento "
+              Tem certeza que deseja excluir o ativo "
               {assetToDelete?.name}"? Esta ação não pode ser desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -707,7 +707,7 @@ export default function Investimentos() {
             <AlertDialogTitle>Confirmar Exclusão em Lote</AlertDialogTitle>
             <AlertDialogDescription>
               Tem certeza que deseja excluir {selectedAssets.length}{" "}
-              investimento(s) selecionado(s)? Esta ação não pode ser desfeita.
+              ativo(s) selecionado(s)? Esta ação não pode ser desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

@@ -29,7 +29,7 @@ export default function Sidebar({
     { path: "/", icon: LayoutDashboard, label: "Dashboard" },
     { path: "/transacoes", icon: ArrowLeftRight, label: "Transações" },
     { path: "/despesas", icon: Receipt, label: "Despesas" },
-    { path: "/investimentos", icon: TrendingUp, label: "Patrimônio e Ativos" },
+    { path: "/patrimonio-ativos", icon: TrendingUp, label: "Patrimônio e Ativos" },
     { path: "/metas", icon: Target, label: "Metas" },
   ];
 

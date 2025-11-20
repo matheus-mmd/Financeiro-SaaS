@@ -442,7 +442,7 @@ export default function Transacoes() {
                     <SelectItem value="credit">Apenas créditos</SelectItem>
                     <SelectItem value="debit">Apenas débitos</SelectItem>
                     <SelectItem value="investment">
-                      Apenas investimentos
+                      Apenas aportes em patrimônio
                     </SelectItem>
                   </SelectContent>
                 </Select>

@@ -196,7 +196,7 @@ export default function Dashboard() {
     .filter((t) => t.type === "debit" && t.date.startsWith(currentMonth))
     .reduce((sum, t) => sum + Math.abs(t.amount), 0);
 
-  // Calcular total de investimentos do mês atual
+  // Calcular total de aportes em patrimônio e ativos do mês atual
   const totalInvestments = transactions
     .filter((t) => t.type === "investment" && t.date.startsWith(currentMonth))
     .reduce((sum, t) => sum + Math.abs(t.amount), 0);
@@ -241,7 +241,7 @@ export default function Dashboard() {
       const monthIndex = parseInt(month) - 1;
       const monthData = transactionsByMonth[yearMonth];
 
-      // Calcular variação do mês: receitas - despesas - investimentos
+      // Calcular variação do mês: receitas - despesas - aportes
       const monthlyChange = monthData.credits - monthData.debits - monthData.investments;
       accumulatedBalance += monthlyChange;
 
@@ -287,13 +287,13 @@ export default function Dashboard() {
   // Calcular total de despesas para porcentagens
   const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
 
-  // Agrupar investimentos por tipo
+  // Agrupar patrimônio e ativos por tipo
   const assetsByType = assets.reduce((acc, asset) => {
     const existing = acc.find((item) => item.name === asset.type);
     if (existing) {
       existing.value += asset.value;
     } else {
-      // Cores para cada tipo de investimento
+      // Cores para cada tipo de ativo
       const typeColors = {
         Poupança: "#22c55e",
         CDB: "#3b82f6",
@@ -312,7 +312,7 @@ export default function Dashboard() {
     return acc;
   }, []);
 
-  // Calcular total de investimentos para porcentagens
+  // Calcular total de patrimônio e ativos para porcentagens
   const totalInvestmentsValue = assets.reduce((sum, a) => sum + a.value, 0);
 
   // Configuração de colunas da tabela de transações
@@ -544,7 +544,7 @@ export default function Dashboard() {
               />
             </div>
 
-            {/* Lista de investimentos */}
+            {/* Lista de patrimônio e ativos */}
             <div className="space-y-3">
               {assetsByType
                 .sort((a, b) => b.value - a.value)

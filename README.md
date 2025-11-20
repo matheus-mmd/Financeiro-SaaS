@@ -29,11 +29,11 @@ SaaS completo de controle financeiro desenvolvido com **Next.js 14**, **React 18
 - Modal para visualizar todas as categorias disponíveis
 - Cards com estatísticas: Total de Despesas, Total de Itens e Categorias Ativas
 
-### 📈 Investimentos
+### 📈 Patrimônio e Ativos
 - Lista de ativos com valores e rendimentos
 - Modal de detalhes com histórico de evolução
 - Gráficos de performance individual
-- Funcionalidade de aporte e retirada em investimentos
+- Funcionalidade de aporte e retirada em patrimônio e ativos
 - Comparação com indicadores de referência (CDI)
 
 ### 🎯 Metas
@@ -82,8 +82,8 @@ financeiro-saas/
 │   │   └── page.jsx            # Página de Transações
 │   ├── despesas/
 │   │   └── page.jsx            # Página de Despesas
-│   ├── investimentos/
-│   │   └── page.jsx            # Página de Investimentos
+│   ├── patrimonio-ativos/
+│   │   └── page.jsx            # Página de Patrimônio e Ativos
 │   ├── metas/
 │   │   └── page.jsx            # Página de Metas
 │   ├── comparador/
@@ -277,7 +277,7 @@ O projeto usa **Next.js App Router** com as seguintes rotas:
 - `/` - Dashboard (página inicial)
 - `/transacoes` - Gerenciamento de transações
 - `/despesas` - Gerenciamento de despesas
-- `/investimentos` - Portfolio de investimentos
+- `/patrimonio-ativos` - Portfolio de patrimônio e ativos
 - `/metas` - Metas financeiras
 - `/comparador` - Comparador de ativos
 - `/perfil` - Perfil do usuário
@@ -289,7 +289,7 @@ Os dados mock estão em `src/data/mockData.json` e incluem:
 - **user**: Informações do usuário (nome, parceiro, moeda)
 - **summary**: Resumo financeiro mensal
 - **expenses**: Lista de despesas categorizadas
-- **assets**: Ativos/investimentos
+- **assets**: Patrimônio e ativos
 - **targets**: Metas financeiras
 - **transactions**: Histórico de transações
 - **comparison_sample**: Dados para comparação de ativos
@@ -306,7 +306,7 @@ O sistema inclui 12 categorias predefinidas com cores distintas:
 6. **Lazer** (#f59e0b) - Cinema, passeios, hobbies
 7. **Assinaturas** (#ec4899) - Streaming, software
 8. **Família** (#14b8a6) - Ajuda familiar, presentes
-9. **Poupança** (#06b6d4) - Investimentos mensais
+9. **Poupança** (#06b6d4) - Aportes mensais em patrimônio
 10. **Crédito** (#f97316) - Cartão de crédito, empréstimos
 11. **Utilities** (#6366f1) - Água, luz, internet
 12. **Outros** (#64748b) - Despesas diversas
@@ -455,7 +455,7 @@ async rewrites() {
 - [x] Gerenciamento completo de Transações (CRUD)
 - [x] Gerenciamento completo de Despesas por categoria (CRUD)
 - [x] Sistema de Metas financeiras (CRUD) com cálculo de prazo
-- [x] Portfolio de Investimentos com aporte/retirada
+- [x] Portfolio de Patrimônio e Ativos com aporte/retirada
 - [x] Comparador de Ativos
 - [x] Perfil do usuário
 - [x] Filtros avançados (tipo, categoria, intervalo de datas)
