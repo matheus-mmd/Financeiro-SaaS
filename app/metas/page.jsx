@@ -347,26 +347,6 @@ export default function Metas() {
       ),
     },
     {
-      key: "goal",
-      label: "Objetivo",
-      sortable: true,
-      render: (row) => (
-        <span>
-          {formatCurrency(row.goal)}
-        </span>
-      ),
-    },
-    {
-      key: "current",
-      label: "Atual",
-      sortable: true,
-      render: (row) => (
-        <span>
-          {formatCurrency(row.progress)}
-        </span>
-      ),
-    },
-    {
       key: "date",
       label: "Data",
       sortable: true,
