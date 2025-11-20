@@ -10,13 +10,6 @@ import { Button } from "../src/components/ui/button";
 import { Input } from "../src/components/ui/input";
 import { Label } from "../src/components/ui/label";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../src/components/ui/select";
-import {
   Dialog,
   DialogContent,
   DialogFooter,
@@ -28,13 +21,33 @@ import DatePicker from "../src/components/DatePicker";
 import Table from "../src/components/Table";
 import DoughnutChart from "../src/components/charts/DoughnutChart";
 import LineChart from "../src/components/charts/LineChart";
-import ProgressBar from "../src/components/ProgressBar";
 import { fetchMock, formatCurrency, formatDate } from "../src/utils/mockApi";
-import { Wallet, TrendingDown, ArrowUpRight, Target, Eye, DollarSign, PiggyBank, ArrowDownRight, TrendingUp } from "lucide-react";
+import { Wallet, TrendingDown, ArrowUpRight, Target, PiggyBank, ArrowDownRight, TrendingUp } from "lucide-react";
+
+// Novos componentes de análise
+import FinancialAlerts from "../src/components/dashboard/FinancialAlerts";
+import FinancialHealthScore from "../src/components/dashboard/FinancialHealthScore";
+import MonthlyComparison from "../src/components/dashboard/MonthlyComparison";
+import MonthEndProjection from "../src/components/dashboard/MonthEndProjection";
+import SavingsRateCard from "../src/components/dashboard/SavingsRateCard";
+import RunwayCard from "../src/components/dashboard/RunwayCard";
+import TopExpenses from "../src/components/dashboard/TopExpenses";
+import BudgetRule503020 from "../src/components/dashboard/BudgetRule503020";
+
+// Funções de análise
+import {
+  getPreviousMonth,
+  calculateMonthData,
+  calculateHealthScore,
+  generateAlerts,
+  calculateMonthEndProjection,
+  calculateExpensesByCategory,
+  calculateBudgetRule503020,
+} from "../src/utils/dashboardAnalytics";
 
 /**
- * Página Dashboard - Visão geral do controle financeiro
- * Exibe resumo mensal, gráficos de despesas e evolução, transações e metas
+ * Página Dashboard - Visão geral do controle financeiro com análises inteligentes
+ * Exibe resumo mensal, análises comparativas, projeções e insights acionáveis
  */
 export default function Dashboard() {
   const [expenses, setExpenses] = useState([]);
@@ -98,33 +111,121 @@ export default function Dashboard() {
 
   // Mês atual para filtros
   const currentMonth = "2025-11";
+  const previousMonth = getPreviousMonth(currentMonth);
+
+  // Calcular dados dos meses atual e anterior
+  const currentMonthExpenses = expenses.filter((e) => e.date.startsWith(currentMonth));
+  const previousMonthExpenses = expenses.filter((e) => e.date.startsWith(previousMonth));
+
+  const currentMonthData = useMemo(() =>
+    calculateMonthData(transactions, currentMonthExpenses, currentMonth),
+    [transactions, currentMonthExpenses, currentMonth]
+  );
+
+  const previousMonthData = useMemo(() =>
+    calculateMonthData(transactions, previousMonthExpenses, previousMonth),
+    [transactions, previousMonthExpenses, previousMonth]
+  );
+
+  // Calcular projeção de fim de mês
+  const projectionData = useMemo(() =>
+    calculateMonthEndProjection(transactions, expenses, currentMonth),
+    [transactions, expenses, currentMonth]
+  );
+
+  // Calcular despesas por categoria com variação
+  const expensesByCategoryWithChange = useMemo(() =>
+    calculateExpensesByCategory(currentMonthExpenses, previousMonthExpenses, categories),
+    [currentMonthExpenses, previousMonthExpenses, categories]
+  );
+
+  // Calcular patrimônio total e métricas
+  const totalAssets = assets.reduce((sum, asset) => sum + asset.value, 0);
+
+  // Calcular média de despesas mensais (últimos 3 meses)
+  const avgMonthlyExpenses = useMemo(() => {
+    const months = [currentMonth, previousMonth, getPreviousMonth(previousMonth)];
+    let totalExpenses = 0;
+    let count = 0;
+
+    months.forEach(month => {
+      const monthExpenses = expenses
+        .filter(e => e.date.startsWith(month))
+        .reduce((sum, e) => sum + e.amount, 0);
+
+      if (monthExpenses > 0) {
+        totalExpenses += monthExpenses;
+        count++;
+      }
+    });
+
+    return count > 0 ? totalExpenses / count : currentMonthData.expenses;
+  }, [expenses, currentMonth, previousMonth, currentMonthData.expenses]);
+
+  // Calcular score de saúde financeira
+  const { score, breakdown } = useMemo(() =>
+    calculateHealthScore(currentMonthData, assets, avgMonthlyExpenses),
+    [currentMonthData, assets, avgMonthlyExpenses]
+  );
+
+  // Gerar alertas inteligentes
+  const alerts = useMemo(() =>
+    generateAlerts(
+      currentMonthData,
+      previousMonthData,
+      projectionData,
+      expensesByCategoryWithChange,
+      categories
+    ),
+    [currentMonthData, previousMonthData, projectionData, expensesByCategoryWithChange, categories]
+  );
+
+  // Calcular taxa de poupança
+  const savings = currentMonthData.balance > 0 ? currentMonthData.balance + currentMonthData.investments : currentMonthData.investments;
+  const savingsRate = currentMonthData.credits > 0
+    ? (savings / currentMonthData.credits) * 100
+    : 0;
+
+  const savingsData = {
+    savings: savings,
+    credits: currentMonthData.credits,
+    savingsRate: savingsRate,
+  };
+
+  // Calcular runway financeiro
+  const runwayMonths = avgMonthlyExpenses > 0 ? totalAssets / avgMonthlyExpenses : 0;
+  const runwayData = {
+    totalAssets: totalAssets,
+    avgMonthlyExpenses: avgMonthlyExpenses,
+    runwayMonths: runwayMonths,
+  };
+
+  // Calcular dados da regra 50/30/20
+  const budgetRule503020Data = useMemo(() =>
+    calculateBudgetRule503020(currentMonthExpenses, currentMonthData, categories),
+    [currentMonthExpenses, currentMonthData, categories]
+  );
 
   // Filtrar e ordenar transações do mês atual para a tabela
   const recentTransactions = useMemo(() => {
-    // Filtrar apenas transações do mês atual
     const currentMonthTransactions = transactions.filter((t) =>
       t.date.startsWith(currentMonth)
     );
 
-    // Ordenar por data (mais recente primeiro) e depois por valor (maior primeiro)
     const sorted = [...currentMonthTransactions].sort((a, b) => {
-      // Primeiro ordenar por data (descendente - mais recente primeiro)
       const dateA = new Date(a.date);
       const dateB = new Date(b.date);
       if (dateB - dateA !== 0) {
         return dateB - dateA;
       }
-      // Se as datas forem iguais, ordenar por valor (maior primeiro)
       return Math.abs(b.amount) - Math.abs(a.amount);
     });
 
-    // Limitar a 10 itens
     return sorted.slice(0, 10);
   }, [transactions, currentMonth]);
 
   const handleEditTransaction = (transaction) => {
     setEditingTransaction(transaction);
-    // Converter string de data para Date object
     const [year, month, day] = transaction.date.split("-");
     const dateObj = new Date(year, month - 1, day);
     setFormData({
@@ -143,7 +244,6 @@ export default function Dashboard() {
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    // Aportes e débitos são negativos (saída), créditos são positivos (entrada)
     let amount = parseFloat(formData.amount);
     if (formData.type === "debit" || formData.type === "investment") {
       amount = -Math.abs(amount);
@@ -151,7 +251,6 @@ export default function Dashboard() {
       amount = Math.abs(amount);
     }
 
-    // Converter Date object para string YYYY-MM-DD
     const dateString = formData.date.toISOString().split("T")[0];
 
     const transactionData = {
@@ -189,41 +288,14 @@ export default function Dashboard() {
     );
   }
 
-  // Calcular Despesas Mensais do mês atual
-  const monthly_expenses_total = expenses
-    .filter((e) => e.date.startsWith(currentMonth))
-    .reduce((sum, e) => sum + e.amount, 0);
-
-  // Calcular total de créditos do mês atual
-  const totalCredits = transactions
-    .filter((t) => t.type === "credit" && t.date.startsWith(currentMonth))
-    .reduce((sum, t) => sum + t.amount, 0);
-
-  // Calcular total de débitos do mês atual
-  const totalDebits = transactions
-    .filter((t) => t.type === "debit" && t.date.startsWith(currentMonth))
-    .reduce((sum, t) => sum + Math.abs(t.amount), 0);
-
-  // Calcular total de aportes em patrimônio e ativos do mês atual
-  const totalInvestments = transactions
-    .filter((t) => t.type === "investment" && t.date.startsWith(currentMonth))
-    .reduce((sum, t) => sum + Math.abs(t.amount), 0);
-
-  // Calcular Saldo Disponível: Créditos - Despesas - Aportes
-  const availableBalance = totalCredits - monthly_expenses_total - totalInvestments;
-
-  // Calcular Patrimônio Total (soma de todos os assets)
-  const totalAssets = assets.reduce((sum, asset) => sum + asset.value, 0);
-
-  // Calcular evolução do saldo dinamicamente baseado nas transações
+  // Calcular evolução do saldo
   const calculateBalanceEvolution = () => {
-    const INITIAL_BALANCE = 12500; // Saldo inicial em Junho
+    const INITIAL_BALANCE = 12500;
     const monthNames = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 
-    // Agrupar transações por mês
     const transactionsByMonth = {};
     transactions.forEach((t) => {
-      const yearMonth = t.date.substring(0, 7); // "2025-06"
+      const yearMonth = t.date.substring(0, 7);
       if (!transactionsByMonth[yearMonth]) {
         transactionsByMonth[yearMonth] = { credits: 0, debits: 0, investments: 0 };
       }
@@ -237,11 +309,9 @@ export default function Dashboard() {
       }
     });
 
-    // Calcular saldo acumulado mês a mês
     let accumulatedBalance = INITIAL_BALANCE;
     const evolution = [];
 
-    // Ordenar meses
     const sortedMonths = Object.keys(transactionsByMonth).sort();
 
     sortedMonths.forEach((yearMonth) => {
@@ -249,7 +319,6 @@ export default function Dashboard() {
       const monthIndex = parseInt(month) - 1;
       const monthData = transactionsByMonth[yearMonth];
 
-      // Calcular variação do mês: receitas - despesas - aportes
       const monthlyChange = monthData.credits - monthData.debits - monthData.investments;
       accumulatedBalance += monthlyChange;
 
@@ -264,7 +333,6 @@ export default function Dashboard() {
 
   const calculatedBalanceEvolution = calculateBalanceEvolution();
 
-  // Calcular porcentagem de crescimento do saldo (baseado em evolução calculada)
   const balanceGrowthPercentage = (() => {
     if (calculatedBalanceEvolution.length < 2) return 0;
     const firstValue = calculatedBalanceEvolution[0].value;
@@ -278,7 +346,6 @@ export default function Dashboard() {
     if (existing) {
       existing.value += expense.amount;
     } else {
-      // Buscar cor da categoria
       const category = categories.find(
         (c) =>
           c.name === expense.category || c.id === expense.category.toLowerCase()
@@ -292,7 +359,6 @@ export default function Dashboard() {
     return acc;
   }, []);
 
-  // Calcular total de despesas para porcentagens
   const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
 
   // Agrupar patrimônio e ativos por tipo
@@ -301,7 +367,6 @@ export default function Dashboard() {
     if (existing) {
       existing.value += asset.value;
     } else {
-      // Buscar cor do tipo de ativo do mock
       const assetType = assetTypes.find((t) => t.name === asset.type);
       acc.push({
         name: asset.type,
@@ -312,10 +377,8 @@ export default function Dashboard() {
     return acc;
   }, []);
 
-  // Calcular total de patrimônio e ativos para porcentagens
   const totalInvestmentsValue = assets.reduce((sum, a) => sum + a.value, 0);
 
-  // Função para buscar dados do tipo de transação pelo nome interno
   const getTransactionTypeByInternalName = (type) => {
     const typeMap = {
       credit: 1,
@@ -326,7 +389,6 @@ export default function Dashboard() {
     return transactionTypes.find((t) => t.id === typeId);
   };
 
-  // Configuração de colunas da tabela de transações
   const transactionColumns = [
     {
       key: "description",
@@ -384,27 +446,36 @@ export default function Dashboard() {
     <div className="space-y-6 animate-fade-in">
       <PageHeader
         title="Dashboard"
-        description="Visão geral do seu controle financeiro"
+        description="Visão geral inteligente do seu controle financeiro"
       />
 
-      {/* Cards de resumo */}
+      {/* NOVO: Alertas Inteligentes */}
+      <FinancialAlerts alerts={alerts} />
+
+      {/* NOVO: Linha superior com Score e Comparativo */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <FinancialHealthScore score={score} breakdown={breakdown} />
+        <MonthEndProjection data={projectionData} />
+      </div>
+
+      {/* Cards de resumo tradicionais */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 min-w-0">
         <StatsCard
           icon={ArrowUpRight}
           label="Créditos Mensais"
-          value={formatCurrency(totalCredits)}
+          value={formatCurrency(currentMonthData.credits)}
           iconColor="green"
           valueColor="text-green-600"
         />
         <StatsCard
           icon={TrendingDown}
           label="Despesas Mensais"
-          value={formatCurrency(monthly_expenses_total)}
+          value={formatCurrency(currentMonthData.expenses)}
           subtitle={
-            totalDebits > monthly_expenses_total
-              ? `⚠️ Acima do previsto (+${formatCurrency(totalDebits - monthly_expenses_total)})`
-              : totalDebits < monthly_expenses_total
-              ? `✓ Abaixo do previsto (-${formatCurrency(monthly_expenses_total - totalDebits)})`
+            currentMonthData.debits > currentMonthData.expenses
+              ? `⚠️ Acima do previsto (+${formatCurrency(currentMonthData.debits - currentMonthData.expenses)})`
+              : currentMonthData.debits < currentMonthData.expenses
+              ? `✓ Abaixo do previsto (-${formatCurrency(currentMonthData.expenses - currentMonthData.debits)})`
               : `✓ Igual ao previsto`
           }
           iconColor="red"
@@ -413,17 +484,17 @@ export default function Dashboard() {
         <StatsCard
           icon={Target}
           label="Aportes Mensais"
-          value={formatCurrency(totalInvestments)}
+          value={formatCurrency(currentMonthData.investments)}
           iconColor="blue"
           valueColor="text-blue-600"
         />
         <StatsCard
           icon={Wallet}
           label="Saldo Disponível"
-          value={formatCurrency(availableBalance)}
+          value={formatCurrency(currentMonthData.balance)}
           subtitle="Créditos - Despesas - Aportes"
-          iconColor={availableBalance >= 0 ? "blue" : "red"}
-          valueColor={availableBalance >= 0 ? "text-blue-600" : "text-red-600"}
+          iconColor={currentMonthData.balance >= 0 ? "blue" : "red"}
+          valueColor={currentMonthData.balance >= 0 ? "text-blue-600" : "text-red-600"}
         />
         <StatsCard
           icon={PiggyBank}
@@ -433,6 +504,19 @@ export default function Dashboard() {
           iconColor="purple"
           valueColor="text-purple-600"
         />
+      </div>
+
+      {/* NOVO: Comparativo Mensal */}
+      <MonthlyComparison
+        current={currentMonthData}
+        previous={previousMonthData}
+      />
+
+      {/* NOVO: Métricas de poupança e runway */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <SavingsRateCard data={savingsData} />
+        <RunwayCard data={runwayData} />
+        <BudgetRule503020 data={budgetRule503020Data} />
       </div>
 
       {/* Gráfico de Evolução do Saldo */}
@@ -456,6 +540,12 @@ export default function Dashboard() {
         </CardContent>
       </Card>
 
+      {/* NOVO: Top 5 Maiores Gastos */}
+      <TopExpenses
+        expenses={expensesByCategoryWithChange}
+        totalExpenses={currentMonthData.expenses}
+      />
+
       {/* Listas de Despesas e Patrimônio */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Despesas por categoria com gráfico e lista */}
@@ -465,7 +555,6 @@ export default function Dashboard() {
               Despesas por Categoria
             </h2>
 
-            {/* Gráfico de Pizza */}
             <div className="h-[300px] mb-6">
               <DoughnutChart
                 data={expensesByCategory}
@@ -475,7 +564,6 @@ export default function Dashboard() {
               />
             </div>
 
-            {/* Lista de categorias */}
             <div className="space-y-3">
               {expensesByCategory
                 .sort((a, b) => b.value - a.value)
@@ -539,7 +627,6 @@ export default function Dashboard() {
               Patrimônio por Tipo
             </h2>
 
-            {/* Gráfico de Pizza */}
             <div className="h-[300px] mb-6">
               <DoughnutChart
                 data={assetsByType}
@@ -549,7 +636,6 @@ export default function Dashboard() {
               />
             </div>
 
-            {/* Lista de patrimônio e ativos */}
             <div className="space-y-3">
               {assetsByType
                 .sort((a, b) => b.value - a.value)
