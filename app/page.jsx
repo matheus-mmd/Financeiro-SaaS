@@ -27,6 +27,7 @@ export default function Dashboard() {
   const [assets, setAssets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeExpenseIndex, setActiveExpenseIndex] = useState(null);
+  const [activeInvestmentIndex, setActiveInvestmentIndex] = useState(null);
 
   useEffect(() => {
     const loadData = async () => {
@@ -413,40 +414,67 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        {/* Lista de investimentos por tipo */}
+        {/* Investimentos por tipo com gráfico e lista */}
         <Card>
           <CardContent className="p-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">
               Investimentos por Tipo
             </h2>
+
+            {/* Gráfico de Pizza */}
+            <div className="h-[300px] mb-6">
+              <DoughnutChart
+                data={assetsByType}
+                showLegend={false}
+                externalActiveIndex={activeInvestmentIndex}
+                onIndexChange={setActiveInvestmentIndex}
+              />
+            </div>
+
+            {/* Lista de investimentos */}
             <div className="space-y-3">
               {assetsByType
                 .sort((a, b) => b.value - a.value)
-                .map((item) => {
+                .map((item, index) => {
                   const percentage = (
                     (item.value / totalInvestmentsValue) *
                     100
                   ).toFixed(1);
+                  const isActive = activeInvestmentIndex === index;
 
                   return (
                     <div
                       key={item.name}
-                      className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                      className={`flex items-center justify-between p-3 rounded-lg transition-all duration-200 cursor-pointer ${
+                        isActive
+                          ? 'bg-gray-100 shadow-sm scale-105 ring-2 ring-gray-200'
+                          : 'bg-gray-50 hover:bg-gray-100 hover:shadow-sm'
+                      }`}
+                      onMouseEnter={() => setActiveInvestmentIndex(index)}
+                      onMouseLeave={() => setActiveInvestmentIndex(null)}
                     >
                       <div className="flex items-center gap-3">
                         <div
-                          className="w-4 h-4 rounded-full"
+                          className={`w-4 h-4 rounded-full transition-all duration-200 ${
+                            isActive ? 'shadow-md scale-125' : 'shadow-sm'
+                          }`}
                           style={{ backgroundColor: item.color }}
                         />
-                        <span className="font-medium text-gray-900">
+                        <span className={`font-medium transition-colors duration-200 ${
+                          isActive ? 'text-gray-900 font-semibold' : 'text-gray-900'
+                        }`}>
                           {item.name}
                         </span>
                       </div>
                       <div className="flex items-center gap-4">
-                        <span className="text-sm text-gray-500">
+                        <span className={`text-sm font-semibold transition-all duration-200 ${
+                          isActive ? 'text-gray-900 scale-110' : 'text-gray-500'
+                        }`}>
                           {percentage}%
                         </span>
-                        <span className="font-semibold text-green-600">
+                        <span className={`font-semibold text-green-600 transition-all duration-200 ${
+                          isActive ? 'scale-105' : ''
+                        }`}>
                           {formatCurrency(item.value)}
                         </span>
                       </div>
