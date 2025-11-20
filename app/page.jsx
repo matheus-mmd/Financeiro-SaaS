@@ -6,7 +6,25 @@ import PageHeader from "../src/components/PageHeader";
 import StatsCard from "../src/components/StatsCard";
 import { Card, CardContent } from "../src/components/ui/card";
 import { Badge } from "../src/components/ui/badge";
+import { Button } from "../src/components/ui/button";
+import { Input } from "../src/components/ui/input";
+import { Label } from "../src/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../src/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "../src/components/ui/dialog";
 import Spinner from "../src/components/Spinner";
+import DatePicker from "../src/components/DatePicker";
 import Table from "../src/components/Table";
 import DoughnutChart from "../src/components/charts/DoughnutChart";
 import LineChart from "../src/components/charts/LineChart";
@@ -28,6 +46,14 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [activeExpenseIndex, setActiveExpenseIndex] = useState(null);
   const [activeInvestmentIndex, setActiveInvestmentIndex] = useState(null);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editingTransaction, setEditingTransaction] = useState(null);
+  const [formData, setFormData] = useState({
+    description: "",
+    amount: "",
+    type: "debit",
+    date: new Date(),
+  });
 
   useEffect(() => {
     const loadData = async () => {
@@ -91,6 +117,65 @@ export default function Dashboard() {
     // Limitar a 10 itens
     return sorted.slice(0, 10);
   }, [transactions, currentMonth]);
+
+  const handleEditTransaction = (transaction) => {
+    setEditingTransaction(transaction);
+    // Converter string de data para Date object
+    const [year, month, day] = transaction.date.split("-");
+    const dateObj = new Date(year, month - 1, day);
+    setFormData({
+      description: transaction.description,
+      amount: Math.abs(transaction.amount).toString(),
+      type: transaction.type,
+      date: dateObj,
+    });
+    setModalOpen(true);
+  };
+
+  const handleInputChange = (field, value) => {
+    setFormData({ ...formData, [field]: value });
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+
+    // Aportes e débitos são negativos (saída), créditos são positivos (entrada)
+    let amount = parseFloat(formData.amount);
+    if (formData.type === "debit" || formData.type === "investment") {
+      amount = -Math.abs(amount);
+    } else {
+      amount = Math.abs(amount);
+    }
+
+    // Converter Date object para string YYYY-MM-DD
+    const dateString = formData.date.toISOString().split("T")[0];
+
+    const transactionData = {
+      id: editingTransaction?.id || Date.now(),
+      description: formData.description,
+      amount: amount,
+      type: formData.type,
+      date: dateString,
+    };
+
+    if (editingTransaction) {
+      setTransactions(
+        transactions.map((t) =>
+          t.id === editingTransaction.id ? transactionData : t
+        )
+      );
+    } else {
+      setTransactions([transactionData, ...transactions]);
+    }
+
+    setModalOpen(false);
+    setFormData({
+      description: "",
+      amount: "",
+      type: "debit",
+      date: new Date(),
+    });
+  };
 
   if (loading) {
     return (
@@ -291,19 +376,6 @@ export default function Dashboard() {
       label: "Data",
       sortable: true,
       render: (row) => formatDate(row.date),
-    },
-    {
-      key: "actions",
-      label: "Ações",
-      render: (row) => (
-        <Link
-          href="/transacoes"
-          className="p-1 hover:bg-gray-100 rounded transition-colors inline-block"
-          aria-label="Ver transação"
-        >
-          <Eye className="w-4 h-4 text-gray-600" />
-        </Link>
-      ),
     },
   ];
 
@@ -534,9 +606,17 @@ export default function Dashboard() {
       {/* Tabela de transações */}
       <Card>
         <CardContent className="p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">
-            Transações Recentes
-          </h2>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+            <h2 className="text-lg font-semibold text-gray-900">
+              Transações Recentes ({recentTransactions.length})
+            </h2>
+            <Link
+              href="/transacoes"
+              className="text-sm text-brand-600 hover:text-brand-700 font-medium"
+            >
+              Ver todas as transações →
+            </Link>
+          </div>
           {recentTransactions.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-gray-500">
@@ -548,10 +628,118 @@ export default function Dashboard() {
               columns={transactionColumns}
               data={recentTransactions}
               pageSize={10}
+              onRowClick={handleEditTransaction}
             />
           )}
         </CardContent>
       </Card>
+
+      {/* Dialog de editar transação */}
+      <Dialog open={modalOpen} onOpenChange={setModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar Transação</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="description">Descrição</Label>
+              <Input
+                id="description"
+                placeholder="Ex: Salário, Compra de mercado..."
+                value={formData.description}
+                onChange={(e) =>
+                  handleInputChange("description", e.target.value)
+                }
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Tipo de Transação</Label>
+              <div className="grid grid-cols-3 gap-3">
+                <button
+                  type="button"
+                  onClick={() => handleInputChange("type", "credit")}
+                  className={`p-4 rounded-lg border-2 transition-all ${
+                    formData.type === "credit"
+                      ? "border-green-500 bg-green-50"
+                      : "border-gray-200 hover:border-gray-300"
+                  }`}
+                >
+                  <ArrowUpRight className="w-6 h-6 text-green-600 mx-auto mb-2" />
+                  <span className="block text-sm font-medium text-gray-900">
+                    Crédito
+                  </span>
+                  <span className="block text-xs text-gray-500">Entrada</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleInputChange("type", "debit")}
+                  className={`p-4 rounded-lg border-2 transition-all ${
+                    formData.type === "debit"
+                      ? "border-red-500 bg-red-50"
+                      : "border-gray-200 hover:border-gray-300"
+                  }`}
+                >
+                  <ArrowDownRight className="w-6 h-6 text-red-600 mx-auto mb-2" />
+                  <span className="block text-sm font-medium text-gray-900">
+                    Débito
+                  </span>
+                  <span className="block text-xs text-gray-500">Saída</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleInputChange("type", "investment")}
+                  className={`p-4 rounded-lg border-2 transition-all ${
+                    formData.type === "investment"
+                      ? "border-blue-500 bg-blue-50"
+                      : "border-gray-200 hover:border-gray-300"
+                  }`}
+                >
+                  <TrendingUp className="w-6 h-6 text-blue-600 mx-auto mb-2" />
+                  <span className="block text-sm font-medium text-gray-900">
+                    Aporte
+                  </span>
+                  <span className="block text-xs text-gray-500">Aplicação</span>
+                </button>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="amount">Valor (R$)</Label>
+              <Input
+                id="amount"
+                type="number"
+                step="0.01"
+                placeholder="0,00"
+                value={formData.amount}
+                onChange={(e) => handleInputChange("amount", e.target.value)}
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="date">Data</Label>
+              <DatePicker
+                value={formData.date}
+                onChange={(date) => handleInputChange("date", date)}
+              />
+            </div>
+          </form>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setModalOpen(false)}
+            >
+              Cancelar
+            </Button>
+            <Button type="submit" onClick={handleSubmit}>
+              Salvar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
