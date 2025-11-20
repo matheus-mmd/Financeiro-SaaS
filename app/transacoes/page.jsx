@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import PageHeader from "../../src/components/PageHeader";
 import StatsCard from "../../src/components/StatsCard";
-import MonthPicker from "../../src/components/MonthPicker";
+import DateRangePicker from "../../src/components/DateRangePicker";
 import { Card, CardContent } from "../../src/components/ui/card";
 import { Badge } from "../../src/components/ui/badge";
 import { Button } from "../../src/components/ui/button";
@@ -413,12 +413,12 @@ export default function Transacoes() {
                 </Select>
               </div>
 
-              {/* Filtro por mês/ano */}
+              {/* Filtro por período */}
               <div className="space-y-2">
                 <Label className="text-sm font-medium text-gray-700">
-                  Mês e Ano
+                  Período
                 </Label>
-                <MonthPicker
+                <DateRangePicker
                   value={filterMonth}
                   onChange={setFilterMonth}
                   placeholder="Selecione o período"
