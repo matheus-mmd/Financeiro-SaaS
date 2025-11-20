@@ -406,7 +406,7 @@ export default function Transacoes() {
 
         <StatsCard
           icon={TrendingUp}
-          label="Total de Investimentos"
+          label="Total de Aportes"
           value={formatCurrency(totalInvestment)}
           iconColor="blue"
           valueColor="text-blue-600"
@@ -600,7 +600,7 @@ export default function Transacoes() {
                 >
                   <TrendingUp className="w-6 h-6 text-blue-600 mx-auto mb-2" />
                   <span className="block text-sm font-medium text-gray-900">
-                    Investimento
+                    Aporte
                   </span>
                   <span className="block text-xs text-gray-500">Aplicação</span>
                 </button>

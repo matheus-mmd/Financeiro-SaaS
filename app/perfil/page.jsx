@@ -1,25 +1,36 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent } from '../../src/components/ui/card';
-import { Avatar, AvatarFallback, AvatarImage } from '../../src/components/ui/avatar';
-import { Badge } from '../../src/components/ui/badge';
-import { Button } from '../../src/components/ui/button';
-import { Input } from '../../src/components/ui/input';
-import Spinner from '../../src/components/Spinner';
-import { fetchMock, formatCurrency } from '../../src/utils/mockApi';
-import { User, Users, DollarSign, TrendingUp, Settings, Save } from 'lucide-react';
+import React, { useState, useEffect } from "react";
+import { Card, CardContent } from "../../src/components/ui/card";
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "../../src/components/ui/avatar";
+import { Badge } from "../../src/components/ui/badge";
+import { Button } from "../../src/components/ui/button";
+import { Input } from "../../src/components/ui/input";
+import Spinner from "../../src/components/Spinner";
+import { fetchMock, formatCurrency } from "../../src/utils/mockApi";
+import {
+  User,
+  Users,
+  DollarSign,
+  TrendingUp,
+  Settings,
+  Save,
+} from "lucide-react";
 
 /**
  * Gera iniciais a partir do nome
  */
 const getInitials = (name) => {
-  if (!name) return '??';
+  if (!name) return "??";
   return name
-    .split(' ')
-    .map(word => word[0])
+    .split(" ")
+    .map((word) => word[0])
     .slice(0, 2)
-    .join('')
+    .join("")
     .toUpperCase();
 };
 
@@ -33,22 +44,22 @@ export default function Perfil() {
   const [assets, setAssets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
-  const [riskProfile, setRiskProfile] = useState('moderado');
+  const [riskProfile, setRiskProfile] = useState("moderado");
 
   useEffect(() => {
     const loadData = async () => {
       try {
         const [userData, summaryData, assetsData] = await Promise.all([
-          fetchMock('/api/user'),
-          fetchMock('/api/summary'),
-          fetchMock('/api/assets'),
+          fetchMock("/api/user"),
+          fetchMock("/api/summary"),
+          fetchMock("/api/assets"),
         ]);
 
         setUser(userData.data);
         setSummary(summaryData.data);
         setAssets(assetsData.data);
       } catch (error) {
-        console.error('Erro ao carregar perfil:', error);
+        console.error("Erro ao carregar perfil:", error);
       } finally {
         setLoading(false);
       }
@@ -60,7 +71,7 @@ export default function Perfil() {
   const handleSaveProfile = () => {
     // Simulação de salvamento
     setEditing(false);
-    alert('Preferências salvas com sucesso!');
+    alert("Preferências salvas com sucesso!");
   };
 
   if (loading) {
@@ -79,7 +90,9 @@ export default function Perfil() {
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-gray-900">Perfil</h1>
-        <p className="text-gray-500 mt-1">Gerencie suas informações e preferências</p>
+        <p className="text-gray-500 mt-1">
+          Gerencie suas informações e preferências
+        </p>
       </div>
 
       {/* Informações do usuário */}
@@ -102,12 +115,8 @@ export default function Perfil() {
               )}
 
               <div className="flex items-center gap-3 mt-4">
-                <Badge variant="default">
-                  Moeda: {user.currency}
-                </Badge>
-                <Badge variant="default">
-                  Perfil: {riskProfile}
-                </Badge>
+                <Badge variant="default">Moeda: {user.currency}</Badge>
+                <Badge variant="default">Perfil: {riskProfile}</Badge>
               </div>
             </div>
 
@@ -121,15 +130,21 @@ export default function Perfil() {
 
       {/* Resumo patrimonial */}
       <div>
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">Resumo Patrimonial</h2>
+        <h2 className="text-xl font-semibold text-gray-900 mb-4">
+          Resumo Patrimonial
+        </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <Card className="bg-gradient-to-br from-brand-500 to-brand-700 text-white">
             <CardContent className="p-6">
               <div className="flex items-center gap-3 mb-2">
                 <DollarSign className="w-8 h-8" />
-                <h3 className="text-sm font-medium opacity-90">Patrimônio Total</h3>
+                <h3 className="text-sm font-medium opacity-90">
+                  Patrimônio Total
+                </h3>
               </div>
-              <p className="text-3xl font-bold">{formatCurrency(patrimonyTotal)}</p>
+              <p className="text-3xl font-bold">
+                {formatCurrency(patrimonyTotal)}
+              </p>
             </CardContent>
           </Card>
 
@@ -137,11 +152,16 @@ export default function Perfil() {
             <CardContent className="p-6">
               <div className="flex items-center gap-3 mb-2">
                 <TrendingUp className="w-6 h-6 text-brand-500" />
-                <h3 className="text-sm font-medium text-gray-600">Investimentos</h3>
+                <h3 className="text-sm font-medium text-gray-600">
+                  Patrimônio e Ativos
+                </h3>
               </div>
-              <p className="text-2xl font-bold text-gray-900">{formatCurrency(totalAssets)}</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {formatCurrency(totalAssets)}
+              </p>
               <p className="text-xs text-gray-500 mt-1">
-                {((totalAssets / patrimonyTotal) * 100).toFixed(1)}% do patrimônio
+                {((totalAssets / patrimonyTotal) * 100).toFixed(1)}% do
+                patrimônio
               </p>
             </CardContent>
           </Card>
@@ -150,13 +170,18 @@ export default function Perfil() {
             <CardContent className="p-6">
               <div className="flex items-center gap-3 mb-2">
                 <DollarSign className="w-6 h-6 text-green-500" />
-                <h3 className="text-sm font-medium text-gray-600">Saldo Disponível</h3>
+                <h3 className="text-sm font-medium text-gray-600">
+                  Saldo Disponível
+                </h3>
               </div>
               <p className="text-2xl font-bold text-gray-900">
                 {formatCurrency(summary.available_balance)}
               </p>
               <p className="text-xs text-gray-500 mt-1">
-                {((summary.available_balance / patrimonyTotal) * 100).toFixed(1)}% do patrimônio
+                {((summary.available_balance / patrimonyTotal) * 100).toFixed(
+                  1
+                )}
+                % do patrimônio
               </p>
             </CardContent>
           </Card>
@@ -207,12 +232,12 @@ export default function Perfil() {
         <CardContent className="p-6">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-lg font-semibold text-gray-900">
-              Preferências de Investimento
+              Preferências de Patrimônio
             </h2>
             <Button
-              variant={editing ? 'default' : 'ghost'}
+              variant={editing ? "default" : "ghost"}
               size="sm"
-              onClick={() => editing ? handleSaveProfile() : setEditing(true)}
+              onClick={() => (editing ? handleSaveProfile() : setEditing(true))}
             >
               {editing ? (
                 <>
@@ -220,7 +245,7 @@ export default function Perfil() {
                   Salvar
                 </>
               ) : (
-                'Editar'
+                "Editar"
               )}
             </Button>
           </div>
@@ -242,7 +267,9 @@ export default function Perfil() {
                   <option value="agressivo">Agressivo</option>
                 </select>
               ) : (
-                <p className="text-gray-900 font-medium capitalize">{riskProfile}</p>
+                <p className="text-gray-900 font-medium capitalize">
+                  {riskProfile}
+                </p>
               )}
               <p className="text-xs text-gray-500 mt-1">
                 Seu perfil de risco ajuda a recomendar investimentos adequados
@@ -254,19 +281,22 @@ export default function Perfil() {
               <div className="p-4 bg-blue-50 rounded-lg">
                 <h4 className="font-medium text-blue-900 mb-1">Conservador</h4>
                 <p className="text-xs text-blue-700">
-                  Prefere segurança e estabilidade, com foco em renda fixa e baixa volatilidade.
+                  Prefere segurança e estabilidade, com foco em renda fixa e
+                  baixa volatilidade.
                 </p>
               </div>
               <div className="p-4 bg-yellow-50 rounded-lg">
                 <h4 className="font-medium text-yellow-900 mb-1">Moderado</h4>
                 <p className="text-xs text-yellow-700">
-                  Equilibra segurança e rentabilidade, diversificando entre renda fixa e variável.
+                  Equilibra segurança e rentabilidade, diversificando entre
+                  renda fixa e variável.
                 </p>
               </div>
               <div className="p-4 bg-red-50 rounded-lg">
                 <h4 className="font-medium text-red-900 mb-1">Agressivo</h4>
                 <p className="text-xs text-red-700">
-                  Busca maior rentabilidade aceitando riscos elevados, com foco em renda variável.
+                  Busca maior rentabilidade aceitando riscos elevados, com foco
+                  em renda variável.
                 </p>
               </div>
             </div>

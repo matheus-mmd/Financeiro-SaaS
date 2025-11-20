@@ -1,16 +1,18 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { Search, ArrowRight, TrendingUp, Target, DollarSign, Receipt } from 'lucide-react';
-import { Input } from './ui/input';
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from './ui/dialog';
-import { formatCurrency, formatDate, fetchMock } from '../utils/mockApi';
+  Search,
+  ArrowRight,
+  TrendingUp,
+  Target,
+  DollarSign,
+  Receipt,
+} from "lucide-react";
+import { Input } from "./ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
+import { formatCurrency, formatDate, fetchMock } from "../utils/mockApi";
 
 /**
  * GlobalSearch - Componente de busca global na aplicação
@@ -18,7 +20,7 @@ import { formatCurrency, formatDate, fetchMock } from '../utils/mockApi';
  */
 export default function GlobalSearch() {
   const [open, setOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [results, setResults] = useState({
     transactions: [],
     targets: [],
@@ -30,14 +32,14 @@ export default function GlobalSearch() {
   // Atalho de teclado Ctrl+K ou Cmd+K para abrir busca
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+      if ((e.ctrlKey || e.metaKey) && e.key === "k") {
         e.preventDefault();
         setOpen(true);
       }
     };
 
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
   }, []);
 
   // Buscar dados quando o termo de busca mudar
@@ -52,33 +54,42 @@ export default function GlobalSearch() {
     // Buscar nos dados mockados
     const searchInData = async () => {
       try {
-        const [transactionsRes, targetsRes, assetsRes, expensesRes] = await Promise.all([
-          fetchMock('/api/transactions'),
-          fetchMock('/api/targets'),
-          fetchMock('/api/assets'),
-          fetchMock('/api/expenses'),
-        ]);
+        const [transactionsRes, targetsRes, assetsRes, expensesRes] =
+          await Promise.all([
+            fetchMock("/api/transactions"),
+            fetchMock("/api/targets"),
+            fetchMock("/api/assets"),
+            fetchMock("/api/expenses"),
+          ]);
 
         const transactions = transactionsRes.data;
         const targets = targetsRes.data;
         const assets = assetsRes.data;
         const expenses = expensesRes.data;
 
-        const filteredTransactions = transactions.filter(t =>
-          t.description?.toLowerCase().includes(term)
-        ).slice(0, 5);
+        const filteredTransactions = transactions
+          .filter((t) => t.description?.toLowerCase().includes(term))
+          .slice(0, 5);
 
-        const filteredTargets = targets.filter(t =>
-          t.title?.toLowerCase().includes(term)
-        ).slice(0, 5);
+        const filteredTargets = targets
+          .filter((t) => t.title?.toLowerCase().includes(term))
+          .slice(0, 5);
 
-        const filteredAssets = assets.filter(a =>
-          a.name?.toLowerCase().includes(term) || a.type?.toLowerCase().includes(term)
-        ).slice(0, 5);
+        const filteredAssets = assets
+          .filter(
+            (a) =>
+              a.name?.toLowerCase().includes(term) ||
+              a.type?.toLowerCase().includes(term)
+          )
+          .slice(0, 5);
 
-        const filteredExpenses = expenses.filter(e =>
-          e.title?.toLowerCase().includes(term) || e.category?.toLowerCase().includes(term)
-        ).slice(0, 5);
+        const filteredExpenses = expenses
+          .filter(
+            (e) =>
+              e.title?.toLowerCase().includes(term) ||
+              e.category?.toLowerCase().includes(term)
+          )
+          .slice(0, 5);
 
         setResults({
           transactions: filteredTransactions,
@@ -87,7 +98,7 @@ export default function GlobalSearch() {
           expenses: filteredExpenses,
         });
       } catch (error) {
-        console.error('Erro ao buscar dados:', error);
+        console.error("Erro ao buscar dados:", error);
       }
     };
 
@@ -96,7 +107,7 @@ export default function GlobalSearch() {
 
   const handleClose = () => {
     setOpen(false);
-    setSearchTerm('');
+    setSearchTerm("");
   };
 
   const handleNavigate = (path) => {
@@ -160,12 +171,16 @@ export default function GlobalSearch() {
                         {results.transactions.map((t) => (
                           <button
                             key={t.id}
-                            onClick={() => handleNavigate('/transacoes')}
+                            onClick={() => handleNavigate("/transacoes")}
                             className="w-full flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg transition-colors text-left"
                           >
                             <div className="flex-1">
-                              <p className="font-medium text-gray-900">{t.description}</p>
-                              <p className="text-sm text-gray-500">{formatDate(t.date)}</p>
+                              <p className="font-medium text-gray-900">
+                                {t.description}
+                              </p>
+                              <p className="text-sm text-gray-500">
+                                {formatDate(t.date)}
+                              </p>
                             </div>
                             <div className="flex items-center gap-2">
                               <span className="font-semibold text-gray-900">
@@ -190,13 +205,16 @@ export default function GlobalSearch() {
                         {results.targets.map((t) => (
                           <button
                             key={t.id}
-                            onClick={() => handleNavigate('/metas')}
+                            onClick={() => handleNavigate("/metas")}
                             className="w-full flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg transition-colors text-left"
                           >
                             <div className="flex-1">
-                              <p className="font-medium text-gray-900">{t.title}</p>
+                              <p className="font-medium text-gray-900">
+                                {t.title}
+                              </p>
                               <p className="text-sm text-gray-500">
-                                {formatCurrency(t.progress)} / {formatCurrency(t.goal)}
+                                {formatCurrency(t.progress)} /{" "}
+                                {formatCurrency(t.goal)}
                               </p>
                             </div>
                             <ArrowRight className="w-4 h-4 text-gray-400" />
@@ -206,22 +224,24 @@ export default function GlobalSearch() {
                     </div>
                   )}
 
-                  {/* Investimentos */}
+                  {/* Patrimônio e Ativos */}
                   {results.assets.length > 0 && (
                     <div>
                       <h3 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
                         <DollarSign className="w-4 h-4" />
-                        Investimentos
+                        Patrimônio e Ativos
                       </h3>
                       <div className="space-y-1">
                         {results.assets.map((a) => (
                           <button
                             key={a.id}
-                            onClick={() => handleNavigate('/investimentos')}
+                            onClick={() => handleNavigate("/investimentos")}
                             className="w-full flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg transition-colors text-left"
                           >
                             <div className="flex-1">
-                              <p className="font-medium text-gray-900">{a.name}</p>
+                              <p className="font-medium text-gray-900">
+                                {a.name}
+                              </p>
                               <p className="text-sm text-gray-500">{a.type}</p>
                             </div>
                             <div className="flex items-center gap-2">
@@ -247,12 +267,16 @@ export default function GlobalSearch() {
                         {results.expenses.map((e) => (
                           <button
                             key={e.id}
-                            onClick={() => handleNavigate('/despesas')}
+                            onClick={() => handleNavigate("/despesas")}
                             className="w-full flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg transition-colors text-left"
                           >
                             <div className="flex-1">
-                              <p className="font-medium text-gray-900">{e.title}</p>
-                              <p className="text-sm text-gray-500">{e.category}</p>
+                              <p className="font-medium text-gray-900">
+                                {e.title}
+                              </p>
+                              <p className="text-sm text-gray-500">
+                                {e.category}
+                              </p>
                             </div>
                             <div className="flex items-center gap-2">
                               <span className="font-semibold text-gray-900">

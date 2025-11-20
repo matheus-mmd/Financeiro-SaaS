@@ -95,7 +95,7 @@ export default function Dashboard() {
     .filter((t) => t.type === "investment" && t.date.startsWith(currentMonth))
     .reduce((sum, t) => sum + Math.abs(t.amount), 0);
 
-  // Calcular Saldo Disponível: Créditos - Despesas - Investimentos
+  // Calcular Saldo Disponível: Créditos - Despesas - Aportes
   const availableBalance = totalCredits - monthly_expenses_total - totalInvestments;
 
   // Calcular Patrimônio Total (soma de todos os assets)
@@ -294,7 +294,7 @@ export default function Dashboard() {
         />
         <StatsCard
           icon={Target}
-          label="Investimentos Mensais"
+          label="Aportes Mensais"
           value={formatCurrency(totalInvestments)}
           iconColor="blue"
           valueColor="text-blue-600"
@@ -303,7 +303,7 @@ export default function Dashboard() {
           icon={Wallet}
           label="Saldo Disponível"
           value={formatCurrency(availableBalance)}
-          subtitle="Créditos - Despesas - Investimentos"
+          subtitle="Créditos - Despesas - Aportes"
           iconColor={availableBalance >= 0 ? "blue" : "red"}
           valueColor={availableBalance >= 0 ? "text-blue-600" : "text-red-600"}
         />
@@ -338,7 +338,7 @@ export default function Dashboard() {
         </CardContent>
       </Card>
 
-      {/* Listas de Despesas e Investimentos */}
+      {/* Listas de Despesas e Patrimônio */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Despesas por categoria com gráfico e lista */}
         <Card>
@@ -414,11 +414,11 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        {/* Investimentos por tipo com gráfico e lista */}
+        {/* Patrimônio por tipo com gráfico e lista */}
         <Card>
           <CardContent className="p-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">
-              Investimentos por Tipo
+              Patrimônio por Tipo
             </h2>
 
             {/* Gráfico de Pizza */}
