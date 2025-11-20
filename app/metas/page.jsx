@@ -386,41 +386,6 @@ export default function Metas() {
         }
       />
 
-      {/* Cards de resumo */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 min-w-0">
-        <StatsCard
-          icon={Target}
-          label="Total de Metas"
-          value={filteredTargets.length}
-          iconColor="blue"
-          valueColor="text-blue-600"
-        />
-
-        <StatsCard
-          icon={CheckCircle}
-          label="Concluídas"
-          value={completedTargets.length}
-          iconColor="green"
-          valueColor="text-green-600"
-        />
-
-        <StatsCard
-          icon={TrendingUp}
-          label="Em Andamento"
-          value={inProgressTargets.length}
-          iconColor="yellow"
-          valueColor="text-yellow-600"
-        />
-
-        <StatsCard
-          icon={Target}
-          label="Total Objetivos"
-          value={formatCurrency(totalGoalAmount)}
-          iconColor="purple"
-          valueColor="text-purple-600"
-        />
-      </div>
-
       {/* Filtros */}
       <Card>
         <CardContent className="p-4 sm:p-6">
@@ -484,6 +449,41 @@ export default function Metas() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Cards de resumo */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 min-w-0">
+        <StatsCard
+          icon={Target}
+          label="Total de Metas"
+          value={filteredTargets.length}
+          iconColor="blue"
+          valueColor="text-blue-600"
+        />
+
+        <StatsCard
+          icon={CheckCircle}
+          label="Concluídas"
+          value={completedTargets.length}
+          iconColor="green"
+          valueColor="text-green-600"
+        />
+
+        <StatsCard
+          icon={TrendingUp}
+          label="Em Andamento"
+          value={inProgressTargets.length}
+          iconColor="yellow"
+          valueColor="text-yellow-600"
+        />
+
+        <StatsCard
+          icon={Target}
+          label="Total Objetivos"
+          value={formatCurrency(totalGoalAmount)}
+          iconColor="purple"
+          valueColor="text-purple-600"
+        />
+      </div>
 
       {/* Tabela de metas */}
       <Card>

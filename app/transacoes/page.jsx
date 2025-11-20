@@ -378,41 +378,6 @@ export default function Transacoes() {
         }
       />
 
-      {/* Cards de resumo */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 min-w-0">
-        <StatsCard
-          icon={ArrowUpRight}
-          label="Total de Créditos"
-          value={formatCurrency(totalCredit)}
-          iconColor="green"
-          valueColor="text-green-600"
-        />
-
-        <StatsCard
-          icon={ArrowDownRight}
-          label="Total de Débitos"
-          value={formatCurrency(totalDebit)}
-          iconColor="red"
-          valueColor="text-red-600"
-        />
-
-        <StatsCard
-          icon={TrendingUp}
-          label="Total de Aportes"
-          value={formatCurrency(totalInvestment)}
-          iconColor="blue"
-          valueColor="text-blue-600"
-        />
-
-        <StatsCard
-          icon={ArrowUpRight}
-          label="Saldo"
-          value={formatCurrency(balance)}
-          iconColor={balance >= 0 ? "purple" : "yellow"}
-          valueColor={balance >= 0 ? "text-purple-600" : "text-orange-600"}
-        />
-      </div>
-
       {/* Filtros */}
       <Card>
         <CardContent className="p-4 sm:p-6">
@@ -479,6 +444,41 @@ export default function Transacoes() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Cards de resumo */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 min-w-0">
+        <StatsCard
+          icon={ArrowUpRight}
+          label="Total de Créditos"
+          value={formatCurrency(totalCredit)}
+          iconColor="green"
+          valueColor="text-green-600"
+        />
+
+        <StatsCard
+          icon={ArrowDownRight}
+          label="Total de Débitos"
+          value={formatCurrency(totalDebit)}
+          iconColor="red"
+          valueColor="text-red-600"
+        />
+
+        <StatsCard
+          icon={TrendingUp}
+          label="Total de Aportes"
+          value={formatCurrency(totalInvestment)}
+          iconColor="blue"
+          valueColor="text-blue-600"
+        />
+
+        <StatsCard
+          icon={ArrowUpRight}
+          label="Saldo"
+          value={formatCurrency(balance)}
+          iconColor={balance >= 0 ? "purple" : "yellow"}
+          valueColor={balance >= 0 ? "text-purple-600" : "text-orange-600"}
+        />
+      </div>
 
       {/* Tabela de transações */}
       <Card>

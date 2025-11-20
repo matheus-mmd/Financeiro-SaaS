@@ -340,33 +340,6 @@ export default function Despesas() {
         }
       />
 
-      {/* Cards de resumo */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 min-w-0">
-        <StatsCard
-          icon={TrendingDown}
-          label="Total de Despesas"
-          value={formatCurrency(totalExpenses)}
-          iconColor="red"
-          valueColor="text-red-600"
-        />
-
-        <StatsCard
-          icon={Receipt}
-          label="Total de Itens"
-          value={expenses.length}
-          iconColor="blue"
-          valueColor="text-blue-600"
-        />
-
-        <StatsCard
-          icon={PieChart}
-          label="Categorias Ativas"
-          value={expensesByCategory.length}
-          iconColor="purple"
-          valueColor="text-purple-600"
-        />
-      </div>
-
       {/* Filtros */}
       <Card>
         <CardContent className="p-4 sm:p-6">
@@ -436,6 +409,33 @@ export default function Despesas() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Cards de resumo */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 min-w-0">
+        <StatsCard
+          icon={TrendingDown}
+          label="Total de Despesas"
+          value={formatCurrency(totalExpenses)}
+          iconColor="red"
+          valueColor="text-red-600"
+        />
+
+        <StatsCard
+          icon={Receipt}
+          label="Total de Itens"
+          value={expenses.length}
+          iconColor="blue"
+          valueColor="text-blue-600"
+        />
+
+        <StatsCard
+          icon={PieChart}
+          label="Categorias Ativas"
+          value={expensesByCategory.length}
+          iconColor="purple"
+          valueColor="text-purple-600"
+        />
+      </div>
 
       {/* Tabela de despesas */}
       <Card>

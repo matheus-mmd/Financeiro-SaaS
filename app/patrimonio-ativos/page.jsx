@@ -404,33 +404,6 @@ export default function PatrimonioAtivos() {
         }
       />
 
-      {/* Cards de resumo */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 min-w-0">
-        <StatsCard
-          icon={DollarSign}
-          label="Total em Patrimônio"
-          value={formatCurrency(totalAssets)}
-          iconColor="green"
-          valueColor="text-green-600"
-        />
-
-        <StatsCard
-          icon={Wallet}
-          label="Total de Ativos"
-          value={filteredAssets.length}
-          iconColor="blue"
-          valueColor="text-blue-600"
-        />
-
-        <StatsCard
-          icon={Percent}
-          label="Rendimento Médio"
-          value={`${(averageYield * 100).toFixed(2)}% a.m.`}
-          iconColor="purple"
-          valueColor="text-purple-600"
-        />
-      </div>
-
       {/* Filtros */}
       <Card>
         <CardContent className="p-4 sm:p-6">
@@ -497,6 +470,33 @@ export default function PatrimonioAtivos() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Cards de resumo */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 min-w-0">
+        <StatsCard
+          icon={DollarSign}
+          label="Total em Patrimônio"
+          value={formatCurrency(totalAssets)}
+          iconColor="green"
+          valueColor="text-green-600"
+        />
+
+        <StatsCard
+          icon={Wallet}
+          label="Total de Ativos"
+          value={filteredAssets.length}
+          iconColor="blue"
+          valueColor="text-blue-600"
+        />
+
+        <StatsCard
+          icon={Percent}
+          label="Rendimento Médio"
+          value={`${(averageYield * 100).toFixed(2)}% a.m.`}
+          iconColor="purple"
+          valueColor="text-purple-600"
+        />
+      </div>
 
       {/* Tabela de patrimônio e ativos */}
       <Card>
