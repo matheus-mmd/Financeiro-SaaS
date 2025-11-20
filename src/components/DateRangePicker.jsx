@@ -50,9 +50,9 @@ export default function DateRangePicker({ value, onChange, placeholder = "Seleci
   };
 
   return (
-    <div className="flex gap-2 w-full">
+    <div className="flex flex-col sm:flex-row gap-2 w-full">
       {/* Data Inicial */}
-      <div className="flex-1">
+      <div className="flex-1 w-full">
         <Popover open={openFrom} onOpenChange={setOpenFrom}>
           <PopoverTrigger asChild>
             <Button
@@ -81,7 +81,7 @@ export default function DateRangePicker({ value, onChange, placeholder = "Seleci
       </div>
 
       {/* Data Final */}
-      <div className="flex-1">
+      <div className="flex-1 w-full">
         <Popover open={openTo} onOpenChange={setOpenTo}>
           <PopoverTrigger asChild>
             <Button
