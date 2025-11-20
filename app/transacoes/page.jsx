@@ -301,6 +301,17 @@ export default function Transacoes() {
     );
   }
 
+  // Função para buscar dados do tipo de transação pelo nome interno
+  const getTransactionTypeByInternalName = (type) => {
+    const typeMap = {
+      credit: 1,
+      debit: 2,
+      investment: 3,
+    };
+    const typeId = typeMap[type];
+    return transactionTypes.find((t) => t.id === typeId);
+  };
+
   // Configuração de colunas da tabela
   const transactionColumns = [
     {
@@ -313,34 +324,28 @@ export default function Transacoes() {
       label: "Tipo",
       sortable: true,
       render: (row) => {
-        if (row.type === "credit") {
-          return (
-            <Badge variant="default" className="bg-green-500">
-              <span className="flex items-center gap-1">
-                <ArrowUpRight className="w-3 h-3" />
-                Crédito
-              </span>
-            </Badge>
-          );
-        } else if (row.type === "investment") {
-          return (
-            <Badge variant="default" className="bg-blue-500">
-              <span className="flex items-center gap-1">
-                <TrendingUp className="w-3 h-3" />
-                Aporte
-              </span>
-            </Badge>
-          );
-        } else {
-          return (
-            <Badge variant="destructive">
-              <span className="flex items-center gap-1">
-                <ArrowDownRight className="w-3 h-3" />
-                Débito
-              </span>
-            </Badge>
-          );
-        }
+        const transactionType = getTransactionTypeByInternalName(row.type);
+        const iconMap = {
+          credit: ArrowUpRight,
+          debit: ArrowDownRight,
+          investment: TrendingUp,
+        };
+        const Icon = iconMap[row.type] || ArrowDownRight;
+
+        return (
+          <Badge
+            variant="default"
+            style={{
+              backgroundColor: transactionType?.color || "#64748b",
+              color: "white",
+            }}
+          >
+            <span className="flex items-center gap-1">
+              <Icon className="w-3 h-3" />
+              {transactionType?.name || "Desconhecido"}
+            </span>
+          </Badge>
+        );
       },
     },
     {

@@ -22,9 +22,9 @@
     { "id": 7, "name": "Outros", "color": "#64748b" }
   ],
   "transactionTypes": [
-    { "id": 1, "name": "Crédito" },
-    { "id": 2, "name": "Débito" },
-    { "id": 3, "name": "Aporte em Patrimônio" }
+    { "id": 1, "name": "Crédito", "color": "#22c55e" },
+    { "id": 2, "name": "Débito", "color": "#ef4444" },
+    { "id": 3, "name": "Aporte", "color": "#3b82f6" }
   ],
   "expenses": [
     {"id": 1, "categoriesId": 1, "title": "Parcela do apartamento", "amount": 1805.00, "date": "2025-11-01"},

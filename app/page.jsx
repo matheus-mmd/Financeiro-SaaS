@@ -40,6 +40,7 @@ export default function Dashboard() {
   const [expenses, setExpenses] = useState([]);
   const [categories, setCategories] = useState([]);
   const [assetTypes, setAssetTypes] = useState([]);
+  const [transactionTypes, setTransactionTypes] = useState([]);
   const [transactions, setTransactions] = useState([]);
   const [targets, setTargets] = useState([]);
   const [assets, setAssets] = useState([]);
@@ -62,6 +63,7 @@ export default function Dashboard() {
           expensesRes,
           categoriesRes,
           assetTypesRes,
+          transactionTypesRes,
           transactionsRes,
           targetsRes,
           assetsRes,
@@ -69,6 +71,7 @@ export default function Dashboard() {
           fetchMock("/api/expenses"),
           fetchMock("/api/categories"),
           fetchMock("/api/assetTypes"),
+          fetchMock("/api/transactionTypes"),
           fetchMock("/api/transactions"),
           fetchMock("/api/targets"),
           fetchMock("/api/assets"),
@@ -77,6 +80,7 @@ export default function Dashboard() {
         setExpenses(expensesRes.data);
         setCategories(categoriesRes.data);
         setAssetTypes(assetTypesRes.data);
+        setTransactionTypes(transactionTypesRes.data);
         setTransactions(transactionsRes.data);
         setTargets(
           targetsRes.data.filter((t) => t.status === "in_progress").slice(0, 2)
@@ -311,6 +315,17 @@ export default function Dashboard() {
   // Calcular total de patrimônio e ativos para porcentagens
   const totalInvestmentsValue = assets.reduce((sum, a) => sum + a.value, 0);
 
+  // Função para buscar dados do tipo de transação pelo nome interno
+  const getTransactionTypeByInternalName = (type) => {
+    const typeMap = {
+      credit: 1,
+      debit: 2,
+      investment: 3,
+    };
+    const typeId = typeMap[type];
+    return transactionTypes.find((t) => t.id === typeId);
+  };
+
   // Configuração de colunas da tabela de transações
   const transactionColumns = [
     {
@@ -323,34 +338,28 @@ export default function Dashboard() {
       label: "Tipo",
       sortable: true,
       render: (row) => {
-        if (row.type === "credit") {
-          return (
-            <Badge variant="default" className="bg-green-500">
-              <span className="flex items-center gap-1">
-                <ArrowUpRight className="w-3 h-3" />
-                Crédito
-              </span>
-            </Badge>
-          );
-        } else if (row.type === "investment") {
-          return (
-            <Badge variant="default" className="bg-blue-500">
-              <span className="flex items-center gap-1">
-                <TrendingUp className="w-3 h-3" />
-                Aporte
-              </span>
-            </Badge>
-          );
-        } else {
-          return (
-            <Badge variant="destructive">
-              <span className="flex items-center gap-1">
-                <ArrowDownRight className="w-3 h-3" />
-                Débito
-              </span>
-            </Badge>
-          );
-        }
+        const transactionType = getTransactionTypeByInternalName(row.type);
+        const iconMap = {
+          credit: ArrowUpRight,
+          debit: ArrowDownRight,
+          investment: TrendingUp,
+        };
+        const Icon = iconMap[row.type] || ArrowDownRight;
+
+        return (
+          <Badge
+            variant="default"
+            style={{
+              backgroundColor: transactionType?.color || "#64748b",
+              color: "white",
+            }}
+          >
+            <span className="flex items-center gap-1">
+              <Icon className="w-3 h-3" />
+              {transactionType?.name || "Desconhecido"}
+            </span>
+          </Badge>
+        );
       },
     },
     {
