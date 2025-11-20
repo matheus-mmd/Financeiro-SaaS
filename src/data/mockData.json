@@ -1,9 +1,4 @@
 {
-  "user": {
-    "name": "Matheus Menezes",
-    "partner": "Nayanna Farias",
-    "currency": "BRL"
-  },
   "categories": [
     { "id": "moradia", "name": "Moradia", "color": "#3b82f6" },
     { "id": "transporte", "name": "Transporte", "color": "#ef4444" },

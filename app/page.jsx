@@ -37,7 +37,6 @@ import { Wallet, TrendingDown, ArrowUpRight, Target, Eye, DollarSign, PiggyBank,
  * Exibe resumo mensal, gráficos de despesas e evolução, transações e metas
  */
 export default function Dashboard() {
-  const [user, setUser] = useState(null);
   const [expenses, setExpenses] = useState([]);
   const [categories, setCategories] = useState([]);
   const [transactions, setTransactions] = useState([]);
@@ -59,14 +58,12 @@ export default function Dashboard() {
     const loadData = async () => {
       try {
         const [
-          userRes,
           expensesRes,
           categoriesRes,
           transactionsRes,
           targetsRes,
           assetsRes,
         ] = await Promise.all([
-          fetchMock("/api/user"),
           fetchMock("/api/expenses"),
           fetchMock("/api/categories"),
           fetchMock("/api/transactions"),
@@ -74,7 +71,6 @@ export default function Dashboard() {
           fetchMock("/api/assets"),
         ]);
 
-        setUser(userRes.data);
         setExpenses(expensesRes.data);
         setCategories(categoriesRes.data);
         setTransactions(transactionsRes.data);
@@ -376,6 +372,19 @@ export default function Dashboard() {
       label: "Data",
       sortable: true,
       render: (row) => formatDate(row.date),
+    },
+    {
+      key: "actions",
+      label: "Ações",
+      render: (row) => (
+        <Link
+          href="/transacoes"
+          className="p-1 hover:bg-gray-100 rounded transition-colors inline-block"
+          aria-label="Ver transação"
+        >
+          <Eye className="w-4 h-4 text-gray-600" />
+        </Link>
+      ),
     },
   ];
 

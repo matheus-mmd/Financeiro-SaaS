@@ -31,7 +31,6 @@ export default function Sidebar({
     { path: "/despesas", icon: Receipt, label: "Despesas" },
     { path: "/investimentos", icon: TrendingUp, label: "Patrimônio e Ativos" },
     { path: "/metas", icon: Target, label: "Metas" },
-    { path: "/perfil", icon: User, label: "Perfil" },
   ];
 
   const isActive = (path) => pathname === path;

@@ -13,7 +13,6 @@ export const fetchMock = async (endpoint) => {
   await delay();
 
   const routes = {
-    '/api/user': mockData.user,
     '/api/expenses': mockData.expenses,
     '/api/assets': mockData.assets,
     '/api/targets': mockData.targets,
