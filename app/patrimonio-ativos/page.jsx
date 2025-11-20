@@ -68,6 +68,7 @@ export default function PatrimonioAtivos() {
   const [selectedAssets, setSelectedAssets] = useState([]);
   const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
   const [typeModalOpen, setTypeModalOpen] = useState(false);
+  const [assetTypes, setAssetTypes] = useState([]);
 
   // Função para obter intervalo do mês atual
   const getCurrentMonthRange = () => {
@@ -89,14 +90,20 @@ export default function PatrimonioAtivos() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const response = await fetchMock("/api/assets");
+        const [assetsRes, assetTypesRes] = await Promise.all([
+          fetchMock("/api/assets"),
+          fetchMock("/api/assetTypes"),
+        ]);
+
         // Adicionar data aos ativos se não tiver
-        const assetsWithDate = response.data.map((asset) => ({
+        const assetsWithDate = assetsRes.data.map((asset) => ({
           ...asset,
           date: asset.date || new Date().toISOString().split("T")[0],
         }));
+
         setAssets(assetsWithDate);
         setFilteredAssets(assetsWithDate);
+        setAssetTypes(assetTypesRes.data);
       } catch (error) {
         console.error("Erro ao carregar patrimônio e ativos:", error);
       } finally {
@@ -259,20 +266,12 @@ export default function PatrimonioAtivos() {
     if (existing) {
       existing.value += asset.value;
     } else {
-      // Cores para cada tipo de ativo
-      const typeColors = {
-        Poupança: "#22c55e",
-        CDB: "#3b82f6",
-        "Tesouro Direto": "#f59e0b",
-        Ações: "#ef4444",
-        Fundos: "#8b5cf6",
-        Criptomoedas: "#ec4899",
-        Outros: "#64748b",
-      };
+      // Buscar cor do tipo de ativo do mock
+      const assetType = assetTypes.find((t) => t.name === asset.type);
       acc.push({
         name: asset.type,
         value: asset.value,
-        color: typeColors[asset.type] || "#64748b",
+        color: assetType?.color || "#64748b",
       });
     }
     return acc;
@@ -294,17 +293,6 @@ export default function PatrimonioAtivos() {
     );
   }
 
-  // Tipos de ativos únicos
-  const assetTypes = [
-    "Poupança",
-    "CDB",
-    "Tesouro Direto",
-    "Ações",
-    "Fundos",
-    "Criptomoedas",
-    "Outros",
-  ];
-
   // Configuração de colunas da tabela
   const assetColumns = [
     {
@@ -317,21 +305,13 @@ export default function PatrimonioAtivos() {
       label: "Tipo",
       sortable: true,
       render: (row) => {
-        // Cores para cada tipo de ativo
-        const typeColors = {
-          Poupança: "#22c55e",
-          CDB: "#3b82f6",
-          "Tesouro Direto": "#f59e0b",
-          Ações: "#ef4444",
-          Fundos: "#8b5cf6",
-          Criptomoedas: "#ec4899",
-          Outros: "#64748b",
-        };
+        // Buscar cor do tipo de ativo do mock
+        const assetType = assetTypes.find((t) => t.name === row.type);
         return (
           <Badge
             variant="default"
             style={{
-              backgroundColor: typeColors[row.type] || "#64748b",
+              backgroundColor: assetType?.color || "#64748b",
               color: "white",
             }}
           >
@@ -431,8 +411,8 @@ export default function PatrimonioAtivos() {
                   <SelectContent>
                     <SelectItem value="all">Todos os tipos</SelectItem>
                     {assetTypes.map((type) => (
-                      <SelectItem key={type} value={type}>
-                        {type}
+                      <SelectItem key={type.id} value={type.name}>
+                        {type.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -575,8 +555,8 @@ export default function PatrimonioAtivos() {
                 </SelectTrigger>
                 <SelectContent>
                   {assetTypes.map((type) => (
-                    <SelectItem key={type} value={type}>
-                      {type}
+                    <SelectItem key={type.id} value={type.name}>
+                      {type.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -645,26 +625,16 @@ export default function PatrimonioAtivos() {
           </DialogHeader>
           <div className="space-y-2">
             {assetTypes.map((type) => {
-              // Cores para cada tipo de ativo
-              const typeColors = {
-                Poupança: "#22c55e",
-                CDB: "#3b82f6",
-                "Tesouro Direto": "#f59e0b",
-                Ações: "#ef4444",
-                Fundos: "#8b5cf6",
-                Criptomoedas: "#ec4899",
-                Outros: "#64748b",
-              };
               return (
                 <div
-                  key={type}
+                  key={type.id}
                   className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg"
                 >
                   <div
                     className="w-6 h-6 rounded-full"
-                    style={{ backgroundColor: typeColors[type] || "#64748b" }}
+                    style={{ backgroundColor: type.color || "#64748b" }}
                   />
-                  <span className="font-medium text-gray-900">{type}</span>
+                  <span className="font-medium text-gray-900">{type.name}</span>
                 </div>
               );
             })}

@@ -39,6 +39,7 @@ import { Wallet, TrendingDown, ArrowUpRight, Target, Eye, DollarSign, PiggyBank,
 export default function Dashboard() {
   const [expenses, setExpenses] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [assetTypes, setAssetTypes] = useState([]);
   const [transactions, setTransactions] = useState([]);
   const [targets, setTargets] = useState([]);
   const [assets, setAssets] = useState([]);
@@ -60,12 +61,14 @@ export default function Dashboard() {
         const [
           expensesRes,
           categoriesRes,
+          assetTypesRes,
           transactionsRes,
           targetsRes,
           assetsRes,
         ] = await Promise.all([
           fetchMock("/api/expenses"),
           fetchMock("/api/categories"),
+          fetchMock("/api/assetTypes"),
           fetchMock("/api/transactions"),
           fetchMock("/api/targets"),
           fetchMock("/api/assets"),
@@ -73,6 +76,7 @@ export default function Dashboard() {
 
         setExpenses(expensesRes.data);
         setCategories(categoriesRes.data);
+        setAssetTypes(assetTypesRes.data);
         setTransactions(transactionsRes.data);
         setTargets(
           targetsRes.data.filter((t) => t.status === "in_progress").slice(0, 2)
@@ -293,20 +297,12 @@ export default function Dashboard() {
     if (existing) {
       existing.value += asset.value;
     } else {
-      // Cores para cada tipo de ativo
-      const typeColors = {
-        Poupança: "#22c55e",
-        CDB: "#3b82f6",
-        "Tesouro Direto": "#f59e0b",
-        Ações: "#ef4444",
-        Fundos: "#8b5cf6",
-        Criptomoedas: "#ec4899",
-        Outros: "#64748b",
-      };
+      // Buscar cor do tipo de ativo do mock
+      const assetType = assetTypes.find((t) => t.name === asset.type);
       acc.push({
         name: asset.type,
         value: asset.value,
-        color: typeColors[asset.type] || "#64748b",
+        color: assetType?.color || "#64748b",
       });
     }
     return acc;

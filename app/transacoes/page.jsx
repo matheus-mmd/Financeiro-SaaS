@@ -56,6 +56,7 @@ import {
  */
 export default function Transacoes() {
   const [transactions, setTransactions] = useState([]);
+  const [transactionTypes, setTransactionTypes] = useState([]);
   const [filteredTransactions, setFilteredTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
@@ -85,9 +86,13 @@ export default function Transacoes() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const response = await fetchMock("/api/transactions");
-        setTransactions(response.data);
-        setFilteredTransactions(response.data);
+        const [transactionsRes, transactionTypesRes] = await Promise.all([
+          fetchMock("/api/transactions"),
+          fetchMock("/api/transactionTypes"),
+        ]);
+        setTransactions(transactionsRes.data);
+        setFilteredTransactions(transactionsRes.data);
+        setTransactionTypes(transactionTypesRes.data);
       } catch (error) {
         console.error("Erro ao carregar transações:", error);
       } finally {
@@ -249,6 +254,16 @@ export default function Transacoes() {
     exportToCSV(filteredTransactions, columns, "transacoes");
   };
 
+  // Mapeia ID de transaction type para nome interno usado no código
+  const getInternalTypeName = (typeId) => {
+    const typeMap = {
+      1: 'credit',
+      2: 'debit',
+      3: 'investment'
+    };
+    return typeMap[typeId] || '';
+  };
+
   // Calcular estatísticas baseadas nas transações filtradas (antes do if loading)
   const totalCredit = filteredTransactions
     .filter((t) => t.type === "credit")
@@ -404,11 +419,14 @@ export default function Transacoes() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Todas as transações</SelectItem>
-                    <SelectItem value="credit">Apenas créditos</SelectItem>
-                    <SelectItem value="debit">Apenas débitos</SelectItem>
-                    <SelectItem value="investment">
-                      Apenas aportes em patrimônio
-                    </SelectItem>
+                    {transactionTypes.map((type) => (
+                      <SelectItem
+                        key={type.id}
+                        value={getInternalTypeName(type.id)}
+                      >
+                        Apenas {type.name.toLowerCase()}s
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
