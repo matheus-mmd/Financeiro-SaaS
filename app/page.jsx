@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import PageHeader from "../src/components/PageHeader";
 import StatsCard from "../src/components/StatsCard";
@@ -12,7 +12,7 @@ import DoughnutChart from "../src/components/charts/DoughnutChart";
 import LineChart from "../src/components/charts/LineChart";
 import ProgressBar from "../src/components/ProgressBar";
 import { fetchMock, formatCurrency, formatDate } from "../src/utils/mockApi";
-import { Wallet, TrendingDown, ArrowUpRight, Target, Eye, DollarSign, PiggyBank } from "lucide-react";
+import { Wallet, TrendingDown, ArrowUpRight, Target, Eye, DollarSign, PiggyBank, ArrowDownRight, TrendingUp } from "lucide-react";
 
 /**
  * Página Dashboard - Visão geral do controle financeiro
@@ -66,6 +66,32 @@ export default function Dashboard() {
     loadData();
   }, []);
 
+  // Mês atual para filtros
+  const currentMonth = "2025-11";
+
+  // Filtrar e ordenar transações do mês atual para a tabela
+  const recentTransactions = useMemo(() => {
+    // Filtrar apenas transações do mês atual
+    const currentMonthTransactions = transactions.filter((t) =>
+      t.date.startsWith(currentMonth)
+    );
+
+    // Ordenar por data (mais recente primeiro) e depois por valor (maior primeiro)
+    const sorted = [...currentMonthTransactions].sort((a, b) => {
+      // Primeiro ordenar por data (descendente - mais recente primeiro)
+      const dateA = new Date(a.date);
+      const dateB = new Date(b.date);
+      if (dateB - dateA !== 0) {
+        return dateB - dateA;
+      }
+      // Se as datas forem iguais, ordenar por valor (maior primeiro)
+      return Math.abs(b.amount) - Math.abs(a.amount);
+    });
+
+    // Limitar a 10 itens
+    return sorted.slice(0, 10);
+  }, [transactions, currentMonth]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -75,7 +101,6 @@ export default function Dashboard() {
   }
 
   // Calcular Despesas Mensais do mês atual
-  const currentMonth = "2025-11";
   const monthly_expenses_total = expenses
     .filter((e) => e.date.startsWith(currentMonth))
     .reduce((sum, e) => sum + e.amount, 0);
@@ -219,18 +244,44 @@ export default function Dashboard() {
     {
       key: "type",
       label: "Tipo",
-      render: (row) => (
-        <Badge variant={row.type === "credit" ? "default" : "destructive"}>
-          {row.type === "credit" ? "Crédito" : "Débito"}
-        </Badge>
-      ),
+      sortable: true,
+      render: (row) => {
+        if (row.type === "credit") {
+          return (
+            <Badge variant="default" className="bg-green-500">
+              <span className="flex items-center gap-1">
+                <ArrowUpRight className="w-3 h-3" />
+                Crédito
+              </span>
+            </Badge>
+          );
+        } else if (row.type === "investment") {
+          return (
+            <Badge variant="default" className="bg-blue-500">
+              <span className="flex items-center gap-1">
+                <TrendingUp className="w-3 h-3" />
+                Aporte
+              </span>
+            </Badge>
+          );
+        } else {
+          return (
+            <Badge variant="destructive">
+              <span className="flex items-center gap-1">
+                <ArrowDownRight className="w-3 h-3" />
+                Débito
+              </span>
+            </Badge>
+          );
+        }
+      },
     },
     {
       key: "amount",
       label: "Valor",
       sortable: true,
       render: (row) => (
-        <span className="font-medium">
+        <span>
           {formatCurrency(Math.abs(row.amount))}
         </span>
       ),
@@ -486,7 +537,7 @@ export default function Dashboard() {
           <h2 className="text-lg font-semibold text-gray-900 mb-4">
             Transações Recentes
           </h2>
-          {transactions.length === 0 ? (
+          {recentTransactions.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-gray-500">
                 Nenhuma transação encontrada.
@@ -495,7 +546,7 @@ export default function Dashboard() {
           ) : (
             <Table
               columns={transactionColumns}
-              data={transactions}
+              data={recentTransactions}
               pageSize={10}
             />
           )}
