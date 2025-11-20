@@ -373,19 +373,6 @@ export default function Dashboard() {
       sortable: true,
       render: (row) => formatDate(row.date),
     },
-    {
-      key: "actions",
-      label: "Ações",
-      render: (row) => (
-        <Link
-          href="/transacoes"
-          className="p-1 hover:bg-gray-100 rounded transition-colors inline-block"
-          aria-label="Ver transação"
-        >
-          <Eye className="w-4 h-4 text-gray-600" />
-        </Link>
-      ),
-    },
   ];
 
   return (
