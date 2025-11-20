@@ -52,8 +52,8 @@ import {
 } from "lucide-react";
 
 /**
- * Página Investimentos - Gerenciamento de ativos e investimentos
- * Permite visualizar, filtrar, adicionar e gerenciar investimentos
+ * Página Patrimônio e Ativos - Gerenciamento de ativos e investimentos
+ * Permite visualizar, filtrar, adicionar e gerenciar patrimônio e ativos
  */
 export default function Investimentos() {
   const [assets, setAssets] = useState([]);
@@ -384,7 +384,7 @@ export default function Investimentos() {
   return (
     <div className="space-y-6 animate-fade-in">
       <PageHeader
-        title="Investimentos"
+        title="Patrimônio e Ativos"
         description="Gerencie seus ativos e acompanhe rendimentos"
         actions={
           <>
@@ -503,7 +503,7 @@ export default function Investimentos() {
         <CardContent className="p-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
             <h2 className="text-lg font-semibold text-gray-900">
-              Todos os Investimentos ({filteredAssets.length})
+              Todos os Ativos ({filteredAssets.length})
             </h2>
           </div>
 
@@ -641,7 +641,7 @@ export default function Investimentos() {
       <Dialog open={typeModalOpen} onOpenChange={setTypeModalOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Tipos de Investimentos</DialogTitle>
+            <DialogTitle>Tipos de Ativos</DialogTitle>
           </DialogHeader>
           <div className="space-y-2">
             {investmentTypes.map((type) => {
