@@ -230,13 +230,7 @@ export default function Dashboard() {
       label: "Valor",
       sortable: true,
       render: (row) => (
-        <span
-          className={
-            row.type === "credit"
-              ? "text-green-600 font-medium"
-              : "text-red-600 font-medium"
-          }
-        >
+        <span className="font-medium">
           {formatCurrency(Math.abs(row.amount))}
         </span>
       ),

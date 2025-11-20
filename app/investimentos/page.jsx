@@ -345,7 +345,7 @@ export default function Investimentos() {
       label: "Valor",
       sortable: true,
       render: (row) => (
-        <span className="text-green-600 font-semibold">
+        <span>
           {formatCurrency(row.value)}
         </span>
       ),
@@ -355,7 +355,7 @@ export default function Investimentos() {
       label: "Rendimento",
       sortable: true,
       render: (row) => (
-        <span className="text-gray-600">
+        <span>
           {(row.yield * 100).toFixed(2)}% a.m.
         </span>
       ),

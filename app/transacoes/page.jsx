@@ -332,19 +332,11 @@ export default function Transacoes() {
       key: "amount",
       label: "Valor",
       sortable: true,
-      render: (row) => {
-        let colorClass = "text-red-600";
-        if (row.type === "credit") {
-          colorClass = "text-green-600";
-        } else if (row.type === "investment") {
-          colorClass = "text-blue-600";
-        }
-        return (
-          <span className={`${colorClass} font-semibold`}>
-            {formatCurrency(Math.abs(row.amount))}
-          </span>
-        );
-      },
+      render: (row) => (
+        <span>
+          {formatCurrency(Math.abs(row.amount))}
+        </span>
+      ),
     },
     {
       key: "date",

@@ -288,7 +288,7 @@ export default function Despesas() {
       label: "Valor",
       sortable: true,
       render: (row) => (
-        <span className="text-red-600 font-semibold">
+        <span>
           {formatCurrency(row.amount)}
         </span>
       ),

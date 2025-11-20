@@ -351,7 +351,7 @@ export default function Metas() {
       label: "Objetivo",
       sortable: true,
       render: (row) => (
-        <span className="font-semibold text-gray-900">
+        <span>
           {formatCurrency(row.goal)}
         </span>
       ),
@@ -361,7 +361,7 @@ export default function Metas() {
       label: "Atual",
       sortable: true,
       render: (row) => (
-        <span className="text-blue-600 font-semibold">
+        <span>
           {formatCurrency(row.progress)}
         </span>
       ),
