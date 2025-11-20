@@ -303,12 +303,6 @@ export default function Metas() {
   // Configuração de colunas da tabela
   const targetColumns = [
     {
-      key: "date",
-      label: "Data",
-      sortable: true,
-      render: (row) => formatDate(row.date),
-    },
-    {
       key: "title",
       label: "Meta",
       sortable: true,
@@ -371,6 +365,12 @@ export default function Metas() {
           {formatCurrency(row.progress)}
         </span>
       ),
+    },
+    {
+      key: "date",
+      label: "Data",
+      sortable: true,
+      render: (row) => formatDate(row.date),
     },
     {
       key: "actions",
@@ -541,7 +541,7 @@ export default function Metas() {
             <Table
               columns={targetColumns}
               data={sortedTargets}
-              pageSize={15}
+              pageSize={10}
               onRowClick={handleEditTarget}
               selectable={true}
               selectedRows={selectedTargets}

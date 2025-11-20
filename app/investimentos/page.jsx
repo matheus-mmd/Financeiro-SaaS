@@ -308,12 +308,6 @@ export default function Investimentos() {
   // Configuração de colunas da tabela
   const assetColumns = [
     {
-      key: "date",
-      label: "Data",
-      sortable: true,
-      render: (row) => formatDate(row.date),
-    },
-    {
       key: "name",
       label: "Nome",
       sortable: true,
@@ -365,6 +359,12 @@ export default function Investimentos() {
           {(row.yield * 100).toFixed(2)}% a.m.
         </span>
       ),
+    },
+    {
+      key: "date",
+      label: "Data",
+      sortable: true,
+      render: (row) => formatDate(row.date),
     },
     {
       key: "actions",
@@ -534,7 +534,7 @@ export default function Investimentos() {
             <Table
               columns={assetColumns}
               data={sortedAssets}
-              pageSize={15}
+              pageSize={10}
               onRowClick={handleEditAsset}
               selectable={true}
               selectedRows={selectedAssets}

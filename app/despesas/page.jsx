@@ -258,12 +258,6 @@ export default function Despesas() {
   // Configuração de colunas da tabela
   const expenseColumns = [
     {
-      key: "date",
-      label: "Data",
-      sortable: true,
-      render: (row) => formatDate(row.date),
-    },
-    {
       key: "title",
       label: "Descrição",
       sortable: true,
@@ -298,6 +292,12 @@ export default function Despesas() {
           {formatCurrency(row.amount)}
         </span>
       ),
+    },
+    {
+      key: "date",
+      label: "Data",
+      sortable: true,
+      render: (row) => formatDate(row.date),
     },
     {
       key: "actions",
@@ -476,7 +476,7 @@ export default function Despesas() {
             <Table
               columns={expenseColumns}
               data={filteredExpenses}
-              pageSize={15}
+              pageSize={10}
               onRowClick={handleEditExpense}
               selectable={true}
               selectedRows={selectedExpenses}

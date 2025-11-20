@@ -212,12 +212,6 @@ export default function Dashboard() {
   // Configuração de colunas da tabela de transações
   const transactionColumns = [
     {
-      key: "date",
-      label: "Data",
-      sortable: true,
-      render: (row) => formatDate(row.date),
-    },
-    {
       key: "description",
       label: "Descrição",
       sortable: true,
@@ -246,6 +240,12 @@ export default function Dashboard() {
           {formatCurrency(Math.abs(row.amount))}
         </span>
       ),
+    },
+    {
+      key: "date",
+      label: "Data",
+      sortable: true,
+      render: (row) => formatDate(row.date),
     },
     {
       key: "actions",
@@ -502,7 +502,7 @@ export default function Dashboard() {
             <Table
               columns={transactionColumns}
               data={transactions}
-              pageSize={5}
+              pageSize={10}
             />
           )}
         </CardContent>

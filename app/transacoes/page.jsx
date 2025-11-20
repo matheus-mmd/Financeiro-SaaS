@@ -183,7 +183,7 @@ export default function Transacoes() {
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    // Investimentos e débitos são negativos (saída), créditos são positivos (entrada)
+    // Aportes e débitos são negativos (saída), créditos são positivos (entrada)
     let amount = parseFloat(formData.amount);
     if (formData.type === "debit" || formData.type === "investment") {
       amount = -Math.abs(amount);
@@ -236,7 +236,7 @@ export default function Transacoes() {
           row.type === "credit"
             ? "Crédito"
             : row.type === "investment"
-            ? "Investimento"
+            ? "Aporte"
             : "Débito",
       },
       {
@@ -289,12 +289,6 @@ export default function Transacoes() {
   // Configuração de colunas da tabela
   const transactionColumns = [
     {
-      key: "date",
-      label: "Data",
-      sortable: true,
-      render: (row) => formatDate(row.date),
-    },
-    {
       key: "description",
       label: "Descrição",
       sortable: true,
@@ -318,7 +312,7 @@ export default function Transacoes() {
             <Badge variant="default" className="bg-blue-500">
               <span className="flex items-center gap-1">
                 <TrendingUp className="w-3 h-3" />
-                Investimento
+                Aporte
               </span>
             </Badge>
           );
@@ -351,6 +345,12 @@ export default function Transacoes() {
           </span>
         );
       },
+    },
+    {
+      key: "date",
+      label: "Data",
+      sortable: true,
+      render: (row) => formatDate(row.date),
     },
     {
       key: "actions",
@@ -524,7 +524,7 @@ export default function Transacoes() {
             <Table
               columns={transactionColumns}
               data={sortedTransactions}
-              pageSize={15}
+              pageSize={10}
               onRowClick={handleEditTransaction}
               selectable={true}
               selectedRows={selectedTransactions}
