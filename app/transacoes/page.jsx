@@ -38,6 +38,7 @@ import Spinner from "../../src/components/Spinner";
 import Table from "../../src/components/Table";
 import TableActions from "../../src/components/TableActions";
 import DatePicker from "../../src/components/DatePicker";
+import ImportStatementDialog from "../../src/components/ImportStatementDialog";
 import { fetchMock, formatCurrency, formatDate } from "../../src/utils/mockApi";
 import { exportToCSV } from "../../src/utils/exportData";
 import {
@@ -48,6 +49,7 @@ import {
   Filter,
   Download,
   Trash2,
+  Upload,
 } from "lucide-react";
 
 /**
@@ -66,6 +68,7 @@ export default function Transacoes() {
   const [transactionToDelete, setTransactionToDelete] = useState(null);
   const [selectedTransactions, setSelectedTransactions] = useState([]);
   const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
 
   // Função para obter intervalo do mês atual
   const getCurrentMonthRange = () => {
@@ -254,6 +257,31 @@ export default function Transacoes() {
     exportToCSV(filteredTransactions, columns, "transacoes");
   };
 
+  const handleImport = (importedTransactions) => {
+    // Converter transações importadas para o formato correto
+    const newTransactions = importedTransactions.map((transaction) => {
+      let amount = transaction.amount;
+
+      // Ajustar sinal baseado no tipo
+      if (transaction.type === "debit" || transaction.type === "investment") {
+        amount = -Math.abs(amount);
+      } else {
+        amount = Math.abs(amount);
+      }
+
+      return {
+        id: Date.now() + Math.random(), // ID único
+        description: transaction.description,
+        amount: amount,
+        type: transaction.type,
+        date: transaction.date,
+      };
+    });
+
+    // Adicionar as novas transações no início da lista
+    setTransactions([...newTransactions, ...transactions]);
+  };
+
   // Mapeia ID de transaction type para nome interno usado no código
   const getInternalTypeName = (typeId) => {
     const typeMap = {
@@ -386,6 +414,10 @@ export default function Transacoes() {
         description="Gerencie todas as suas transações financeiras"
         actions={
           <>
+            <Button variant="secondary" onClick={() => setImportDialogOpen(true)}>
+              <Upload className="w-4 h-4" />
+              Importar
+            </Button>
             <Button variant="secondary" onClick={handleExport}>
               <Download className="w-4 h-4" />
               Exportar
@@ -705,6 +737,13 @@ export default function Transacoes() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Dialog de importação de extratos */}
+      <ImportStatementDialog
+        open={importDialogOpen}
+        onOpenChange={setImportDialogOpen}
+        onImport={handleImport}
+      />
     </div>
   );
 }
