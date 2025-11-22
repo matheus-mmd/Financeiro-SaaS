@@ -37,7 +37,7 @@ import Spinner from "../../src/components/Spinner";
 import Table from "../../src/components/Table";
 import TableActions from "../../src/components/TableActions";
 import DatePicker from "../../src/components/DatePicker";
-import { fetchMock, formatCurrency, formatDate } from "../../src/utils/mockApi";
+import { fetchData, formatCurrency, formatDate, createAsset, updateAsset, deleteAsset } from "../../src/utils";
 import { exportToCSV } from "../../src/utils/exportData";
 import {
   TrendingUp,
@@ -91,8 +91,8 @@ export default function PatrimonioAtivos() {
     const loadData = async () => {
       try {
         const [assetsRes, assetTypesRes] = await Promise.all([
-          fetchMock("/api/assets"),
-          fetchMock("/api/assetTypes"),
+          fetchData("/api/assets"),
+          fetchData("/api/assetTypes"),
         ]);
 
         // Adicionar data aos ativos se não tiver
@@ -179,11 +179,27 @@ export default function PatrimonioAtivos() {
     setDeleteDialogOpen(true);
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (assetToDelete) {
-      setAssets(assets.filter((a) => a.id !== assetToDelete.id));
-      setDeleteDialogOpen(false);
-      setAssetToDelete(null);
+      try {
+        // Deletar do Supabase
+        await deleteAsset(assetToDelete.id);
+
+        // Recarregar dados do Supabase
+        const response = await fetchData("/api/assets");
+        const assetsWithDate = response.data.map((asset) => ({
+          ...asset,
+          date: asset.date || new Date().toISOString().split("T")[0],
+        }));
+        setAssets(assetsWithDate);
+        setFilteredAssets(assetsWithDate);
+
+        setDeleteDialogOpen(false);
+        setAssetToDelete(null);
+      } catch (error) {
+        console.error("Erro ao deletar ativo:", error);
+        alert("Erro ao deletar ativo. Verifique o console para mais detalhes.");
+      }
     }
   };
 
@@ -197,36 +213,54 @@ export default function PatrimonioAtivos() {
     setBulkDeleteDialogOpen(false);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Converter Date object para string YYYY-MM-DD
-    const dateString = formData.date.toISOString().split("T")[0];
+    try {
+      // Converter Date object para string YYYY-MM-DD
+      const dateString = formData.date.toISOString().split("T")[0];
 
-    const assetData = {
-      id: editingAsset?.id || Date.now(),
-      name: formData.name,
-      type: formData.type,
-      value: parseFloat(formData.value),
-      yield: formData.yield ? parseFloat(formData.yield) / 100 : 0,
-      date: dateString,
-      currency: "BRL",
-    };
+      // Buscar o ID do tipo de ativo pelo nome
+      const assetType = assetTypes.find(t => t.name === formData.type);
 
-    if (editingAsset) {
-      setAssets(assets.map((a) => (a.id === editingAsset.id ? assetData : a)));
-    } else {
-      setAssets([assetData, ...assets]);
+      const assetData = {
+        assetTypesid: assetType?.id,
+        name: formData.name,
+        value: parseFloat(formData.value),
+        yield: formData.yield ? parseFloat(formData.yield) / 100 : 0,
+        currency: "BRL",
+        date: dateString,
+      };
+
+      if (editingAsset) {
+        // Atualizar ativo existente no Supabase
+        await updateAsset(editingAsset.id, assetData);
+      } else {
+        // Criar novo ativo no Supabase
+        await createAsset(assetData);
+      }
+
+      // Recarregar dados do Supabase
+      const response = await fetchData("/api/assets");
+      const assetsWithDate = response.data.map((asset) => ({
+        ...asset,
+        date: asset.date || new Date().toISOString().split("T")[0],
+      }));
+      setAssets(assetsWithDate);
+      setFilteredAssets(assetsWithDate);
+
+      setModalOpen(false);
+      setFormData({
+        name: "",
+        type: "Poupança",
+        value: "",
+        yield: "",
+        date: new Date(),
+      });
+    } catch (error) {
+      console.error("Erro ao salvar ativo:", error);
+      alert("Erro ao salvar ativo. Verifique o console para mais detalhes.");
     }
-
-    setModalOpen(false);
-    setFormData({
-      name: "",
-      type: "Poupança",
-      value: "",
-      yield: "",
-      date: new Date(),
-    });
   };
 
   const handleInputChange = (field, value) => {

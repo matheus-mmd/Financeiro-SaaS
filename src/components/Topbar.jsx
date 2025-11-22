@@ -1,7 +1,15 @@
 import React from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, LogOut, User as UserIcon } from 'lucide-react';
 import GlobalSearch from './GlobalSearch';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from './ui/dropdown-menu';
 
 /**
  * Gera iniciais a partir do nome
@@ -23,8 +31,9 @@ const getInitials = (name) => {
  * @param {function} onToggleSidebar - Função para alternar menu lateral
  * @param {boolean} isMobileSidebarOpen - Estado do menu mobile
  * @param {function} onToggleMobileSidebar - Função para alternar menu mobile
+ * @param {function} onLogout - Função para fazer logout
  */
-export default function Topbar({ user, isSidebarCollapsed, onToggleSidebar, isMobileSidebarOpen, onToggleMobileSidebar }) {
+export default function Topbar({ user, isSidebarCollapsed, onToggleSidebar, isMobileSidebarOpen, onToggleMobileSidebar, onLogout }) {
   return (
     <header className="bg-white border-b border-gray-200 px-4 sm:px-6 py-4">
       <div className="flex items-center justify-between gap-4">
@@ -61,19 +70,38 @@ export default function Topbar({ user, isSidebarCollapsed, onToggleSidebar, isMo
         {/* User info */}
         <div className="flex items-center gap-4">
           {user && (
-            <>
-              <div className="hidden sm:block text-right">
-                <p className="text-sm font-medium text-gray-900">{user.name}</p>
-                {user.partner && (
-                  <p className="text-xs text-gray-500">& {user.partner}</p>
-                )}
-              </div>
-              <Avatar>
-                <AvatarFallback className="bg-brand-500 text-white">
-                  {getInitials(user.name)}
-                </AvatarFallback>
-              </Avatar>
-            </>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="flex items-center gap-3 hover:opacity-80 transition-opacity focus:outline-none focus:ring-2 focus:ring-brand-500 rounded-lg">
+                  <div className="hidden sm:block text-right">
+                    <p className="text-sm font-medium text-gray-900">{user.name}</p>
+                    {user.email && (
+                      <p className="text-xs text-gray-500">{user.email}</p>
+                    )}
+                  </div>
+                  <Avatar>
+                    <AvatarFallback className="bg-brand-500 text-white">
+                      {getInitials(user.name)}
+                    </AvatarFallback>
+                  </Avatar>
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-medium leading-none">{user.name}</p>
+                    {user.email && (
+                      <p className="text-xs leading-none text-gray-500">{user.email}</p>
+                    )}
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={onLogout} className="cursor-pointer text-red-600 focus:text-red-600">
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Sair</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           )}
         </div>
       </div>

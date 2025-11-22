@@ -38,7 +38,7 @@ import Table from "../../src/components/Table";
 import TableActions from "../../src/components/TableActions";
 import ProgressBar from "../../src/components/ProgressBar";
 import DatePicker from "../../src/components/DatePicker";
-import { fetchMock, formatCurrency, formatDate } from "../../src/utils/mockApi";
+import { fetchData, formatCurrency, formatDate, createTarget, updateTarget, deleteTarget } from "../../src/utils";
 import { exportToCSV } from "../../src/utils/exportData";
 import {
   Target,
@@ -79,7 +79,7 @@ export default function Metas() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const response = await fetchMock("/api/targets");
+        const response = await fetchData("/api/targets");
         // Adicionar data às metas se não tiver
         const targetsWithDate = response.data.map((target) => ({
           ...target,
@@ -157,11 +157,27 @@ export default function Metas() {
     setDeleteDialogOpen(true);
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (targetToDelete) {
-      setTargets(targets.filter((t) => t.id !== targetToDelete.id));
-      setDeleteDialogOpen(false);
-      setTargetToDelete(null);
+      try {
+        // Deletar do Supabase
+        await deleteTarget(targetToDelete.id);
+
+        // Recarregar dados do Supabase
+        const response = await fetchData("/api/targets");
+        const targetsWithDate = response.data.map((target) => ({
+          ...target,
+          date: target.date || new Date().toISOString().split("T")[0],
+        }));
+        setTargets(targetsWithDate);
+        setFilteredTargets(targetsWithDate);
+
+        setDeleteDialogOpen(false);
+        setTargetToDelete(null);
+      } catch (error) {
+        console.error("Erro ao deletar meta:", error);
+        alert("Erro ao deletar meta. Verifique o console para mais detalhes.");
+      }
     }
   };
 
@@ -175,43 +191,53 @@ export default function Metas() {
     setBulkDeleteDialogOpen(false);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Converter Date object para string YYYY-MM-DD
-    const dateString = formData.date.toISOString().split("T")[0];
+    try {
+      // Converter Date object para string YYYY-MM-DD
+      const dateString = formData.date.toISOString().split("T")[0];
 
-    const newTarget = {
-      id: editingTarget?.id || `t${Date.now()}`,
-      title: formData.title,
-      goal: parseFloat(formData.goal),
-      progress: parseFloat(formData.progress || 0),
-      monthlyAmount: formData.monthlyAmount
-        ? parseFloat(formData.monthlyAmount)
-        : 0,
-      status:
-        parseFloat(formData.progress || 0) >= parseFloat(formData.goal)
-          ? "completed"
-          : "in_progress",
-      date: dateString,
-    };
+      const targetData = {
+        title: formData.title,
+        goal: parseFloat(formData.goal),
+        progress: parseFloat(formData.progress || 0),
+        status:
+          parseFloat(formData.progress || 0) >= parseFloat(formData.goal)
+            ? "completed"
+            : "in_progress",
+        date: dateString,
+      };
 
-    if (editingTarget) {
-      setTargets(
-        targets.map((t) => (t.id === editingTarget.id ? newTarget : t))
-      );
-    } else {
-      setTargets([newTarget, ...targets]);
+      if (editingTarget) {
+        // Atualizar meta existente no Supabase
+        await updateTarget(editingTarget.id, targetData);
+      } else {
+        // Criar nova meta no Supabase
+        await createTarget(targetData);
+      }
+
+      // Recarregar dados do Supabase
+      const response = await fetchData("/api/targets");
+      const targetsWithDate = response.data.map((target) => ({
+        ...target,
+        date: target.date || new Date().toISOString().split("T")[0],
+      }));
+      setTargets(targetsWithDate);
+      setFilteredTargets(targetsWithDate);
+
+      setModalOpen(false);
+      setFormData({
+        title: "",
+        goal: "",
+        progress: "",
+        monthlyAmount: "",
+        date: new Date(),
+      });
+    } catch (error) {
+      console.error("Erro ao salvar meta:", error);
+      alert("Erro ao salvar meta. Verifique o console para mais detalhes.");
     }
-
-    setModalOpen(false);
-    setFormData({
-      title: "",
-      goal: "",
-      progress: "",
-      monthlyAmount: "",
-      date: new Date(),
-    });
   };
 
   const calculateMonthsToGoal = (goal, progress, monthlyAmount) => {

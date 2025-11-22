@@ -4,6 +4,14 @@ SaaS completo de controle financeiro desenvolvido com **Next.js 14**, **React 18
 
 ## ✨ Funcionalidades
 
+### 🔐 Autenticação
+- Login e cadastro integrados com Supabase Auth
+- Proteção automática de rotas (redirecionamento para login)
+- Perfil de usuário com nome e preferências
+- Logout seguro com limpeza de sessão
+- Confirmação de e-mail opcional
+- Dados isolados por usuário (multi-tenant com RLS)
+
 ### 📊 Dashboard
 - Resumo mensal de receitas, despesas e saldo
 - Gráfico de rosca (donut) interativo para despesas por categoria
@@ -62,22 +70,34 @@ SaaS completo de controle financeiro desenvolvido com **Next.js 14**, **React 18
 
 ## 🚀 Stack Tecnológica
 
+### Frontend
 - **Next.js 14** - Framework React com App Router
 - **React 18** - Biblioteca UI com Server e Client Components
 - **Tailwind CSS** - Framework CSS utilitário
 - **shadcn/ui** - Componentes acessíveis baseados em Radix UI
 - **Recharts** - Biblioteca de gráficos interativos
 - **Lucide React** - Ícones modernos e customizáveis
+
+### Backend & Database
+- **Supabase** - Backend-as-a-Service (BaaS)
+- **PostgreSQL** - Banco de dados relacional
+- **Row Level Security (RLS)** - Segurança multi-tenant
+- **Supabase Realtime** - Atualizações em tempo real
+
+### Dev & Build
 - **TypeScript Ready** - Preparado para migração
+- **ESLint** - Linter JavaScript/React
 
 ## 📁 Estrutura do Projeto
 
 ```
 financeiro-saas/
 ├── app/                         # Next.js App Router
-│   ├── layout.jsx              # Layout raiz da aplicação
+│   ├── layout.jsx              # Layout raiz com AuthProvider
 │   ├── page.jsx                # Dashboard (página inicial)
 │   ├── globals.css             # Estilos globais
+│   ├── login/
+│   │   └── page.jsx            # Página de Login/Cadastro
 │   ├── transacoes/
 │   │   └── page.jsx            # Página de Transações
 │   ├── despesas/
@@ -105,7 +125,7 @@ financeiro-saas/
 │   │   ├── Avatar.jsx
 │   │   ├── BalanceCard.jsx
 │   │   ├── EmptyState.jsx
-│   │   ├── Layout.jsx          # Layout com Sidebar/Topbar
+│   │   ├── Layout.jsx          # Layout com proteção de rotas
 │   │   ├── PageHeader.jsx
 │   │   ├── ProgressBar.jsx
 │   │   ├── Select.jsx
@@ -113,17 +133,26 @@ financeiro-saas/
 │   │   ├── Spinner.jsx
 │   │   ├── StatsCard.jsx
 │   │   ├── Table.jsx
-│   │   ├── Topbar.jsx
+│   │   ├── Topbar.jsx          # Barra superior com logout
 │   │   └── charts/             # Componentes de gráficos
 │   │       ├── DoughnutChart.jsx    # Gráfico de rosca interativo
 │   │       ├── LineChart.jsx        # Gráfico de área/linha
 │   │       └── MultiLineChart.jsx   # Múltiplas linhas
-│   ├── data/                   # Dados mock
+│   ├── contexts/               # Contextos React
+│   │   └── AuthContext.jsx    # Contexto de autenticação
+│   ├── data/                   # Dados mock (legado)
 │   │   └── mockData.json
 │   ├── utils/                  # Utilitários
 │   │   ├── cn.js              # Utility para merge de classes
-│   │   ├── mockApi.js         # API simulada
+│   │   ├── supabase.js        # Cliente Supabase
+│   │   ├── supabaseApi.js     # API Supabase (CRUD e queries)
+│   │   ├── mockApi.js         # API simulada (legado)
 │   │   └── index.js           # Exports
+├── supabase/                   # Configuração Supabase
+│   ├── schema.sql             # Schema completo do banco
+│   ├── seed.sql               # Dados iniciais (categorias, tipos)
+│   ├── enable-rls.sql         # Script para habilitar RLS
+│   └── disable-rls-dev.sql    # Script para dev (não usar em prod)
 ├── next.config.js              # Configuração do Next.js
 ├── tailwind.config.js          # Configuração do Tailwind
 ├── postcss.config.js           # Configuração do PostCSS
@@ -270,6 +299,270 @@ npm run build
 npm start
 ```
 
+## 🗄️ Configuração do Banco de Dados (Supabase)
+
+O projeto foi migrado de dados mock para **Supabase** como banco de dados real. Abaixo estão as instruções completas para configurar e popular o banco.
+
+### 🔧 Pré-requisitos Supabase
+
+1. **Criar uma conta Supabase**
+   - Acesse [https://supabase.com](https://supabase.com)
+   - Crie uma conta gratuita
+   - Crie um novo projeto
+
+2. **Obter credenciais do projeto**
+   - No dashboard do Supabase, vá em **Settings** → **API**
+   - Anote as seguintes informações:
+     - **Project URL** (URL do projeto)
+     - **anon/public key** (chave pública)
+
+### ⚙️ Configuração das Variáveis de Ambiente
+
+1. **Criar arquivo `.env.local`** na raiz do projeto:
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL=https://seu-projeto.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=sua-chave-publica-anon
+```
+
+2. **Substituir valores**:
+   - `https://seu-projeto.supabase.co` → URL do seu projeto Supabase
+   - `sua-chave-publica-anon` → Chave pública (anon/public) do Supabase
+
+> **⚠️ IMPORTANTE:** Nunca faça commit do arquivo `.env.local` no Git. Ele já está incluído no `.gitignore`.
+
+### 🗃️ Criação do Schema do Banco
+
+1. **Acessar SQL Editor no Supabase**
+   - No dashboard do Supabase, vá em **SQL Editor**
+   - Clique em **New Query**
+
+2. **Executar schema SQL**
+   - Copie todo o conteúdo do arquivo `supabase/schema.sql`
+   - Cole no SQL Editor
+   - Clique em **Run** para executar
+
+O script irá criar:
+- ✅ 7 tabelas principais (categories, asset_types, transaction_types, expenses, assets, targets, transactions)
+- ✅ Relacionamentos via Foreign Keys
+- ✅ Índices para performance
+- ✅ Row Level Security (RLS) policies para segurança
+- ✅ Views enriquecidas (_enriched) para queries otimizadas
+- ✅ Triggers para atualização automática de `updated_at`
+
+### 📊 Popular o Banco com Dados Iniciais (Seed)
+
+**Execute o seed para popular as tabelas de lookup:**
+
+1. **Abrir SQL Editor** no Supabase
+2. **Copiar todo o conteúdo** do arquivo `supabase/seed.sql`
+3. **Colar no SQL Editor**
+4. **Clicar em Run**
+
+O script irá popular:
+- ✅ **11 categorias** de despesas (Moradia, Transporte, Alimentação, etc)
+- ✅ **7 tipos de ativos** (Poupança, CDB, Ações, etc)
+- ✅ **3 tipos de transações** (Crédito, Débito, Aporte)
+
+> **📝 NOTA:** As tabelas de dados do usuário (expenses, assets, targets, transactions) **não são populadas** pelo seed. Elas começam vazias e devem ser preenchidas através da própria aplicação após criar uma conta de usuário.
+
+### 🔐 Configuração de Autenticação
+
+O projeto já vem com autenticação completa integrada ao **Supabase Auth**. Siga os passos abaixo para ativar:
+
+#### 1. Habilitar Autenticação por Email no Supabase
+
+1. **Acesse o dashboard do Supabase**
+2. Vá em **Authentication** → **Providers**
+3. **Habilite "Email"** (já vem habilitado por padrão)
+4. Configure as opções de e-mail:
+   - **Enable Email Confirmations** (recomendado): Usuários precisam confirmar e-mail
+   - Ou desabilite para testes (permite login imediato sem confirmação)
+
+#### 2. Configurar URL de Redirecionamento
+
+1. Vá em **Authentication** → **URL Configuration**
+2. Adicione as URLs permitidas:
+   - `http://localhost:3000` (desenvolvimento)
+   - Sua URL de produção (quando deployar)
+
+#### 3. Executar Schema com Tabela de Usuários
+
+O arquivo `supabase/schema.sql` já inclui:
+- ✅ Tabela `users` para perfil estendido (nome, moeda preferida)
+- ✅ Trigger automático que cria perfil quando usuário se registra
+- ✅ Policies RLS para proteger dados do perfil
+
+Certifique-se de executar o `schema.sql` completo no SQL Editor.
+
+#### 4. Habilitar Row Level Security
+
+Após configurar autenticação, habilite RLS executando o script `supabase/enable-rls.sql`:
+
+```bash
+# No SQL Editor do Supabase, execute:
+supabase/enable-rls.sql
+```
+
+Isso garante que cada usuário só veja seus próprios dados.
+
+#### 5. Primeiro Acesso
+
+1. **Inicie a aplicação**: `npm run dev`
+2. **Acesse**: http://localhost:3000
+3. **Você será redirecionado** automaticamente para `/login`
+4. **Crie sua conta**:
+   - Clique em "Cadastre-se"
+   - Preencha nome, e-mail e senha (mínimo 6 caracteres)
+   - Se confirmação de e-mail estiver habilitada, verifique sua caixa de entrada
+5. **Faça login** com suas credenciais
+6. **Comece a usar** a aplicação!
+
+#### 6. Gerenciar Usuários
+
+- **Ver usuários**: Supabase Dashboard → **Authentication** → **Users**
+- **Redefinir senha**: Use a funcionalidade de "Esqueci minha senha" (em desenvolvimento)
+- **Deletar usuário**: Pelo dashboard do Supabase
+
+### 👤 Como Criar Seus Dados
+
+Após fazer login na aplicação:
+
+1. **Use a interface** para criar:
+   - **Despesas**: Vá em "Despesas" e clique em "Nova Despesa"
+   - **Ativos**: Vá em "Patrimônio & Ativos" e adicione seus ativos
+   - **Metas**: Vá em "Metas" e defina seus objetivos financeiros
+   - **Transações**: Vá em "Transações" e registre suas movimentações
+   - **Importar OFX**: Na página de Transações, use "Importar Extrato" para carregar arquivo OFX do banco
+
+2. **Dados automáticos no Dashboard**:
+   - Todos os gráficos e análises são gerados automaticamente
+   - O Dashboard calcula: saúde financeira, projeções, alertas, etc.
+
+Todos os dados são **automaticamente vinculados ao seu usuário** e **protegidos pelas políticas RLS**.
+
+### 🔐 Row Level Security (RLS)
+
+O schema já inclui políticas RLS **otimizadas para performance** que garantem que:
+- ✅ Usuários **só podem ver seus próprios dados**
+- ✅ Usuários **não podem ver dados de outros usuários**
+- ✅ Tabelas de categorias/tipos são **públicas (read-only)**
+- ✅ **Performance otimizada**: Usa `(select auth.uid())` ao invés de `auth.uid()` para evitar re-avaliação por linha
+
+As políticas RLS são aplicadas automaticamente pelo Supabase em todas as queries.
+
+#### Otimização de Performance RLS
+
+As políticas usam `(select auth.uid())` ao invés de `auth.uid()` direto. Isso garante que a função seja avaliada **apenas uma vez por query**, não uma vez por linha, resultando em performance muito melhor em escala.
+
+```sql
+-- ❌ Ruim - Re-avalia para cada linha
+USING (auth.uid() = user_id)
+
+-- ✅ Bom - Avalia apenas uma vez
+USING ((select auth.uid()) = user_id)
+```
+
+### 📝 Estrutura de Dados (Resumo)
+
+| Tabela | Campos Principais | Relacionamentos |
+|--------|-------------------|-----------------|
+| **categories** | id, name, color | ← expenses.categories_id |
+| **asset_types** | id, name, color | ← assets.asset_types_id |
+| **transaction_types** | id, name, color, internal_name | ← transactions.transaction_types_id |
+| **expenses** | id, user_id, categories_id, title, amount, date | → categories |
+| **assets** | id, user_id, asset_types_id, name, value, yield, currency, date | → asset_types |
+| **targets** | id, user_id, title, goal, progress, status, date | - |
+| **transactions** | id, user_id, transaction_types_id, date, description, amount | → transaction_types |
+
+### 🔍 Views Enriquecidas
+
+O schema cria 3 views otimizadas que já trazem dados relacionados:
+
+- `expenses_enriched` - Despesas com nome e cor da categoria
+- `assets_enriched` - Ativos com nome e cor do tipo
+- `transactions_enriched` - Transações com nome, cor e tipo interno
+
+Essas views são usadas automaticamente pelo `supabaseApi.js`.
+
+### ✅ Testar a Conexão
+
+Após configurar o `.env.local` e executar o schema:
+
+1. **Reiniciar o servidor de desenvolvimento**:
+```bash
+npm run dev
+```
+
+2. **Acessar o app**: http://localhost:3000
+
+3. **Verificar no console do navegador** se não há erros de conexão
+
+4. **Testar CRUD** em qualquer página (Despesas, Transações, etc.)
+
+### 🐛 Troubleshooting Supabase
+
+#### Erro: "Missing environment variables"
+- Verifique se criou o arquivo `.env.local`
+- Verifique se as variáveis estão com os nomes corretos (NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY)
+- Reinicie o servidor (`npm run dev`)
+
+#### Erro: "Row Level Security policy violation"
+- Certifique-se de ter configurado autenticação
+- Verifique se está logado com um usuário válido
+- Verifique se o user_id nos registros corresponde ao usuário logado
+
+#### Erro: "relation does not exist"
+- Execute o script `supabase/schema.sql` completo no SQL Editor
+- Verifique se todas as tabelas foram criadas em **Table Editor**
+
+#### Categorias/Tipos não aparecem
+- Verifique se executou o **seed.sql** (categorias, tipos de ativos, tipos de transações)
+- Abra o **Table Editor** no Supabase e verifique as tabelas `categories`, `asset_types` e `transaction_types`
+
+#### Tabelas de dados vazias (esperado)
+- As tabelas `expenses`, `assets`, `targets` e `transactions` devem começar **vazias**
+- Elas serão populadas quando você criar dados através da aplicação
+- Certifique-se de ter configurado autenticação e estar logado
+
+#### Performance lenta em queries (RLS)
+Se você já criou o banco antes dessa otimização, precisa recriar as políticas RLS:
+
+**Opção 1: Recriar o banco completo**
+- Delete todas as tabelas
+- Execute o `supabase/schema.sql` atualizado
+
+**Opção 2: Atualizar apenas as políticas RLS** (RECOMENDADO)
+- Abra o SQL Editor no Supabase
+- Copie todo o conteúdo do arquivo **`supabase/fix-rls-performance.sql`**
+- Cole no SQL Editor
+- Clique em **Run**
+
+Este script automaticamente:
+1. Remove todas as políticas RLS antigas
+2. Cria políticas RLS otimizadas com `(select auth.uid())`
+3. Preserva todos os seus dados
+
+#### Aviso de segurança em funções (search_path)
+Se você receber um aviso sobre `search_path` na função `update_updated_at_column`:
+
+- Abra o SQL Editor no Supabase
+- Copie todo o conteúdo do arquivo **`supabase/fix-function-search-path.sql`**
+- Cole no SQL Editor
+- Clique em **Run**
+
+Este script adiciona `SECURITY DEFINER` e `SET search_path = ''` à função para prevenir vulnerabilidades de search path injection.
+
+#### Aviso de segurança em views (SECURITY DEFINER)
+Se você receber um aviso sobre views com `SECURITY DEFINER`:
+
+- Abra o SQL Editor no Supabase
+- Copie todo o conteúdo do arquivo **`supabase/fix-views-security.sql`**
+- Cole no SQL Editor
+- Clique em **Run**
+
+Este script recria as views com `security_invoker = true` para garantir que elas respeitem as políticas RLS de cada usuário.
+
 ## 🗺️ Rotas Disponíveis
 
 O projeto usa **Next.js App Router** com as seguintes rotas:
@@ -282,45 +575,90 @@ O projeto usa **Next.js App Router** com as seguintes rotas:
 - `/comparador` - Comparador de ativos
 - `/perfil` - Perfil do usuário
 
-## 📊 Dados Mock
+## 📊 Camada de Dados
 
-Os dados mock estão em `src/data/mockData.json` e incluem:
+O projeto utiliza **Supabase** como banco de dados real (PostgreSQL). A estrutura de dados inclui:
 
-- **user**: Informações do usuário (nome, parceiro, moeda)
-- **summary**: Resumo financeiro mensal
-- **expenses**: Lista de despesas categorizadas
-- **assets**: Patrimônio e ativos
-- **targets**: Metas financeiras
-- **transactions**: Histórico de transações
-- **comparison_sample**: Dados para comparação de ativos
+- **categories**: Categorias de despesas (11 categorias)
+- **asset_types**: Tipos de ativos (7 tipos)
+- **transaction_types**: Tipos de transações (3 tipos)
+- **expenses**: Despesas categorizadas do usuário
+- **assets**: Patrimônio e ativos do usuário
+- **targets**: Metas financeiras do usuário
+- **transactions**: Histórico de transações do usuário
 
 ### Categorias de Despesas
 
-O sistema inclui 12 categorias predefinidas com cores distintas:
+O sistema inclui 11 categorias predefinidas com cores distintas:
 
-1. **Moradia** (#0ea5a4) - Aluguel, financiamento, condomínio
-2. **Transporte** (#3b82f6) - Combustível, transporte público
+1. **Moradia** (#3b82f6) - Aluguel, financiamento, condomínio
+2. **Transporte** (#ef4444) - Combustível, transporte público
 3. **Alimentação** (#10b981) - Supermercado, restaurantes
-4. **Saúde** (#ef4444) - Plano de saúde, medicamentos
+4. **Saúde** (#f59e0b) - Plano de saúde, medicamentos
 5. **Educação** (#8b5cf6) - Cursos, livros, material
-6. **Lazer** (#f59e0b) - Cinema, passeios, hobbies
-7. **Assinaturas** (#ec4899) - Streaming, software
-8. **Família** (#14b8a6) - Ajuda familiar, presentes
-9. **Poupança** (#06b6d4) - Aportes mensais em patrimônio
-10. **Crédito** (#f97316) - Cartão de crédito, empréstimos
-11. **Utilities** (#6366f1) - Água, luz, internet
-12. **Outros** (#64748b) - Despesas diversas
+6. **Lazer** (#ec4899) - Cinema, passeios, hobbies
+7. **Assinaturas** (#06b6d4) - Streaming, software
+8. **Família** (#f97316) - Ajuda familiar, presentes
+9. **Crédito** (#6366f1) - Cartão de crédito, empréstimos
+10. **Utilities** (#84cc16) - Água, luz, internet
+11. **Outros** (#64748b) - Despesas diversas
 
-### Modificar Dados Mock
+### Acessar Dados via Supabase API
 
-Edite o arquivo `src/data/mockData.json` diretamente. Os dados são consumidos pela função `fetchMock()` em `src/utils/mockApi.js`.
+O projeto usa `supabaseApi.js` para comunicação com o banco:
 
 ```js
-import { fetchMock } from '../utils/mockApi';
+import { fetchData } from '../utils';
 
-const response = await fetchMock('/api/expenses');
-console.log(response.data); // Array de despesas
+// Buscar despesas
+const response = await fetchData('/api/expenses');
+console.log(response.data); // Array de despesas enriquecidas
+
+// Criar nova despesa
+import { createExpense } from '../utils';
+await createExpense({
+  categoriesId: 1,
+  title: 'Aluguel',
+  amount: 1500.00,
+  date: '2025-11-01'
+});
 ```
+
+### API de Dados (src/utils/supabaseApi.js)
+
+Funções disponíveis:
+
+#### Leitura (Read)
+- `fetchData(endpoint)` - Busca dados enriquecidos
+
+#### Despesas (Expenses)
+- `createExpense(expense)` - Criar despesa
+- `updateExpense(id, updates)` - Atualizar despesa
+- `deleteExpense(id)` - Deletar despesa
+
+#### Ativos (Assets)
+- `createAsset(asset)` - Criar ativo
+- `updateAsset(id, updates)` - Atualizar ativo
+- `deleteAsset(id)` - Deletar ativo
+
+#### Metas (Targets)
+- `createTarget(target)` - Criar meta
+- `updateTarget(id, updates)` - Atualizar meta
+- `deleteTarget(id)` - Deletar meta
+
+#### Transações (Transactions)
+- `createTransaction(transaction)` - Criar transação
+- `updateTransaction(id, updates)` - Atualizar transação
+- `deleteTransaction(id)` - Deletar transação
+
+#### Utilitários
+- `formatCurrency(value)` - Formata valores monetários
+- `formatDate(dateString)` - Formata datas
+- `calculateProgress(progress, goal)` - Calcula porcentagem
+
+### Dados Mock (Legado)
+
+Para referência, os dados mock antigos estão em `src/data/mockData.json` e `src/utils/mockApi.js`, mas **não são mais utilizados** pela aplicação.
 
 ## 🛠️ Funções Utilitárias
 
@@ -464,12 +802,15 @@ async rewrites() {
 - [x] Sidebar comprimível/expansível
 - [x] Layout responsivo mobile-first
 - [x] Acessibilidade completa (WCAG AA)
+- [x] Integração completa com Supabase (PostgreSQL)
+- [x] CRUD completo via Supabase API
+- [x] Row Level Security (RLS) para multi-tenancy
 
 ## 🔮 Próximos Passos (Sugestões)
 
 - [ ] Migrar para TypeScript
-- [ ] Integrar com API backend real (Supabase, Firebase, ou REST)
-- [ ] Adicionar autenticação (NextAuth, Clerk)
+- [ ] Adicionar autenticação Supabase Auth
+- [ ] Implementar login social (Google, GitHub)
 - [ ] Implementar filtros avançados com date range picker
 - [ ] Exportar dados (PDF, CSV, Excel)
 - [ ] Notificações push e alertas de metas

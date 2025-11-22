@@ -1,2 +1,2 @@
 export { cn } from './cn';
-export * from './mockApi';
+export * from './supabaseApi';

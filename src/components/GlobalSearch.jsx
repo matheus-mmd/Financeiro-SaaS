@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { Input } from "./ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
-import { formatCurrency, formatDate, fetchMock } from "../utils/mockApi";
+import { formatCurrency, formatDate, fetchData } from "../utils";
 
 /**
  * GlobalSearch - Componente de busca global na aplicação
@@ -56,10 +56,10 @@ export default function GlobalSearch() {
       try {
         const [transactionsRes, targetsRes, assetsRes, expensesRes] =
           await Promise.all([
-            fetchMock("/api/transactions"),
-            fetchMock("/api/targets"),
-            fetchMock("/api/assets"),
-            fetchMock("/api/expenses"),
+            fetchData("/api/transactions"),
+            fetchData("/api/targets"),
+            fetchData("/api/assets"),
+            fetchData("/api/expenses"),
           ]);
 
         const transactions = transactionsRes.data;

@@ -37,7 +37,7 @@ import Spinner from "../../src/components/Spinner";
 import Table from "../../src/components/Table";
 import TableActions from "../../src/components/TableActions";
 import DatePicker from "../../src/components/DatePicker";
-import { fetchMock, formatCurrency, formatDate } from "../../src/utils/mockApi";
+import { fetchData, formatCurrency, formatDate, createExpense, updateExpense, deleteExpense } from "../../src/utils";
 import { exportToCSV } from "../../src/utils/exportData";
 import {
   Receipt,
@@ -87,8 +87,8 @@ export default function Despesas() {
     const loadData = async () => {
       try {
         const [expensesRes, categoriesRes] = await Promise.all([
-          fetchMock("/api/expenses"),
-          fetchMock("/api/categories"),
+          fetchData("/api/expenses"),
+          fetchData("/api/categories"),
         ]);
         setExpenses(expensesRes.data);
         setFilteredExpenses(expensesRes.data);
@@ -163,11 +163,23 @@ export default function Despesas() {
     setDeleteDialogOpen(true);
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (expenseToDelete) {
-      setExpenses(expenses.filter((e) => e.id !== expenseToDelete.id));
-      setDeleteDialogOpen(false);
-      setExpenseToDelete(null);
+      try {
+        // Deletar do Supabase
+        await deleteExpense(expenseToDelete.id);
+
+        // Recarregar dados do Supabase
+        const response = await fetchData("/api/expenses");
+        setExpenses(response.data);
+        setFilteredExpenses(response.data);
+
+        setDeleteDialogOpen(false);
+        setExpenseToDelete(null);
+      } catch (error) {
+        console.error("Erro ao deletar despesa:", error);
+        alert("Erro ao deletar despesa. Verifique o console para mais detalhes.");
+      }
     }
   };
 
@@ -181,30 +193,42 @@ export default function Despesas() {
     setBulkDeleteDialogOpen(false);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Converter Date object para string YYYY-MM-DD
-    const dateString = formData.date.toISOString().split("T")[0];
+    try {
+      // Converter Date object para string YYYY-MM-DD
+      const dateString = formData.date.toISOString().split("T")[0];
 
-    const newExpense = {
-      id: editingExpense?.id || Date.now(),
-      title: formData.title,
-      category: formData.category,
-      amount: parseFloat(formData.amount),
-      date: dateString,
-    };
+      // Buscar o ID da categoria pelo nome
+      const category = categories.find(c => c.name === formData.category);
 
-    if (editingExpense) {
-      setExpenses(
-        expenses.map((e) => (e.id === editingExpense.id ? newExpense : e))
-      );
-    } else {
-      setExpenses([...expenses, newExpense]);
+      const expenseData = {
+        categoriesId: category?.id,
+        title: formData.title,
+        amount: parseFloat(formData.amount),
+        date: dateString,
+      };
+
+      if (editingExpense) {
+        // Atualizar despesa existente no Supabase
+        await updateExpense(editingExpense.id, expenseData);
+      } else {
+        // Criar nova despesa no Supabase
+        await createExpense(expenseData);
+      }
+
+      // Recarregar dados do Supabase
+      const response = await fetchData("/api/expenses");
+      setExpenses(response.data);
+      setFilteredExpenses(response.data);
+
+      setModalOpen(false);
+      setFormData({ title: "", category: "", amount: "", date: new Date() });
+    } catch (error) {
+      console.error("Erro ao salvar despesa:", error);
+      alert("Erro ao salvar despesa. Verifique o console para mais detalhes.");
     }
-
-    setModalOpen(false);
-    setFormData({ title: "", category: "", amount: "", date: new Date() });
   };
 
   const handleInputChange = (field, value) => {

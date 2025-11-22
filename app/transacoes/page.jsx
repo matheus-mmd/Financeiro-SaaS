@@ -39,7 +39,7 @@ import Table from "../../src/components/Table";
 import TableActions from "../../src/components/TableActions";
 import DatePicker from "../../src/components/DatePicker";
 import ImportStatementDialog from "../../src/components/ImportStatementDialog";
-import { fetchMock, formatCurrency, formatDate } from "../../src/utils/mockApi";
+import { fetchData, formatCurrency, formatDate, createTransaction, updateTransaction, deleteTransaction } from "../../src/utils";
 import { exportToCSV } from "../../src/utils/exportData";
 import {
   ArrowUpRight,
@@ -90,8 +90,8 @@ export default function Transacoes() {
     const loadData = async () => {
       try {
         const [transactionsRes, transactionTypesRes] = await Promise.all([
-          fetchMock("/api/transactions"),
-          fetchMock("/api/transactionTypes"),
+          fetchData("/api/transactions"),
+          fetchData("/api/transactionTypes"),
         ]);
         setTransactions(transactionsRes.data);
         setFilteredTransactions(transactionsRes.data);
@@ -166,13 +166,23 @@ export default function Transacoes() {
     setDeleteDialogOpen(true);
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (transactionToDelete) {
-      setTransactions(
-        transactions.filter((t) => t.id !== transactionToDelete.id)
-      );
-      setDeleteDialogOpen(false);
-      setTransactionToDelete(null);
+      try {
+        // Deletar do Supabase
+        await deleteTransaction(transactionToDelete.id);
+
+        // Recarregar dados do Supabase
+        const response = await fetchData("/api/transactions");
+        setTransactions(response.data);
+        setFilteredTransactions(response.data);
+
+        setDeleteDialogOpen(false);
+        setTransactionToDelete(null);
+      } catch (error) {
+        console.error("Erro ao deletar transação:", error);
+        alert("Erro ao deletar transação. Verifique o console para mais detalhes.");
+      }
     }
   };
 
@@ -188,45 +198,59 @@ export default function Transacoes() {
     setBulkDeleteDialogOpen(false);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Aportes e débitos são negativos (saída), créditos são positivos (entrada)
-    let amount = parseFloat(formData.amount);
-    if (formData.type === "debit" || formData.type === "investment") {
-      amount = -Math.abs(amount);
-    } else {
-      amount = Math.abs(amount);
+    try {
+      // Aportes e débitos são negativos (saída), créditos são positivos (entrada)
+      let amount = parseFloat(formData.amount);
+      if (formData.type === "debit" || formData.type === "investment") {
+        amount = -Math.abs(amount);
+      } else {
+        amount = Math.abs(amount);
+      }
+
+      // Converter Date object para string YYYY-MM-DD
+      const dateString = formData.date.toISOString().split("T")[0];
+
+      // Mapear tipo interno para transaction_types_id
+      const typeMap = {
+        credit: 1,      // Crédito
+        debit: 2,       // Débito
+        investment: 3   // Aporte
+      };
+
+      const transactionData = {
+        transactionTypesid: typeMap[formData.type],
+        description: formData.description,
+        amount: amount,
+        date: dateString,
+      };
+
+      if (editingTransaction) {
+        // Atualizar transação existente no Supabase
+        await updateTransaction(editingTransaction.id, transactionData);
+      } else {
+        // Criar nova transação no Supabase
+        await createTransaction(transactionData);
+      }
+
+      // Recarregar dados do Supabase
+      const response = await fetchData("/api/transactions");
+      setTransactions(response.data);
+      setFilteredTransactions(response.data);
+
+      setModalOpen(false);
+      setFormData({
+        description: "",
+        amount: "",
+        type: "debit",
+        date: new Date(),
+      });
+    } catch (error) {
+      console.error("Erro ao salvar transação:", error);
+      alert("Erro ao salvar transação. Verifique o console para mais detalhes.");
     }
-
-    // Converter Date object para string YYYY-MM-DD
-    const dateString = formData.date.toISOString().split("T")[0];
-
-    const transactionData = {
-      id: editingTransaction?.id || Date.now(),
-      description: formData.description,
-      amount: amount,
-      type: formData.type,
-      date: dateString,
-    };
-
-    if (editingTransaction) {
-      setTransactions(
-        transactions.map((t) =>
-          t.id === editingTransaction.id ? transactionData : t
-        )
-      );
-    } else {
-      setTransactions([transactionData, ...transactions]);
-    }
-
-    setModalOpen(false);
-    setFormData({
-      description: "",
-      amount: "",
-      type: "debit",
-      date: new Date(),
-    });
   };
 
   const handleInputChange = (field, value) => {
@@ -257,29 +281,46 @@ export default function Transacoes() {
     exportToCSV(filteredTransactions, columns, "transacoes");
   };
 
-  const handleImport = (importedTransactions) => {
-    // Converter transações importadas para o formato correto
-    const newTransactions = importedTransactions.map((transaction) => {
-      let amount = transaction.amount;
+  const handleImport = async (importedTransactions) => {
+    try {
+      // Mapear tipo interno para transaction_types_id
+      const typeMap = {
+        credit: 1,      // Crédito
+        debit: 2,       // Débito
+        investment: 3   // Aporte
+      };
 
-      // Ajustar sinal baseado no tipo
-      if (transaction.type === "debit" || transaction.type === "investment") {
-        amount = -Math.abs(amount);
-      } else {
-        amount = Math.abs(amount);
+      // Salvar todas as transações no Supabase
+      for (const transaction of importedTransactions) {
+        let amount = transaction.amount;
+
+        // Ajustar sinal baseado no tipo
+        if (transaction.type === "debit" || transaction.type === "investment") {
+          amount = -Math.abs(amount);
+        } else {
+          amount = Math.abs(amount);
+        }
+
+        const transactionData = {
+          transactionTypesid: typeMap[transaction.type],
+          description: transaction.description,
+          amount: amount,
+          date: transaction.date,
+        };
+
+        await createTransaction(transactionData);
       }
 
-      return {
-        id: Date.now() + Math.random(), // ID único
-        description: transaction.description,
-        amount: amount,
-        type: transaction.type,
-        date: transaction.date,
-      };
-    });
+      // Recarregar dados do Supabase
+      const response = await fetchData("/api/transactions");
+      setTransactions(response.data);
+      setFilteredTransactions(response.data);
 
-    // Adicionar as novas transações no início da lista
-    setTransactions([...newTransactions, ...transactions]);
+      alert(`${importedTransactions.length} transações importadas com sucesso!`);
+    } catch (error) {
+      console.error("Erro ao importar transações:", error);
+      alert("Erro ao importar transações. Verifique o console para mais detalhes.");
+    }
   };
 
   // Mapeia ID de transaction type para nome interno usado no código

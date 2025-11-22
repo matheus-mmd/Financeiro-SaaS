@@ -21,7 +21,7 @@ import DatePicker from "../src/components/DatePicker";
 import Table from "../src/components/Table";
 import DoughnutChart from "../src/components/charts/DoughnutChart";
 import LineChart from "../src/components/charts/LineChart";
-import { fetchMock, formatCurrency, formatDate } from "../src/utils/mockApi";
+import { fetchData, formatCurrency, formatDate } from "../src/utils";
 import { Wallet, TrendingDown, ArrowUpRight, Target, PiggyBank, ArrowDownRight, TrendingUp } from "lucide-react";
 
 // Novos componentes de análise
@@ -81,13 +81,13 @@ export default function Dashboard() {
           targetsRes,
           assetsRes,
         ] = await Promise.all([
-          fetchMock("/api/expenses"),
-          fetchMock("/api/categories"),
-          fetchMock("/api/assetTypes"),
-          fetchMock("/api/transactionTypes"),
-          fetchMock("/api/transactions"),
-          fetchMock("/api/targets"),
-          fetchMock("/api/assets"),
+          fetchData("/api/expenses"),
+          fetchData("/api/categories"),
+          fetchData("/api/assetTypes"),
+          fetchData("/api/transactionTypes"),
+          fetchData("/api/transactions"),
+          fetchData("/api/targets"),
+          fetchData("/api/assets"),
         ]);
 
         setExpenses(expensesRes.data);
