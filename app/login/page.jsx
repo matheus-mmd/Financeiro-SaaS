@@ -14,8 +14,12 @@ import { Wallet, ArrowRight, Mail, Lock, User } from 'lucide-react';
  * Interface unificada para autenticação de usuários
  */
 export default function LoginPage() {
+  console.log('🟧 [LoginPage] ===== COMPONENTE RENDERIZOU =====');
+
   const router = useRouter();
   const { user, loading: authLoading, signIn, signUp } = useAuth();
+  console.log(`🟧 [LoginPage] useAuth retornou: authLoading=${authLoading}, user=${user?.email || 'null'}`);
+
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -26,12 +30,27 @@ export default function LoginPage() {
     confirmPassword: '',
   });
 
+  console.log(`🟧 [LoginPage] Estado local: isLogin=${isLogin}, loading=${loading}, error="${error}"`);
+
   // Redirecionar se já estiver autenticado
   useEffect(() => {
-    if (!authLoading && user) {
-      console.log('Login: Usuário autenticado, redirecionando para home');
+    const timestamp = new Date().toISOString();
+    console.log(`🟠 [${timestamp}] [LoginPage useEffect] ===== EXECUTANDO =====`);
+    console.log(`🟠 [LoginPage useEffect] authLoading: ${authLoading}`);
+    console.log(`🟠 [LoginPage useEffect] user: ${user?.email || 'null'}`);
+
+    const shouldRedirect = !authLoading && user;
+    console.log(`🟠 [LoginPage useEffect] shouldRedirect: ${shouldRedirect} (!authLoading=${!authLoading} && user=${!!user})`);
+
+    if (shouldRedirect) {
+      console.log('🔴 [LoginPage useEffect] ⚠️ USUÁRIO JÁ AUTENTICADO - REDIRECIONANDO PARA /');
       router.replace('/');
+      console.log('🔴 [LoginPage useEffect] router.replace("/") chamado');
+    } else {
+      console.log('✅ [LoginPage useEffect] Não precisa redirecionar (usuário não autenticado ou ainda carregando)');
     }
+
+    console.log(`🟠 [${timestamp}] [LoginPage useEffect] ===== FIM =====`);
   }, [user, authLoading, router]);
 
   const handleInputChange = (field, value) => {
@@ -70,49 +89,74 @@ export default function LoginPage() {
   };
 
   const handleSubmit = async (e) => {
+    console.log('🟢 [LoginPage handleSubmit] ===== INÍCIO =====');
     e.preventDefault();
+    console.log(`🟢 [LoginPage handleSubmit] isLogin: ${isLogin}`);
+    console.log(`🟢 [LoginPage handleSubmit] email: ${formData.email}`);
+
+    console.log('🟢 [LoginPage handleSubmit] Limpando erro anterior');
     setError('');
 
-    if (!validateForm()) return;
+    console.log('🟢 [LoginPage handleSubmit] Validando form...');
+    if (!validateForm()) {
+      console.log('❌ [LoginPage handleSubmit] Validação falhou, abortando');
+      return;
+    }
+    console.log('✅ [LoginPage handleSubmit] Validação OK');
 
+    console.log('🟢 [LoginPage handleSubmit] Setando loading=true');
     setLoading(true);
 
     try {
       if (isLogin) {
-        // Login
+        console.log('🟢 [LoginPage handleSubmit] Modo LOGIN - chamando signIn()...');
         const { error } = await signIn(formData.email, formData.password);
+        console.log('🟢 [LoginPage handleSubmit] signIn() retornou');
+        console.log(`🟢 [LoginPage handleSubmit] error: ${error?.message || 'null'}`);
+
         if (error) {
+          console.log('❌ [LoginPage handleSubmit] Erro no login, mostrando mensagem');
           if (error.message.includes('Invalid login credentials')) {
             setError('E-mail ou senha incorretos');
           } else {
             setError(error.message);
           }
+          console.log('🟢 [LoginPage handleSubmit] Setando loading=false');
           setLoading(false);
+          console.log('🟢 [LoginPage handleSubmit] ===== FIM (erro no login) =====');
           return;
         }
-        // Sucesso - redirecionamento será feito pelo useEffect
+        console.log('✅ [LoginPage handleSubmit] Login bem-sucedido! useEffect fará o redirect');
       } else {
-        // Cadastro
+        console.log('🟢 [LoginPage handleSubmit] Modo CADASTRO - chamando signUp()...');
         const { error } = await signUp(formData.email, formData.password, formData.name);
+        console.log('🟢 [LoginPage handleSubmit] signUp() retornou');
+        console.log(`🟢 [LoginPage handleSubmit] error: ${error?.message || 'null'}`);
+
         if (error) {
+          console.log('❌ [LoginPage handleSubmit] Erro no cadastro, mostrando mensagem');
           if (error.message.includes('already registered')) {
             setError('Este e-mail já está cadastrado');
           } else {
             setError(error.message);
           }
+          console.log('🟢 [LoginPage handleSubmit] Setando loading=false');
           setLoading(false);
+          console.log('🟢 [LoginPage handleSubmit] ===== FIM (erro no cadastro) =====');
           return;
         }
-        // Sucesso - mostrar mensagem e alternar para login
+        console.log('✅ [LoginPage handleSubmit] Cadastro bem-sucedido! Alternando para modo login');
         setError('');
         setIsLogin(true);
         setFormData({ name: '', email: '', password: '', confirmPassword: '' });
       }
     } catch (err) {
+      console.error('💥 [LoginPage handleSubmit] Exceção capturada:', err);
       setError('Ocorreu um erro inesperado. Tente novamente.');
-      console.error('Erro de autenticação:', err);
     } finally {
+      console.log('🟢 [LoginPage handleSubmit] Finally - setando loading=false');
       setLoading(false);
+      console.log('🟢 [LoginPage handleSubmit] ===== FIM =====');
     }
   };
 
@@ -123,12 +167,17 @@ export default function LoginPage() {
   };
 
   if (authLoading) {
+    console.log('⏳ [LoginPage] authLoading=true - MOSTRANDO SPINNER');
+    console.log('🟧 [LoginPage] ===== FIM (authLoading) =====');
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-brand-50 to-brand-100">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-brand-600"></div>
       </div>
     );
   }
+
+  console.log('✅ [LoginPage] RENDERIZANDO FORMULÁRIO DE LOGIN');
+  console.log('🟧 [LoginPage] ===== FIM (renderizando form) =====');
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-brand-50 to-brand-100 p-4">
