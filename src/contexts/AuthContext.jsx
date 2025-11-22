@@ -42,9 +42,16 @@ export const AuthProvider = ({ children }) => {
     console.log('🟢 [AuthProvider] useState(profile) inicializado com null');
     return null;
   });
+
+  // CORREÇÃO DO LOOP INFINITO:
+  // Durante SSR (Server-Side Rendering), useEffect NÃO executa no servidor
+  // Portanto, se inicializarmos loading=true no servidor, ele nunca muda para false
+  // Solução: Inicializar loading=false no servidor, e true apenas no cliente
   const [loading, setLoading] = useState(() => {
-    console.log('🟢 [AuthProvider] useState(loading) inicializado com true');
-    return true;
+    const isServer = typeof window === 'undefined';
+    const initialLoading = isServer ? false : true;
+    console.log(`🟢 [AuthProvider] useState(loading) inicializado com ${initialLoading} (isServer=${isServer})`);
+    return initialLoading;
   });
 
   console.log(`🔵 [AuthProvider] Estado atual: loading=${loading}, user=${user?.email || 'null'}, profile=${profile?.name || 'null'}`);
@@ -55,6 +62,14 @@ export const AuthProvider = ({ children }) => {
   // TESTE: useEffect simples para confirmar que effects executam
   useEffect(() => {
     console.log('🧪🧪🧪 [TESTE] useEffect SIMPLES executou! Effects funcionam!');
+  }, []);
+
+  // CORREÇÃO: Setar loading=true quando o componente montar no CLIENTE
+  // Isso garante que mesmo após a hidratação, loading será true até a auth ser verificada
+  useEffect(() => {
+    console.log('🟦 [AuthProvider MOUNT] useEffect de montagem executou no CLIENTE');
+    console.log('🟦 [AuthProvider MOUNT] Setando loading=true para iniciar verificação de autenticação');
+    setLoading(true);
   }, []);
 
   useEffect(() => {
