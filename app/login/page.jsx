@@ -21,8 +21,8 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [formData, setFormData] = useState({
     name: '',
-    email: '',
-    password: '',
+    email: 'matheus_meneses2011@hotmail.com', // TODO: Remover antes de produção
+    password: 'matheus_meneses2011@hotmail.com', // TODO: Remover antes de produção
     confirmPassword: '',
   });
 
@@ -104,7 +104,6 @@ export default function LoginPage() {
         }
         // Sucesso - mostrar mensagem e alternar para login
         setError('');
-        alert('Cadastro realizado com sucesso! Verifique seu e-mail para confirmar sua conta.');
         setIsLogin(true);
         setFormData({ name: '', email: '', password: '', confirmPassword: '' });
       }
