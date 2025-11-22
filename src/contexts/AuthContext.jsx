@@ -29,26 +29,38 @@ export const AuthProvider = ({ children }) => {
 
     // Função para carregar sessão inicial
     const initializeAuth = async () => {
+      console.log('[AuthContext] Iniciando verificação de sessão...');
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { session }, error } = await supabase.auth.getSession();
+        console.log('[AuthContext] Sessão obtida:', session?.user?.email || 'Nenhuma sessão');
+
+        if (error) {
+          console.error('[AuthContext] Erro ao obter sessão:', error);
+          throw error;
+        }
 
         if (mounted) {
           if (session?.user) {
+            console.log('[AuthContext] Usuário encontrado, setando user...');
             setUser(session.user);
+            console.log('[AuthContext] Carregando perfil do usuário...');
             await loadProfile(session.user.id);
+            console.log('[AuthContext] Perfil carregado com sucesso');
           } else {
+            console.log('[AuthContext] Nenhum usuário autenticado');
             setUser(null);
             setProfile(null);
           }
         }
       } catch (error) {
-        console.error('Erro ao verificar sessão:', error);
+        console.error('[AuthContext] Erro ao verificar sessão:', error);
         if (mounted) {
           setUser(null);
           setProfile(null);
         }
       } finally {
         if (mounted) {
+          console.log('[AuthContext] Finalizando inicialização - setando loading = false');
           setLoading(false);
           setInitializing(false);
         }
@@ -61,27 +73,30 @@ export const AuthProvider = ({ children }) => {
     // Escutar mudanças de autenticação (login/logout)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('Auth state changed:', event, session?.user?.email);
+        console.log('[AuthContext] Auth state changed:', event, session?.user?.email);
 
         if (mounted) {
           if (session?.user) {
+            console.log('[AuthContext] onAuthStateChange: Setando usuário...');
             setUser(session.user);
+            console.log('[AuthContext] onAuthStateChange: Carregando perfil...');
             await loadProfile(session.user.id);
+            console.log('[AuthContext] onAuthStateChange: Perfil carregado');
           } else {
+            console.log('[AuthContext] onAuthStateChange: Limpando usuário');
             setUser(null);
             setProfile(null);
           }
 
-          // Apenas marca como não inicializando se ainda estiver
-          if (initializing) {
-            setInitializing(false);
-          }
+          console.log('[AuthContext] onAuthStateChange: Setando loading = false');
+          setInitializing(false);
           setLoading(false);
         }
       }
     );
 
     return () => {
+      console.log('[AuthContext] Cleanup - desmontando componente');
       mounted = false;
       subscription?.unsubscribe();
     };
@@ -89,16 +104,23 @@ export const AuthProvider = ({ children }) => {
 
   const loadProfile = async (userId) => {
     try {
+      console.log('[AuthContext] loadProfile: Buscando perfil para userId:', userId);
       const { data, error } = await supabase
         .from('users')
         .select('*')
         .eq('id', userId)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.warn('[AuthContext] loadProfile: Erro ao buscar perfil (pode não existir):', error.message);
+        setProfile(null);
+        return;
+      }
+
+      console.log('[AuthContext] loadProfile: Perfil encontrado:', data);
       setProfile(data);
     } catch (error) {
-      console.error('Erro ao carregar perfil:', error);
+      console.error('[AuthContext] loadProfile: Erro inesperado:', error);
       // Não bloqueia se o perfil não existir
       setProfile(null);
     }
