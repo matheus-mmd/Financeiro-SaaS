@@ -31,6 +31,8 @@ export const useAuth = () => {
 
 export const AuthProvider = ({ children }) => {
   console.log('🔵 [AuthProvider] COMPONENTE RENDERIZOU');
+  console.log('🔵 [AuthProvider] Ambiente:', typeof window !== 'undefined' ? 'CLIENTE' : 'SERVIDOR');
+  console.log('🔵 [AuthProvider] window:', typeof window);
 
   const [user, setUser] = useState(() => {
     console.log('🟢 [AuthProvider] useState(user) inicializado com null');
@@ -47,9 +49,18 @@ export const AuthProvider = ({ children }) => {
 
   console.log(`🔵 [AuthProvider] Estado atual: loading=${loading}, user=${user?.email || 'null'}, profile=${profile?.name || 'null'}`);
   console.log('⚠️ [AuthProvider] PRESTES A DECLARAR useEffect...');
+  console.log('⚠️ [AuthProvider] children:', children ? 'PRESENTE' : 'AUSENTE');
+  console.log('⚠️ [AuthProvider] React.useEffect:', typeof useEffect);
+
+  // TESTE: useEffect simples para confirmar que effects executam
+  useEffect(() => {
+    console.log('🧪🧪🧪 [TESTE] useEffect SIMPLES executou! Effects funcionam!');
+  }, []);
 
   useEffect(() => {
-    console.log('🟡 [AuthContext useEffect] ===== EXECUTANDO - INÍCIO DO EFFECT =====');
+    console.log('🟡🟡🟡 [AuthContext useEffect] ===== EXECUTANDO - INÍCIO DO EFFECT =====');
+    console.log('🟡🟡🟡 [AuthContext useEffect] Este log DEVE aparecer se o useEffect está funcionando!');
+
     let mounted = true;
     let isInitialized = false;
 
@@ -292,7 +303,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const value = {
+  const value = React.useMemo(() => ({
     user,
     profile,
     loading,
@@ -300,7 +311,10 @@ export const AuthProvider = ({ children }) => {
     signUp,
     signOut,
     updateProfile,
-  };
+  }), [user, profile, loading]);
+
+  console.log('🎯 [AuthProvider] PRESTES A RETORNAR JSX - se você vê isso, o componente renderizou até o fim');
+  console.log('🎯 [AuthProvider] Agora o React deveria executar os useEffects...');
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
