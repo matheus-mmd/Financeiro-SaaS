@@ -23,12 +23,19 @@ export default function Layout({ children }) {
 
   // Redirecionar para login se não autenticado (exceto em rotas públicas)
   React.useEffect(() => {
+    // IMPORTANTE: Só redireciona se NÃO estiver carregando E não tiver usuário E não for rota pública
     if (!loading && !user && !isPublicRoute) {
+      console.log('Layout: Redirecionando para /login (sem usuário autenticado)');
       router.replace('/login');
     }
-  }, [user, loading, pathname, router]);
+  }, [user, loading, isPublicRoute, router]);
 
-  // Mostrar loading enquanto verifica autenticação
+  // Renderizar rotas públicas sem layout ANTES de verificar loading
+  if (isPublicRoute) {
+    return <>{children}</>;
+  }
+
+  // Mostrar loading enquanto verifica autenticação (APENAS para rotas protegidas)
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen bg-bg">
@@ -37,14 +44,14 @@ export default function Layout({ children }) {
     );
   }
 
-  // Renderizar rotas públicas sem layout
-  if (isPublicRoute) {
-    return <>{children}</>;
-  }
-
-  // Não renderizar nada se não estiver autenticado
+  // Se não está carregando e não tem usuário, não renderiza nada
+  // (o useEffect acima já disparou o redirect)
   if (!user) {
-    return null;
+    return (
+      <div className="flex items-center justify-center h-screen bg-bg">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-brand-600"></div>
+      </div>
+    );
   }
 
   const handleLogout = async () => {

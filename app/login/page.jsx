@@ -29,7 +29,8 @@ export default function LoginPage() {
   // Redirecionar se já estiver autenticado
   useEffect(() => {
     if (!authLoading && user) {
-      router.push('/');
+      console.log('Login: Usuário autenticado, redirecionando para home');
+      router.replace('/');
     }
   }, [user, authLoading, router]);
 

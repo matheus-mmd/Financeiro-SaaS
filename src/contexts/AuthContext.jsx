@@ -22,43 +22,70 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [initializing, setInitializing] = useState(true);
 
   useEffect(() => {
-    // Verificar sessão inicial
-    checkSession();
+    let mounted = true;
 
-    // Escutar mudanças de autenticação
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (session?.user) {
-          setUser(session.user);
-          await loadProfile(session.user.id);
-        } else {
+    // Função para carregar sessão inicial
+    const initializeAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+
+        if (mounted) {
+          if (session?.user) {
+            setUser(session.user);
+            await loadProfile(session.user.id);
+          } else {
+            setUser(null);
+            setProfile(null);
+          }
+        }
+      } catch (error) {
+        console.error('Erro ao verificar sessão:', error);
+        if (mounted) {
           setUser(null);
           setProfile(null);
         }
-        setLoading(false);
+      } finally {
+        if (mounted) {
+          setLoading(false);
+          setInitializing(false);
+        }
+      }
+    };
+
+    // Inicializar autenticação
+    initializeAuth();
+
+    // Escutar mudanças de autenticação (login/logout)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log('Auth state changed:', event, session?.user?.email);
+
+        if (mounted) {
+          if (session?.user) {
+            setUser(session.user);
+            await loadProfile(session.user.id);
+          } else {
+            setUser(null);
+            setProfile(null);
+          }
+
+          // Apenas marca como não inicializando se ainda estiver
+          if (initializing) {
+            setInitializing(false);
+          }
+          setLoading(false);
+        }
       }
     );
 
     return () => {
+      mounted = false;
       subscription?.unsubscribe();
     };
   }, []);
-
-  const checkSession = async () => {
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        setUser(session.user);
-        await loadProfile(session.user.id);
-      }
-    } catch (error) {
-      console.error('Erro ao verificar sessão:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const loadProfile = async (userId) => {
     try {
@@ -72,6 +99,8 @@ export const AuthProvider = ({ children }) => {
       setProfile(data);
     } catch (error) {
       console.error('Erro ao carregar perfil:', error);
+      // Não bloqueia se o perfil não existir
+      setProfile(null);
     }
   };
 
