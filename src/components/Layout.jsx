@@ -30,7 +30,7 @@ export default function Layout({ children }) {
       console.log('[Layout] Redirecionando para /login (sem usuário autenticado)');
       router.replace('/login');
     }
-  }, [user, loading, isPublicRoute, router]);
+  }, [user, loading, pathname, router]);
 
   // Renderizar rotas públicas sem layout ANTES de verificar loading
   if (isPublicRoute) {

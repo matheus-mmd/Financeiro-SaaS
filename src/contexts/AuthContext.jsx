@@ -42,9 +42,16 @@ export const AuthProvider = ({ children }) => {
     console.log('🟢 [AuthProvider] useState(profile) inicializado com null');
     return null;
   });
+
+  // CORREÇÃO DEFINITIVA DO LOOP INFINITO:
+  // Durante SSR, useEffect NÃO executa no servidor
+  // Se loading=true no servidor, ele NUNCA muda para false (loop infinito)
+  // Solução: Detectar servidor e inicializar loading=false no servidor, true no cliente
   const [loading, setLoading] = useState(() => {
-    console.log('🟢 [AuthProvider] useState(loading) inicializado com true');
-    return true;
+    const isServer = typeof window === 'undefined';
+    const initialValue = !isServer; // false no servidor, true no cliente
+    console.log(`🟢 [AuthProvider] useState(loading) inicializado com ${initialValue} (isServer=${isServer})`);
+    return initialValue;
   });
 
   console.log(`🔵 [AuthProvider] Estado atual: loading=${loading}, user=${user?.email || 'null'}, profile=${profile?.name || 'null'}`);
@@ -52,14 +59,10 @@ export const AuthProvider = ({ children }) => {
   console.log('⚠️ [AuthProvider] children:', children ? 'PRESENTE' : 'AUSENTE');
   console.log('⚠️ [AuthProvider] React.useEffect:', typeof useEffect);
 
-  // TESTE: useEffect simples para confirmar que effects executam
-  useEffect(() => {
-    console.log('🧪🧪🧪 [TESTE] useEffect SIMPLES executou! Effects funcionam!');
-  }, []);
-
   useEffect(() => {
     console.log('🟡🟡🟡 [AuthContext useEffect] ===== EXECUTANDO - INÍCIO DO EFFECT =====');
     console.log('🟡🟡🟡 [AuthContext useEffect] Este log DEVE aparecer se o useEffect está funcionando!');
+    console.log('🟡 [AuthContext useEffect] loading já é TRUE, iniciando verificação de autenticação...');
 
     let mounted = true;
     let isInitialized = false;
