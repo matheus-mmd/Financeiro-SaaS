@@ -29,10 +29,10 @@ import FinancialAlerts from "../src/components/dashboard/FinancialAlerts";
 import FinancialHealthScore from "../src/components/dashboard/FinancialHealthScore";
 import MonthlyComparison from "../src/components/dashboard/MonthlyComparison";
 import MonthEndProjection from "../src/components/dashboard/MonthEndProjection";
-import SavingsRateCard from "../src/components/dashboard/SavingsRateCard";
 import RunwayCard from "../src/components/dashboard/RunwayCard";
-import TopExpenses from "../src/components/dashboard/TopExpenses";
+import TopTransactions from "../src/components/dashboard/TopTransactions";
 import BudgetRule503020 from "../src/components/dashboard/BudgetRule503020";
+import CreditsVsDebitsChart from "../src/components/dashboard/CreditsVsDebitsChart";
 
 // Funções de análise
 import {
@@ -180,18 +180,6 @@ export default function Dashboard() {
     [currentMonthData, previousMonthData, projectionData, expensesByCategoryWithChange, categories]
   );
 
-  // Calcular taxa de poupança
-  const savings = currentMonthData.balance > 0 ? currentMonthData.balance + currentMonthData.investments : currentMonthData.investments;
-  const savingsRate = currentMonthData.credits > 0
-    ? (savings / currentMonthData.credits) * 100
-    : 0;
-
-  const savingsData = {
-    savings: savings,
-    credits: currentMonthData.credits,
-    savingsRate: savingsRate,
-  };
-
   // Calcular runway financeiro
   const runwayMonths = avgMonthlyExpenses > 0 ? totalAssets / avgMonthlyExpenses : 0;
   const runwayData = {
@@ -283,58 +271,6 @@ export default function Dashboard() {
   if (loading) {
     return <DashboardSkeleton />;
   }
-
-  // Calcular evolução do saldo
-  const calculateBalanceEvolution = () => {
-    const INITIAL_BALANCE = 12500;
-    const monthNames = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
-
-    const transactionsByMonth = {};
-    transactions.forEach((t) => {
-      const yearMonth = t.date.substring(0, 7);
-      if (!transactionsByMonth[yearMonth]) {
-        transactionsByMonth[yearMonth] = { credits: 0, debits: 0, investments: 0 };
-      }
-
-      if (t.type === "credit") {
-        transactionsByMonth[yearMonth].credits += t.amount;
-      } else if (t.type === "debit") {
-        transactionsByMonth[yearMonth].debits += Math.abs(t.amount);
-      } else if (t.type === "investment") {
-        transactionsByMonth[yearMonth].investments += t.amount;
-      }
-    });
-
-    let accumulatedBalance = INITIAL_BALANCE;
-    const evolution = [];
-
-    const sortedMonths = Object.keys(transactionsByMonth).sort();
-
-    sortedMonths.forEach((yearMonth) => {
-      const [year, month] = yearMonth.split("-");
-      const monthIndex = parseInt(month) - 1;
-      const monthData = transactionsByMonth[yearMonth];
-
-      const monthlyChange = monthData.credits - monthData.debits - monthData.investments;
-      accumulatedBalance += monthlyChange;
-
-      evolution.push({
-        date: monthNames[monthIndex],
-        value: Math.round(accumulatedBalance)
-      });
-    });
-
-    return evolution;
-  };
-
-  const calculatedBalanceEvolution = calculateBalanceEvolution();
-
-  const balanceGrowthPercentage = (() => {
-    if (calculatedBalanceEvolution.length < 2) return 0;
-    const firstValue = calculatedBalanceEvolution[0].value;
-    const lastValue = calculatedBalanceEvolution[calculatedBalanceEvolution.length - 1].value;
-    return ((lastValue - firstValue) / firstValue * 100).toFixed(1);
-  })();
 
   // Preparar dados para gráfico de despesas por categoria
   const expensesByCategory = expenses.reduce((acc, expense) => {
@@ -508,38 +444,20 @@ export default function Dashboard() {
         previous={previousMonthData}
       />
 
-      {/* NOVO: Métricas de poupança e runway */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <SavingsRateCard data={savingsData} />
+      {/* NOVO: Métricas de runway e regra 50/30/20 */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <RunwayCard data={runwayData} />
         <BudgetRule503020 data={budgetRule503020Data} />
       </div>
 
-      {/* Gráfico de Evolução do Saldo */}
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-2">
-            <h2 className="text-lg font-semibold text-gray-900">
-              Evolução do Saldo
-            </h2>
-            <div className="flex items-center gap-2 text-sm">
-              <span className="text-gray-500">Últimos {calculatedBalanceEvolution.length} meses</span>
-              <div className={`flex items-center gap-1 font-semibold ${balanceGrowthPercentage >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                <ArrowUpRight className="w-4 h-4" />
-                <span>{balanceGrowthPercentage >= 0 ? '+' : ''}{balanceGrowthPercentage}%</span>
-              </div>
-            </div>
-          </div>
-          <div className="h-[300px] sm:h-[350px]">
-            <LineChart data={calculatedBalanceEvolution} />
-          </div>
-        </CardContent>
-      </Card>
+      {/* NOVO: Gráfico Créditos vs Débitos */}
+      <CreditsVsDebitsChart transactions={transactions} />
 
-      {/* NOVO: Top 5 Maiores Gastos */}
-      <TopExpenses
-        expenses={expensesByCategoryWithChange}
-        totalExpenses={currentMonthData.expenses}
+      {/* NOVO: Top 5 Maiores Transações (Débitos/Créditos) */}
+      <TopTransactions
+        transactions={transactions}
+        categories={categories}
+        currentMonth={currentMonth}
       />
 
       {/* Listas de Despesas e Patrimônio */}
