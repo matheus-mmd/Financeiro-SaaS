@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useAuth } from "../../src/contexts/AuthContext";
 import PageHeader from "../../src/components/PageHeader";
 import StatsCard from "../../src/components/StatsCard";
 import DateRangePicker from "../../src/components/DateRangePicker";
@@ -54,6 +55,7 @@ import {
  * Permite visualizar, adicionar, editar e excluir despesas
  */
 export default function Despesas() {
+  const { user } = useAuth();
   const [expenses, setExpenses] = useState([]);
   const [filteredExpenses, setFilteredExpenses] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -215,7 +217,7 @@ export default function Despesas() {
         await updateExpense(editingExpense.id, expenseData);
       } else {
         // Criar nova despesa no Supabase
-        await createExpense(expenseData);
+        await createExpense(expenseData, user.id);
       }
 
       // Recarregar dados do Supabase

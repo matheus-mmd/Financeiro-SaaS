@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
+import { useAuth } from "../../src/contexts/AuthContext";
 import PageHeader from "../../src/components/PageHeader";
 import StatsCard from "../../src/components/StatsCard";
 import DateRangePicker from "../../src/components/DateRangePicker";
@@ -56,6 +57,7 @@ import {
  * Permite visualizar, filtrar, adicionar e gerenciar patrimônio e ativos
  */
 export default function PatrimonioAtivos() {
+  const { user } = useAuth();
   const [assets, setAssets] = useState([]);
   const [filteredAssets, setFilteredAssets] = useState([]);
   const [selectedAsset, setSelectedAsset] = useState(null);
@@ -237,7 +239,7 @@ export default function PatrimonioAtivos() {
         await updateAsset(editingAsset.id, assetData);
       } else {
         // Criar novo ativo no Supabase
-        await createAsset(assetData);
+        await createAsset(assetData, user.id);
       }
 
       // Recarregar dados do Supabase

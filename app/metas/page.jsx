@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
+import { useAuth } from "../../src/contexts/AuthContext";
 import PageHeader from "../../src/components/PageHeader";
 import StatsCard from "../../src/components/StatsCard";
 import DateRangePicker from "../../src/components/DateRangePicker";
@@ -56,6 +57,7 @@ import {
  * Permite visualizar, filtrar, adicionar e acompanhar progresso de metas
  */
 export default function Metas() {
+  const { user } = useAuth();
   const [targets, setTargets] = useState([]);
   const [filteredTargets, setFilteredTargets] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -214,7 +216,7 @@ export default function Metas() {
         await updateTarget(editingTarget.id, targetData);
       } else {
         // Criar nova meta no Supabase
-        await createTarget(targetData);
+        await createTarget(targetData, user.id);
       }
 
       // Recarregar dados do Supabase

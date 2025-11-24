@@ -145,11 +145,14 @@ export const fetchData = async (endpoint) => {
 // FUNÇÕES CRUD PARA EXPENSES
 // =====================================================
 
-export const createExpense = async (expense) => {
-  // Obter user_id do usuário autenticado
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user) {
+/**
+ * Cria uma nova despesa
+ * @param {Object} expense - Dados da despesa
+ * @param {string} userId - ID do usuário autenticado (obtido do AuthContext)
+ * @returns {Promise<Object>} Despesa criada
+ */
+export const createExpense = async (expense, userId) => {
+  if (!userId) {
     throw new Error('Usuário não autenticado');
   }
 
@@ -160,7 +163,7 @@ export const createExpense = async (expense) => {
       title: expense.title,
       amount: expense.amount,
       date: expense.date,
-      user_id: user.id,
+      user_id: userId,
     }])
     .select()
     .single();
@@ -200,11 +203,14 @@ export const deleteExpense = async (id) => {
 // FUNÇÕES CRUD PARA ASSETS
 // =====================================================
 
-export const createAsset = async (asset) => {
-  // Obter user_id do usuário autenticado
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user) {
+/**
+ * Cria um novo ativo
+ * @param {Object} asset - Dados do ativo
+ * @param {string} userId - ID do usuário autenticado (obtido do AuthContext)
+ * @returns {Promise<Object>} Ativo criado
+ */
+export const createAsset = async (asset, userId) => {
+  if (!userId) {
     throw new Error('Usuário não autenticado');
   }
 
@@ -217,7 +223,7 @@ export const createAsset = async (asset) => {
       yield: asset.yield || 0,
       currency: asset.currency || 'BRL',
       date: asset.date,
-      user_id: user.id,
+      user_id: userId,
     }])
     .select()
     .single();
@@ -259,11 +265,14 @@ export const deleteAsset = async (id) => {
 // FUNÇÕES CRUD PARA TARGETS
 // =====================================================
 
-export const createTarget = async (target) => {
-  // Obter user_id do usuário autenticado
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user) {
+/**
+ * Cria uma nova meta
+ * @param {Object} target - Dados da meta
+ * @param {string} userId - ID do usuário autenticado (obtido do AuthContext)
+ * @returns {Promise<Object>} Meta criada
+ */
+export const createTarget = async (target, userId) => {
+  if (!userId) {
     throw new Error('Usuário não autenticado');
   }
 
@@ -275,7 +284,7 @@ export const createTarget = async (target) => {
       progress: target.progress || 0,
       status: target.status || 'in_progress',
       date: target.date,
-      user_id: user.id,
+      user_id: userId,
     }])
     .select()
     .single();
@@ -316,11 +325,14 @@ export const deleteTarget = async (id) => {
 // FUNÇÕES CRUD PARA TRANSACTIONS
 // =====================================================
 
-export const createTransaction = async (transaction) => {
-  // Obter user_id do usuário autenticado
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user) {
+/**
+ * Cria uma nova transação
+ * @param {Object} transaction - Dados da transação
+ * @param {string} userId - ID do usuário autenticado (obtido do AuthContext)
+ * @returns {Promise<Object>} Transação criada
+ */
+export const createTransaction = async (transaction, userId) => {
+  if (!userId) {
     throw new Error('Usuário não autenticado');
   }
 
@@ -331,7 +343,7 @@ export const createTransaction = async (transaction) => {
       date: transaction.date,
       description: transaction.description,
       amount: transaction.amount,
-      user_id: user.id,
+      user_id: userId,
     }])
     .select()
     .single();

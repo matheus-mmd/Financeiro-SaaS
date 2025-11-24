@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
+import { useAuth } from "../../src/contexts/AuthContext";
 import PageHeader from "../../src/components/PageHeader";
 import StatsCard from "../../src/components/StatsCard";
 import DateRangePicker from "../../src/components/DateRangePicker";
@@ -57,6 +58,7 @@ import {
  * Permite visualizar, filtrar, adicionar e exportar transações
  */
 export default function Transacoes() {
+  const { user } = useAuth();
   const [transactions, setTransactions] = useState([]);
   const [transactionTypes, setTransactionTypes] = useState([]);
   const [filteredTransactions, setFilteredTransactions] = useState([]);
@@ -232,7 +234,7 @@ export default function Transacoes() {
         await updateTransaction(editingTransaction.id, transactionData);
       } else {
         // Criar nova transação no Supabase
-        await createTransaction(transactionData);
+        await createTransaction(transactionData, user.id);
       }
 
       // Recarregar dados do Supabase
@@ -308,7 +310,7 @@ export default function Transacoes() {
           date: transaction.date,
         };
 
-        await createTransaction(transactionData);
+        await createTransaction(transactionData, user.id);
       }
 
       // Recarregar dados do Supabase
