@@ -35,7 +35,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "../../src/components/ui/alert-dialog";
-import Spinner from "../../src/components/Spinner";
+import PageSkeleton from "../../src/components/PageSkeleton";
 import Table from "../../src/components/Table";
 import TableActions from "../../src/components/TableActions";
 import DatePicker from "../../src/components/DatePicker";
@@ -365,11 +365,7 @@ export default function Transacoes() {
   }, [filteredTransactions]);
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Spinner size="lg" />
-      </div>
-    );
+    return <PageSkeleton />;
   }
 
   // Função para buscar dados do tipo de transação pelo nome interno

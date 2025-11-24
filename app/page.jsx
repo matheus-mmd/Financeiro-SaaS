@@ -16,7 +16,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "../src/components/ui/dialog";
-import Spinner from "../src/components/Spinner";
+import DashboardSkeleton from "../src/components/DashboardSkeleton";
 import DatePicker from "../src/components/DatePicker";
 import Table from "../src/components/Table";
 import DoughnutChart from "../src/components/charts/DoughnutChart";
@@ -281,11 +281,7 @@ export default function Dashboard() {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Spinner size="lg" />
-      </div>
-    );
+    return <DashboardSkeleton />;
   }
 
   // Calcular evolução do saldo

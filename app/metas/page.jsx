@@ -34,7 +34,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "../../src/components/ui/alert-dialog";
-import Spinner from "../../src/components/Spinner";
+import PageSkeleton from "../../src/components/PageSkeleton";
 import Table from "../../src/components/Table";
 import TableActions from "../../src/components/TableActions";
 import ProgressBar from "../../src/components/ProgressBar";
@@ -313,11 +313,7 @@ export default function Metas() {
   }, [filteredTargets]);
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Spinner size="lg" />
-      </div>
-    );
+    return <PageSkeleton />;
   }
 
   // Configuração de colunas da tabela
