@@ -2,8 +2,8 @@
 
 import React, { useState, useMemo } from 'react';
 import { Card, CardContent } from '../ui/card';
-import { TrendingDown, TrendingUp, ArrowUp, ArrowDown } from 'lucide-react';
-import { formatCurrency } from '../../utils/supabaseApi';
+import { TrendingDown, TrendingUp } from 'lucide-react';
+import { formatCurrency } from '../../formatters';
 import { Button } from '../ui/button';
 
 /**

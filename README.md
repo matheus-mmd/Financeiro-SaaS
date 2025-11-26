@@ -5,12 +5,11 @@ SaaS completo de controle financeiro desenvolvido com **Next.js 14**, **React 18
 ## ✨ Funcionalidades
 
 ### 🔐 Autenticação
-- Login e cadastro integrados com Supabase Auth
+- Login e cadastro com sistema mock (desenvolvimento)
 - Proteção automática de rotas (redirecionamento para login)
 - Perfil de usuário com nome e preferências
 - Logout seguro com limpeza de sessão
-- Confirmação de e-mail opcional
-- Dados isolados por usuário (multi-tenant com RLS)
+- Persistência de sessão em localStorage
 
 ### 📊 Dashboard
 - Resumo mensal de receitas, despesas e saldo
@@ -78,11 +77,10 @@ SaaS completo de controle financeiro desenvolvido com **Next.js 14**, **React 18
 - **Recharts** - Biblioteca de gráficos interativos
 - **Lucide React** - Ícones modernos e customizáveis
 
-### Backend & Database
-- **Supabase** - Backend-as-a-Service (BaaS)
-- **PostgreSQL** - Banco de dados relacional
-- **Row Level Security (RLS)** - Segurança multi-tenant
-- **Supabase Realtime** - Atualizações em tempo real
+### Backend & Data
+- **Mock Data** - Sistema de dados simulados para desenvolvimento
+- **In-memory Database** - Estado gerenciado em memória durante sessão
+- **localStorage** - Persistência de sessão do usuário
 
 ### Dev & Build
 - **TypeScript Ready** - Preparado para migração

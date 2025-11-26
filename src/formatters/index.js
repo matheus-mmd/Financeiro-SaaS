@@ -1,5 +1,6 @@
 export * from './currency';
 export * from './date';
+export * from '../formatters';
 
 export const calculateProgress = (progress, goal) => {
   if (goal === 0) return 0;

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card, CardContent } from '../ui/card';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { formatCurrency } from '../../utils/supabaseApi';
+import { formatCurrency } from '../../formatters';
 
 /**
  * CreditsVsDebitsChart - Gráfico comparativo de Créditos vs Débitos
