@@ -1,5 +1,6 @@
 // Mock API - Simula chamadas de API retornando dados mock
 import mockData from '../data/mockData.json';
+export { formatCurrency } from '../formatters/currency';
 
 // Simula delay de rede
 const delay = (ms = 300) => new Promise(resolve => setTimeout(resolve, ms));
