@@ -10,8 +10,9 @@ import { Card, CardContent } from '../../src/components/ui/card';
 import { Wallet, ArrowRight, Mail, Lock, User } from 'lucide-react';
 
 /**
- * Página de Login e Cadastro
+ * Página de Login e Cadastro MOCK
  * Interface unificada para autenticação de usuários
+ * MODO DESENVOLVIMENTO: Aceita qualquer email/senha (mínimo 6 caracteres)
  */
 export default function LoginPage() {
   const router = useRouter();
@@ -84,11 +85,7 @@ export default function LoginPage() {
         const { error } = await signIn(formData.email, formData.password);
 
         if (error) {
-          if (error.message.includes('Invalid login credentials')) {
-            setError('E-mail ou senha incorretos');
-          } else {
-            setError(error.message);
-          }
+          setError(error.message);
           setLoading(false);
           return;
         }
@@ -96,11 +93,7 @@ export default function LoginPage() {
         const { error } = await signUp(formData.email, formData.password, formData.name);
 
         if (error) {
-          if (error.message.includes('already registered')) {
-            setError('Este e-mail já está cadastrado');
-          } else {
-            setError(error.message);
-          }
+          setError(error.message);
           setLoading(false);
           return;
         }
@@ -121,11 +114,6 @@ export default function LoginPage() {
     setError('');
     setFormData({ name: '', email: '', password: '', confirmPassword: '' });
   };
-
-  // CORREÇÃO DE HIDRATAÇÃO:
-  // Removido o check de authLoading para evitar mismatch servidor/cliente
-  // A página de login é pública e não precisa aguardar verificação de auth
-  // O useEffect acima já redireciona se o usuário estiver logado
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-brand-50 to-brand-100 p-4">

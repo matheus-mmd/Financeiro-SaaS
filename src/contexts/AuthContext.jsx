@@ -1,11 +1,12 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { supabase } from '../utils/supabase';
+import mockData from '../data/mockData.json';
 
 /**
- * Contexto de Autenticação
- * Gerencia o estado de autenticação do usuário em toda a aplicação
+ * Contexto de Autenticação MOCK
+ * Sistema de autenticação simulado para desenvolvimento/demonstração
+ * Não usa banco de dados real - todos os dados são salvos em localStorage
  */
 
 const AuthContext = createContext({});
@@ -19,93 +20,77 @@ export const useAuth = () => {
 };
 
 export const AuthProvider = ({ children }) => {
+  // Usuário mock do arquivo mockData.json
+  const mockUser = mockData.users[0];
+
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
-
-  // CORREÇÃO DE HIDRATAÇÃO:
-  // SEMPRE inicializar loading=true em AMBOS servidor e cliente
-  // Isso garante que o HTML renderizado seja idêntico (evita hydration mismatch)
-  // O useEffect (que só roda no cliente) mudará para false após verificar autenticação
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    let mounted = true;
-    let isInitialized = false;
-
-    try {
-      // Registrar listener ÚNICO que trata TANTO a sessão inicial QUANTO mudanças futuras
-      const { data: { subscription } } = supabase.auth.onAuthStateChange(
-        async (event, session) => {
-          // Prevenir execução se componente foi desmontado
-          if (!mounted) return;
-
-          try {
-            if (session?.user) {
-              setUser(session.user);
-              await loadProfile(session.user.id);
-            } else {
-              setUser(null);
-              setProfile(null);
-            }
-          } catch (error) {
-            console.error('[AuthContext] Erro ao processar estado de autenticação:', error);
-            // Mesmo com erro, limpar estados para evitar inconsistência
-            if (mounted) {
-              setUser(null);
-              setProfile(null);
-            }
-          } finally {
-            // Só setar loading = false na PRIMEIRA execução (sessão inicial)
-            if (!isInitialized && mounted) {
-              setLoading(false);
-              isInitialized = true;
-            }
-          }
+    // Simular carregamento inicial
+    const timer = setTimeout(() => {
+      // Verifica se há sessão salva no localStorage
+      const savedSession = localStorage.getItem('mock_auth_session');
+      if (savedSession) {
+        try {
+          const session = JSON.parse(savedSession);
+          setUser(session.user);
+          setProfile(session.profile);
+        } catch (error) {
+          console.error('[AuthContext] Erro ao carregar sessão:', error);
+          localStorage.removeItem('mock_auth_session');
         }
-      );
-
-      return () => {
-        mounted = false;
-        subscription?.unsubscribe();
-      };
-    } catch (error) {
-      console.error('[AuthContext] ERRO CRÍTICO ao registrar listener:', error);
-      // Fallback: setar loading=false para não travar a aplicação
-      setLoading(false);
-      return () => {};
-    }
-  }, []);
-
-  const loadProfile = async (userId) => {
-    try {
-      const { data, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('id', userId)
-        .single();
-
-      if (error) {
-        console.warn('[AuthContext] Erro ao buscar perfil:', error.message);
-        setProfile(null);
-        return;
       }
+      setLoading(false);
+    }, 500);
 
-      setProfile(data);
-    } catch (error) {
-      console.error('[AuthContext] Erro inesperado ao carregar perfil:', error);
-      setProfile(null);
-    }
-  };
+    return () => clearTimeout(timer);
+  }, []);
 
   const signIn = async (email, password) => {
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      // Simula delay de rede
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
-      if (error) throw error;
-      return { data, error: null };
+      // Validação básica mock - qualquer email/senha funciona
+      if (!email || !password) {
+        return {
+          data: null,
+          error: new Error('Email e senha são obrigatórios')
+        };
+      }
+
+      if (password.length < 6) {
+        return {
+          data: null,
+          error: new Error('A senha deve ter pelo menos 6 caracteres')
+        };
+      }
+
+      // Criar sessão mock
+      const mockSession = {
+        user: {
+          id: mockUser.id,
+          email: email,
+          created_at: mockUser.created_at,
+        },
+        profile: {
+          id: mockUser.id,
+          name: mockUser.name,
+          email: email,
+          currency: mockUser.currency,
+        }
+      };
+
+      // Salvar sessão no localStorage
+      localStorage.setItem('mock_auth_session', JSON.stringify(mockSession));
+
+      // Atualizar estado
+      setUser(mockSession.user);
+      setProfile(mockSession.profile);
+
+      return { data: mockSession, error: null };
     } catch (error) {
       console.error('[AuthContext] Erro ao fazer login:', error);
       return { data: null, error };
@@ -114,18 +99,47 @@ export const AuthProvider = ({ children }) => {
 
   const signUp = async (email, password, name) => {
     try {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            name: name,
-          },
-        },
-      });
+      // Simula delay de rede
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
-      if (error) throw error;
-      return { data, error: null };
+      // Validação básica
+      if (!email || !password || !name) {
+        return {
+          data: null,
+          error: new Error('Todos os campos são obrigatórios')
+        };
+      }
+
+      if (password.length < 6) {
+        return {
+          data: null,
+          error: new Error('A senha deve ter pelo menos 6 caracteres')
+        };
+      }
+
+      // Criar sessão mock
+      const mockSession = {
+        user: {
+          id: mockUser.id,
+          email: email,
+          created_at: new Date().toISOString(),
+        },
+        profile: {
+          id: mockUser.id,
+          name: name,
+          email: email,
+          currency: 'BRL',
+        }
+      };
+
+      // Salvar sessão no localStorage
+      localStorage.setItem('mock_auth_session', JSON.stringify(mockSession));
+
+      // Atualizar estado
+      setUser(mockSession.user);
+      setProfile(mockSession.profile);
+
+      return { data: mockSession, error: null };
     } catch (error) {
       console.error('[AuthContext] Erro ao criar conta:', error);
       return { data: null, error };
@@ -134,10 +148,14 @@ export const AuthProvider = ({ children }) => {
 
   const signOut = async () => {
     try {
+      // Simula delay
+      await new Promise(resolve => setTimeout(resolve, 300));
+
+      // Limpar sessão
+      localStorage.removeItem('mock_auth_session');
       setUser(null);
       setProfile(null);
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
+
       return { error: null };
     } catch (error) {
       console.error('[AuthContext] Erro ao fazer logout:', error);
@@ -149,16 +167,19 @@ export const AuthProvider = ({ children }) => {
     try {
       if (!user) throw new Error('Usuário não autenticado');
 
-      const { data, error } = await supabase
-        .from('users')
-        .update(updates)
-        .eq('id', user.id)
-        .select()
-        .single();
+      // Simula delay
+      await new Promise(resolve => setTimeout(resolve, 500));
 
-      if (error) throw error;
-      setProfile(data);
-      return { data, error: null };
+      // Atualizar perfil
+      const updatedProfile = { ...profile, ...updates };
+      setProfile(updatedProfile);
+
+      // Atualizar localStorage
+      const savedSession = JSON.parse(localStorage.getItem('mock_auth_session') || '{}');
+      savedSession.profile = updatedProfile;
+      localStorage.setItem('mock_auth_session', JSON.stringify(savedSession));
+
+      return { data: updatedProfile, error: null };
     } catch (error) {
       return { data: null, error };
     }
