@@ -122,13 +122,10 @@ export default function LoginPage() {
     setFormData({ name: '', email: '', password: '', confirmPassword: '' });
   };
 
-  if (authLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-brand-50 to-brand-100">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-brand-600"></div>
-      </div>
-    );
-  }
+  // CORREÇÃO DE HIDRATAÇÃO:
+  // Removido o check de authLoading para evitar mismatch servidor/cliente
+  // A página de login é pública e não precisa aguardar verificação de auth
+  // O useEffect acima já redireciona se o usuário estiver logado
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-brand-50 to-brand-100 p-4">

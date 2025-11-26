@@ -22,14 +22,11 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
 
-  // CORREÇÃO DEFINITIVA DO LOOP INFINITO:
-  // Durante SSR, useEffect NÃO executa no servidor
-  // Se loading=true no servidor, ele NUNCA muda para false (loop infinito)
-  // Solução: Detectar servidor e inicializar loading=false no servidor, true no cliente
-  const [loading, setLoading] = useState(() => {
-    const isServer = typeof window === 'undefined';
-    return !isServer; // false no servidor, true no cliente
-  });
+  // CORREÇÃO DE HIDRATAÇÃO:
+  // SEMPRE inicializar loading=true em AMBOS servidor e cliente
+  // Isso garante que o HTML renderizado seja idêntico (evita hydration mismatch)
+  // O useEffect (que só roda no cliente) mudará para false após verificar autenticação
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let mounted = true;
