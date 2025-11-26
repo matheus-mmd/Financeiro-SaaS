@@ -4,22 +4,16 @@ import mockData from '../data/mockData.json';
 // Simula delay de rede
 const delay = (ms = 300) => new Promise(resolve => setTimeout(resolve, ms));
 
-// Mapeamento de IDs de transactionTypes para nomes internos do sistema
-const transactionTypeMap = {
-  1: 'credit',
-  2: 'debit',
-  3: 'investment'
-};
-
 /**
  * Enriquece expenses com dados de category
  */
 const enrichExpenses = (expenses) => {
   return expenses.map(expense => {
-    const category = mockData.categories.find(c => c.id === expense.categoriesId);
+    const category = mockData.categories.find(c => c.id === expense.categories_id);
     return {
       ...expense,
-      category: category?.name || 'Desconhecido'
+      category: category?.name || 'Desconhecido',
+      category_color: category?.color || '#64748b'
     };
   });
 };
@@ -29,10 +23,11 @@ const enrichExpenses = (expenses) => {
  */
 const enrichAssets = (assets) => {
   return assets.map(asset => {
-    const assetType = mockData.assetTypes.find(t => t.id === asset.assetTypesid);
+    const assetType = mockData.assetTypes.find(t => t.id === asset.asset_types_id);
     return {
       ...asset,
-      type: assetType?.name || 'Desconhecido'
+      type: assetType?.name || 'Desconhecido',
+      type_color: assetType?.color || '#64748b'
     };
   });
 };
@@ -42,11 +37,12 @@ const enrichAssets = (assets) => {
  */
 const enrichTransactions = (transactions) => {
   return transactions.map(transaction => {
-    // Mapeia o ID para o nome interno do sistema (credit, debit, investment)
-    const typeInternal = transactionTypeMap[transaction.transactionTypesid];
+    const transactionType = mockData.transactionTypes.find(t => t.id === transaction.transaction_types_id);
     return {
       ...transaction,
-      type: typeInternal || 'desconhecido'
+      type: transactionType?.internal_name || 'desconhecido',
+      type_name: transactionType?.name || 'Desconhecido',
+      type_color: transactionType?.color || '#64748b'
     };
   });
 };
@@ -60,6 +56,7 @@ export const fetchMock = async (endpoint) => {
   await delay();
 
   const routes = {
+    '/api/users': mockData.users,
     '/api/expenses': enrichExpenses(mockData.expenses),
     '/api/assets': enrichAssets(mockData.assets),
     '/api/targets': mockData.targets,
