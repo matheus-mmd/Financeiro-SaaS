@@ -1,15 +1,12 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import { localStorageAdapter } from '../lib/storage/storageAdapter';
 import mockData from '../data/mockData.json';
 
-/**
- * Contexto de Autenticação MOCK
- * Sistema de autenticação simulado para desenvolvimento/demonstração
- * Não usa banco de dados real - todos os dados são salvos em localStorage
- */
-
 const AuthContext = createContext({});
+
+const SESSION_KEY = 'mock_auth_session';
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
@@ -20,27 +17,17 @@ export const useAuth = () => {
 };
 
 export const AuthProvider = ({ children }) => {
-  // Usuário mock do arquivo mockData.json
   const mockUser = mockData.users[0];
-
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Simular carregamento inicial
     const timer = setTimeout(() => {
-      // Verifica se há sessão salva no localStorage
-      const savedSession = localStorage.getItem('mock_auth_session');
+      const savedSession = localStorageAdapter.get(SESSION_KEY);
       if (savedSession) {
-        try {
-          const session = JSON.parse(savedSession);
-          setUser(session.user);
-          setProfile(session.profile);
-        } catch (error) {
-          console.error('[AuthContext] Erro ao carregar sessão:', error);
-          localStorage.removeItem('mock_auth_session');
-        }
+        setUser(savedSession.user);
+        setProfile(savedSession.profile);
       }
       setLoading(false);
     }, 500);
@@ -48,12 +35,10 @@ export const AuthProvider = ({ children }) => {
     return () => clearTimeout(timer);
   }, []);
 
-  const signIn = async (email, password) => {
+  const signIn = useCallback(async (email, password) => {
     try {
-      // Simula delay de rede
       await new Promise(resolve => setTimeout(resolve, 1000));
 
-      // Validação básica mock - qualquer email/senha funciona
       if (!email || !password) {
         return {
           data: null,
@@ -68,25 +53,21 @@ export const AuthProvider = ({ children }) => {
         };
       }
 
-      // Criar sessão mock
       const mockSession = {
         user: {
           id: mockUser.id,
-          email: email,
+          email,
           created_at: mockUser.created_at,
         },
         profile: {
           id: mockUser.id,
           name: mockUser.name,
-          email: email,
+          email,
           currency: mockUser.currency,
         }
       };
 
-      // Salvar sessão no localStorage
-      localStorage.setItem('mock_auth_session', JSON.stringify(mockSession));
-
-      // Atualizar estado
+      localStorageAdapter.set(SESSION_KEY, mockSession);
       setUser(mockSession.user);
       setProfile(mockSession.profile);
 
@@ -95,14 +76,12 @@ export const AuthProvider = ({ children }) => {
       console.error('[AuthContext] Erro ao fazer login:', error);
       return { data: null, error };
     }
-  };
+  }, [mockUser]);
 
-  const signUp = async (email, password, name) => {
+  const signUp = useCallback(async (email, password, name) => {
     try {
-      // Simula delay de rede
       await new Promise(resolve => setTimeout(resolve, 1000));
 
-      // Validação básica
       if (!email || !password || !name) {
         return {
           data: null,
@@ -117,25 +96,21 @@ export const AuthProvider = ({ children }) => {
         };
       }
 
-      // Criar sessão mock
       const mockSession = {
         user: {
           id: mockUser.id,
-          email: email,
+          email,
           created_at: new Date().toISOString(),
         },
         profile: {
           id: mockUser.id,
-          name: name,
-          email: email,
+          name,
+          email,
           currency: 'BRL',
         }
       };
 
-      // Salvar sessão no localStorage
-      localStorage.setItem('mock_auth_session', JSON.stringify(mockSession));
-
-      // Atualizar estado
+      localStorageAdapter.set(SESSION_KEY, mockSession);
       setUser(mockSession.user);
       setProfile(mockSession.profile);
 
@@ -144,48 +119,41 @@ export const AuthProvider = ({ children }) => {
       console.error('[AuthContext] Erro ao criar conta:', error);
       return { data: null, error };
     }
-  };
+  }, [mockUser]);
 
-  const signOut = async () => {
+  const signOut = useCallback(async () => {
     try {
-      // Simula delay
       await new Promise(resolve => setTimeout(resolve, 300));
-
-      // Limpar sessão
-      localStorage.removeItem('mock_auth_session');
+      localStorageAdapter.remove(SESSION_KEY);
       setUser(null);
       setProfile(null);
-
       return { error: null };
     } catch (error) {
       console.error('[AuthContext] Erro ao fazer logout:', error);
       return { error };
     }
-  };
+  }, []);
 
-  const updateProfile = async (updates) => {
+  const updateProfile = useCallback(async (updates) => {
     try {
       if (!user) throw new Error('Usuário não autenticado');
 
-      // Simula delay
       await new Promise(resolve => setTimeout(resolve, 500));
 
-      // Atualizar perfil
       const updatedProfile = { ...profile, ...updates };
       setProfile(updatedProfile);
 
-      // Atualizar localStorage
-      const savedSession = JSON.parse(localStorage.getItem('mock_auth_session') || '{}');
+      const savedSession = localStorageAdapter.get(SESSION_KEY) || {};
       savedSession.profile = updatedProfile;
-      localStorage.setItem('mock_auth_session', JSON.stringify(savedSession));
+      localStorageAdapter.set(SESSION_KEY, savedSession);
 
       return { data: updatedProfile, error: null };
     } catch (error) {
       return { data: null, error };
     }
-  };
+  }, [user, profile]);
 
-  const value = React.useMemo(() => ({
+  const value = {
     user,
     profile,
     loading,
@@ -193,7 +161,7 @@ export const AuthProvider = ({ children }) => {
     signUp,
     signOut,
     updateProfile,
-  }), [user, profile, loading]);
+  };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

@@ -5,6 +5,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import Sidebar from './Sidebar';
 import Topbar from './Topbar';
 import { useAuth } from '../contexts/AuthContext';
+import { ErrorBoundary } from './ErrorBoundary';
 
 /**
  * Componente Layout - Layout principal da aplicação
@@ -85,7 +86,9 @@ export default function Layout({ children }) {
 
         <main className="flex-1 overflow-y-auto p-6">
           <div className="max-w-7xl mx-auto">
-            {children}
+            <ErrorBoundary>
+              {children}
+            </ErrorBoundary>
           </div>
         </main>
       </div>
