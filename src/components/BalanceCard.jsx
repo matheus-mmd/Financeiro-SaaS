@@ -1,6 +1,6 @@
 import React from "react";
 import { Card, CardContent } from "./ui/card";
-import { formatCurrency } from "../utils/mockApi";
+import { formatCurrency } from "../utils";
 import { TrendingUp, TrendingDown } from "lucide-react";
 
 /**

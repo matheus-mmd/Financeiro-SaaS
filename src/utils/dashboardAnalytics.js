@@ -2,15 +2,11 @@
  * Funções de análise financeira para o Dashboard
  */
 
-/**
- * Calcula o mês anterior baseado no mês atual
- */
-export const getPreviousMonth = (currentMonth) => {
-  const [year, month] = currentMonth.split('-').map(Number);
-  const prevMonth = month === 1 ? 12 : month - 1;
-  const prevYear = month === 1 ? year - 1 : year;
-  return `${prevYear}-${String(prevMonth).padStart(2, '0')}`;
-};
+// Importar getPreviousMonth de formatters/date (função única)
+import { getPreviousMonth } from '../formatters/date';
+
+// Re-exportar para manter compatibilidade
+export { getPreviousMonth };
 
 /**
  * Calcula dados financeiros de um mês específico

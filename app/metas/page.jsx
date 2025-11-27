@@ -162,10 +162,10 @@ export default function Metas() {
   const confirmDelete = async () => {
     if (targetToDelete) {
       try {
-        // Deletar do Supabase
+        // Deletar usando mock API
         await deleteTarget(targetToDelete.id);
 
-        // Recarregar dados do Supabase
+        // Recarregar dados da mock API
         const response = await fetchData("/api/targets");
         const targetsWithDate = response.data.map((target) => ({
           ...target,
@@ -212,14 +212,14 @@ export default function Metas() {
       };
 
       if (editingTarget) {
-        // Atualizar meta existente no Supabase
+        // Atualizar meta existente
         await updateTarget(editingTarget.id, targetData);
       } else {
-        // Criar nova meta no Supabase
+        // Criar nova meta
         await createTarget(targetData, user.id);
       }
 
-      // Recarregar dados do Supabase
+      // Recarregar dados da mock API
       const response = await fetchData("/api/targets");
       const targetsWithDate = response.data.map((target) => ({
         ...target,

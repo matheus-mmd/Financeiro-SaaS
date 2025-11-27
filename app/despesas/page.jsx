@@ -168,10 +168,10 @@ export default function Despesas() {
   const confirmDelete = async () => {
     if (expenseToDelete) {
       try {
-        // Deletar do Supabase
+        // Deletar usando mock API
         await deleteExpense(expenseToDelete.id);
 
-        // Recarregar dados do Supabase
+        // Recarregar dados da mock API
         const response = await fetchData("/api/expenses");
         setExpenses(response.data);
         setFilteredExpenses(response.data);
@@ -213,14 +213,14 @@ export default function Despesas() {
       };
 
       if (editingExpense) {
-        // Atualizar despesa existente no Supabase
+        // Atualizar despesa existente
         await updateExpense(editingExpense.id, expenseData);
       } else {
-        // Criar nova despesa no Supabase
+        // Criar nova despesa
         await createExpense(expenseData, user.id);
       }
 
-      // Recarregar dados do Supabase
+      // Recarregar dados da mock API
       const response = await fetchData("/api/expenses");
       setExpenses(response.data);
       setFilteredExpenses(response.data);

@@ -354,42 +354,49 @@ export default function Dashboard() {
     return <DashboardSkeleton />;
   }
 
+  // OTIMIZAÇÃO: Memoizar cálculos pesados para evitar recálculo em cada render
   // Preparar dados para gráfico de despesas por categoria
-  const expensesByCategory = expenses.reduce((acc, expense) => {
-    const existing = acc.find((item) => item.name === expense.category);
-    if (existing) {
-      existing.value += expense.amount;
-    } else {
-      const category = categories.find(
-        (c) =>
-          c.name === expense.category || c.id === expense.category.toLowerCase()
-      );
-      acc.push({
-        name: expense.category,
-        value: expense.amount,
-        color: category?.color || "#64748b",
-      });
-    }
-    return acc;
-  }, []);
+  const expensesByCategory = useMemo(() =>
+    expenses.reduce((acc, expense) => {
+      const existing = acc.find((item) => item.name === expense.category);
+      if (existing) {
+        existing.value += expense.amount;
+      } else {
+        const category = categories.find(
+          (c) =>
+            c.name === expense.category || c.id === expense.category.toLowerCase()
+        );
+        acc.push({
+          name: expense.category,
+          value: expense.amount,
+          color: category?.color || "#64748b",
+        });
+      }
+      return acc;
+    }, []),
+  [expenses, categories]);
 
-  const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
+  const totalExpenses = useMemo(() =>
+    expenses.reduce((sum, e) => sum + e.amount, 0),
+  [expenses]);
 
   // Agrupar patrimônio e ativos por tipo
-  const assetsByType = assets.reduce((acc, asset) => {
-    const existing = acc.find((item) => item.name === asset.type);
-    if (existing) {
-      existing.value += asset.value;
-    } else {
-      const assetType = assetTypes.find((t) => t.name === asset.type);
-      acc.push({
-        name: asset.type,
-        value: asset.value,
-        color: assetType?.color || "#64748b",
-      });
-    }
-    return acc;
-  }, []);
+  const assetsByType = useMemo(() =>
+    assets.reduce((acc, asset) => {
+      const existing = acc.find((item) => item.name === asset.type);
+      if (existing) {
+        existing.value += asset.value;
+      } else {
+        const assetType = assetTypes.find((t) => t.name === asset.type);
+        acc.push({
+          name: asset.type,
+          value: asset.value,
+          color: assetType?.color || "#64748b",
+        });
+      }
+      return acc;
+    }, []),
+  [assets, assetTypes]);
 
   const totalInvestmentsValue = assets.reduce((sum, a) => sum + a.value, 0);
 

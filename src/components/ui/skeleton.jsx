@@ -1,4 +1,4 @@
-import { cn } from "../../utils/cn";
+import { cn } from "@/lib/utils";
 
 /**
  * Componente Skeleton - Placeholder animado para loading

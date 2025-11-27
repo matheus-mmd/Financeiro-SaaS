@@ -184,10 +184,10 @@ export default function PatrimonioAtivos() {
   const confirmDelete = async () => {
     if (assetToDelete) {
       try {
-        // Deletar do Supabase
+        // Deletar usando mock API
         await deleteAsset(assetToDelete.id);
 
-        // Recarregar dados do Supabase
+        // Recarregar dados da mock API
         const response = await fetchData("/api/assets");
         const assetsWithDate = response.data.map((asset) => ({
           ...asset,
@@ -235,14 +235,14 @@ export default function PatrimonioAtivos() {
       };
 
       if (editingAsset) {
-        // Atualizar ativo existente no Supabase
+        // Atualizar ativo existente
         await updateAsset(editingAsset.id, assetData);
       } else {
-        // Criar novo ativo no Supabase
+        // Criar novo ativo
         await createAsset(assetData, user.id);
       }
 
-      // Recarregar dados do Supabase
+      // Recarregar dados da mock API
       const response = await fetchData("/api/assets");
       const assetsWithDate = response.data.map((asset) => ({
         ...asset,

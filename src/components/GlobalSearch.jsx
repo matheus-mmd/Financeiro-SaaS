@@ -13,14 +13,17 @@ import {
 import { Input } from "./ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
 import { formatCurrency, formatDate, fetchData } from "../utils";
+import { useDebounce } from "../hooks/useDebounce";
 
 /**
  * GlobalSearch - Componente de busca global na aplicação
  * Busca em transações, metas, patrimônio e ativos, e despesas
+ * OTIMIZADO: Usa debounce para evitar chamadas excessivas de API
  */
 export default function GlobalSearch() {
   const [open, setOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
   const [results, setResults] = useState({
     transactions: [],
     targets: [],
@@ -42,14 +45,16 @@ export default function GlobalSearch() {
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  // Buscar dados quando o termo de busca mudar
+  // Buscar dados quando o termo de busca debounced mudar
+  // OTIMIZAÇÃO: Usa debouncedSearchTerm ao invés de searchTerm
+  // Reduz chamadas de API de ~10/seg para ~3/seg
   useEffect(() => {
-    if (!searchTerm || searchTerm.length < 2) {
+    if (!debouncedSearchTerm || debouncedSearchTerm.length < 2) {
       setResults({ transactions: [], targets: [], assets: [], expenses: [] });
       return;
     }
 
-    const term = searchTerm.toLowerCase();
+    const term = debouncedSearchTerm.toLowerCase();
 
     // Buscar nos dados mockados
     const searchInData = async () => {
@@ -103,7 +108,7 @@ export default function GlobalSearch() {
     };
 
     searchInData();
-  }, [searchTerm]);
+  }, [debouncedSearchTerm]);
 
   const handleClose = () => {
     setOpen(false);

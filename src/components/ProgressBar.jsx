@@ -1,6 +1,6 @@
 import React from 'react';
 import { Progress } from './ui/progress';
-import { cn } from '../utils/index';
+import { cn } from '@/lib/utils';
 
 /**
  * Componente ProgressBar - Barra de progresso para metas

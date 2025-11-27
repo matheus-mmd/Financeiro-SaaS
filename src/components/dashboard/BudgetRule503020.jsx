@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { Card, CardContent } from '../ui/card';
-import { PieChart, CheckCircle, AlertCircle } from 'lucide-react';
-import { formatCurrency } from '../../utils/mockApi';
+import React from "react";
+import { Card, CardContent } from "../ui/card";
+import { PieChart, CheckCircle, AlertCircle } from "lucide-react";
+import { formatCurrency } from "../../utils";
 
 /**
  * BudgetRule503020 - Análise da regra 50/30/20
@@ -14,36 +14,36 @@ export default function BudgetRule503020({ data }) {
 
   const categories = [
     {
-      name: 'Essenciais',
+      name: "Essenciais",
       current: percentages.essentials,
       ideal: 50,
       amount: essentials,
-      color: 'bg-blue-500',
-      textColor: 'text-blue-600',
+      color: "bg-blue-500",
+      textColor: "text-blue-600",
     },
     {
-      name: 'Pessoais',
+      name: "Pessoais",
       current: percentages.personal,
       ideal: 30,
       amount: personal,
-      color: 'bg-purple-500',
-      textColor: 'text-purple-600',
+      color: "bg-purple-500",
+      textColor: "text-purple-600",
     },
     {
-      name: 'Poupança',
+      name: "Poupança",
       current: percentages.savings,
       ideal: 20,
       amount: savings,
-      color: 'bg-green-500',
-      textColor: 'text-green-600',
+      color: "bg-green-500",
+      textColor: "text-green-600",
     },
   ];
 
   const isOnTrack = (current, ideal) => {
     const diff = Math.abs(current - ideal);
-    if (diff <= 5) return 'perfect';
-    if (diff <= 10) return 'good';
-    return 'needs-improvement';
+    if (diff <= 5) return "perfect";
+    if (diff <= 10) return "good";
+    return "needs-improvement";
   };
 
   return (
@@ -90,12 +90,14 @@ export default function BudgetRule503020({ data }) {
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
                     <div className={`w-3 h-3 rounded-full ${cat.color}`} />
-                    <span className="font-medium text-gray-900">{cat.name}</span>
+                    <span className="font-medium text-gray-900">
+                      {cat.name}
+                    </span>
 
-                    {status === 'perfect' && (
+                    {status === "perfect" && (
                       <CheckCircle className="w-4 h-4 text-green-600" />
                     )}
-                    {status === 'needs-improvement' && (
+                    {status === "needs-improvement" && (
                       <AlertCircle className="w-4 h-4 text-orange-600" />
                     )}
                   </div>
@@ -120,7 +122,7 @@ export default function BudgetRule503020({ data }) {
                 </div>
 
                 {/* Feedback */}
-                {status === 'needs-improvement' && (
+                {status === "needs-improvement" && (
                   <p className="text-xs text-orange-700 mt-2">
                     {diff > 0
                       ? `🔴 ${Math.abs(diff).toFixed(1)}% acima do ideal`
@@ -145,7 +147,8 @@ export default function BudgetRule503020({ data }) {
         {/* Dica geral */}
         <div className="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-3">
           <p className="text-xs text-blue-800">
-            💡 Regra 50/30/20: 50% essenciais, 30% pessoais, 20% poupança/investimentos
+            💡 Regra 50/30/20: 50% essenciais, 30% pessoais, 20%
+            poupança/investimentos
           </p>
         </div>
       </CardContent>

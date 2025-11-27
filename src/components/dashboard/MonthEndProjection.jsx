@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { Card, CardContent } from '../ui/card';
-import { TrendingUp, Calendar, AlertCircle } from 'lucide-react';
-import { formatCurrency } from '../../utils/mockApi';
+import React from "react";
+import { Card, CardContent } from "../ui/card";
+import { TrendingUp, Calendar, AlertCircle } from "lucide-react";
+import { formatCurrency } from "../../utils";
 
 /**
  * MonthEndProjection - Projeção para fim do mês
@@ -18,18 +18,20 @@ export default function MonthEndProjection({ data }) {
     projectedBalance,
     daysRemaining,
     avgDailyExpense,
-    totalDaysInMonth
+    totalDaysInMonth,
   } = data;
 
   const isNegative = projectedBalance < 0;
   const isWarning = projectedBalance < 500 && projectedBalance >= 0;
 
   // Calcular quanto precisa economizar por dia para terminar no zero
-  const neededDailyReduction = isNegative && daysRemaining > 0
-    ? Math.abs(projectedBalance) / daysRemaining
-    : 0;
+  const neededDailyReduction =
+    isNegative && daysRemaining > 0
+      ? Math.abs(projectedBalance) / daysRemaining
+      : 0;
 
-  const progressPercentage = ((totalDaysInMonth - daysRemaining) / totalDaysInMonth) * 100;
+  const progressPercentage =
+    ((totalDaysInMonth - daysRemaining) / totalDaysInMonth) * 100;
 
   return (
     <Card>
@@ -60,37 +62,53 @@ export default function MonthEndProjection({ data }) {
         <div className="space-y-3">
           <div className="flex justify-between items-center text-sm">
             <span className="text-gray-600">Receitas confirmadas</span>
-            <span className="font-semibold text-green-600">{formatCurrency(credits)}</span>
+            <span className="font-semibold text-green-600">
+              {formatCurrency(credits)}
+            </span>
           </div>
 
           <div className="flex justify-between items-center text-sm">
             <span className="text-gray-600">Despesas até agora</span>
-            <span className="font-medium text-gray-900">{formatCurrency(currentExpenses)}</span>
+            <span className="font-medium text-gray-900">
+              {formatCurrency(currentExpenses)}
+            </span>
           </div>
 
           <div className="flex justify-between items-center text-sm border-t pt-2">
             <span className="text-gray-600">Despesas projetadas</span>
-            <span className="font-semibold text-orange-600">{formatCurrency(projectedExpenses)}</span>
+            <span className="font-semibold text-orange-600">
+              {formatCurrency(projectedExpenses)}
+            </span>
           </div>
 
           <div className="flex justify-between items-center text-sm">
             <span className="text-gray-600">Aportes</span>
-            <span className="font-medium text-blue-600">{formatCurrency(investments)}</span>
+            <span className="font-medium text-blue-600">
+              {formatCurrency(investments)}
+            </span>
           </div>
 
           {/* Saldo projetado */}
-          <div className={`p-4 rounded-lg border-2 ${
-            isNegative ? 'bg-red-50 border-red-200' :
-            isWarning ? 'bg-yellow-50 border-yellow-200' :
-            'bg-green-50 border-green-200'
-          }`}>
+          <div
+            className={`p-4 rounded-lg border-2 ${
+              isNegative
+                ? "bg-red-50 border-red-200"
+                : isWarning
+                ? "bg-yellow-50 border-yellow-200"
+                : "bg-green-50 border-green-200"
+            }`}
+          >
             <div className="flex justify-between items-center">
               <span className="font-medium text-gray-700">Saldo estimado</span>
-              <span className={`text-xl font-bold ${
-                isNegative ? 'text-red-600' :
-                isWarning ? 'text-yellow-600' :
-                'text-green-600'
-              }`}>
+              <span
+                className={`text-xl font-bold ${
+                  isNegative
+                    ? "text-red-600"
+                    : isWarning
+                    ? "text-yellow-600"
+                    : "text-green-600"
+                }`}
+              >
                 {formatCurrency(projectedBalance)}
               </span>
             </div>
@@ -104,7 +122,11 @@ export default function MonthEndProjection({ data }) {
                       💡 Para terminar no zero:
                     </p>
                     <p className="text-xs text-red-700 mt-1">
-                      Reduza <span className="font-semibold">{formatCurrency(neededDailyReduction)}/dia</span> nos próximos {daysRemaining} dias
+                      Reduza{" "}
+                      <span className="font-semibold">
+                        {formatCurrency(neededDailyReduction)}/dia
+                      </span>{" "}
+                      nos próximos {daysRemaining} dias
                     </p>
                   </div>
                 </div>

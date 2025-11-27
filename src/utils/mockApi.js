@@ -1,9 +1,8 @@
 // Mock API - Simula chamadas de API retornando dados mock
-import mockData from '../data/mockData.json';
-export { formatCurrency } from '../formatters/currency';
+import mockData from "../data/mockData.json";
 
 // Simula delay de rede
-const delay = (ms = 300) => new Promise(resolve => setTimeout(resolve, ms));
+const delay = (ms = 300) => new Promise((resolve) => setTimeout(resolve, ms));
 
 // Estado em memória para simular banco de dados
 let mockDatabase = {
@@ -35,13 +34,15 @@ export const resetMockDatabase = () => {
  * Enriquece expenses com dados de category
  */
 const enrichExpenses = (expenses) => {
-  return expenses.map(expense => {
-    const category = mockDatabase.categories.find(c => c.id === expense.categories_id);
+  return expenses.map((expense) => {
+    const category = mockDatabase.categories.find(
+      (c) => c.id === expense.categories_id
+    );
     return {
       ...expense,
       categoriesId: expense.categories_id, // Compatibilidade com código antigo
-      category: category?.name || 'Desconhecido',
-      category_color: category?.color || '#64748b'
+      category: category?.name || "Desconhecido",
+      category_color: category?.color || "#64748b",
     };
   });
 };
@@ -50,13 +51,15 @@ const enrichExpenses = (expenses) => {
  * Enriquece assets com dados de type
  */
 const enrichAssets = (assets) => {
-  return assets.map(asset => {
-    const assetType = mockDatabase.assetTypes.find(t => t.id === asset.asset_types_id);
+  return assets.map((asset) => {
+    const assetType = mockDatabase.assetTypes.find(
+      (t) => t.id === asset.asset_types_id
+    );
     return {
       ...asset,
       assetTypesid: asset.asset_types_id, // Compatibilidade com código antigo
-      type: assetType?.name || 'Desconhecido',
-      type_color: assetType?.color || '#64748b'
+      type: assetType?.name || "Desconhecido",
+      type_color: assetType?.color || "#64748b",
     };
   });
 };
@@ -65,18 +68,22 @@ const enrichAssets = (assets) => {
  * Enriquece transactions com dados de type e category
  */
 const enrichTransactions = (transactions) => {
-  return transactions.map(transaction => {
-    const transactionType = mockDatabase.transactionTypes.find(t => t.id === transaction.transaction_types_id);
-    const category = mockDatabase.categories.find(c => c.id === transaction.categories_id);
+  return transactions.map((transaction) => {
+    const transactionType = mockDatabase.transactionTypes.find(
+      (t) => t.id === transaction.transaction_types_id
+    );
+    const category = mockDatabase.categories.find(
+      (c) => c.id === transaction.categories_id
+    );
     return {
       ...transaction,
       transactionTypesid: transaction.transaction_types_id, // Compatibilidade com código antigo
       categoriesId: transaction.categories_id, // Compatibilidade com código antigo
-      type: transactionType?.internal_name || 'desconhecido',
-      type_name: transactionType?.name || 'Desconhecido',
-      type_color: transactionType?.color || '#64748b',
-      category: category?.name || 'Desconhecido',
-      category_color: category?.color || '#64748b'
+      type: transactionType?.internal_name || "desconhecido",
+      type_name: transactionType?.name || "Desconhecido",
+      type_color: transactionType?.color || "#64748b",
+      category: category?.name || "Desconhecido",
+      category_color: category?.color || "#64748b",
     };
   });
 };
@@ -90,14 +97,14 @@ export const fetchData = async (endpoint) => {
   await delay();
 
   const routes = {
-    '/api/users': mockDatabase.users,
-    '/api/expenses': enrichExpenses(mockDatabase.expenses),
-    '/api/assets': enrichAssets(mockDatabase.assets),
-    '/api/targets': mockDatabase.targets,
-    '/api/transactions': enrichTransactions(mockDatabase.transactions),
-    '/api/categories': mockDatabase.categories,
-    '/api/assetTypes': mockDatabase.assetTypes,
-    '/api/transactionTypes': mockDatabase.transactionTypes,
+    "/api/users": mockDatabase.users,
+    "/api/expenses": enrichExpenses(mockDatabase.expenses),
+    "/api/assets": enrichAssets(mockDatabase.assets),
+    "/api/targets": mockDatabase.targets,
+    "/api/transactions": enrichTransactions(mockDatabase.transactions),
+    "/api/categories": mockDatabase.categories,
+    "/api/assetTypes": mockDatabase.assetTypes,
+    "/api/transactionTypes": mockDatabase.transactionTypes,
   };
 
   if (routes[endpoint]) {
@@ -121,7 +128,7 @@ export const createExpense = async (expense, userId = null) => {
   await delay();
 
   const newExpense = {
-    id: Math.max(...mockDatabase.expenses.map(e => e.id), 0) + 1,
+    id: Math.max(...mockDatabase.expenses.map((e) => e.id), 0) + 1,
     user_id: userId || mockDatabase.users[0]?.id,
     categories_id: expense.categoriesId,
     title: expense.title,
@@ -138,9 +145,9 @@ export const createExpense = async (expense, userId = null) => {
 export const updateExpense = async (id, updates) => {
   await delay();
 
-  const index = mockDatabase.expenses.findIndex(e => e.id === id);
+  const index = mockDatabase.expenses.findIndex((e) => e.id === id);
   if (index === -1) {
-    throw new Error('Despesa não encontrada');
+    throw new Error("Despesa não encontrada");
   }
 
   mockDatabase.expenses[index] = {
@@ -158,9 +165,9 @@ export const updateExpense = async (id, updates) => {
 export const deleteExpense = async (id) => {
   await delay();
 
-  const index = mockDatabase.expenses.findIndex(e => e.id === id);
+  const index = mockDatabase.expenses.findIndex((e) => e.id === id);
   if (index === -1) {
-    throw new Error('Despesa não encontrada');
+    throw new Error("Despesa não encontrada");
   }
 
   mockDatabase.expenses.splice(index, 1);
@@ -175,13 +182,13 @@ export const createAsset = async (asset, userId = null) => {
   await delay();
 
   const newAsset = {
-    id: Math.max(...mockDatabase.assets.map(a => a.id), 0) + 1,
+    id: Math.max(...mockDatabase.assets.map((a) => a.id), 0) + 1,
     user_id: userId || mockDatabase.users[0]?.id,
     asset_types_id: asset.assetTypesid,
     name: asset.name,
     value: asset.value,
     yield: asset.yield || 0,
-    currency: asset.currency || 'BRL',
+    currency: asset.currency || "BRL",
     date: asset.date,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
@@ -194,9 +201,9 @@ export const createAsset = async (asset, userId = null) => {
 export const updateAsset = async (id, updates) => {
   await delay();
 
-  const index = mockDatabase.assets.findIndex(a => a.id === id);
+  const index = mockDatabase.assets.findIndex((a) => a.id === id);
   if (index === -1) {
-    throw new Error('Ativo não encontrado');
+    throw new Error("Ativo não encontrado");
   }
 
   mockDatabase.assets[index] = {
@@ -216,9 +223,9 @@ export const updateAsset = async (id, updates) => {
 export const deleteAsset = async (id) => {
   await delay();
 
-  const index = mockDatabase.assets.findIndex(a => a.id === id);
+  const index = mockDatabase.assets.findIndex((a) => a.id === id);
   if (index === -1) {
-    throw new Error('Ativo não encontrado');
+    throw new Error("Ativo não encontrado");
   }
 
   mockDatabase.assets.splice(index, 1);
@@ -233,12 +240,12 @@ export const createTarget = async (target, userId = null) => {
   await delay();
 
   const newTarget = {
-    id: Math.max(...mockDatabase.targets.map(t => t.id), 0) + 1,
+    id: Math.max(...mockDatabase.targets.map((t) => t.id), 0) + 1,
     user_id: userId || mockDatabase.users[0]?.id,
     title: target.title,
     goal: target.goal,
     progress: target.progress || 0,
-    status: target.status || 'in_progress',
+    status: target.status || "in_progress",
     date: target.date,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
@@ -251,9 +258,9 @@ export const createTarget = async (target, userId = null) => {
 export const updateTarget = async (id, updates) => {
   await delay();
 
-  const index = mockDatabase.targets.findIndex(t => t.id === id);
+  const index = mockDatabase.targets.findIndex((t) => t.id === id);
   if (index === -1) {
-    throw new Error('Meta não encontrada');
+    throw new Error("Meta não encontrada");
   }
 
   mockDatabase.targets[index] = {
@@ -272,9 +279,9 @@ export const updateTarget = async (id, updates) => {
 export const deleteTarget = async (id) => {
   await delay();
 
-  const index = mockDatabase.targets.findIndex(t => t.id === id);
+  const index = mockDatabase.targets.findIndex((t) => t.id === id);
   if (index === -1) {
-    throw new Error('Meta não encontrada');
+    throw new Error("Meta não encontrada");
   }
 
   mockDatabase.targets.splice(index, 1);
@@ -289,7 +296,7 @@ export const createTransaction = async (transaction, userId = null) => {
   await delay();
 
   const newTransaction = {
-    id: Math.max(...mockDatabase.transactions.map(t => t.id), 0) + 1,
+    id: Math.max(...mockDatabase.transactions.map((t) => t.id), 0) + 1,
     user_id: userId || mockDatabase.users[0]?.id,
     transaction_types_id: transaction.transactionTypesid,
     categories_id: transaction.categoriesId,
@@ -307,9 +314,9 @@ export const createTransaction = async (transaction, userId = null) => {
 export const updateTransaction = async (id, updates) => {
   await delay();
 
-  const index = mockDatabase.transactions.findIndex(t => t.id === id);
+  const index = mockDatabase.transactions.findIndex((t) => t.id === id);
   if (index === -1) {
-    throw new Error('Transação não encontrada');
+    throw new Error("Transação não encontrada");
   }
 
   mockDatabase.transactions[index] = {
@@ -328,9 +335,9 @@ export const updateTransaction = async (id, updates) => {
 export const deleteTransaction = async (id) => {
   await delay();
 
-  const index = mockDatabase.transactions.findIndex(t => t.id === id);
+  const index = mockDatabase.transactions.findIndex((t) => t.id === id);
   if (index === -1) {
-    throw new Error('Transação não encontrada');
+    throw new Error("Transação não encontrada");
   }
 
   mockDatabase.transactions.splice(index, 1);

@@ -20,7 +20,6 @@ import {
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -171,10 +170,10 @@ export default function Transacoes() {
   const confirmDelete = async () => {
     if (transactionToDelete) {
       try {
-        // Deletar do Supabase
+        // Deletar usando mock API
         await deleteTransaction(transactionToDelete.id);
 
-        // Recarregar dados do Supabase
+        // Recarregar dados da mock API
         const response = await fetchData("/api/transactions");
         setTransactions(response.data);
         setFilteredTransactions(response.data);
@@ -230,14 +229,14 @@ export default function Transacoes() {
       };
 
       if (editingTransaction) {
-        // Atualizar transação existente no Supabase
+        // Atualizar transação existente
         await updateTransaction(editingTransaction.id, transactionData);
       } else {
-        // Criar nova transação no Supabase
+        // Criar nova transação
         await createTransaction(transactionData, user.id);
       }
 
-      // Recarregar dados do Supabase
+      // Recarregar dados da mock API
       const response = await fetchData("/api/transactions");
       setTransactions(response.data);
       setFilteredTransactions(response.data);
@@ -292,7 +291,7 @@ export default function Transacoes() {
         investment: 3   // Aporte
       };
 
-      // Salvar todas as transações no Supabase
+      // Salvar todas as transações
       for (const transaction of importedTransactions) {
         let amount = transaction.amount;
 
@@ -313,7 +312,7 @@ export default function Transacoes() {
         await createTransaction(transactionData, user.id);
       }
 
-      // Recarregar dados do Supabase
+      // Recarregar dados da mock API
       const response = await fetchData("/api/transactions");
       setTransactions(response.data);
       setFilteredTransactions(response.data);
