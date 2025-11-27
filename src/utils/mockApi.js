@@ -62,17 +62,21 @@ const enrichAssets = (assets) => {
 };
 
 /**
- * Enriquece transactions com dados de type
+ * Enriquece transactions com dados de type e category
  */
 const enrichTransactions = (transactions) => {
   return transactions.map(transaction => {
     const transactionType = mockDatabase.transactionTypes.find(t => t.id === transaction.transaction_types_id);
+    const category = mockDatabase.categories.find(c => c.id === transaction.categories_id);
     return {
       ...transaction,
       transactionTypesid: transaction.transaction_types_id, // Compatibilidade com código antigo
+      categoriesId: transaction.categories_id, // Compatibilidade com código antigo
       type: transactionType?.internal_name || 'desconhecido',
       type_name: transactionType?.name || 'Desconhecido',
-      type_color: transactionType?.color || '#64748b'
+      type_color: transactionType?.color || '#64748b',
+      category: category?.name || 'Desconhecido',
+      category_color: category?.color || '#64748b'
     };
   });
 };
@@ -288,6 +292,7 @@ export const createTransaction = async (transaction, userId = null) => {
     id: Math.max(...mockDatabase.transactions.map(t => t.id), 0) + 1,
     user_id: userId || mockDatabase.users[0]?.id,
     transaction_types_id: transaction.transactionTypesid,
+    categories_id: transaction.categoriesId,
     date: transaction.date,
     description: transaction.description,
     amount: transaction.amount,
@@ -310,6 +315,7 @@ export const updateTransaction = async (id, updates) => {
   mockDatabase.transactions[index] = {
     ...mockDatabase.transactions[index],
     transaction_types_id: updates.transactionTypesid,
+    categories_id: updates.categoriesId,
     date: updates.date,
     description: updates.description,
     amount: updates.amount,

@@ -19,20 +19,16 @@ import {
 import DashboardSkeleton from "../src/components/DashboardSkeleton";
 import DatePicker from "../src/components/DatePicker";
 import Table from "../src/components/Table";
-import DoughnutChart from "../src/components/charts/DoughnutChart";
-import LineChart from "../src/components/charts/LineChart";
 import { fetchData, formatCurrency, formatDate } from "../src/utils";
 import { Wallet, TrendingDown, ArrowUpRight, Target, PiggyBank, ArrowDownRight, TrendingUp } from "lucide-react";
 
 // Novos componentes de análise
-import FinancialAlerts from "../src/components/dashboard/FinancialAlerts";
 import FinancialHealthScore from "../src/components/dashboard/FinancialHealthScore";
-import MonthlyComparison from "../src/components/dashboard/MonthlyComparison";
 import MonthEndProjection from "../src/components/dashboard/MonthEndProjection";
 import RunwayCard from "../src/components/dashboard/RunwayCard";
-import TopTransactions from "../src/components/dashboard/TopTransactions";
 import BudgetRule503020 from "../src/components/dashboard/BudgetRule503020";
-import CreditsVsDebitsChart from "../src/components/dashboard/CreditsVsDebitsChart";
+import CategoryBreakdownCard from "../src/components/dashboard/CategoryBreakdownCard";
+import IncomeVsExpensesChart from "../src/components/dashboard/IncomeVsExpensesChart";
 
 // Funções de análise
 import {
@@ -212,6 +208,92 @@ export default function Dashboard() {
     return sorted.slice(0, 10);
   }, [transactions, currentMonth]);
 
+  // Preparar dados para CategoryBreakdownCard - Receitas por Categoria
+  const incomeByCategory = useMemo(() => {
+    const currentMonthTransactions = transactions.filter(t =>
+      t.date.startsWith(currentMonth) && t.type === 'credit'
+    );
+
+    const grouped = currentMonthTransactions.reduce((acc, transaction) => {
+      const categoryName = transaction.category || 'Outros';
+      const existing = acc.find(item => item.name === categoryName);
+
+      if (existing) {
+        existing.value += Math.abs(transaction.amount);
+      } else {
+        const category = categories.find(c => c.name === categoryName || c.id === categoryName.toLowerCase());
+        acc.push({
+          name: categoryName,
+          value: Math.abs(transaction.amount),
+          color: category?.color || "#10b981",
+        });
+      }
+      return acc;
+    }, []);
+
+    return grouped;
+  }, [transactions, currentMonth, categories]);
+
+  // Preparar dados para CategoryBreakdownCard - Despesas por Categoria do mês atual
+  const currentMonthExpensesByCategory = useMemo(() => {
+    const monthExpenses = expenses.filter(e => e.date.startsWith(currentMonth));
+
+    const grouped = monthExpenses.reduce((acc, expense) => {
+      const existing = acc.find(item => item.name === expense.category);
+      if (existing) {
+        existing.value += expense.amount;
+      } else {
+        const category = categories.find(c =>
+          c.name === expense.category || c.id === expense.category.toLowerCase()
+        );
+        acc.push({
+          name: expense.category,
+          value: expense.amount,
+          color: category?.color || "#6366f1",
+        });
+      }
+      return acc;
+    }, []);
+
+    return grouped;
+  }, [expenses, currentMonth, categories]);
+
+  // Preparar dados para IncomeVsExpensesChart - Evolução ao longo do mês
+  const incomeVsExpensesData = useMemo(() => {
+    // Agrupar transações por dia do mês atual
+    const dailyData = {};
+
+    // Processar receitas
+    transactions
+      .filter(t => t.date.startsWith(currentMonth) && t.type === 'credit')
+      .forEach(t => {
+        const day = t.date.split('-')[2];
+        if (!dailyData[day]) {
+          dailyData[day] = { date: day, income: 0, expense: 0 };
+        }
+        dailyData[day].income += Math.abs(t.amount);
+      });
+
+    // Processar despesas
+    expenses
+      .filter(e => e.date.startsWith(currentMonth))
+      .forEach(e => {
+        const day = e.date.split('-')[2];
+        if (!dailyData[day]) {
+          dailyData[day] = { date: day, income: 0, expense: 0 };
+        }
+        dailyData[day].expense += e.amount;
+      });
+
+    // Converter para array e ordenar por dia
+    return Object.values(dailyData)
+      .sort((a, b) => parseInt(a.date) - parseInt(b.date))
+      .map(d => ({
+        ...d,
+        date: `${d.date}`,
+      }));
+  }, [transactions, expenses, currentMonth]);
+
   const handleEditTransaction = (transaction) => {
     setEditingTransaction(transaction);
     const [year, month, day] = transaction.date.split("-");
@@ -381,9 +463,6 @@ export default function Dashboard() {
         description="Visão geral inteligente do seu controle financeiro"
       />
 
-      {/* NOVO: Alertas Inteligentes */}
-      <FinancialAlerts alerts={alerts} />
-
       {/* NOVO: Linha superior com Score e Comparativo */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <FinancialHealthScore score={score} breakdown={breakdown} />
@@ -438,171 +517,23 @@ export default function Dashboard() {
         />
       </div>
 
-      {/* NOVO: Comparativo Mensal */}
-      <MonthlyComparison
-        current={currentMonthData}
-        previous={previousMonthData}
-      />
-
       {/* NOVO: Métricas de runway e regra 50/30/20 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <RunwayCard data={runwayData} />
         <BudgetRule503020 data={budgetRule503020Data} />
       </div>
 
-      {/* NOVO: Gráfico Créditos vs Débitos */}
-      <CreditsVsDebitsChart transactions={transactions} />
-
-      {/* NOVO: Top 5 Maiores Transações (Débitos/Créditos) */}
-      <TopTransactions
-        transactions={transactions}
-        categories={categories}
-        currentMonth={currentMonth}
+      {/* NOVO: Gráfico de Receitas x Despesas com métricas */}
+      <IncomeVsExpensesChart
+        data={incomeVsExpensesData}
+        period="PERÍODO ATUAL"
       />
 
-      {/* Listas de Despesas e Patrimônio */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Despesas por categoria com gráfico e lista */}
-        <Card>
-          <CardContent className="p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">
-              Despesas por Categoria
-            </h2>
-
-            <div className="h-[300px] mb-6">
-              <DoughnutChart
-                data={expensesByCategory}
-                showLegend={false}
-                externalActiveIndex={activeExpenseIndex}
-                onIndexChange={setActiveExpenseIndex}
-              />
-            </div>
-
-            <div className="space-y-3">
-              {expensesByCategory
-                .sort((a, b) => b.value - a.value)
-                .map((item, index) => {
-                  const category = categories.find(
-                    (c) =>
-                      c.name === item.name || c.id === item.name.toLowerCase()
-                  );
-                  const percentage = ((item.value / totalExpenses) * 100).toFixed(1);
-                  const isActive = activeExpenseIndex === index;
-
-                  return (
-                    <div
-                      key={item.name}
-                      className={`flex items-center justify-between p-3 rounded-lg transition-all duration-200 cursor-pointer ${
-                        isActive
-                          ? 'bg-gray-100 shadow-sm scale-105 ring-2 ring-gray-200'
-                          : 'bg-gray-50 hover:bg-gray-100 hover:shadow-sm'
-                      }`}
-                      onMouseEnter={() => setActiveExpenseIndex(index)}
-                      onMouseLeave={() => setActiveExpenseIndex(null)}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div
-                          className={`w-4 h-4 rounded-full transition-all duration-200 ${
-                            isActive ? 'shadow-md scale-125' : 'shadow-sm'
-                          }`}
-                          style={{
-                            backgroundColor: category?.color || "#64748b",
-                          }}
-                        />
-                        <span className={`font-medium transition-colors duration-200 ${
-                          isActive ? 'text-gray-900 font-semibold' : 'text-gray-900'
-                        }`}>
-                          {item.name}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-4">
-                        <span className={`text-sm font-semibold transition-all duration-200 ${
-                          isActive ? 'text-gray-900 scale-110' : 'text-gray-500'
-                        }`}>
-                          {percentage}%
-                        </span>
-                        <span className={`font-semibold text-red-600 transition-all duration-200 ${
-                          isActive ? 'scale-105' : ''
-                        }`}>
-                          {formatCurrency(item.value)}
-                        </span>
-                      </div>
-                    </div>
-                  );
-                })}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Patrimônio por tipo com gráfico e lista */}
-        <Card>
-          <CardContent className="p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">
-              Patrimônio por Tipo
-            </h2>
-
-            <div className="h-[300px] mb-6">
-              <DoughnutChart
-                data={assetsByType}
-                showLegend={false}
-                externalActiveIndex={activeInvestmentIndex}
-                onIndexChange={setActiveInvestmentIndex}
-              />
-            </div>
-
-            <div className="space-y-3">
-              {assetsByType
-                .sort((a, b) => b.value - a.value)
-                .map((item, index) => {
-                  const percentage = (
-                    (item.value / totalInvestmentsValue) *
-                    100
-                  ).toFixed(1);
-                  const isActive = activeInvestmentIndex === index;
-
-                  return (
-                    <div
-                      key={item.name}
-                      className={`flex items-center justify-between p-3 rounded-lg transition-all duration-200 cursor-pointer ${
-                        isActive
-                          ? 'bg-gray-100 shadow-sm scale-105 ring-2 ring-gray-200'
-                          : 'bg-gray-50 hover:bg-gray-100 hover:shadow-sm'
-                      }`}
-                      onMouseEnter={() => setActiveInvestmentIndex(index)}
-                      onMouseLeave={() => setActiveInvestmentIndex(null)}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div
-                          className={`w-4 h-4 rounded-full transition-all duration-200 ${
-                            isActive ? 'shadow-md scale-125' : 'shadow-sm'
-                          }`}
-                          style={{ backgroundColor: item.color }}
-                        />
-                        <span className={`font-medium transition-colors duration-200 ${
-                          isActive ? 'text-gray-900 font-semibold' : 'text-gray-900'
-                        }`}>
-                          {item.name}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-4">
-                        <span className={`text-sm font-semibold transition-all duration-200 ${
-                          isActive ? 'text-gray-900 scale-110' : 'text-gray-500'
-                        }`}>
-                          {percentage}%
-                        </span>
-                        <span className={`font-semibold text-green-600 transition-all duration-200 ${
-                          isActive ? 'scale-105' : ''
-                        }`}>
-                          {formatCurrency(item.value)}
-                        </span>
-                      </div>
-                    </div>
-                  );
-                })}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      {/* NOVO: Card de Categorias (Receitas/Despesas) */}
+      <CategoryBreakdownCard
+        incomeData={incomeByCategory}
+        expenseData={currentMonthExpensesByCategory}
+      />
 
       {/* Tabela de transações */}
       <Card>
