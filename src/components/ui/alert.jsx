@@ -1,3 +1,5 @@
+'use client';
+
 import * as React from "react"
 
 const Alert = React.forwardRef(({ className, variant = "default", ...props }, ref) => {
