@@ -12,6 +12,7 @@ import {
   BarChart3,
   User,
   X,
+  Tag,
 } from "lucide-react";
 
 /**
@@ -31,6 +32,7 @@ export default function Sidebar({
     { path: "/despesas", icon: Receipt, label: "Despesas" },
     { path: "/patrimonio-ativos", icon: TrendingUp, label: "Patrimônio e Ativos" },
     { path: "/metas", icon: Target, label: "Metas" },
+    { path: "/categorias", icon: Tag, label: "Categorias" },
   ];
 
   const isActive = (path) => pathname === path;

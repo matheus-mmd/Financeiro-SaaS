@@ -72,7 +72,7 @@ export default function Dashboard() {
           expensesRes,
           categoriesRes,
           assetTypesRes,
-          transactionTypesRes,
+          transactionCategoriesRes,
           transactionsRes,
           targetsRes,
           assetsRes,
@@ -80,7 +80,7 @@ export default function Dashboard() {
           fetchData("/api/expenses"),
           fetchData("/api/categories"),
           fetchData("/api/assetTypes"),
-          fetchData("/api/transactionTypes"),
+          fetchData("/api/transactionCategories"),
           fetchData("/api/transactions"),
           fetchData("/api/targets"),
           fetchData("/api/assets"),
@@ -89,7 +89,7 @@ export default function Dashboard() {
         setExpenses(expensesRes.data);
         setCategories(categoriesRes.data);
         setAssetTypes(assetTypesRes.data);
-        setTransactionTypes(transactionTypesRes.data);
+        setTransactionTypes(transactionCategoriesRes.data);
         setTransactions(transactionsRes.data);
         setTargets(
           targetsRes.data.filter((t) => t.status === "in_progress").slice(0, 2)
