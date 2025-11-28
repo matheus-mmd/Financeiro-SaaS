@@ -2,7 +2,7 @@
 
 import React from "react";
 import { Card, CardContent } from "../ui/card";
-import { PieChart, CheckCircle, AlertCircle } from "lucide-react";
+import { PieChart as PieChartIcon, CheckCircle, AlertCircle } from "lucide-react";
 import { formatCurrency } from "../../utils";
 
 /**
@@ -50,7 +50,7 @@ export default function BudgetRule503020({ data }) {
     <Card>
       <CardContent className="p-6">
         <div className="flex items-center gap-2 mb-4">
-          <PieChart className="w-5 h-5 text-gray-700" />
+          <PieChartIcon className="w-5 h-5 text-gray-700" />
           <h3 className="font-semibold text-gray-900">Regra 50/30/20</h3>
         </div>
 
@@ -110,7 +110,6 @@ export default function BudgetRule503020({ data }) {
                 <div className="flex items-center gap-2 text-sm">
                   <div className="flex-1 bg-gray-200 rounded-full h-2">
                     <div
-                      className={cat.color}
                       style={{ width: `${(cat.current / cat.ideal) * 100}%` }}
                       className={`h-2 rounded-full ${cat.color}`}
                     />

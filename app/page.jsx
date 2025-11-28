@@ -110,8 +110,15 @@ export default function Dashboard() {
   const previousMonth = getPreviousMonth(currentMonth);
 
   // Calcular dados dos meses atual e anterior
-  const currentMonthExpenses = expenses.filter((e) => e.date.startsWith(currentMonth));
-  const previousMonthExpenses = expenses.filter((e) => e.date.startsWith(previousMonth));
+  const currentMonthExpenses = useMemo(() =>
+    expenses.filter((e) => e.date.startsWith(currentMonth)),
+    [expenses, currentMonth]
+  );
+
+  const previousMonthExpenses = useMemo(() =>
+    expenses.filter((e) => e.date.startsWith(previousMonth)),
+    [expenses, previousMonth]
+  );
 
   const currentMonthData = useMemo(() =>
     calculateMonthData(transactions, currentMonthExpenses, currentMonth),
@@ -311,49 +318,6 @@ export default function Dashboard() {
     setFormData({ ...formData, [field]: value });
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-
-    let amount = parseFloat(formData.amount);
-    if (formData.type === "debit" || formData.type === "investment") {
-      amount = -Math.abs(amount);
-    } else {
-      amount = Math.abs(amount);
-    }
-
-    const dateString = formData.date.toISOString().split("T")[0];
-
-    const transactionData = {
-      id: editingTransaction?.id || Date.now(),
-      description: formData.description,
-      amount: amount,
-      type: formData.type,
-      date: dateString,
-    };
-
-    if (editingTransaction) {
-      setTransactions(
-        transactions.map((t) =>
-          t.id === editingTransaction.id ? transactionData : t
-        )
-      );
-    } else {
-      setTransactions([transactionData, ...transactions]);
-    }
-
-    setModalOpen(false);
-    setFormData({
-      description: "",
-      amount: "",
-      type: "debit",
-      date: new Date(),
-    });
-  };
-
-  if (loading) {
-    return <DashboardSkeleton />;
-  }
-
   // OTIMIZAÇÃO: Memoizar cálculos pesados para evitar recálculo em cada render
   // Preparar dados para gráfico de despesas por categoria
   const expensesByCategory = useMemo(() =>
@@ -399,6 +363,49 @@ export default function Dashboard() {
   [assets, assetTypes]);
 
   const totalInvestmentsValue = assets.reduce((sum, a) => sum + a.value, 0);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+
+    let amount = parseFloat(formData.amount);
+    if (formData.type === "debit" || formData.type === "investment") {
+      amount = -Math.abs(amount);
+    } else {
+      amount = Math.abs(amount);
+    }
+
+    const dateString = formData.date.toISOString().split("T")[0];
+
+    const transactionData = {
+      id: editingTransaction?.id || Date.now(),
+      description: formData.description,
+      amount: amount,
+      type: formData.type,
+      date: dateString,
+    };
+
+    if (editingTransaction) {
+      setTransactions(
+        transactions.map((t) =>
+          t.id === editingTransaction.id ? transactionData : t
+        )
+      );
+    } else {
+      setTransactions([transactionData, ...transactions]);
+    }
+
+    setModalOpen(false);
+    setFormData({
+      description: "",
+      amount: "",
+      type: "debit",
+      date: new Date(),
+    });
+  };
+
+  if (loading) {
+    return <DashboardSkeleton />;
+  }
 
   const getTransactionTypeByInternalName = (type) => {
     const typeMap = {
