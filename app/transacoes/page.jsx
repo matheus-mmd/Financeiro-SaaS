@@ -49,18 +49,20 @@ import {
 } from "lucide-react";
 
 /**
- * Página Transações - Gerenciamento de transações com categorias hierárquicas
- * Estrutura: Categoria (Receitas/Despesas/Aportes) > Subcategoria/Tipo
+ * Página Transações - Gerenciamento de transações
+ * Nova estrutura: Categoria (Salário, Moradia, etc.) + Tipo de Transação (Receita, Despesa, Aporte)
  */
 export default function Transacoes() {
   const { user } = useAuth();
   const [transactions, setTransactions] = useState([]);
-  const [transactionCategories, setTransactionCategories] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [transactionTypes, setTransactionTypes] = useState([]);
   const [filteredTransactions, setFilteredTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState(null);
   const [filterCategory, setFilterCategory] = useState("all");
+  const [filterTransactionType, setFilterTransactionType] = useState("all");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [transactionToDelete, setTransactionToDelete] = useState(null);
 
@@ -76,21 +78,34 @@ export default function Transacoes() {
   const [formData, setFormData] = useState({
     description: "",
     amount: "",
-    categoryId: 2, // Despesas por padrão
-    typeId: 14, // Outros por padrão
+    categoryId: null,
+    transactionTypeId: null,
     date: new Date(),
   });
 
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [transactionsRes, transactionCategoriesRes] = await Promise.all([
+        const [transactionsRes, categoriesRes, transactionTypesRes] = await Promise.all([
           fetchData("/api/transactions"),
-          fetchData("/api/transactionCategories"),
+          fetchData("/api/categories"),
+          fetchData("/api/transactionTypes"),
         ]);
         setTransactions(transactionsRes.data);
         setFilteredTransactions(transactionsRes.data);
-        setTransactionCategories(transactionCategoriesRes.data);
+        setCategories(categoriesRes.data);
+        setTransactionTypes(transactionTypesRes.data);
+
+        // Definir categoria e tipo padrão após carregar os dados
+        if (categoriesRes.data.length > 0 && transactionTypesRes.data.length > 0) {
+          const defaultCategory = categoriesRes.data[0];
+          const defaultType = transactionTypesRes.data[0];
+          setFormData(prev => ({
+            ...prev,
+            categoryId: defaultCategory.id,
+            transactionTypeId: defaultType.id,
+          }));
+        }
       } catch (error) {
         console.error("Erro ao carregar transações:", error);
       } finally {
@@ -106,7 +121,12 @@ export default function Transacoes() {
 
     // Filtrar por categoria
     if (filterCategory !== "all") {
-      filtered = filtered.filter((t) => t.category_internal_name === filterCategory);
+      filtered = filtered.filter((t) => t.category_id === parseInt(filterCategory));
+    }
+
+    // Filtrar por tipo de transação
+    if (filterTransactionType !== "all") {
+      filtered = filtered.filter((t) => t.type_internal_name === filterTransactionType);
     }
 
     // Filtrar por intervalo de datas
@@ -127,15 +147,17 @@ export default function Transacoes() {
     }
 
     setFilteredTransactions(filtered);
-  }, [filterCategory, filterMonth, transactions]);
+  }, [filterCategory, filterTransactionType, filterMonth, transactions]);
 
   const handleAddTransaction = () => {
     setEditingTransaction(null);
+    const defaultCategory = categories[0];
+    const defaultType = transactionTypes[0];
     setFormData({
       description: "",
       amount: "",
-      categoryId: 2, // Despesas por padrão
-      typeId: 14, // Outros por padrão
+      categoryId: defaultCategory?.id || null,
+      transactionTypeId: defaultType?.id || null,
       date: new Date(),
     });
     setModalOpen(true);
@@ -148,8 +170,8 @@ export default function Transacoes() {
     setFormData({
       description: transaction.description,
       amount: Math.abs(transaction.amount).toString(),
-      categoryId: transaction.transaction_category_id,
-      typeId: transaction.transaction_type_id,
+      categoryId: transaction.category_id,
+      transactionTypeId: transaction.transaction_type_id,
       date: dateObj,
     });
     setModalOpen(true);
@@ -180,12 +202,12 @@ export default function Transacoes() {
     e.preventDefault();
 
     try {
-      // Determinar o sinal do valor baseado na categoria
-      const category = transactionCategories.find(c => c.id === formData.categoryId);
+      // Determinar o sinal do valor baseado no tipo de transação
+      const transactionType = transactionTypes.find(t => t.id === formData.transactionTypeId);
       let amount = parseFloat(formData.amount);
 
       // Receitas são positivas, Despesas e Aportes são negativos
-      if (category?.internal_name === "income") {
+      if (transactionType?.internal_name === "income") {
         amount = Math.abs(amount);
       } else {
         amount = -Math.abs(amount);
@@ -194,8 +216,8 @@ export default function Transacoes() {
       const dateString = formData.date.toISOString().split("T")[0];
 
       const transactionData = {
-        transactionCategoryId: formData.categoryId,
-        transactionTypeId: formData.typeId,
+        categoryId: formData.categoryId,
+        transactionTypeId: formData.transactionTypeId,
         description: formData.description,
         amount: amount,
         date: dateString,
@@ -212,11 +234,13 @@ export default function Transacoes() {
       setFilteredTransactions(response.data);
 
       setModalOpen(false);
+      const defaultCategory = categories[0];
+      const defaultType = transactionTypes[0];
       setFormData({
         description: "",
         amount: "",
-        categoryId: 2,
-        typeId: 14,
+        categoryId: defaultCategory?.id || null,
+        transactionTypeId: defaultType?.id || null,
         date: new Date(),
       });
     } catch (error) {
@@ -229,34 +253,48 @@ export default function Transacoes() {
     setFormData({ ...formData, [field]: value });
   };
 
-  // Quando muda a categoria, resetar o tipo para o primeiro disponível
+  // Quando muda a categoria, verificar se o tipo de transação selecionado é válido
   const handleCategoryChange = (categoryId) => {
-    const category = transactionCategories.find(c => c.id === parseInt(categoryId));
-    const firstTypeId = category?.transactionTypes?.[0]?.id || 1;
+    const category = categories.find(c => c.id === parseInt(categoryId));
+    let newTypeId = formData.transactionTypeId;
+
+    // Se o tipo atual não está disponível para a nova categoria, selecionar o primeiro disponível
+    if (category && !category.transactionTypes?.includes(formData.transactionTypeId)) {
+      newTypeId = category.transactionTypes?.[0] || transactionTypes[0]?.id;
+    }
+
     setFormData({
       ...formData,
       categoryId: parseInt(categoryId),
-      typeId: firstTypeId,
+      transactionTypeId: newTypeId,
     });
   };
 
   // Obter tipos disponíveis para a categoria selecionada
   const getAvailableTypes = () => {
-    const category = transactionCategories.find(c => c.id === formData.categoryId);
-    return category?.transactionTypes || [];
+    const category = categories.find(c => c.id === formData.categoryId);
+    if (!category) return transactionTypes;
+
+    // Se a categoria não tem tipos especificados, retornar todos
+    if (!category.transactionTypes || category.transactionTypes.length === 0) {
+      return transactionTypes;
+    }
+
+    // Retornar apenas os tipos permitidos para esta categoria
+    return transactionTypes.filter(t => category.transactionTypes.includes(t.id));
   };
 
   // Calcular estatísticas baseadas nas transações filtradas
   const totalIncome = filteredTransactions
-    .filter((t) => t.category_internal_name === "income")
+    .filter((t) => t.type_internal_name === "income")
     .reduce((sum, t) => sum + t.amount, 0);
 
   const totalExpense = filteredTransactions
-    .filter((t) => t.category_internal_name === "expense")
+    .filter((t) => t.type_internal_name === "expense")
     .reduce((sum, t) => sum + Math.abs(t.amount), 0);
 
   const totalInvestment = filteredTransactions
-    .filter((t) => t.category_internal_name === "investment")
+    .filter((t) => t.type_internal_name === "investment")
     .reduce((sum, t) => sum + Math.abs(t.amount), 0);
 
   const balance = totalIncome - totalExpense - totalInvestment;
@@ -277,14 +315,14 @@ export default function Transacoes() {
     return <PageSkeleton />;
   }
 
-  // Ícone baseado na categoria
-  const getCategoryIcon = (categoryInternalName) => {
+  // Ícone baseado no tipo de transação
+  const getTypeIcon = (typeInternalName) => {
     const iconMap = {
       income: ArrowUpRight,
       expense: ArrowDownRight,
       investment: TrendingUp,
     };
-    return iconMap[categoryInternalName] || ArrowDownRight;
+    return iconMap[typeInternalName] || ArrowDownRight;
   };
 
   // Configuração de colunas da tabela
@@ -298,41 +336,41 @@ export default function Transacoes() {
       key: "category",
       label: "Categoria",
       sortable: true,
+      render: (row) => (
+        <Badge
+          variant="outline"
+          style={{
+            borderColor: row.category_color,
+            color: row.category_color,
+          }}
+        >
+          {row.category_name}
+        </Badge>
+      ),
+    },
+    {
+      key: "type",
+      label: "Tipo",
+      sortable: true,
       render: (row) => {
-        const Icon = getCategoryIcon(row.category_internal_name);
+        const Icon = getTypeIcon(row.type_internal_name);
         return (
           <div className="flex items-center gap-2">
             <Badge
               variant="default"
               style={{
-                backgroundColor: row.category_color,
+                backgroundColor: row.type_color,
                 color: "white",
               }}
             >
               <span className="flex items-center gap-1">
                 <Icon className="w-3 h-3" />
-                {row.category_name}
+                {row.type_name}
               </span>
             </Badge>
           </div>
         );
       },
-    },
-    {
-      key: "type",
-      label: "Subcategoria",
-      sortable: true,
-      render: (row) => (
-        <Badge
-          variant="outline"
-          style={{
-            borderColor: row.type_color,
-            color: row.type_color,
-          }}
-        >
-          {row.type_name}
-        </Badge>
-      ),
     },
     {
       key: "amount",
@@ -389,7 +427,7 @@ export default function Transacoes() {
               </span>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {/* Filtro por categoria */}
               <div className="space-y-2">
                 <Label htmlFor="filter-category" className="text-sm font-medium text-gray-700">
@@ -401,9 +439,29 @@ export default function Transacoes() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Todas as categorias</SelectItem>
-                    {transactionCategories.map((category) => (
-                      <SelectItem key={category.id} value={category.internal_name}>
+                    {categories.map((category) => (
+                      <SelectItem key={category.id} value={category.id.toString()}>
                         {category.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Filtro por tipo de transação */}
+              <div className="space-y-2">
+                <Label htmlFor="filter-type" className="text-sm font-medium text-gray-700">
+                  Tipo
+                </Label>
+                <Select value={filterTransactionType} onValueChange={setFilterTransactionType}>
+                  <SelectTrigger id="filter-type">
+                    <SelectValue placeholder="Selecione o tipo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos os tipos</SelectItem>
+                    {transactionTypes.map((type) => (
+                      <SelectItem key={type.id} value={type.internal_name}>
+                        {type.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -424,13 +482,14 @@ export default function Transacoes() {
             </div>
 
             {/* Limpar filtros */}
-            {(filterCategory !== "all" || filterMonth) && (
+            {(filterCategory !== "all" || filterTransactionType !== "all" || filterMonth) && (
               <div className="flex justify-end">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => {
                     setFilterCategory("all");
+                    setFilterTransactionType("all");
                     setFilterMonth(null);
                   }}
                 >
@@ -534,14 +593,14 @@ export default function Transacoes() {
               <div className="space-y-2">
                 <Label htmlFor="category">Categoria</Label>
                 <Select
-                  value={formData.categoryId.toString()}
+                  value={formData.categoryId?.toString() || ""}
                   onValueChange={handleCategoryChange}
                 >
                   <SelectTrigger id="category">
-                    <SelectValue />
+                    <SelectValue placeholder="Selecione" />
                   </SelectTrigger>
                   <SelectContent>
-                    {transactionCategories.map((category) => (
+                    {categories.map((category) => (
                       <SelectItem key={category.id} value={category.id.toString()}>
                         <div className="flex items-center gap-2">
                           <div
@@ -556,15 +615,15 @@ export default function Transacoes() {
                 </Select>
               </div>
 
-              {/* Subcategoria/Tipo */}
+              {/* Tipo de Transação */}
               <div className="space-y-2">
-                <Label htmlFor="type">Subcategoria</Label>
+                <Label htmlFor="type">Tipo</Label>
                 <Select
-                  value={formData.typeId.toString()}
-                  onValueChange={(value) => handleInputChange("typeId", parseInt(value))}
+                  value={formData.transactionTypeId?.toString() || ""}
+                  onValueChange={(value) => handleInputChange("transactionTypeId", parseInt(value))}
                 >
                   <SelectTrigger id="type">
-                    <SelectValue />
+                    <SelectValue placeholder="Selecione" />
                   </SelectTrigger>
                   <SelectContent>
                     {getAvailableTypes().map((type) => (

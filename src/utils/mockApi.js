@@ -11,7 +11,7 @@ let mockDatabase = {
   targets: [...mockData.targets],
   transactions: [...mockData.transactions],
   categories: [...mockData.categories],
-  transactionCategories: [...mockData.transactionCategories],
+  transactionTypes: [...mockData.transactionTypes],
   assetTypes: [...mockData.assetTypes],
   users: [...mockData.users],
 };
@@ -24,7 +24,7 @@ export const resetMockDatabase = () => {
     targets: [...mockData.targets],
     transactions: [...mockData.transactions],
     categories: [...mockData.categories],
-    transactionCategories: [...mockData.transactionCategories],
+    transactionTypes: [...mockData.transactionTypes],
     assetTypes: [...mockData.assetTypes],
     users: [...mockData.users],
   };
@@ -69,21 +69,21 @@ const enrichAssets = (assets) => {
  */
 const enrichTransactions = (transactions) => {
   return transactions.map((transaction) => {
-    const transactionCategory = mockDatabase.transactionCategories.find(
-      (c) => c.id === transaction.transaction_category_id
+    const category = mockDatabase.categories.find(
+      (c) => c.id === transaction.category_id
     );
 
-    const transactionType = transactionCategory?.transactionTypes.find(
+    const transactionType = mockDatabase.transactionTypes.find(
       (t) => t.id === transaction.transaction_type_id
     );
 
     return {
       ...transaction,
-      transactionCategoryId: transaction.transaction_category_id,
+      categoryId: transaction.category_id,
       transactionTypeId: transaction.transaction_type_id,
-      category_name: transactionCategory?.name || "Desconhecido",
-      category_color: transactionCategory?.color || "#64748b",
-      category_internal_name: transactionCategory?.internal_name || "unknown",
+      category_name: category?.name || "Desconhecido",
+      category_color: category?.color || "#64748b",
+      category_internal_name: category?.internal_name || "unknown",
       type_name: transactionType?.name || "Desconhecido",
       type_color: transactionType?.color || "#64748b",
       type_internal_name: transactionType?.internal_name || "unknown",
@@ -106,7 +106,7 @@ export const fetchData = async (endpoint) => {
     "/api/targets": mockDatabase.targets,
     "/api/transactions": enrichTransactions(mockDatabase.transactions),
     "/api/categories": mockDatabase.categories,
-    "/api/transactionCategories": mockDatabase.transactionCategories,
+    "/api/transactionTypes": mockDatabase.transactionTypes,
     "/api/assetTypes": mockDatabase.assetTypes,
   };
 
@@ -301,7 +301,7 @@ export const createTransaction = async (transaction, userId = null) => {
   const newTransaction = {
     id: Math.max(...mockDatabase.transactions.map((t) => t.id), 0) + 1,
     user_id: userId || mockDatabase.users[0]?.id,
-    transaction_category_id: transaction.transactionCategoryId,
+    category_id: transaction.categoryId,
     transaction_type_id: transaction.transactionTypeId,
     date: transaction.date,
     description: transaction.description,
@@ -324,7 +324,7 @@ export const updateTransaction = async (id, updates) => {
 
   mockDatabase.transactions[index] = {
     ...mockDatabase.transactions[index],
-    transaction_category_id: updates.transactionCategoryId,
+    category_id: updates.categoryId,
     transaction_type_id: updates.transactionTypeId,
     date: updates.date,
     description: updates.description,
@@ -358,6 +358,8 @@ export const createCategory = async (category) => {
     id: Math.max(...mockDatabase.categories.map((c) => c.id), 0) + 1,
     name: category.name,
     color: category.color,
+    internal_name: category.internal_name || category.name.toLowerCase().replace(/\s+/g, '_'),
+    transactionTypes: category.transactionTypes || [],
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   };
@@ -376,8 +378,10 @@ export const updateCategory = async (id, updates) => {
 
   mockDatabase.categories[index] = {
     ...mockDatabase.categories[index],
-    name: updates.name,
-    color: updates.color,
+    name: updates.name !== undefined ? updates.name : mockDatabase.categories[index].name,
+    color: updates.color !== undefined ? updates.color : mockDatabase.categories[index].color,
+    internal_name: updates.internal_name !== undefined ? updates.internal_name : mockDatabase.categories[index].internal_name,
+    transactionTypes: updates.transactionTypes !== undefined ? updates.transactionTypes : mockDatabase.categories[index].transactionTypes,
     updated_at: new Date().toISOString(),
   };
 
@@ -397,87 +401,67 @@ export const deleteCategory = async (id) => {
 };
 
 // =====================================================
-// FUNÇÕES CRUD PARA TRANSACTION TYPES (dentro de categorias)
+// FUNÇÕES PARA GERENCIAR TIPOS DE TRANSAÇÃO NAS CATEGORIAS
 // =====================================================
 
 /**
- * Cria um novo tipo de transação dentro de uma categoria
+ * Adiciona um tipo de transação permitido a uma categoria
  */
-export const createTransactionType = async (categoryId, transactionType) => {
+export const addTransactionTypeToCategory = async (categoryId, transactionTypeId) => {
   await delay();
 
-  const categoryIndex = mockDatabase.transactionCategories.findIndex(
+  const categoryIndex = mockDatabase.categories.findIndex(
     (c) => c.id === categoryId
   );
   if (categoryIndex === -1) {
     throw new Error("Categoria não encontrada");
   }
 
-  const category = mockDatabase.transactionCategories[categoryIndex];
-  const allTypes = mockDatabase.transactionCategories.flatMap(c => c.transactionTypes);
-  const newId = Math.max(...allTypes.map((t) => t.id), 0) + 1;
+  const category = mockDatabase.categories[categoryIndex];
 
-  const newType = {
-    id: newId,
-    name: transactionType.name,
-    color: transactionType.color,
-    internal_name: transactionType.internal_name,
-  };
-
-  category.transactionTypes.push(newType);
-  return newType;
-};
-
-/**
- * Atualiza um tipo de transação
- */
-export const updateTransactionType = async (categoryId, typeId, updates) => {
-  await delay();
-
-  const categoryIndex = mockDatabase.transactionCategories.findIndex(
-    (c) => c.id === categoryId
+  // Verifica se o tipo de transação existe
+  const typeExists = mockDatabase.transactionTypes.some(
+    (t) => t.id === transactionTypeId
   );
-  if (categoryIndex === -1) {
-    throw new Error("Categoria não encontrada");
-  }
-
-  const category = mockDatabase.transactionCategories[categoryIndex];
-  const typeIndex = category.transactionTypes.findIndex((t) => t.id === typeId);
-  if (typeIndex === -1) {
+  if (!typeExists) {
     throw new Error("Tipo de transação não encontrado");
   }
 
-  category.transactionTypes[typeIndex] = {
-    ...category.transactionTypes[typeIndex],
-    name: updates.name,
-    color: updates.color,
-    internal_name: updates.internal_name,
-  };
+  // Verifica se já não está adicionado
+  if (category.transactionTypes.includes(transactionTypeId)) {
+    return category;
+  }
 
-  return category.transactionTypes[typeIndex];
+  category.transactionTypes.push(transactionTypeId);
+  category.updated_at = new Date().toISOString();
+
+  return category;
 };
 
 /**
- * Deleta um tipo de transação
+ * Remove um tipo de transação permitido de uma categoria
  */
-export const deleteTransactionType = async (categoryId, typeId) => {
+export const removeTransactionTypeFromCategory = async (categoryId, transactionTypeId) => {
   await delay();
 
-  const categoryIndex = mockDatabase.transactionCategories.findIndex(
+  const categoryIndex = mockDatabase.categories.findIndex(
     (c) => c.id === categoryId
   );
   if (categoryIndex === -1) {
     throw new Error("Categoria não encontrada");
   }
 
-  const category = mockDatabase.transactionCategories[categoryIndex];
-  const typeIndex = category.transactionTypes.findIndex((t) => t.id === typeId);
+  const category = mockDatabase.categories[categoryIndex];
+  const typeIndex = category.transactionTypes.indexOf(transactionTypeId);
+
   if (typeIndex === -1) {
-    throw new Error("Tipo de transação não encontrado");
+    return category;
   }
 
   category.transactionTypes.splice(typeIndex, 1);
-  return true;
+  category.updated_at = new Date().toISOString();
+
+  return category;
 };
 
 // =====================================================
@@ -529,57 +513,3 @@ export const deleteAssetType = async (id) => {
   return true;
 };
 
-// =====================================================
-// FUNÇÕES CRUD PARA TRANSACTION CATEGORIES
-// =====================================================
-
-export const createTransactionCategory = async (transactionCategory) => {
-  await delay();
-
-  const newCategory = {
-    id:
-      Math.max(...mockDatabase.transactionCategories.map((tc) => tc.id), 0) +
-      1,
-    name: transactionCategory.name,
-    color: transactionCategory.color,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  };
-
-  mockDatabase.transactionCategories.push(newCategory);
-  return newCategory;
-};
-
-export const updateTransactionCategory = async (id, updates) => {
-  await delay();
-
-  const index = mockDatabase.transactionCategories.findIndex(
-    (tc) => tc.id === id
-  );
-  if (index === -1) {
-    throw new Error("Categoria de transação não encontrada");
-  }
-
-  mockDatabase.transactionCategories[index] = {
-    ...mockDatabase.transactionCategories[index],
-    name: updates.name,
-    color: updates.color,
-    updated_at: new Date().toISOString(),
-  };
-
-  return mockDatabase.transactionCategories[index];
-};
-
-export const deleteTransactionCategory = async (id) => {
-  await delay();
-
-  const index = mockDatabase.transactionCategories.findIndex(
-    (tc) => tc.id === id
-  );
-  if (index === -1) {
-    throw new Error("Categoria de transação não encontrada");
-  }
-
-  mockDatabase.transactionCategories.splice(index, 1);
-  return true;
-};
