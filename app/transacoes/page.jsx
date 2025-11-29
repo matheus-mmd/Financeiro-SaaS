@@ -337,40 +337,16 @@ export default function Transacoes() {
       label: "Categoria",
       sortable: true,
       render: (row) => (
-        <Badge
-          variant="outline"
-          style={{
-            borderColor: row.category_color,
-            color: row.category_color,
-          }}
-        >
-          {row.category_name}
-        </Badge>
+        <div className="flex items-center gap-2">
+          <div
+            className="w-3 h-3 rounded-full flex-shrink-0"
+            style={{ backgroundColor: row.category_color }}
+          />
+          <span className="text-sm font-medium text-gray-900">
+            {row.category_name}
+          </span>
+        </div>
       ),
-    },
-    {
-      key: "type",
-      label: "Tipo",
-      sortable: true,
-      render: (row) => {
-        const Icon = getTypeIcon(row.type_internal_name);
-        return (
-          <div className="flex items-center gap-2">
-            <Badge
-              variant="default"
-              style={{
-                backgroundColor: row.type_color,
-                color: "white",
-              }}
-            >
-              <span className="flex items-center gap-1">
-                <Icon className="w-3 h-3" />
-                {row.type_name}
-              </span>
-            </Badge>
-          </div>
-        );
-      },
     },
     {
       key: "amount",

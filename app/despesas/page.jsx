@@ -293,15 +293,15 @@ export default function Despesas() {
           (c) => c.name === row.category || c.id === row.category.toLowerCase()
         );
         return (
-          <Badge
-            variant="default"
-            style={{
-              backgroundColor: category?.color || "#64748b",
-              color: "white",
-            }}
-          >
-            {row.category}
-          </Badge>
+          <div className="flex items-center gap-2">
+            <div
+              className="w-3 h-3 rounded-full flex-shrink-0"
+              style={{ backgroundColor: category?.color || "#64748b" }}
+            />
+            <span className="text-sm font-medium text-gray-900">
+              {row.category}
+            </span>
+          </div>
         );
       },
     },

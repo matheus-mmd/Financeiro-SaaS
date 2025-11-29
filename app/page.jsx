@@ -72,7 +72,7 @@ export default function Dashboard() {
           expensesRes,
           categoriesRes,
           assetTypesRes,
-          transactionCategoriesRes,
+          transactionTypesRes,
           transactionsRes,
           targetsRes,
           assetsRes,
@@ -80,7 +80,7 @@ export default function Dashboard() {
           fetchData("/api/expenses"),
           fetchData("/api/categories"),
           fetchData("/api/assetTypes"),
-          fetchData("/api/transactionCategories"),
+          fetchData("/api/transactionTypes"),
           fetchData("/api/transactions"),
           fetchData("/api/targets"),
           fetchData("/api/assets"),
@@ -89,7 +89,7 @@ export default function Dashboard() {
         setExpenses(expensesRes.data);
         setCategories(categoriesRes.data);
         setAssetTypes(assetTypesRes.data);
-        setTransactionTypes(transactionCategoriesRes.data);
+        setTransactionTypes(transactionTypesRes.data);
         setTransactions(transactionsRes.data);
         setTargets(
           targetsRes.data.filter((t) => t.status === "in_progress").slice(0, 2)
@@ -218,21 +218,21 @@ export default function Dashboard() {
   // Preparar dados para CategoryBreakdownCard - Receitas por Categoria
   const incomeByCategory = useMemo(() => {
     const currentMonthTransactions = transactions.filter(t =>
-      t.date.startsWith(currentMonth) && t.type === 'credit'
+      t.date.startsWith(currentMonth) && t.type_internal_name === 'income'
     );
 
     const grouped = currentMonthTransactions.reduce((acc, transaction) => {
-      const categoryName = transaction.category || 'Outros';
+      const categoryName = transaction.category_name || 'Outros';
       const existing = acc.find(item => item.name === categoryName);
 
       if (existing) {
         existing.value += Math.abs(transaction.amount);
       } else {
-        const category = categories.find(c => c.name === categoryName || c.id === categoryName.toLowerCase());
+        const category = categories.find(c => c.name === categoryName || c.id === transaction.category_id);
         acc.push({
           name: categoryName,
           value: Math.abs(transaction.amount),
-          color: category?.color || "#10b981",
+          color: category?.color || transaction.category_color || "#10b981",
         });
       }
       return acc;
@@ -272,7 +272,7 @@ export default function Dashboard() {
 
     // Processar receitas
     transactions
-      .filter(t => t.date.startsWith(currentMonth) && t.type === 'credit')
+      .filter(t => t.date.startsWith(currentMonth) && t.type_internal_name === 'income')
       .forEach(t => {
         const day = t.date.split('-')[2];
         if (!dailyData[day]) {
@@ -281,7 +281,17 @@ export default function Dashboard() {
         dailyData[day].income += Math.abs(t.amount);
       });
 
-    // Processar despesas
+    // Processar despesas (incluindo de expenses e transactions com tipo expense)
+    transactions
+      .filter(t => t.date.startsWith(currentMonth) && t.type_internal_name === 'expense')
+      .forEach(t => {
+        const day = t.date.split('-')[2];
+        if (!dailyData[day]) {
+          dailyData[day] = { date: day, income: 0, expense: 0 };
+        }
+        dailyData[day].expense += Math.abs(t.amount);
+      });
+
     expenses
       .filter(e => e.date.startsWith(currentMonth))
       .forEach(e => {
@@ -407,16 +417,6 @@ export default function Dashboard() {
     return <DashboardSkeleton />;
   }
 
-  const getTransactionTypeByInternalName = (type) => {
-    const typeMap = {
-      credit: 1,
-      debit: 2,
-      investment: 3,
-    };
-    const typeId = typeMap[type];
-    return transactionTypes.find((t) => t.id === typeId);
-  };
-
   const transactionColumns = [
     {
       key: "description",
@@ -424,41 +424,28 @@ export default function Dashboard() {
       sortable: true,
     },
     {
-      key: "type",
-      label: "Tipo",
+      key: "category",
+      label: "Categoria",
       sortable: true,
-      render: (row) => {
-        const transactionType = getTransactionTypeByInternalName(row.type);
-        const iconMap = {
-          credit: ArrowUpRight,
-          debit: ArrowDownRight,
-          investment: TrendingUp,
-        };
-        const Icon = iconMap[row.type] || ArrowDownRight;
-
-        return (
-          <Badge
-            variant="default"
-            style={{
-              backgroundColor: transactionType?.color || "#64748b",
-              color: "white",
-            }}
-          >
-            <span className="flex items-center gap-1">
-              <Icon className="w-3 h-3" />
-              {transactionType?.name || "Desconhecido"}
-            </span>
-          </Badge>
-        );
-      },
+      render: (row) => (
+        <div className="flex items-center gap-2">
+          <div
+            className="w-3 h-3 rounded-full flex-shrink-0"
+            style={{ backgroundColor: row.category_color }}
+          />
+          <span className="text-sm font-medium text-gray-900">
+            {row.category_name}
+          </span>
+        </div>
+      ),
     },
     {
       key: "amount",
       label: "Valor",
       sortable: true,
       render: (row) => (
-        <span>
-          {formatCurrency(Math.abs(row.amount))}
+        <span className={row.amount >= 0 ? "text-green-600 font-medium" : "text-red-600 font-medium"}>
+          {row.amount >= 0 ? "+" : "-"} {formatCurrency(Math.abs(row.amount))}
         </span>
       ),
     },
