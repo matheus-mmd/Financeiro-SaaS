@@ -7,6 +7,7 @@ const delay = (ms = 300) => new Promise((resolve) => setTimeout(resolve, ms));
 // Estado em memória para simular banco de dados
 let mockDatabase = {
   expenses: [...mockData.expenses],
+  incomes: [...mockData.incomes],
   assets: [...mockData.assets],
   targets: [...mockData.targets],
   transactions: [...mockData.transactions],
@@ -20,6 +21,7 @@ let mockDatabase = {
 export const resetMockDatabase = () => {
   mockDatabase = {
     expenses: [...mockData.expenses],
+    incomes: [...mockData.incomes],
     assets: [...mockData.assets],
     targets: [...mockData.targets],
     transactions: [...mockData.transactions],
@@ -41,6 +43,23 @@ const enrichExpenses = (expenses) => {
     return {
       ...expense,
       categoriesId: expense.categories_id, // Compatibilidade com código antigo
+      category: category?.name || "Desconhecido",
+      category_color: category?.color || "#64748b",
+    };
+  });
+};
+
+/**
+ * Enriquece incomes com dados de category
+ */
+const enrichIncomes = (incomes) => {
+  return incomes.map((income) => {
+    const category = mockDatabase.categories.find(
+      (c) => c.id === income.categories_id
+    );
+    return {
+      ...income,
+      categoriesId: income.categories_id, // Compatibilidade com código antigo
       category: category?.name || "Desconhecido",
       category_color: category?.color || "#64748b",
     };
@@ -102,6 +121,7 @@ export const fetchData = async (endpoint) => {
   const routes = {
     "/api/users": mockDatabase.users,
     "/api/expenses": enrichExpenses(mockDatabase.expenses),
+    "/api/incomes": enrichIncomes(mockDatabase.incomes),
     "/api/assets": enrichAssets(mockDatabase.assets),
     "/api/targets": mockDatabase.targets,
     "/api/transactions": enrichTransactions(mockDatabase.transactions),
@@ -174,6 +194,66 @@ export const deleteExpense = async (id) => {
   }
 
   mockDatabase.expenses.splice(index, 1);
+  return true;
+};
+
+// =====================================================
+// FUNÇÕES CRUD PARA INCOMES
+// =====================================================
+
+/**
+ * Cria uma nova receita
+ * @param {Object} income - Dados da receita
+ * @param {string} userId - ID do usuário (ignorado no mock)
+ * @returns {Promise<Object>} Receita criada
+ */
+export const createIncome = async (income, userId = null) => {
+  await delay();
+
+  const newIncome = {
+    id: Math.max(...mockDatabase.incomes.map((i) => i.id), 0) + 1,
+    user_id: userId || mockDatabase.users[0]?.id,
+    categories_id: income.categoriesId,
+    title: income.title,
+    amount: income.amount,
+    date: income.date,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  };
+
+  mockDatabase.incomes.push(newIncome);
+  return newIncome;
+};
+
+export const updateIncome = async (id, updates) => {
+  await delay();
+
+  const index = mockDatabase.incomes.findIndex((i) => i.id === id);
+  if (index === -1) {
+    throw new Error("Receita não encontrada");
+  }
+
+  mockDatabase.incomes[index] = {
+    ...mockDatabase.incomes[index],
+    categories_id: updates.categoriesId,
+    title: updates.title,
+    amount: updates.amount,
+    date: updates.date,
+    updated_at: new Date().toISOString(),
+  };
+
+  return mockDatabase.incomes[index];
+};
+
+export const deleteIncome = async (id) => {
+  await delay();
+
+  const index = mockDatabase.incomes.findIndex((i) => i.id === id);
+  if (index === -1) {
+    throw new Error("Receita não encontrada");
+  }
+
+  mockDatabase.incomes.splice(index, 1);
   return true;
 };
 
@@ -512,4 +592,3 @@ export const deleteAssetType = async (id) => {
   mockDatabase.assetTypes.splice(index, 1);
   return true;
 };
-

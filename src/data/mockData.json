@@ -58,6 +58,14 @@
     {"id": 9, "user_id": "550e8400-e29b-41d4-a716-446655440000", "categories_id": 12, "title": "Ajudar", "amount": 550.00, "date": "2025-11-09", "created_at": "2025-11-09T10:00:00Z", "updated_at": "2025-11-09T10:00:00Z"},
     {"id": 10, "user_id": "550e8400-e29b-41d4-a716-446655440000", "categories_id": 10, "title": "Lazer casal", "amount": 1500.00, "date": "2025-11-10", "created_at": "2025-11-10T10:00:00Z", "updated_at": "2025-11-10T10:00:00Z"}
   ],
+  "incomes": [
+    {"id": 1, "user_id": "550e8400-e29b-41d4-a716-446655440000", "categories_id": 1, "title": "Salário Matheus", "amount": 2840.30, "date": "2025-11-01", "created_at": "2025-11-01T10:00:00Z", "updated_at": "2025-11-01T10:00:00Z"},
+    {"id": 2, "user_id": "550e8400-e29b-41d4-a716-446655440000", "categories_id": 1, "title": "Salário Nayanna", "amount": 3517.20, "date": "2025-11-01", "created_at": "2025-11-01T10:00:00Z", "updated_at": "2025-11-01T10:00:00Z"},
+    {"id": 3, "user_id": "550e8400-e29b-41d4-a716-446655440000", "categories_id": 2, "title": "Projeto freelance", "amount": 1350.00, "date": "2025-11-09", "created_at": "2025-11-09T10:00:00Z", "updated_at": "2025-11-09T10:00:00Z"},
+    {"id": 4, "user_id": "550e8400-e29b-41d4-a716-446655440000", "categories_id": 1, "title": "Salário Matheus", "amount": 2840.30, "date": "2025-10-01", "created_at": "2025-10-01T10:00:00Z", "updated_at": "2025-10-01T10:00:00Z"},
+    {"id": 5, "user_id": "550e8400-e29b-41d4-a716-446655440000", "categories_id": 1, "title": "Salário Nayanna", "amount": 3517.20, "date": "2025-10-01", "created_at": "2025-10-01T10:00:00Z", "updated_at": "2025-10-01T10:00:00Z"},
+    {"id": 6, "user_id": "550e8400-e29b-41d4-a716-446655440000", "categories_id": 4, "title": "Reembolso plano de saúde", "amount": 250.00, "date": "2025-10-15", "created_at": "2025-10-15T10:00:00Z", "updated_at": "2025-10-15T10:00:00Z"}
+  ],
   "assets": [
     {"id": 1, "user_id": "550e8400-e29b-41d4-a716-446655440000", "asset_types_id": 1, "name": "Poupança Matheus", "value": 52752.00, "yield": 0.005, "currency": "BRL", "date": "2025-11-01", "created_at": "2025-11-01T10:00:00Z", "updated_at": "2025-11-01T10:00:00Z"},
     {"id": 2, "user_id": "550e8400-e29b-41d4-a716-446655440000", "asset_types_id": 1, "name": "Poupança Nayanna", "value": 64500.00, "yield": 0.005, "currency": "BRL", "date": "2025-11-01", "created_at": "2025-11-01T10:00:00Z", "updated_at": "2025-11-01T10:00:00Z"},
