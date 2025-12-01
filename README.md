@@ -42,6 +42,16 @@ SaaS completo de controle financeiro desenvolvido com **Next.js 14**, **React 18
 - Modal para visualizar todas as categorias disponíveis
 - Cards com estatísticas: Total de Despesas, Total de Itens e Categorias Ativas
 
+### 💵 Receitas
+- Gerenciamento detalhado de receitas por categoria
+- Categorias de receitas com cores distintas
+- Filtros por categoria e intervalo de datas
+- CRUD completo (Criar, Editar, Excluir receitas)
+- Tabela com ordenação, paginação e seleção múltipla
+- Exportação de dados em CSV
+- Modal para visualizar todas as categorias disponíveis
+- Cards com estatísticas: Total de Receitas, Total de Itens e Categorias Ativas
+
 ### 📈 Patrimônio e Ativos
 - Lista de ativos com valores e rendimentos
 - 7 tipos de ativos: Poupança, CDB, Tesouro Direto, Ações, FIIs, Cripto, Renda Fixa
@@ -97,6 +107,7 @@ financeiro-saas/
 │   ├── login/page.jsx          # Página de Login/Cadastro
 │   ├── transacoes/page.jsx     # Página de Transações
 │   ├── despesas/page.jsx       # Página de Despesas
+│   ├── receitas/page.jsx       # Página de Receitas
 │   ├── patrimonio-ativos/page.jsx  # Página de Patrimônio
 │   └── metas/page.jsx          # Página de Metas
 ├── src/
@@ -258,6 +269,7 @@ console.log(response.data); // Array de despesas
 // CRUD para cada entidade
 import {
   createExpense, updateExpense, deleteExpense,
+  createIncome, updateIncome, deleteIncome,
   createAsset, updateAsset, deleteAsset,
   createTarget, updateTarget, deleteTarget,
   createTransaction, updateTransaction, deleteTransaction
@@ -278,8 +290,10 @@ await createExpense({
 - `/login` - Login e cadastro
 - `/transacoes` - Gerenciamento de transações
 - `/despesas` - Gerenciamento de despesas
+- `/receitas` - Gerenciamento de receitas
 - `/patrimonio-ativos` - Portfolio de patrimônio e ativos
 - `/metas` - Metas financeiras
+- `/categorias` - Gerenciamento de categorias
 
 ## ♿ Acessibilidade
 
@@ -326,6 +340,7 @@ npm run lint         # Lint com ESLint
 - [x] Gerenciamento completo de Transações (CRUD)
 - [x] Importação de extratos OFX
 - [x] Gerenciamento de Despesas por categoria (CRUD)
+- [x] Gerenciamento de Receitas por categoria (CRUD)
 - [x] Sistema de Metas financeiras (CRUD)
 - [x] Portfolio de Patrimônio e Ativos
 - [x] Busca global (Ctrl+K)

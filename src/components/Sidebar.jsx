@@ -13,6 +13,7 @@ import {
   User,
   X,
   Tag,
+  DollarSign,
 } from "lucide-react";
 
 /**
@@ -30,6 +31,7 @@ export default function Sidebar({
     { path: "/", icon: LayoutDashboard, label: "Dashboard" },
     { path: "/transacoes", icon: ArrowLeftRight, label: "Transações" },
     { path: "/despesas", icon: Receipt, label: "Despesas" },
+    { path: "/receitas", icon: DollarSign, label: "Receitas" },
     { path: "/patrimonio-ativos", icon: TrendingUp, label: "Patrimônio e Ativos" },
     { path: "/metas", icon: Target, label: "Metas" },
     { path: "/categorias", icon: Tag, label: "Categorias" },
