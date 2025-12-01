@@ -12,6 +12,13 @@ import {
 } from './ui/table';
 import { Button } from './ui/button';
 import { Card, CardContent } from './ui/card';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from './ui/select';
 
 /**
  * Componente Table - Tabela com ordenação e paginação
@@ -35,6 +42,7 @@ export default function Table({
 }) {
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
   const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(pageSize);
 
   // Ordenação
   const sortedData = React.useMemo(() => {
@@ -51,9 +59,9 @@ export default function Table({
   }, [data, sortConfig]);
 
   // Paginação
-  const totalPages = Math.ceil(sortedData.length / pageSize);
-  const startIndex = (currentPage - 1) * pageSize;
-  const paginatedData = sortedData.slice(startIndex, startIndex + pageSize);
+  const totalPages = Math.ceil(sortedData.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedData = sortedData.slice(startIndex, startIndex + itemsPerPage);
 
   const handleSort = (key) => {
     setSortConfig({
@@ -99,6 +107,12 @@ export default function Table({
 
   const isAllSelected = paginatedData.length > 0 && paginatedData.every(row => selectedRows.includes(row.id));
   const isSomeSelected = paginatedData.some(row => selectedRows.includes(row.id)) && !isAllSelected;
+
+  // Função para alterar quantidade de itens por página
+  const handleItemsPerPageChange = (value) => {
+    setItemsPerPage(Number(value));
+    setCurrentPage(1); // Resetar para primeira página
+  };
 
   return (
     <div className="w-full">
@@ -165,11 +179,33 @@ export default function Table({
       </div>
 
       {/* Paginação */}
-      {totalPages > 1 && (
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mt-4">
-          <p className="text-xs sm:text-sm text-muted-foreground order-2 sm:order-1">
-            Mostrando {startIndex + 1} a {Math.min(startIndex + pageSize, sortedData.length)} de {sortedData.length} resultados
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mt-4">
+        {/* Informações de resultados e seletor de itens por página */}
+        <div className="flex flex-col sm:flex-row items-center gap-3 order-2 sm:order-1">
+          <p className="text-xs sm:text-sm text-muted-foreground">
+            Mostrando {startIndex + 1} a {Math.min(startIndex + itemsPerPage, sortedData.length)} de {sortedData.length} resultados
           </p>
+          <div className="flex items-center gap-2">
+            <span className="text-xs sm:text-sm text-muted-foreground">Itens por página:</span>
+            <Select value={String(itemsPerPage)} onValueChange={handleItemsPerPageChange}>
+              <SelectTrigger className="w-[70px] h-8">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="5">5</SelectItem>
+                <SelectItem value="10">10</SelectItem>
+                <SelectItem value="15">15</SelectItem>
+                <SelectItem value="20">20</SelectItem>
+                <SelectItem value="25">25</SelectItem>
+                <SelectItem value="50">50</SelectItem>
+                <SelectItem value="100">100</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        {/* Controles de paginação */}
+        {totalPages > 1 && (
           <div className="flex gap-2 order-1 sm:order-2">
             <Button
               variant="outline"
@@ -191,8 +227,8 @@ export default function Table({
               Próxima
             </Button>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
