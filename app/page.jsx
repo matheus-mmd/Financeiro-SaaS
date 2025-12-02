@@ -215,13 +215,16 @@ export default function Dashboard() {
       return Math.abs(b.amount) - Math.abs(a.amount);
     });
 
-    return sorted.slice(0, 10);
+    // Retornar todas as transações do mês - o componente Table controla a paginação
+    return sorted;
   }, [transactions, currentMonth]);
 
   // Preparar dados para CategoryBreakdownCard - Receitas por Categoria
+  // Incluindo receitas (income) e aportes (investment)
   const incomeByCategory = useMemo(() => {
     const currentMonthTransactions = transactions.filter(t =>
-      t.date.startsWith(currentMonth) && t.type_internal_name === 'income'
+      t.date.startsWith(currentMonth) &&
+      (t.type_internal_name === 'income' || t.type_internal_name === 'investment')
     );
 
     const grouped = currentMonthTransactions.reduce((acc, transaction) => {
@@ -542,7 +545,7 @@ export default function Dashboard() {
         <CardContent className="p-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
             <h2 className="text-lg font-semibold text-gray-900">
-              Transações Recentes ({recentTransactions.length})
+              Transações Recentes
             </h2>
             <Link
               href="/transacoes"
