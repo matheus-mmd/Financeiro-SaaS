@@ -37,7 +37,14 @@ import {
 import PageSkeleton from "../../src/components/PageSkeleton";
 import Table from "../../src/components/Table";
 import DatePicker from "../../src/components/DatePicker";
-import { fetchData, formatCurrency, formatDate, createIncome, updateIncome, deleteIncome } from "../../src/utils";
+import {
+  fetchData,
+  formatCurrency,
+  formatDate,
+  createIncome,
+  updateIncome,
+  deleteIncome,
+} from "../../src/utils";
 import { exportToCSV } from "../../src/utils/exportData";
 import FilterButton from "../../src/components/FilterButton";
 import FloatingActionButton from "../../src/components/FloatingActionButton";
@@ -92,8 +99,8 @@ export default function Receitas() {
         setIncomes(incomesRes.data);
         setFilteredIncomes(incomesRes.data);
         // Filtrar apenas categorias de receita (transactionTypes inclui 1)
-        const incomeCategories = categoriesRes.data.filter(cat =>
-          cat.transactionTypes && cat.transactionTypes.includes(1)
+        const incomeCategories = categoriesRes.data.filter(
+          (cat) => cat.transactionTypes && cat.transactionTypes.includes(1)
         );
         setCategories(incomeCategories);
       } catch (error) {
@@ -181,7 +188,9 @@ export default function Receitas() {
         setIncomeToDelete(null);
       } catch (error) {
         console.error("Erro ao deletar receita:", error);
-        alert("Erro ao deletar receita. Verifique o console para mais detalhes.");
+        alert(
+          "Erro ao deletar receita. Verifique o console para mais detalhes."
+        );
       }
     }
   };
@@ -194,7 +203,7 @@ export default function Receitas() {
       const dateString = formData.date.toISOString().split("T")[0];
 
       // Buscar o ID da categoria pelo nome
-      const category = categories.find(c => c.name === formData.category);
+      const category = categories.find((c) => c.name === formData.category);
 
       const incomeData = {
         categoriesId: category?.id,
@@ -300,11 +309,7 @@ export default function Receitas() {
       key: "amount",
       label: "Valor",
       sortable: true,
-      render: (row) => (
-        <span>
-          {formatCurrency(row.amount)}
-        </span>
-      ),
+      render: (row) => <span>{formatCurrency(row.amount)}</span>,
     },
     {
       key: "date",
@@ -431,10 +436,7 @@ export default function Receitas() {
         <CardContent className="p-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
             <h2 className="text-lg font-semibold text-gray-900">
-              {selectedCategory === "all"
-                ? "Todas as Receitas"
-                : `Receitas - ${selectedCategory}`}{" "}
-              ({filteredIncomes.length})
+              Todas as Receitas
             </h2>
           </div>
 
@@ -558,10 +560,7 @@ export default function Receitas() {
         </AlertDialogContent>
       </AlertDialog>
 
-      <FloatingActionButton
-        onClick={handleAddIncome}
-        label="Nova Receita"
-      />
+      <FloatingActionButton onClick={handleAddIncome} label="Nova Receita" />
     </div>
   );
 }

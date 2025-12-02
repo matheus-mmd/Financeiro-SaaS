@@ -504,10 +504,7 @@ export default function Despesas() {
         <CardContent className="p-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
             <h2 className="text-lg font-semibold text-gray-900">
-              {selectedCategory === "all"
-                ? "Todas as Despesas"
-                : `Despesas - ${selectedCategory}`}{" "}
-              ({filteredExpenses.length})
+              Todas as Despesas
             </h2>
           </div>
 

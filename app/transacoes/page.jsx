@@ -503,7 +503,7 @@ export default function Transacoes() {
         <CardContent className="p-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
             <h2 className="text-lg font-semibold text-gray-900">
-              Todas as Transações ({filteredTransactions.length})
+              Todas as Transações
             </h2>
           </div>
 
