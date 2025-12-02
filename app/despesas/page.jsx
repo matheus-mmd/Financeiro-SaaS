@@ -96,7 +96,11 @@ export default function Despesas() {
         ]);
         setExpenses(expensesRes.data);
         setFilteredExpenses(expensesRes.data);
-        setCategories(categoriesRes.data);
+        // Filtrar apenas categorias de despesa (transactionTypes inclui 2)
+        const expenseCategories = categoriesRes.data.filter(cat =>
+          cat.transactionTypes && cat.transactionTypes.includes(2)
+        );
+        setCategories(expenseCategories);
       } catch (error) {
         console.error("Erro ao carregar dados:", error);
       } finally {
@@ -504,7 +508,10 @@ export default function Despesas() {
         <CardContent className="p-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
             <h2 className="text-lg font-semibold text-gray-900">
-              Todas as Despesas
+              {selectedCategory === "all"
+                ? "Todas as Despesas"
+                : `Despesas - ${selectedCategory}`}{" "}
+              ({filteredExpenses.length})
             </h2>
           </div>
 

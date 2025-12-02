@@ -26,9 +26,9 @@ import {
 import { Plus, Edit2, Trash2, Tag, ChevronDown, ChevronRight } from "lucide-react";
 
 /**
- * Página de Categorias - Gerenciamento unificado de todas as categorias
- * Todas as categorias (Salário, Moradia, Poupança, etc.) são unificadas
- * Cada categoria pode ter múltiplos tipos (Receita, Despesa, Aporte)
+ * Página de Categorias - Gerenciamento segmentado de categorias
+ * Categorias separadas por tipo: Receitas, Despesas e Patrimônio/Ativos
+ * Cada seção gerencia apenas suas categorias específicas
  */
 export default function CategoriasPage() {
   const [categories, setCategories] = useState([]);
@@ -65,6 +65,37 @@ export default function CategoriasPage() {
       setLoading(false);
     }
   };
+
+  // Separar categorias por tipo
+  const categorizeByType = () => {
+    const incomeCategories = categories.filter(cat =>
+      cat.transactionTypes && cat.transactionTypes.includes(1) && !cat.transactionTypes.includes(2) && !cat.transactionTypes.includes(3)
+    );
+
+    const expenseCategories = categories.filter(cat =>
+      cat.transactionTypes && cat.transactionTypes.includes(2) && !cat.transactionTypes.includes(1) && !cat.transactionTypes.includes(3)
+    );
+
+    const assetCategories = categories.filter(cat =>
+      cat.transactionTypes && cat.transactionTypes.includes(3) && !cat.transactionTypes.includes(1) && !cat.transactionTypes.includes(2)
+    );
+
+    // Categoria "Outros" que pode ter múltiplos tipos
+    const multiTypeCategories = categories.filter(cat =>
+      cat.transactionTypes &&
+      (cat.transactionTypes.length > 1 ||
+      (cat.transactionTypes.length === 0))
+    );
+
+    return {
+      income: incomeCategories,
+      expense: expenseCategories,
+      asset: assetCategories,
+      multiType: multiTypeCategories,
+    };
+  };
+
+  const { income, expense, asset, multiType } = categorizeByType();
 
   const toggleCategory = (categoryId) => {
     setExpandedCategories(prev =>
@@ -156,38 +187,37 @@ export default function CategoriasPage() {
     return transactionTypes.find(t => t.id === id);
   };
 
-  if (loading) {
+  // Função para renderizar uma seção de categorias
+  const renderCategorySection = (sectionCategories, title, description, icon, iconColor, defaultType = null) => {
+    if (sectionCategories.length === 0) {
+      return null;
+    }
+
     return (
-      <div className="flex items-center justify-center h-64">
-        <p className="text-gray-500">Carregando...</p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-6 animate-fade-in">
-      <PageHeader
-        title="Categorias"
-        description="Gerencie todas as categorias e configure quais tipos de transação (Receita, Despesa, Aporte) são permitidos para cada uma"
-      />
-
-      {/* Seção: Categorias */}
       <Card>
         <CardContent className="p-6">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <Tag className="w-5 h-5 text-blue-600" />
+              <div className={`p-2 ${iconColor} rounded-lg`}>
+                {icon}
               </div>
               <div>
-                <h2 className="text-lg font-semibold text-gray-900">Todas as Categorias</h2>
+                <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
                 <p className="text-sm text-gray-500">
-                  Gerencie categorias de receitas, despesas, aportes e ativos em um só lugar ({categories.length})
+                  {description} ({sectionCategories.length})
                 </p>
               </div>
             </div>
             <Button
-              onClick={() => handleOpenCategoryModal()}
+              onClick={() => {
+                handleOpenCategoryModal();
+                if (defaultType) {
+                  setCategoryFormData(prev => ({
+                    ...prev,
+                    transactionTypes: [defaultType]
+                  }));
+                }
+              }}
               className="flex items-center gap-2"
             >
               <Plus className="w-4 h-4" />
@@ -196,7 +226,7 @@ export default function CategoriasPage() {
           </div>
 
           <div className="space-y-3">
-            {categories.map((category) => (
+            {sectionCategories.map((category) => (
               <div key={category.id} className="border border-gray-200 rounded-lg overflow-hidden">
                 {/* Categoria Principal */}
                 <div className="flex items-center justify-between p-4 bg-gray-50">
@@ -307,6 +337,63 @@ export default function CategoriasPage() {
           </div>
         </CardContent>
       </Card>
+    );
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <p className="text-gray-500">Carregando...</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6 animate-fade-in">
+      <PageHeader
+        title="Categorias"
+        description="Gerencie categorias organizadas por tipo: Receitas, Despesas e Patrimônio/Ativos"
+      />
+
+      {/* Seção: Categorias de Receitas */}
+      {renderCategorySection(
+        income,
+        "Categorias de Receitas",
+        "Gerencie categorias para suas receitas e ganhos",
+        <Tag className="w-5 h-5 text-green-600" />,
+        "bg-green-100",
+        1 // ID do tipo "Receita"
+      )}
+
+      {/* Seção: Categorias de Despesas */}
+      {renderCategorySection(
+        expense,
+        "Categorias de Despesas",
+        "Gerencie categorias para suas despesas e gastos",
+        <Tag className="w-5 h-5 text-red-600" />,
+        "bg-red-100",
+        2 // ID do tipo "Despesa"
+      )}
+
+      {/* Seção: Categorias de Patrimônio e Ativos */}
+      {renderCategorySection(
+        asset,
+        "Categorias de Patrimônio e Ativos",
+        "Gerencie categorias para seus aportes, investimentos e ativos",
+        <Tag className="w-5 h-5 text-blue-600" />,
+        "bg-blue-100",
+        3 // ID do tipo "Aporte"
+      )}
+
+      {/* Seção: Categorias Compartilhadas (se houver) */}
+      {multiType.length > 0 && renderCategorySection(
+        multiType,
+        "Categorias Compartilhadas",
+        "Categorias que podem ser usadas em múltiplos contextos",
+        <Tag className="w-5 h-5 text-gray-600" />,
+        "bg-gray-100",
+        null
+      )}
 
       {/* Modal de Categoria */}
       <Dialog open={categoryModalOpen} onOpenChange={setCategoryModalOpen}>
