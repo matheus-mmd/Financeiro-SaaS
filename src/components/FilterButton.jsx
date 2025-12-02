@@ -45,7 +45,7 @@ export default function FilterButton({
         </Button>
       </PopoverTrigger>
       <PopoverContent
-        className="w-[min(calc(100vw-2rem),28rem)] p-0"
+        className="w-[calc(100vw-2rem)] sm:w-[36rem] lg:w-[48rem] p-0"
         align="start"
         sideOffset={5}
       >
@@ -70,7 +70,7 @@ export default function FilterButton({
             )}
           </div>
 
-          <div className="space-y-4 max-h-[min(calc(100vh-12rem),32rem)] overflow-y-auto pr-1">
+          <div className="space-y-4 max-h-[min(calc(100vh-12rem),32rem)] overflow-y-auto overflow-x-hidden pr-1">
             {children}
           </div>
         </div>
