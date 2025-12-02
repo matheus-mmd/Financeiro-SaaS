@@ -36,16 +36,16 @@ import {
 } from "../../src/components/ui/alert-dialog";
 import PageSkeleton from "../../src/components/PageSkeleton";
 import Table from "../../src/components/Table";
-import TableActions from "../../src/components/TableActions";
 import DatePicker from "../../src/components/DatePicker";
 import { fetchData, formatCurrency, formatDate, createAsset, updateAsset, deleteAsset } from "../../src/utils";
 import { exportToCSV } from "../../src/utils/exportData";
+import FilterButton from "../../src/components/FilterButton";
+import FloatingActionButton from "../../src/components/FloatingActionButton";
 import {
   TrendingUp,
   DollarSign,
   Percent,
   Plus,
-  Filter,
   Download,
   Trash2,
   Wallet,
@@ -67,9 +67,6 @@ export default function PatrimonioAtivos() {
   const [filterType, setFilterType] = useState("all");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [assetToDelete, setAssetToDelete] = useState(null);
-  const [selectedAssets, setSelectedAssets] = useState([]);
-  const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
-  const [typeModalOpen, setTypeModalOpen] = useState(false);
   const [categories, setCategories] = useState([]);
 
   // Função para obter intervalo do mês atual
@@ -207,16 +204,6 @@ export default function PatrimonioAtivos() {
         alert("Erro ao deletar ativo. Verifique o console para mais detalhes.");
       }
     }
-  };
-
-  const handleBulkDelete = () => {
-    setBulkDeleteDialogOpen(true);
-  };
-
-  const confirmBulkDelete = () => {
-    setAssets(assets.filter((a) => !selectedAssets.includes(a.id)));
-    setSelectedAssets([]);
-    setBulkDeleteDialogOpen(false);
   };
 
   const handleSubmit = async (e) => {
@@ -409,10 +396,6 @@ export default function PatrimonioAtivos() {
               <Download className="w-4 h-4" />
               Exportar
             </Button>
-            <Button variant="secondary" onClick={() => setTypeModalOpen(true)}>
-              <PieChart className="w-4 h-4" />
-              Tipos
-            </Button>
             <Button onClick={handleAddAsset}>
               <Plus className="w-4 h-4" />
               Novo Ativo
@@ -422,71 +405,54 @@ export default function PatrimonioAtivos() {
       />
 
       {/* Filtros */}
-      <Card>
-        <CardContent className="p-4 sm:p-6">
-          <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <Filter className="w-5 h-5 text-gray-500" />
-              <span className="text-sm font-medium text-gray-700">
-                Filtrar por:
-              </span>
+      <div className="flex items-center gap-3">
+        <FilterButton
+          activeFiltersCount={
+            (filterType !== "all" ? 1 : 0) + (filterMonth ? 1 : 0)
+          }
+          onClearFilters={() => {
+            setFilterType("all");
+            setFilterMonth(null);
+          }}
+        >
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Filtro por tipo */}
+            <div className="space-y-2">
+              <Label
+                htmlFor="filter-type"
+                className="text-sm font-medium text-gray-700"
+              >
+                Tipo de Ativo
+              </Label>
+              <Select value={filterType} onValueChange={setFilterType}>
+                <SelectTrigger id="filter-type">
+                  <SelectValue placeholder="Selecione o tipo" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os tipos</SelectItem>
+                  {categories.map((cat) => (
+                    <SelectItem key={cat.id} value={cat.name}>
+                      {cat.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {/* Filtro por tipo */}
-              <div className="space-y-2">
-                <Label
-                  htmlFor="filter-type"
-                  className="text-sm font-medium text-gray-700"
-                >
-                  Tipo de Ativo
-                </Label>
-                <Select value={filterType} onValueChange={setFilterType}>
-                  <SelectTrigger id="filter-type">
-                    <SelectValue placeholder="Selecione o tipo" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos os tipos</SelectItem>
-                    {categories.map((cat) => (
-                      <SelectItem key={cat.id} value={cat.name}>
-                        {cat.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Filtro por período */}
-              <div className="space-y-2">
-                <Label className="text-sm font-medium text-gray-700">
-                  Período
-                </Label>
-                <DateRangePicker
-                  value={filterMonth}
-                  onChange={setFilterMonth}
-                  placeholder="Selecione o período"
-                />
-              </div>
+            {/* Filtro por período */}
+            <div className="space-y-2">
+              <Label className="text-sm font-medium text-gray-700">
+                Período
+              </Label>
+              <DateRangePicker
+                value={filterMonth}
+                onChange={setFilterMonth}
+                placeholder="Selecione o período"
+              />
             </div>
-
-            {/* Limpar filtros */}
-            {(filterType !== "all" || filterMonth) && (
-              <div className="flex justify-end">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    setFilterType("all");
-                    setFilterMonth(null);
-                  }}
-                >
-                  Limpar Filtros
-                </Button>
-              </div>
-            )}
           </div>
-        </CardContent>
-      </Card>
+        </FilterButton>
+      </div>
 
       {/* Cards de resumo */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 min-w-0">
@@ -524,17 +490,6 @@ export default function PatrimonioAtivos() {
             </h2>
           </div>
 
-          {/* Barra de ações da tabela */}
-          <TableActions
-            onAdd={handleAddAsset}
-            onExport={handleExport}
-            onDelete={handleBulkDelete}
-            selectedCount={selectedAssets.length}
-            addLabel="Novo ativo"
-            exportLabel="Exportar patrimônio"
-            deleteLabel="Excluir ativos selecionados"
-          />
-
           {sortedAssets.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-gray-500 mb-4">
@@ -553,9 +508,6 @@ export default function PatrimonioAtivos() {
               data={sortedAssets}
               pageSize={10}
               onRowClick={handleEditAsset}
-              selectable={true}
-              selectedRows={selectedAssets}
-              onSelectionChange={setSelectedAssets}
             />
           )}
         </CardContent>
@@ -654,34 +606,6 @@ export default function PatrimonioAtivos() {
         </DialogContent>
       </Dialog>
 
-      {/* Dialog de tipos de ativos */}
-      <Dialog open={typeModalOpen} onOpenChange={setTypeModalOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Tipos de Ativos</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-2">
-            {categories.map((cat) => {
-              return (
-                <div
-                  key={cat.id}
-                  className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg"
-                >
-                  <div
-                    className="w-6 h-6 rounded-full"
-                    style={{ backgroundColor: cat.color || "#64748b" }}
-                  />
-                  <span className="font-medium text-gray-900">{cat.name}</span>
-                </div>
-              );
-            })}
-          </div>
-          <DialogFooter>
-            <Button onClick={() => setTypeModalOpen(false)}>Fechar</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
       {/* AlertDialog de confirmação de exclusão */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
@@ -704,30 +628,10 @@ export default function PatrimonioAtivos() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* AlertDialog de confirmação de exclusão em lote */}
-      <AlertDialog
-        open={bulkDeleteDialogOpen}
-        onOpenChange={setBulkDeleteDialogOpen}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Confirmar Exclusão em Lote</AlertDialogTitle>
-            <AlertDialogDescription>
-              Tem certeza que deseja excluir {selectedAssets.length}{" "}
-              ativo(s) selecionado(s)? Esta ação não pode ser desfeita.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={confirmBulkDelete}
-              className="bg-red-600 hover:bg-red-700"
-            >
-              Excluir Todos
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <FloatingActionButton
+        onClick={handleAddAsset}
+        label="Novo Ativo"
+      />
     </div>
   );
 }

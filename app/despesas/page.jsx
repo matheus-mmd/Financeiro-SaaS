@@ -36,8 +36,9 @@ import {
 } from "../../src/components/ui/alert-dialog";
 import PageSkeleton from "../../src/components/PageSkeleton";
 import Table from "../../src/components/Table";
-import TableActions from "../../src/components/TableActions";
 import DatePicker from "../../src/components/DatePicker";
+import FilterButton from "../../src/components/FilterButton";
+import FloatingActionButton from "../../src/components/FloatingActionButton";
 import { fetchData, formatCurrency, formatDate, createExpense, updateExpense, deleteExpense } from "../../src/utils";
 import { exportToCSV } from "../../src/utils/exportData";
 import {
@@ -46,7 +47,6 @@ import {
   Trash2,
   TrendingDown,
   PieChart,
-  Filter,
   Download,
 } from "lucide-react";
 
@@ -61,13 +61,10 @@ export default function Despesas() {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
-  const [categoryModalOpen, setCategoryModalOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [expenseToDelete, setExpenseToDelete] = useState(null);
-  const [selectedExpenses, setSelectedExpenses] = useState([]);
-  const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
 
   // Função para obter intervalo do mês atual
   const getCurrentMonthRange = () => {
@@ -83,6 +80,11 @@ export default function Despesas() {
     category: "",
     amount: "",
     date: new Date(),
+    paid_date: null,
+    status: "pending",
+    payment_method: "",
+    installments_current: "",
+    installments_total: "",
   });
 
   useEffect(() => {
@@ -142,6 +144,11 @@ export default function Despesas() {
       category: "",
       amount: "",
       date: new Date(),
+      paid_date: null,
+      status: "pending",
+      payment_method: "",
+      installments_current: "",
+      installments_total: "",
     });
     setModalOpen(true);
   };
@@ -151,11 +158,23 @@ export default function Despesas() {
     // Converter string de data para Date object
     const [year, month, day] = expense.date.split("-");
     const dateObj = new Date(year, month - 1, day);
+
+    let paidDateObj = null;
+    if (expense.paid_date) {
+      const [pYear, pMonth, pDay] = expense.paid_date.split("-");
+      paidDateObj = new Date(pYear, pMonth - 1, pDay);
+    }
+
     setFormData({
       title: expense.title,
       category: expense.category,
       amount: expense.amount.toString(),
       date: dateObj,
+      paid_date: paidDateObj,
+      status: expense.status || "pending",
+      payment_method: expense.payment_method || "",
+      installments_current: expense.installments?.current?.toString() || "",
+      installments_total: expense.installments?.total?.toString() || "",
     });
     setModalOpen(true);
   };
@@ -185,31 +204,35 @@ export default function Despesas() {
     }
   };
 
-  const handleBulkDelete = () => {
-    setBulkDeleteDialogOpen(true);
-  };
-
-  const confirmBulkDelete = () => {
-    setExpenses(expenses.filter((e) => !selectedExpenses.includes(e.id)));
-    setSelectedExpenses([]);
-    setBulkDeleteDialogOpen(false);
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
       // Converter Date object para string YYYY-MM-DD
       const dateString = formData.date.toISOString().split("T")[0];
+      const paidDateString = formData.paid_date ? formData.paid_date.toISOString().split("T")[0] : null;
 
       // Buscar o ID da categoria pelo nome
       const category = categories.find(c => c.name === formData.category);
+
+      // Processar parcelamento
+      let installments = null;
+      if (formData.installments_current && formData.installments_total) {
+        installments = {
+          current: parseInt(formData.installments_current),
+          total: parseInt(formData.installments_total),
+        };
+      }
 
       const expenseData = {
         categoriesId: category?.id,
         title: formData.title,
         amount: parseFloat(formData.amount),
         date: dateString,
+        paid_date: paidDateString,
+        status: formData.status,
+        payment_method: formData.payment_method || null,
+        installments: installments,
       };
 
       if (editingExpense) {
@@ -226,7 +249,17 @@ export default function Despesas() {
       setFilteredExpenses(response.data);
 
       setModalOpen(false);
-      setFormData({ title: "", category: "", amount: "", date: new Date() });
+      setFormData({
+        title: "",
+        category: "",
+        amount: "",
+        date: new Date(),
+        paid_date: null,
+        status: "pending",
+        payment_method: "",
+        installments_current: "",
+        installments_total: "",
+      });
     } catch (error) {
       console.error("Erro ao salvar despesa:", error);
       alert("Erro ao salvar despesa. Verifique o console para mais detalhes.");
@@ -322,6 +355,36 @@ export default function Despesas() {
       render: (row) => formatDate(row.date),
     },
     {
+      key: "paid_date",
+      label: "Data Pago",
+      sortable: true,
+      render: (row) => row.paid_date ? formatDate(row.paid_date) : <span className="text-gray-400">-</span>,
+    },
+    {
+      key: "status",
+      label: "Status",
+      sortable: true,
+      render: (row) => (
+        <Badge variant={row.status === "paid" ? "success" : "warning"}>
+          {row.status === "paid" ? "Pago" : "Pendente"}
+        </Badge>
+      ),
+    },
+    {
+      key: "payment_info",
+      label: "Pagamento",
+      render: (row) => (
+        <div className="text-sm">
+          <div className="font-medium text-gray-900">{row.payment_method || "-"}</div>
+          {row.installments && (
+            <div className="text-gray-500 text-xs">
+              {row.installments.current}/{row.installments.total}x
+            </div>
+          )}
+        </div>
+      ),
+    },
+    {
       key: "actions",
       label: "Ações",
       render: (row) => (
@@ -347,13 +410,6 @@ export default function Despesas() {
               <Download className="w-4 h-4" />
               Exportar
             </Button>
-            <Button
-              variant="secondary"
-              onClick={() => setCategoryModalOpen(true)}
-            >
-              <PieChart className="w-4 h-4" />
-              Categorias
-            </Button>
             <Button onClick={handleAddExpense}>
               <Plus className="w-4 h-4" />
               Nova Despesa
@@ -363,74 +419,58 @@ export default function Despesas() {
       />
 
       {/* Filtros */}
-      <Card>
-        <CardContent className="p-4 sm:p-6">
-          <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <Filter className="w-5 h-5 text-gray-500" />
-              <span className="text-sm font-medium text-gray-700">
-                Filtrar por:
-              </span>
+      <div className="flex items-center gap-3">
+        <FilterButton
+          activeFiltersCount={
+            (selectedCategory !== "all" ? 1 : 0) +
+            (filterMonth ? 1 : 0)
+          }
+          onClearFilters={() => {
+            setSelectedCategory("all");
+            setFilterMonth(null);
+          }}
+        >
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Filtro por categoria */}
+            <div className="space-y-2">
+              <Label
+                htmlFor="filter-category"
+                className="text-sm font-medium text-gray-700"
+              >
+                Categoria
+              </Label>
+              <Select
+                value={selectedCategory}
+                onValueChange={setSelectedCategory}
+              >
+                <SelectTrigger id="filter-category">
+                  <SelectValue placeholder="Selecione uma categoria" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas as categorias</SelectItem>
+                  {categories.map((cat) => (
+                    <SelectItem key={cat.id} value={cat.name}>
+                      {cat.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {/* Filtro por categoria */}
-              <div className="space-y-2">
-                <Label
-                  htmlFor="filter-category"
-                  className="text-sm font-medium text-gray-700"
-                >
-                  Categoria
-                </Label>
-                <Select
-                  value={selectedCategory}
-                  onValueChange={setSelectedCategory}
-                >
-                  <SelectTrigger id="filter-category">
-                    <SelectValue placeholder="Selecione uma categoria" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todas as categorias</SelectItem>
-                    {categories.map((cat) => (
-                      <SelectItem key={cat.id} value={cat.name}>
-                        {cat.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Filtro por período */}
-              <div className="space-y-2">
-                <Label className="text-sm font-medium text-gray-700">
-                  Período
-                </Label>
-                <DateRangePicker
-                  value={filterMonth}
-                  onChange={setFilterMonth}
-                  placeholder="Selecione o período"
-                />
-              </div>
+            {/* Filtro por período */}
+            <div className="space-y-2">
+              <Label className="text-sm font-medium text-gray-700">
+                Período
+              </Label>
+              <DateRangePicker
+                value={filterMonth}
+                onChange={setFilterMonth}
+                placeholder="Selecione o período"
+              />
             </div>
-
-            {/* Limpar filtros */}
-            {(selectedCategory !== "all" || filterMonth) && (
-              <div className="flex justify-end">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    setSelectedCategory("all");
-                    setFilterMonth(null);
-                  }}
-                >
-                  Limpar Filtros
-                </Button>
-              </div>
-            )}
           </div>
-        </CardContent>
-      </Card>
+        </FilterButton>
+      </div>
 
       {/* Cards de resumo */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 min-w-0">
@@ -471,17 +511,6 @@ export default function Despesas() {
             </h2>
           </div>
 
-          {/* Barra de ações da tabela */}
-          <TableActions
-            onAdd={handleAddExpense}
-            onExport={handleExport}
-            onDelete={handleBulkDelete}
-            selectedCount={selectedExpenses.length}
-            addLabel="Nova despesa"
-            exportLabel="Exportar despesas"
-            deleteLabel="Excluir despesas selecionadas"
-          />
-
           {filteredExpenses.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-gray-500 mb-4">
@@ -500,9 +529,6 @@ export default function Despesas() {
               data={filteredExpenses}
               pageSize={10}
               onRowClick={handleEditExpense}
-              selectable={true}
-              selectedRows={selectedExpenses}
-              onSelectionChange={setSelectedExpenses}
             />
           )}
         </CardContent>
@@ -561,12 +587,89 @@ export default function Despesas() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="date">Data</Label>
+              <Label htmlFor="date">Data da Despesa</Label>
               <DatePicker
                 value={formData.date}
                 onChange={(date) => handleInputChange("date", date)}
               />
             </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="status">Status</Label>
+              <Select
+                value={formData.status}
+                onValueChange={(value) => handleInputChange("status", value)}
+              >
+                <SelectTrigger id="status">
+                  <SelectValue placeholder="Selecione o status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="pending">Pendente</SelectItem>
+                  <SelectItem value="paid">Pago</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {formData.status === "paid" && (
+              <div className="space-y-2">
+                <Label htmlFor="paid_date">Data do Pagamento</Label>
+                <DatePicker
+                  value={formData.paid_date || new Date()}
+                  onChange={(date) => handleInputChange("paid_date", date)}
+                />
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <Label htmlFor="payment_method">Forma de Pagamento</Label>
+              <Select
+                value={formData.payment_method}
+                onValueChange={(value) => handleInputChange("payment_method", value)}
+              >
+                <SelectTrigger id="payment_method">
+                  <SelectValue placeholder="Selecione a forma de pagamento" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Dinheiro">Dinheiro</SelectItem>
+                  <SelectItem value="Pix">Pix</SelectItem>
+                  <SelectItem value="Débito Automático">Débito Automático</SelectItem>
+                  <SelectItem value="Cartão de Crédito">Cartão de Crédito</SelectItem>
+                  <SelectItem value="Cartão de Débito">Cartão de Débito</SelectItem>
+                  <SelectItem value="Boleto">Boleto</SelectItem>
+                  <SelectItem value="Transferência">Transferência</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label htmlFor="installments_current">Parcela Atual</Label>
+                <Input
+                  id="installments_current"
+                  type="number"
+                  min="1"
+                  placeholder="1"
+                  value={formData.installments_current}
+                  onChange={(e) => handleInputChange("installments_current", e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="installments_total">Total de Parcelas</Label>
+                <Input
+                  id="installments_total"
+                  type="number"
+                  min="1"
+                  placeholder="1"
+                  value={formData.installments_total}
+                  onChange={(e) => handleInputChange("installments_total", e.target.value)}
+                />
+              </div>
+            </div>
+            {formData.installments_current && formData.installments_total && (
+              <p className="text-xs text-gray-500">
+                Parcela {formData.installments_current} de {formData.installments_total}
+              </p>
+            )}
           </form>
           <DialogFooter>
             <Button
@@ -579,32 +682,6 @@ export default function Despesas() {
             <Button type="submit" onClick={handleSubmit}>
               {editingExpense ? "Salvar" : "Adicionar Despesa"}
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Dialog de categorias */}
-      <Dialog open={categoryModalOpen} onOpenChange={setCategoryModalOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Categorias de Despesas</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-2">
-            {categories.map((cat) => (
-              <div
-                key={cat.id}
-                className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg"
-              >
-                <div
-                  className="w-6 h-6 rounded-full"
-                  style={{ backgroundColor: cat.color }}
-                />
-                <span className="font-medium text-gray-900">{cat.name}</span>
-              </div>
-            ))}
-          </div>
-          <DialogFooter>
-            <Button onClick={() => setCategoryModalOpen(false)}>Fechar</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -631,30 +708,11 @@ export default function Despesas() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* AlertDialog de confirmação de exclusão em lote */}
-      <AlertDialog
-        open={bulkDeleteDialogOpen}
-        onOpenChange={setBulkDeleteDialogOpen}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Confirmar Exclusão em Lote</AlertDialogTitle>
-            <AlertDialogDescription>
-              Tem certeza que deseja excluir {selectedExpenses.length}{" "}
-              despesa(s) selecionada(s)? Esta ação não pode ser desfeita.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={confirmBulkDelete}
-              className="bg-red-600 hover:bg-red-700"
-            >
-              Excluir Todas
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {/* Floating Action Button */}
+      <FloatingActionButton
+        onClick={handleAddExpense}
+        label="Nova Despesa"
+      />
     </div>
   );
 }

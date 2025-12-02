@@ -11,7 +11,6 @@ import {
   TableRow,
 } from './ui/table';
 import { Button } from './ui/button';
-import { Card, CardContent } from './ui/card';
 import {
   Select,
   SelectContent,
@@ -21,24 +20,18 @@ import {
 } from './ui/select';
 
 /**
- * Componente Table - Tabela com ordenação e paginação
+ * Componente Table - Tabela otimizada com ordenação e paginação
  * Usa componentes do shadcn/ui internamente
  * @param {Array} columns - Configuração das colunas: [{ key, label, sortable, render }]
  * @param {Array} data - Dados a serem exibidos
- * @param {number} pageSize - Itens por página
+ * @param {number} pageSize - Itens por página padrão
  * @param {Function} onRowClick - Função opcional chamada ao clicar em uma linha
- * @param {boolean} selectable - Habilita seleção múltipla
- * @param {Array} selectedRows - Array de IDs das linhas selecionadas
- * @param {Function} onSelectionChange - Callback quando seleção muda
  */
 export default function Table({
   columns,
   data,
   pageSize = 10,
   onRowClick,
-  selectable = false,
-  selectedRows = [],
-  onSelectionChange
 }) {
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
   const [currentPage, setCurrentPage] = useState(1);
@@ -71,12 +64,11 @@ export default function Table({
   };
 
   const handleRowClick = (row, event) => {
-    // Não aciona clique se clicar em botões, checkboxes ou elementos interativos
+    // Não aciona clique se clicar em botões ou elementos interativos
     if (
       event.target.closest('button') ||
       event.target.closest('a') ||
-      event.target.closest('[role="button"]') ||
-      event.target.closest('input[type="checkbox"]')
+      event.target.closest('[role="button"]')
     ) {
       return;
     }
@@ -86,28 +78,6 @@ export default function Table({
     }
   };
 
-  // Funções de seleção
-  const handleSelectAll = (e) => {
-    if (e.target.checked) {
-      const allIds = paginatedData.map(row => row.id);
-      onSelectionChange([...new Set([...selectedRows, ...allIds])]);
-    } else {
-      const pageIds = paginatedData.map(row => row.id);
-      onSelectionChange(selectedRows.filter(id => !pageIds.includes(id)));
-    }
-  };
-
-  const handleSelectRow = (rowId) => {
-    if (selectedRows.includes(rowId)) {
-      onSelectionChange(selectedRows.filter(id => id !== rowId));
-    } else {
-      onSelectionChange([...selectedRows, rowId]);
-    }
-  };
-
-  const isAllSelected = paginatedData.length > 0 && paginatedData.every(row => selectedRows.includes(row.id));
-  const isSomeSelected = paginatedData.some(row => selectedRows.includes(row.id)) && !isAllSelected;
-
   // Função para alterar quantidade de itens por página
   const handleItemsPerPageChange = (value) => {
     setItemsPerPage(Number(value));
@@ -116,29 +86,18 @@ export default function Table({
 
   return (
     <div className="w-full">
-      {/* Table View - mantém formato de linhas em todas as telas */}
+      {/* Tabela responsiva com overflow controlado */}
       <div className="rounded-lg border overflow-x-auto">
         <ShadcnTable>
           <TableHeader>
             <TableRow>
-              {selectable && (
-                <TableHead className="w-12">
-                  <input
-                    type="checkbox"
-                    checked={isAllSelected}
-                    ref={(el) => el && (el.indeterminate = isSomeSelected)}
-                    onChange={handleSelectAll}
-                    className="w-4 h-4 cursor-pointer"
-                  />
-                </TableHead>
-              )}
               {columns.map((column) => (
                 <TableHead
                   key={column.key}
-                  className={column.sortable ? 'cursor-pointer select-none' : ''}
+                  className={column.sortable ? 'cursor-pointer select-none hover:bg-gray-50' : ''}
                   onClick={() => column.sortable && handleSort(column.key)}
                 >
-                  <div className="flex items-center gap-2 uppercase">
+                  <div className="flex items-center gap-2 uppercase text-xs font-semibold">
                     {column.label}
                     {column.sortable && sortConfig.key === column.key && (
                       sortConfig.direction === 'asc' ?
@@ -153,20 +112,10 @@ export default function Table({
           <TableBody>
             {paginatedData.map((row, index) => (
               <TableRow
-                key={index}
+                key={row.id || index}
                 onClick={(e) => handleRowClick(row, e)}
-                className={onRowClick ? 'cursor-pointer hover:bg-gray-50' : ''}
+                className={onRowClick ? 'cursor-pointer hover:bg-gray-50 transition-colors' : ''}
               >
-                {selectable && (
-                  <TableCell className="w-12">
-                    <input
-                      type="checkbox"
-                      checked={selectedRows.includes(row.id)}
-                      onChange={() => handleSelectRow(row.id)}
-                      className="w-4 h-4 cursor-pointer"
-                    />
-                  </TableCell>
-                )}
                 {columns.map((column) => (
                   <TableCell key={column.key}>
                     {column.render ? column.render(row) : row[column.key]}

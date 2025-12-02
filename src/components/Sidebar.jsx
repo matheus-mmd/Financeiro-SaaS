@@ -9,16 +9,17 @@ import {
   Receipt,
   TrendingUp,
   Target,
-  BarChart3,
-  User,
-  X,
   Tag,
   DollarSign,
+  X,
 } from "lucide-react";
 
 /**
- * Componente Sidebar - Menu lateral de navegação
- * Responsivo: colapsável em mobile, comprimível em desktop
+ * Componente Sidebar - Menu lateral de navegação moderno e responsivo
+ * Segue padrões de UI/UX modernos (Material UI, Tailwind UI)
+ * - Mobile: Overlay que não quebra o layout
+ * - Desktop: Sidebar fixa que não causa reflow
+ * - Transições suaves e otimizadas
  */
 export default function Sidebar({
   isCollapsed = false,
@@ -41,95 +42,90 @@ export default function Sidebar({
 
   return (
     <>
-      {/* Botão X que acompanha o menu lateral mobile */}
-      <button
-        onClick={onClose}
-        className={`
-          lg:hidden fixed top-4 z-50 p-2 bg-white rounded-lg shadow-lg
-          transition-all duration-300 ease-in-out
-          ${isOpen ? "left-60" : "-left-20"}
-        `}
-        aria-label="Fechar menu"
-      >
-        <X className="w-6 h-6 text-gray-600" />
-      </button>
-
-      {/* Overlay para mobile */}
+      {/* Overlay para mobile - aparece quando menu está aberto */}
       {isOpen && (
         <div
-          className="lg:hidden fixed inset-0 bg-black/50 z-30"
+          className="lg:hidden fixed inset-0 bg-black/50 z-40 transition-opacity duration-300"
           onClick={onClose}
+          aria-hidden="true"
         />
       )}
 
-      {/* Sidebar */}
+      {/* Sidebar Principal */}
       <aside
         className={`
-          fixed lg:static inset-y-0 left-0 z-40
+          fixed lg:relative inset-y-0 left-0 z-50 lg:z-0
           bg-white border-r border-gray-200
-          transform transition-all duration-300 ease-in-out
-          ${isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
-          ${isCollapsed ? "lg:w-20" : "w-64"}
+          flex flex-col
+          transition-all duration-300 ease-in-out
+          ${isOpen ? "translate-x-0" : "-translate-x-full"}
+          lg:translate-x-0
+          ${isCollapsed ? "lg:w-20" : "lg:w-64"}
+          w-64
         `}
       >
-        <div className="flex flex-col h-full">
-          {/* Logo */}
-          <div
-            className={`flex items-center h-[72px] border-b border-gray-200 ${
-              isCollapsed ? "justify-center px-4" : "px-6"
-            }`}
-          >
-            {!isCollapsed ? (
-              <div>
-                <h1 className="text-2xl font-bold text-brand-500 leading-tight">
-                  Financeiro
-                </h1>
-                <p className="text-xs text-gray-500 mt-1">Controle Pessoal</p>
-              </div>
-            ) : (
-              <div className="text-2xl font-bold text-brand-500">F</div>
-            )}
+        {/* Header com Logo */}
+        <div className="flex items-center justify-between h-[72px] px-6 border-b border-gray-200 flex-shrink-0">
+          <div className={`transition-all duration-300 ${isCollapsed ? "lg:hidden" : ""}`}>
+            <h1 className="text-2xl font-bold text-brand-500 leading-tight">
+              Financeiro
+            </h1>
+            <p className="text-xs text-gray-500 mt-1">Controle Pessoal</p>
           </div>
 
-          {/* Menu items */}
-          <nav className="flex-1 p-4 space-y-1" aria-label="Menu principal">
-            {menuItems.map((item) => {
-              const Icon = item.icon;
-              const active = isActive(item.path);
+          {/* Logo colapsado (desktop) */}
+          <div className={`hidden lg:block transition-all duration-300 ${isCollapsed ? "" : "lg:hidden"}`}>
+            <div className="text-2xl font-bold text-brand-500">F</div>
+          </div>
 
-              return (
-                <Link
-                  key={item.path}
-                  href={item.path}
-                  onClick={onClose}
-                  className={`
-                    flex items-center gap-3 rounded-lg
-                    transition-colors duration-200
-                    ${isCollapsed ? "justify-center px-4 py-3" : "px-4 py-3"}
-                    ${
-                      active
-                        ? "bg-brand-50 text-brand-600 font-medium"
-                        : "text-gray-700 hover:bg-gray-50"
-                    }
-                  `}
-                  aria-current={active ? "page" : undefined}
-                  title={isCollapsed ? item.label : ""}
-                >
-                  <Icon className="w-5 h-5 flex-shrink-0" />
-                  {!isCollapsed && <span>{item.label}</span>}
-                </Link>
-              );
-            })}
-          </nav>
+          {/* Botão fechar (mobile) */}
+          <button
+            onClick={onClose}
+            className="lg:hidden p-2 -mr-2 rounded-lg hover:bg-gray-100 transition-colors"
+            aria-label="Fechar menu"
+          >
+            <X className="w-5 h-5 text-gray-600" />
+          </button>
+        </div>
 
-          {/* Footer */}
-          {!isCollapsed && (
-            <div className="p-4 border-t border-gray-200">
-              <p className="text-xs text-gray-500 text-center">
-                © 2025 Financeiro SaaS
-              </p>
-            </div>
-          )}
+        {/* Navegação */}
+        <nav className="flex-1 overflow-y-auto p-4 space-y-1" aria-label="Menu principal">
+          {menuItems.map((item) => {
+            const Icon = item.icon;
+            const active = isActive(item.path);
+
+            return (
+              <Link
+                key={item.path}
+                href={item.path}
+                onClick={onClose}
+                className={`
+                  flex items-center gap-3 px-4 py-3 rounded-lg
+                  transition-all duration-200
+                  ${isCollapsed ? "lg:justify-center lg:px-3" : ""}
+                  ${
+                    active
+                      ? "bg-brand-50 text-brand-600 font-medium shadow-sm"
+                      : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
+                  }
+                `}
+                aria-current={active ? "page" : undefined}
+                title={isCollapsed ? item.label : ""}
+              >
+                <Icon className="w-5 h-5 flex-shrink-0" />
+                <span className={`transition-all duration-300 ${isCollapsed ? "lg:hidden" : ""}`}>
+                  {item.label}
+                </span>
+              </Link>
+            );
+          })}
+        </nav>
+
+        {/* Footer */}
+        <div className={`flex-shrink-0 p-4 border-t border-gray-200 transition-all duration-300 ${isCollapsed ? "lg:hidden" : ""}`}>
+          <p className="text-xs text-gray-500 text-center">
+            © 2025 Financeiro SaaS
+          </p>
         </div>
       </aside>
     </>

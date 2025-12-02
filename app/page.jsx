@@ -22,8 +22,7 @@ import Table from "../src/components/Table";
 import { fetchData, formatCurrency, formatDate } from "../src/utils";
 import { Wallet, TrendingDown, ArrowUpRight, Target, PiggyBank, ArrowDownRight, TrendingUp } from "lucide-react";
 
-// Novos componentes de análise
-import FinancialHealthScore from "../src/components/dashboard/FinancialHealthScore";
+// Componentes de análise do dashboard
 import MonthEndProjection from "../src/components/dashboard/MonthEndProjection";
 import RunwayCard from "../src/components/dashboard/RunwayCard";
 import BudgetRule503020 from "../src/components/dashboard/BudgetRule503020";
@@ -34,7 +33,6 @@ import IncomeVsExpensesChart from "../src/components/dashboard/IncomeVsExpensesC
 import {
   getPreviousMonth,
   calculateMonthData,
-  calculateHealthScore,
   generateAlerts,
   calculateMonthEndProjection,
   calculateExpensesByCategory,
@@ -47,6 +45,7 @@ import {
  */
 export default function Dashboard() {
   const [expenses, setExpenses] = useState([]);
+  const [incomes, setIncomes] = useState([]);
   const [categories, setCategories] = useState([]);
   const [transactionTypes, setTransactionTypes] = useState([]);
   const [transactions, setTransactions] = useState([]);
@@ -69,6 +68,7 @@ export default function Dashboard() {
       try {
         const [
           expensesRes,
+          incomesRes,
           categoriesRes,
           transactionTypesRes,
           transactionsRes,
@@ -76,6 +76,7 @@ export default function Dashboard() {
           assetsRes,
         ] = await Promise.all([
           fetchData("/api/expenses"),
+          fetchData("/api/incomes"),
           fetchData("/api/categories"),
           fetchData("/api/transactionTypes"),
           fetchData("/api/transactions"),
@@ -84,6 +85,7 @@ export default function Dashboard() {
         ]);
 
         setExpenses(expensesRes.data);
+        setIncomes(incomesRes.data);
         setCategories(categoriesRes.data);
         setTransactionTypes(transactionTypesRes.data);
         setTransactions(transactionsRes.data);
@@ -101,14 +103,25 @@ export default function Dashboard() {
     loadData();
   }, []);
 
-  // Mês atual para filtros
-  const currentMonth = "2025-11";
-  const previousMonth = getPreviousMonth(currentMonth);
+  // Mês atual para filtros - dinamicamente calculado
+  const currentMonth = useMemo(() => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    return `${year}-${month}`;
+  }, []);
+
+  const previousMonth = useMemo(() => getPreviousMonth(currentMonth), [currentMonth]);
 
   // Calcular dados dos meses atual e anterior
   const currentMonthExpenses = useMemo(() =>
     expenses.filter((e) => e.date.startsWith(currentMonth)),
     [expenses, currentMonth]
+  );
+
+  const currentMonthIncomes = useMemo(() =>
+    incomes.filter((i) => i.date.startsWith(currentMonth)),
+    [incomes, currentMonth]
   );
 
   const previousMonthExpenses = useMemo(() =>
@@ -160,12 +173,6 @@ export default function Dashboard() {
 
     return count > 0 ? totalExpenses / count : currentMonthData.expenses;
   }, [expenses, currentMonth, previousMonth, currentMonthData.expenses]);
-
-  // Calcular score de saúde financeira
-  const { score, breakdown } = useMemo(() =>
-    calculateHealthScore(currentMonthData, assets, avgMonthlyExpenses),
-    [currentMonthData, assets, avgMonthlyExpenses]
-  );
 
   // Gerar alertas inteligentes
   const alerts = useMemo(() =>
@@ -460,18 +467,16 @@ export default function Dashboard() {
         description="Visão geral inteligente do seu controle financeiro"
       />
 
-      {/* NOVO: Linha superior com Score e Comparativo */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <FinancialHealthScore score={score} breakdown={breakdown} />
-        <MonthEndProjection data={projectionData} />
-      </div>
+      {/* Projeção de Fim de Mês */}
+      <MonthEndProjection data={projectionData} />
 
       {/* Cards de resumo tradicionais */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 min-w-0">
         <StatsCard
           icon={ArrowUpRight}
-          label="Créditos Mensais"
-          value={formatCurrency(currentMonthData.credits)}
+          label="Receitas Mensais"
+          value={formatCurrency(currentMonthIncomes.reduce((sum, income) => sum + income.amount, 0))}
+          subtitle={`${currentMonthIncomes.length} receita(s)`}
           iconColor="green"
           valueColor="text-green-600"
         />

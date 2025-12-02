@@ -5,6 +5,8 @@ import { useAuth } from "../../src/contexts/AuthContext";
 import PageHeader from "../../src/components/PageHeader";
 import StatsCard from "../../src/components/StatsCard";
 import DateRangePicker from "../../src/components/DateRangePicker";
+import FilterButton from "../../src/components/FilterButton";
+import FloatingActionButton from "../../src/components/FloatingActionButton";
 import { Card, CardContent } from "../../src/components/ui/card";
 import { Badge } from "../../src/components/ui/badge";
 import { Button } from "../../src/components/ui/button";
@@ -36,7 +38,6 @@ import {
 } from "../../src/components/ui/alert-dialog";
 import PageSkeleton from "../../src/components/PageSkeleton";
 import Table from "../../src/components/Table";
-import TableActions from "../../src/components/TableActions";
 import ProgressBar from "../../src/components/ProgressBar";
 import DatePicker from "../../src/components/DatePicker";
 import { fetchData, formatCurrency, formatDate, createTarget, updateTarget, deleteTarget } from "../../src/utils";
@@ -46,9 +47,7 @@ import {
   Plus,
   Trash2,
   CheckCircle,
-  Minus,
   Download,
-  Filter,
   TrendingUp,
 } from "lucide-react";
 
@@ -66,9 +65,6 @@ export default function Metas() {
   const [filterStatus, setFilterStatus] = useState("all");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [targetToDelete, setTargetToDelete] = useState(null);
-  const [selectedTargets, setSelectedTargets] = useState([]);
-  const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
-
   const [filterMonth, setFilterMonth] = useState(null);
   const [formData, setFormData] = useState({
     title: "",
@@ -181,16 +177,6 @@ export default function Metas() {
         alert("Erro ao deletar meta. Verifique o console para mais detalhes.");
       }
     }
-  };
-
-  const handleBulkDelete = () => {
-    setBulkDeleteDialogOpen(true);
-  };
-
-  const confirmBulkDelete = () => {
-    setTargets(targets.filter((t) => !selectedTargets.includes(t.id)));
-    setSelectedTargets([]);
-    setBulkDeleteDialogOpen(false);
   };
 
   const handleSubmit = async (e) => {
@@ -403,68 +389,49 @@ export default function Metas() {
       />
 
       {/* Filtros */}
-      <Card>
-        <CardContent className="p-4 sm:p-6">
-          <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <Filter className="w-5 h-5 text-gray-500" />
-              <span className="text-sm font-medium text-gray-700">
-                Filtrar por:
-              </span>
+      <div className="flex items-center gap-3">
+        <FilterButton
+          activeFiltersCount={(filterStatus !== "all" ? 1 : 0) + (filterMonth ? 1 : 0)}
+          onClearFilters={() => {
+            setFilterStatus("all");
+            setFilterMonth(null);
+          }}
+        >
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Filtro por status */}
+            <div className="space-y-2">
+              <Label
+                htmlFor="filter-status"
+                className="text-sm font-medium text-gray-700"
+              >
+                Status
+              </Label>
+              <Select value={filterStatus} onValueChange={setFilterStatus}>
+                <SelectTrigger id="filter-status">
+                  <SelectValue placeholder="Selecione o status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas as metas</SelectItem>
+                  <SelectItem value="in_progress">Em andamento</SelectItem>
+                  <SelectItem value="completed">Concluídas</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {/* Filtro por status */}
-              <div className="space-y-2">
-                <Label
-                  htmlFor="filter-status"
-                  className="text-sm font-medium text-gray-700"
-                >
-                  Status
-                </Label>
-                <Select value={filterStatus} onValueChange={setFilterStatus}>
-                  <SelectTrigger id="filter-status">
-                    <SelectValue placeholder="Selecione o status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todas as metas</SelectItem>
-                    <SelectItem value="in_progress">Em andamento</SelectItem>
-                    <SelectItem value="completed">Concluídas</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Filtro por período */}
-              <div className="space-y-2">
-                <Label className="text-sm font-medium text-gray-700">
-                  Período
-                </Label>
-                <DateRangePicker
-                  value={filterMonth}
-                  onChange={setFilterMonth}
-                  placeholder="Selecione o período"
-                />
-              </div>
+            {/* Filtro por período */}
+            <div className="space-y-2">
+              <Label className="text-sm font-medium text-gray-700">
+                Período
+              </Label>
+              <DateRangePicker
+                value={filterMonth}
+                onChange={setFilterMonth}
+                placeholder="Selecione o período"
+              />
             </div>
-
-            {/* Limpar filtros */}
-            {(filterStatus !== "all" || filterMonth) && (
-              <div className="flex justify-end">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    setFilterStatus("all");
-                    setFilterMonth(null);
-                  }}
-                >
-                  Limpar Filtros
-                </Button>
-              </div>
-            )}
           </div>
-        </CardContent>
-      </Card>
+        </FilterButton>
+      </div>
 
       {/* Cards de resumo */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 min-w-0">
@@ -510,17 +477,6 @@ export default function Metas() {
             </h2>
           </div>
 
-          {/* Barra de ações da tabela */}
-          <TableActions
-            onAdd={handleAddTarget}
-            onExport={handleExport}
-            onDelete={handleBulkDelete}
-            selectedCount={selectedTargets.length}
-            addLabel="Nova meta"
-            exportLabel="Exportar metas"
-            deleteLabel="Excluir metas selecionadas"
-          />
-
           {sortedTargets.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-gray-500 mb-4">
@@ -539,9 +495,6 @@ export default function Metas() {
               data={sortedTargets}
               pageSize={10}
               onRowClick={handleEditTarget}
-              selectable={true}
-              selectedRows={selectedTargets}
-              onSelectionChange={setSelectedTargets}
             />
           )}
         </CardContent>
@@ -683,30 +636,11 @@ export default function Metas() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* AlertDialog de confirmação de exclusão em lote */}
-      <AlertDialog
-        open={bulkDeleteDialogOpen}
-        onOpenChange={setBulkDeleteDialogOpen}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Confirmar Exclusão em Lote</AlertDialogTitle>
-            <AlertDialogDescription>
-              Tem certeza que deseja excluir {selectedTargets.length} meta(s)
-              selecionada(s)? Esta ação não pode ser desfeita.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={confirmBulkDelete}
-              className="bg-red-600 hover:bg-red-700"
-            >
-              Excluir Todas
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {/* Floating Action Button */}
+      <FloatingActionButton
+        onClick={handleAddTarget}
+        label="Nova Meta"
+      />
     </div>
   );
 }

@@ -158,6 +158,10 @@ export const createExpense = async (expense, userId = null) => {
     title: expense.title,
     amount: expense.amount,
     date: expense.date,
+    paid_date: expense.paid_date || null,
+    status: expense.status || "pending",
+    payment_method: expense.payment_method || null,
+    installments: expense.installments || null,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   };
@@ -176,10 +180,14 @@ export const updateExpense = async (id, updates) => {
 
   mockDatabase.expenses[index] = {
     ...mockDatabase.expenses[index],
-    categories_id: updates.categoriesId,
-    title: updates.title,
-    amount: updates.amount,
-    date: updates.date,
+    categories_id: updates.categoriesId !== undefined ? updates.categoriesId : mockDatabase.expenses[index].categories_id,
+    title: updates.title !== undefined ? updates.title : mockDatabase.expenses[index].title,
+    amount: updates.amount !== undefined ? updates.amount : mockDatabase.expenses[index].amount,
+    date: updates.date !== undefined ? updates.date : mockDatabase.expenses[index].date,
+    paid_date: updates.paid_date !== undefined ? updates.paid_date : mockDatabase.expenses[index].paid_date,
+    status: updates.status !== undefined ? updates.status : mockDatabase.expenses[index].status,
+    payment_method: updates.payment_method !== undefined ? updates.payment_method : mockDatabase.expenses[index].payment_method,
+    installments: updates.installments !== undefined ? updates.installments : mockDatabase.expenses[index].installments,
     updated_at: new Date().toISOString(),
   };
 

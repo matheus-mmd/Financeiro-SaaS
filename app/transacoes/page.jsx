@@ -38,12 +38,13 @@ import PageSkeleton from "../../src/components/PageSkeleton";
 import Table from "../../src/components/Table";
 import DatePicker from "../../src/components/DatePicker";
 import { fetchData, formatCurrency, formatDate, createTransaction, updateTransaction, deleteTransaction } from "../../src/utils";
+import FilterButton from "../../src/components/FilterButton";
+import FloatingActionButton from "../../src/components/FloatingActionButton";
 import {
   ArrowUpRight,
   ArrowDownRight,
   TrendingUp,
   Plus,
-  Filter,
   Download,
   Trash2,
 } from "lucide-react";
@@ -393,89 +394,74 @@ export default function Transacoes() {
       />
 
       {/* Filtros */}
-      <Card>
-        <CardContent className="p-4 sm:p-6">
-          <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <Filter className="w-5 h-5 text-gray-500" />
-              <span className="text-sm font-medium text-gray-700">
-                Filtrar por:
-              </span>
+      <div className="flex items-center gap-3">
+        <FilterButton
+          activeFiltersCount={
+            (filterCategory !== "all" ? 1 : 0) +
+            (filterTransactionType !== "all" ? 1 : 0) +
+            (filterMonth ? 1 : 0)
+          }
+          onClearFilters={() => {
+            setFilterCategory("all");
+            setFilterTransactionType("all");
+            setFilterMonth(null);
+          }}
+        >
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {/* Filtro por categoria */}
+            <div className="space-y-2">
+              <Label htmlFor="filter-category" className="text-sm font-medium text-gray-700">
+                Categoria
+              </Label>
+              <Select value={filterCategory} onValueChange={setFilterCategory}>
+                <SelectTrigger id="filter-category">
+                  <SelectValue placeholder="Selecione a categoria" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas as categorias</SelectItem>
+                  {categories.map((category) => (
+                    <SelectItem key={category.id} value={category.id.toString()}>
+                      {category.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              {/* Filtro por categoria */}
-              <div className="space-y-2">
-                <Label htmlFor="filter-category" className="text-sm font-medium text-gray-700">
-                  Categoria
-                </Label>
-                <Select value={filterCategory} onValueChange={setFilterCategory}>
-                  <SelectTrigger id="filter-category">
-                    <SelectValue placeholder="Selecione a categoria" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todas as categorias</SelectItem>
-                    {categories.map((category) => (
-                      <SelectItem key={category.id} value={category.id.toString()}>
-                        {category.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Filtro por tipo de transação */}
-              <div className="space-y-2">
-                <Label htmlFor="filter-type" className="text-sm font-medium text-gray-700">
-                  Tipo
-                </Label>
-                <Select value={filterTransactionType} onValueChange={setFilterTransactionType}>
-                  <SelectTrigger id="filter-type">
-                    <SelectValue placeholder="Selecione o tipo" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos os tipos</SelectItem>
-                    {transactionTypes.map((type) => (
-                      <SelectItem key={type.id} value={type.internal_name}>
-                        {type.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Filtro por período */}
-              <div className="space-y-2">
-                <Label className="text-sm font-medium text-gray-700">
-                  Período
-                </Label>
-                <DateRangePicker
-                  value={filterMonth}
-                  onChange={setFilterMonth}
-                  placeholder="Selecione o período"
-                />
-              </div>
+            {/* Filtro por tipo de transação */}
+            <div className="space-y-2">
+              <Label htmlFor="filter-type" className="text-sm font-medium text-gray-700">
+                Tipo
+              </Label>
+              <Select value={filterTransactionType} onValueChange={setFilterTransactionType}>
+                <SelectTrigger id="filter-type">
+                  <SelectValue placeholder="Selecione o tipo" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os tipos</SelectItem>
+                  {transactionTypes.map((type) => (
+                    <SelectItem key={type.id} value={type.internal_name}>
+                      {type.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
-            {/* Limpar filtros */}
-            {(filterCategory !== "all" || filterTransactionType !== "all" || filterMonth) && (
-              <div className="flex justify-end">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    setFilterCategory("all");
-                    setFilterTransactionType("all");
-                    setFilterMonth(null);
-                  }}
-                >
-                  Limpar Filtros
-                </Button>
-              </div>
-            )}
+            {/* Filtro por período */}
+            <div className="space-y-2">
+              <Label className="text-sm font-medium text-gray-700">
+                Período
+              </Label>
+              <DateRangePicker
+                value={filterMonth}
+                onChange={setFilterMonth}
+                placeholder="Selecione o período"
+              />
+            </div>
           </div>
-        </CardContent>
-      </Card>
+        </FilterButton>
+      </div>
 
       {/* Cards de resumo */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 min-w-0">
@@ -676,6 +662,11 @@ export default function Transacoes() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <FloatingActionButton
+        onClick={handleAddTransaction}
+        label="Nova Transação"
+      />
     </div>
   );
 }

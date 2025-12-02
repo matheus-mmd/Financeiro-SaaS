@@ -36,17 +36,17 @@ import {
 } from "../../src/components/ui/alert-dialog";
 import PageSkeleton from "../../src/components/PageSkeleton";
 import Table from "../../src/components/Table";
-import TableActions from "../../src/components/TableActions";
 import DatePicker from "../../src/components/DatePicker";
 import { fetchData, formatCurrency, formatDate, createIncome, updateIncome, deleteIncome } from "../../src/utils";
 import { exportToCSV } from "../../src/utils/exportData";
+import FilterButton from "../../src/components/FilterButton";
+import FloatingActionButton from "../../src/components/FloatingActionButton";
 import {
   Receipt,
   Plus,
   Trash2,
   TrendingUp,
   PieChart,
-  Filter,
   Download,
 } from "lucide-react";
 
@@ -61,13 +61,10 @@ export default function Receitas() {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
-  const [categoryModalOpen, setCategoryModalOpen] = useState(false);
   const [editingIncome, setEditingIncome] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [incomeToDelete, setIncomeToDelete] = useState(null);
-  const [selectedIncomes, setSelectedIncomes] = useState([]);
-  const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
 
   // Função para obter intervalo do mês atual
   const getCurrentMonthRange = () => {
@@ -187,16 +184,6 @@ export default function Receitas() {
         alert("Erro ao deletar receita. Verifique o console para mais detalhes.");
       }
     }
-  };
-
-  const handleBulkDelete = () => {
-    setBulkDeleteDialogOpen(true);
-  };
-
-  const confirmBulkDelete = () => {
-    setIncomes(incomes.filter((i) => !selectedIncomes.includes(i.id)));
-    setSelectedIncomes([]);
-    setBulkDeleteDialogOpen(false);
   };
 
   const handleSubmit = async (e) => {
@@ -351,13 +338,6 @@ export default function Receitas() {
               <Download className="w-4 h-4" />
               Exportar
             </Button>
-            <Button
-              variant="secondary"
-              onClick={() => setCategoryModalOpen(true)}
-            >
-              <PieChart className="w-4 h-4" />
-              Categorias
-            </Button>
             <Button onClick={handleAddIncome}>
               <Plus className="w-4 h-4" />
               Nova Receita
@@ -367,74 +347,57 @@ export default function Receitas() {
       />
 
       {/* Filtros */}
-      <Card>
-        <CardContent className="p-4 sm:p-6">
-          <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <Filter className="w-5 h-5 text-gray-500" />
-              <span className="text-sm font-medium text-gray-700">
-                Filtrar por:
-              </span>
+      <div className="flex items-center gap-3">
+        <FilterButton
+          activeFiltersCount={
+            (selectedCategory !== "all" ? 1 : 0) + (filterMonth ? 1 : 0)
+          }
+          onClearFilters={() => {
+            setSelectedCategory("all");
+            setFilterMonth(null);
+          }}
+        >
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Filtro por categoria */}
+            <div className="space-y-2">
+              <Label
+                htmlFor="filter-category"
+                className="text-sm font-medium text-gray-700"
+              >
+                Categoria
+              </Label>
+              <Select
+                value={selectedCategory}
+                onValueChange={setSelectedCategory}
+              >
+                <SelectTrigger id="filter-category">
+                  <SelectValue placeholder="Selecione uma categoria" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas as categorias</SelectItem>
+                  {categories.map((cat) => (
+                    <SelectItem key={cat.id} value={cat.name}>
+                      {cat.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {/* Filtro por categoria */}
-              <div className="space-y-2">
-                <Label
-                  htmlFor="filter-category"
-                  className="text-sm font-medium text-gray-700"
-                >
-                  Categoria
-                </Label>
-                <Select
-                  value={selectedCategory}
-                  onValueChange={setSelectedCategory}
-                >
-                  <SelectTrigger id="filter-category">
-                    <SelectValue placeholder="Selecione uma categoria" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todas as categorias</SelectItem>
-                    {categories.map((cat) => (
-                      <SelectItem key={cat.id} value={cat.name}>
-                        {cat.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Filtro por período */}
-              <div className="space-y-2">
-                <Label className="text-sm font-medium text-gray-700">
-                  Período
-                </Label>
-                <DateRangePicker
-                  value={filterMonth}
-                  onChange={setFilterMonth}
-                  placeholder="Selecione o período"
-                />
-              </div>
+            {/* Filtro por período */}
+            <div className="space-y-2">
+              <Label className="text-sm font-medium text-gray-700">
+                Período
+              </Label>
+              <DateRangePicker
+                value={filterMonth}
+                onChange={setFilterMonth}
+                placeholder="Selecione o período"
+              />
             </div>
-
-            {/* Limpar filtros */}
-            {(selectedCategory !== "all" || filterMonth) && (
-              <div className="flex justify-end">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    setSelectedCategory("all");
-                    setFilterMonth(null);
-                  }}
-                >
-                  Limpar Filtros
-                </Button>
-              </div>
-            )}
           </div>
-        </CardContent>
-      </Card>
+        </FilterButton>
+      </div>
 
       {/* Cards de resumo */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 min-w-0">
@@ -475,17 +438,6 @@ export default function Receitas() {
             </h2>
           </div>
 
-          {/* Barra de ações da tabela */}
-          <TableActions
-            onAdd={handleAddIncome}
-            onExport={handleExport}
-            onDelete={handleBulkDelete}
-            selectedCount={selectedIncomes.length}
-            addLabel="Nova receita"
-            exportLabel="Exportar receitas"
-            deleteLabel="Excluir receitas selecionadas"
-          />
-
           {filteredIncomes.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-gray-500 mb-4">
@@ -504,9 +456,6 @@ export default function Receitas() {
               data={filteredIncomes}
               pageSize={10}
               onRowClick={handleEditIncome}
-              selectable={true}
-              selectedRows={selectedIncomes}
-              onSelectionChange={setSelectedIncomes}
             />
           )}
         </CardContent>
@@ -587,32 +536,6 @@ export default function Receitas() {
         </DialogContent>
       </Dialog>
 
-      {/* Dialog de categorias */}
-      <Dialog open={categoryModalOpen} onOpenChange={setCategoryModalOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Categorias de Receitas</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-2">
-            {categories.map((cat) => (
-              <div
-                key={cat.id}
-                className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg"
-              >
-                <div
-                  className="w-6 h-6 rounded-full"
-                  style={{ backgroundColor: cat.color }}
-                />
-                <span className="font-medium text-gray-900">{cat.name}</span>
-              </div>
-            ))}
-          </div>
-          <DialogFooter>
-            <Button onClick={() => setCategoryModalOpen(false)}>Fechar</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
       {/* AlertDialog de confirmação de exclusão */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
@@ -635,30 +558,10 @@ export default function Receitas() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* AlertDialog de confirmação de exclusão em lote */}
-      <AlertDialog
-        open={bulkDeleteDialogOpen}
-        onOpenChange={setBulkDeleteDialogOpen}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Confirmar Exclusão em Lote</AlertDialogTitle>
-            <AlertDialogDescription>
-              Tem certeza que deseja excluir {selectedIncomes.length}{" "}
-              receita(s) selecionada(s)? Esta ação não pode ser desfeita.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={confirmBulkDelete}
-              className="bg-red-600 hover:bg-red-700"
-            >
-              Excluir Todas
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <FloatingActionButton
+        onClick={handleAddIncome}
+        label="Nova Receita"
+      />
     </div>
   );
 }
