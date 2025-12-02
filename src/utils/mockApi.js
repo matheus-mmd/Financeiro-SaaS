@@ -13,7 +13,6 @@ let mockDatabase = {
   transactions: [...mockData.transactions],
   categories: [...mockData.categories],
   transactionTypes: [...mockData.transactionTypes],
-  assetTypes: [...mockData.assetTypes],
   users: [...mockData.users],
 };
 
@@ -27,7 +26,6 @@ export const resetMockDatabase = () => {
     transactions: [...mockData.transactions],
     categories: [...mockData.categories],
     transactionTypes: [...mockData.transactionTypes],
-    assetTypes: [...mockData.assetTypes],
     users: [...mockData.users],
   };
 };
@@ -67,18 +65,20 @@ const enrichIncomes = (incomes) => {
 };
 
 /**
- * Enriquece assets com dados de type
+ * Enriquece assets com dados de type (agora busca de categories)
  */
 const enrichAssets = (assets) => {
   return assets.map((asset) => {
-    const assetType = mockDatabase.assetTypes.find(
-      (t) => t.id === asset.asset_types_id
+    // Buscar categoria em vez de assetType
+    const category = mockDatabase.categories.find(
+      (c) => c.id === asset.asset_types_id || c.id === asset.categories_id
     );
     return {
       ...asset,
-      assetTypesid: asset.asset_types_id, // Compatibilidade com código antigo
-      type: assetType?.name || "Desconhecido",
-      type_color: assetType?.color || "#64748b",
+      assetTypesid: asset.asset_types_id || asset.categories_id, // Compatibilidade com código antigo
+      categoriesId: asset.categories_id || asset.asset_types_id,
+      type: category?.name || "Desconhecido",
+      type_color: category?.color || "#64748b",
     };
   });
 };
@@ -127,7 +127,8 @@ export const fetchData = async (endpoint) => {
     "/api/transactions": enrichTransactions(mockDatabase.transactions),
     "/api/categories": mockDatabase.categories,
     "/api/transactionTypes": mockDatabase.transactionTypes,
-    "/api/assetTypes": mockDatabase.assetTypes,
+    // assetTypes agora retorna categories com transactionType = 3 (Aporte) para compatibilidade
+    "/api/assetTypes": mockDatabase.categories.filter(c => c.transactionTypes && c.transactionTypes.includes(3)),
   };
 
   if (routes[endpoint]) {
@@ -542,53 +543,4 @@ export const removeTransactionTypeFromCategory = async (categoryId, transactionT
   category.updated_at = new Date().toISOString();
 
   return category;
-};
-
-// =====================================================
-// FUNÇÕES CRUD PARA ASSET TYPES
-// =====================================================
-
-export const createAssetType = async (assetType) => {
-  await delay();
-
-  const newType = {
-    id: Math.max(...mockDatabase.assetTypes.map((t) => t.id), 0) + 1,
-    name: assetType.name,
-    color: assetType.color,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  };
-
-  mockDatabase.assetTypes.push(newType);
-  return newType;
-};
-
-export const updateAssetType = async (id, updates) => {
-  await delay();
-
-  const index = mockDatabase.assetTypes.findIndex((t) => t.id === id);
-  if (index === -1) {
-    throw new Error("Tipo de ativo não encontrado");
-  }
-
-  mockDatabase.assetTypes[index] = {
-    ...mockDatabase.assetTypes[index],
-    name: updates.name,
-    color: updates.color,
-    updated_at: new Date().toISOString(),
-  };
-
-  return mockDatabase.assetTypes[index];
-};
-
-export const deleteAssetType = async (id) => {
-  await delay();
-
-  const index = mockDatabase.assetTypes.findIndex((t) => t.id === id);
-  if (index === -1) {
-    throw new Error("Tipo de ativo não encontrado");
-  }
-
-  mockDatabase.assetTypes.splice(index, 1);
-  return true;
 };

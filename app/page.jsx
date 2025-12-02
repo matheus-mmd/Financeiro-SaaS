@@ -48,7 +48,6 @@ import {
 export default function Dashboard() {
   const [expenses, setExpenses] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [assetTypes, setAssetTypes] = useState([]);
   const [transactionTypes, setTransactionTypes] = useState([]);
   const [transactions, setTransactions] = useState([]);
   const [targets, setTargets] = useState([]);
@@ -71,7 +70,6 @@ export default function Dashboard() {
         const [
           expensesRes,
           categoriesRes,
-          assetTypesRes,
           transactionTypesRes,
           transactionsRes,
           targetsRes,
@@ -79,7 +77,6 @@ export default function Dashboard() {
         ] = await Promise.all([
           fetchData("/api/expenses"),
           fetchData("/api/categories"),
-          fetchData("/api/assetTypes"),
           fetchData("/api/transactionTypes"),
           fetchData("/api/transactions"),
           fetchData("/api/targets"),
@@ -88,7 +85,6 @@ export default function Dashboard() {
 
         setExpenses(expensesRes.data);
         setCategories(categoriesRes.data);
-        setAssetTypes(assetTypesRes.data);
         setTransactionTypes(transactionTypesRes.data);
         setTransactions(transactionsRes.data);
         setTargets(
@@ -361,16 +357,16 @@ export default function Dashboard() {
       if (existing) {
         existing.value += asset.value;
       } else {
-        const assetType = assetTypes.find((t) => t.name === asset.type);
+        // Usar type_color que já vem enriquecido do enrichAssets
         acc.push({
           name: asset.type,
           value: asset.value,
-          color: assetType?.color || "#64748b",
+          color: asset.type_color || "#64748b",
         });
       }
       return acc;
     }, []),
-  [assets, assetTypes]);
+  [assets]);
 
   const totalInvestmentsValue = assets.reduce((sum, a) => sum + a.value, 0);
 

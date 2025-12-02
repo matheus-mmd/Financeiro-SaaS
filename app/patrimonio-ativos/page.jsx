@@ -70,7 +70,7 @@ export default function PatrimonioAtivos() {
   const [selectedAssets, setSelectedAssets] = useState([]);
   const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
   const [typeModalOpen, setTypeModalOpen] = useState(false);
-  const [assetTypes, setAssetTypes] = useState([]);
+  const [categories, setCategories] = useState([]);
 
   // Função para obter intervalo do mês atual
   const getCurrentMonthRange = () => {
@@ -92,9 +92,9 @@ export default function PatrimonioAtivos() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [assetsRes, assetTypesRes] = await Promise.all([
+        const [assetsRes, categoriesRes] = await Promise.all([
           fetchData("/api/assets"),
-          fetchData("/api/assetTypes"),
+          fetchData("/api/categories"),
         ]);
 
         // Adicionar data aos ativos se não tiver
@@ -105,7 +105,11 @@ export default function PatrimonioAtivos() {
 
         setAssets(assetsWithDate);
         setFilteredAssets(assetsWithDate);
-        setAssetTypes(assetTypesRes.data);
+        // Filtrar apenas categorias que permitem Aporte (transactionType = 3)
+        const assetCategories = categoriesRes.data.filter(cat =>
+          cat.transactionTypes && cat.transactionTypes.includes(3)
+        );
+        setCategories(assetCategories);
       } catch (error) {
         console.error("Erro ao carregar patrimônio e ativos:", error);
       } finally {
@@ -223,10 +227,11 @@ export default function PatrimonioAtivos() {
       const dateString = formData.date.toISOString().split("T")[0];
 
       // Buscar o ID do tipo de ativo pelo nome
-      const assetType = assetTypes.find(t => t.name === formData.type);
+      const category = categories.find(c => c.name === formData.type);
 
       const assetData = {
-        assetTypesid: assetType?.id,
+        assetTypesid: category?.id,
+        categoriesId: category?.id,
         name: formData.name,
         value: parseFloat(formData.value),
         yield: formData.yield ? parseFloat(formData.yield) / 100 : 0,
@@ -303,11 +308,11 @@ export default function PatrimonioAtivos() {
       existing.value += asset.value;
     } else {
       // Buscar cor do tipo de ativo do mock
-      const assetType = assetTypes.find((t) => t.name === asset.type);
+      const category = categories.find((c) => c.name === asset.type);
       acc.push({
         name: asset.type,
         value: asset.value,
-        color: assetType?.color || "#64748b",
+        color: category?.color || "#64748b",
       });
     }
     return acc;
@@ -338,12 +343,12 @@ export default function PatrimonioAtivos() {
       sortable: true,
       render: (row) => {
         // Buscar cor do tipo de ativo do mock
-        const assetType = assetTypes.find((t) => t.name === row.type);
+        const category = categories.find((c) => c.name === row.type);
         return (
           <Badge
             variant="default"
             style={{
-              backgroundColor: assetType?.color || "#64748b",
+              backgroundColor: category?.color || "#64748b",
               color: "white",
             }}
           >
@@ -442,9 +447,9 @@ export default function PatrimonioAtivos() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Todos os tipos</SelectItem>
-                    {assetTypes.map((type) => (
-                      <SelectItem key={type.id} value={type.name}>
-                        {type.name}
+                    {categories.map((cat) => (
+                      <SelectItem key={cat.id} value={cat.name}>
+                        {cat.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -586,9 +591,9 @@ export default function PatrimonioAtivos() {
                   <SelectValue placeholder="Selecione o tipo" />
                 </SelectTrigger>
                 <SelectContent>
-                  {assetTypes.map((type) => (
-                    <SelectItem key={type.id} value={type.name}>
-                      {type.name}
+                  {categories.map((cat) => (
+                    <SelectItem key={cat.id} value={cat.name}>
+                      {cat.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -656,17 +661,17 @@ export default function PatrimonioAtivos() {
             <DialogTitle>Tipos de Ativos</DialogTitle>
           </DialogHeader>
           <div className="space-y-2">
-            {assetTypes.map((type) => {
+            {categories.map((cat) => {
               return (
                 <div
-                  key={type.id}
+                  key={cat.id}
                   className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg"
                 >
                   <div
                     className="w-6 h-6 rounded-full"
-                    style={{ backgroundColor: type.color || "#64748b" }}
+                    style={{ backgroundColor: cat.color || "#64748b" }}
                   />
-                  <span className="font-medium text-gray-900">{type.name}</span>
+                  <span className="font-medium text-gray-900">{cat.name}</span>
                 </div>
               );
             })}

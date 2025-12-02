@@ -22,20 +22,17 @@ import {
   deleteCategory,
   addTransactionTypeToCategory,
   removeTransactionTypeFromCategory,
-  createAssetType,
-  updateAssetType,
-  deleteAssetType,
 } from "../../src/utils/mockApi";
-import { Plus, Edit2, Trash2, Tag, PiggyBank, ChevronDown, ChevronRight } from "lucide-react";
+import { Plus, Edit2, Trash2, Tag, ChevronDown, ChevronRight } from "lucide-react";
 
 /**
- * Página de Categorias - Gerenciamento de categorias e tipos de transação
- * Nova estrutura: Categorias (Salário, Moradia, etc.) podem ter múltiplos tipos (Receita, Despesa, Aporte)
+ * Página de Categorias - Gerenciamento unificado de todas as categorias
+ * Todas as categorias (Salário, Moradia, Poupança, etc.) são unificadas
+ * Cada categoria pode ter múltiplos tipos (Receita, Despesa, Aporte)
  */
 export default function CategoriasPage() {
   const [categories, setCategories] = useState([]);
   const [transactionTypes, setTransactionTypes] = useState([]);
-  const [assetTypes, setAssetTypes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [expandedCategories, setExpandedCategories] = useState([]);
 
@@ -49,29 +46,19 @@ export default function CategoriasPage() {
     transactionTypes: [],
   });
 
-  // Estados para modal de asset type
-  const [assetModalOpen, setAssetModalOpen] = useState(false);
-  const [editingAsset, setEditingAsset] = useState(null);
-  const [assetFormData, setAssetFormData] = useState({
-    name: "",
-    color: "#10b981",
-  });
-
   useEffect(() => {
     loadData();
   }, []);
 
   const loadData = async () => {
     try {
-      const [categoriesRes, transactionTypesRes, assetTypesRes] = await Promise.all([
+      const [categoriesRes, transactionTypesRes] = await Promise.all([
         fetchData("/api/categories"),
         fetchData("/api/transactionTypes"),
-        fetchData("/api/assetTypes"),
       ]);
 
       setCategories(categoriesRes.data);
       setTransactionTypes(transactionTypesRes.data);
-      setAssetTypes(assetTypesRes.data);
     } catch (error) {
       console.error("Erro ao carregar dados:", error);
     } finally {
@@ -165,54 +152,6 @@ export default function CategoriasPage() {
     }
   };
 
-  // ===== FUNÇÕES PARA ASSET TYPES =====
-
-  const handleOpenAssetModal = (asset = null) => {
-    setEditingAsset(asset);
-    if (asset) {
-      setAssetFormData({
-        name: asset.name,
-        color: asset.color,
-      });
-    } else {
-      setAssetFormData({
-        name: "",
-        color: "#10b981",
-      });
-    }
-    setAssetModalOpen(true);
-  };
-
-  const handleAssetSubmit = async (e) => {
-    e.preventDefault();
-
-    try {
-      if (editingAsset) {
-        await updateAssetType(editingAsset.id, assetFormData);
-      } else {
-        await createAssetType(assetFormData);
-      }
-
-      await loadData();
-      setAssetModalOpen(false);
-    } catch (error) {
-      console.error("Erro ao salvar tipo de ativo:", error);
-      alert("Erro ao salvar tipo de ativo. Tente novamente.");
-    }
-  };
-
-  const handleDeleteAsset = async (id) => {
-    if (!confirm("Tem certeza que deseja deletar este tipo de ativo?")) return;
-
-    try {
-      await deleteAssetType(id);
-      await loadData();
-    } catch (error) {
-      console.error("Erro ao deletar tipo de ativo:", error);
-      alert("Erro ao deletar tipo de ativo. Tente novamente.");
-    }
-  };
-
   const getTransactionTypeById = (id) => {
     return transactionTypes.find(t => t.id === id);
   };
@@ -228,11 +167,11 @@ export default function CategoriasPage() {
   return (
     <div className="space-y-6 animate-fade-in">
       <PageHeader
-        title="Categorias e Tipos"
-        description="Gerencie categorias de transações e configure quais tipos (Receita, Despesa, Aporte) são permitidos"
+        title="Categorias"
+        description="Gerencie todas as categorias e configure quais tipos de transação (Receita, Despesa, Aporte) são permitidos para cada uma"
       />
 
-      {/* Seção: Categorias de Transação */}
+      {/* Seção: Categorias */}
       <Card>
         <CardContent className="p-6">
           <div className="flex items-center justify-between mb-6">
@@ -241,9 +180,9 @@ export default function CategoriasPage() {
                 <Tag className="w-5 h-5 text-blue-600" />
               </div>
               <div>
-                <h2 className="text-lg font-semibold text-gray-900">Categorias de Transações</h2>
+                <h2 className="text-lg font-semibold text-gray-900">Todas as Categorias</h2>
                 <p className="text-sm text-gray-500">
-                  Configure quais tipos de transação são permitidos para cada categoria ({categories.length})
+                  Gerencie categorias de receitas, despesas, aportes e ativos em um só lugar ({categories.length})
                 </p>
               </div>
             </div>
@@ -369,63 +308,6 @@ export default function CategoriasPage() {
         </CardContent>
       </Card>
 
-      {/* Seção: Tipos de Ativos */}
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <PiggyBank className="w-5 h-5 text-green-600" />
-              </div>
-              <div>
-                <h2 className="text-lg font-semibold text-gray-900">Tipos de Ativos</h2>
-                <p className="text-sm text-gray-500">
-                  Poupança, CDB, Ações, etc. ({assetTypes.length})
-                </p>
-              </div>
-            </div>
-            <Button
-              onClick={() => handleOpenAssetModal()}
-              className="flex items-center gap-2"
-            >
-              <Plus className="w-4 h-4" />
-              Novo Tipo
-            </Button>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {assetTypes.map((type) => (
-              <div
-                key={type.id}
-                className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow"
-              >
-                <div className="flex items-center gap-3">
-                  <div
-                    className="w-4 h-4 rounded-full"
-                    style={{ backgroundColor: type.color }}
-                  />
-                  <span className="font-medium text-gray-900">{type.name}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => handleOpenAssetModal(type)}
-                    className="p-1.5 hover:bg-gray-100 rounded transition-colors"
-                  >
-                    <Edit2 className="w-4 h-4 text-gray-600" />
-                  </button>
-                  <button
-                    onClick={() => handleDeleteAsset(type.id)}
-                    className="p-1.5 hover:bg-red-50 rounded transition-colors"
-                  >
-                    <Trash2 className="w-4 h-4 text-red-600" />
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
       {/* Modal de Categoria */}
       <Dialog open={categoryModalOpen} onOpenChange={setCategoryModalOpen}>
         <DialogContent className="max-w-md">
@@ -529,68 +411,6 @@ export default function CategoriasPage() {
           </form>
         </DialogContent>
       </Dialog>
-
-      {/* Modal de Asset Type */}
-      <Dialog open={assetModalOpen} onOpenChange={setAssetModalOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>
-              {editingAsset ? "Editar Tipo de Ativo" : "Criar Novo Tipo de Ativo"}
-            </DialogTitle>
-          </DialogHeader>
-          <form onSubmit={handleAssetSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="asset-name">Nome</Label>
-              <Input
-                id="asset-name"
-                value={assetFormData.name}
-                onChange={(e) =>
-                  setAssetFormData({ ...assetFormData, name: e.target.value })
-                }
-                placeholder="Ex: Poupança, CDB, Ações..."
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="asset-color">Cor</Label>
-              <div className="flex items-center gap-3">
-                <input
-                  id="asset-color"
-                  type="color"
-                  value={assetFormData.color}
-                  onChange={(e) =>
-                    setAssetFormData({ ...assetFormData, color: e.target.value })
-                  }
-                  className="w-16 h-10 rounded border border-gray-300 cursor-pointer"
-                />
-                <Input
-                  value={assetFormData.color}
-                  onChange={(e) =>
-                    setAssetFormData({ ...assetFormData, color: e.target.value })
-                  }
-                  placeholder="#10b981"
-                  className="flex-1"
-                />
-              </div>
-            </div>
-
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setAssetModalOpen(false)}
-              >
-                Cancelar
-              </Button>
-              <Button type="submit">
-                {editingAsset ? "Salvar" : "Criar"}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
-
