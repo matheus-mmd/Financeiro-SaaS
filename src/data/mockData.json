@@ -28,7 +28,8 @@
     { "id": 21, "name": "Criptomoedas", "color": "#ec4899", "internal_name": "crypto", "transactionTypes": [3] },
     { "id": 23, "name": "CDB", "color": "#3b82f6", "internal_name": "cdb", "transactionTypes": [3] },
     { "id": 24, "name": "Tesouro Direto", "color": "#f59e0b", "internal_name": "treasury", "transactionTypes": [3] },
-    { "id": 22, "name": "Outros", "color": "#64748b", "internal_name": "other", "transactionTypes": [1, 2, 3] }
+    { "id": 25, "name": "FGTS", "color": "#10b981", "internal_name": "fgts", "transactionTypes": [3] },
+    { "id": 22, "name": "Outros", "color": "#64748b", "internal_name": "other", "transactionTypes": [2] }
   ],
   "users": [
     {
@@ -62,8 +63,8 @@
   "assets": [
     {"id": 1, "user_id": "550e8400-e29b-41d4-a716-446655440000", "categories_id": 18, "asset_types_id": 18, "name": "Poupança Matheus", "value": 52752.00, "yield": 0.005, "currency": "BRL", "date": "2025-12-01", "created_at": "2025-12-01T10:00:00Z", "updated_at": "2025-12-01T10:00:00Z"},
     {"id": 2, "user_id": "550e8400-e29b-41d4-a716-446655440000", "categories_id": 18, "asset_types_id": 18, "name": "Poupança Nayanna", "value": 64500.00, "yield": 0.005, "currency": "BRL", "date": "2025-12-01", "created_at": "2025-12-01T10:00:00Z", "updated_at": "2025-12-01T10:00:00Z"},
-    {"id": 3, "user_id": "550e8400-e29b-41d4-a716-446655440000", "categories_id": 22, "asset_types_id": 22, "name": "FGTS Matheus", "value": 5000.00, "yield": 0.003, "currency": "BRL", "date": "2025-12-01", "created_at": "2025-12-01T10:00:00Z", "updated_at": "2025-12-01T10:00:00Z"},
-    {"id": 4, "user_id": "550e8400-e29b-41d4-a716-446655440000", "categories_id": 22, "asset_types_id": 22, "name": "FGTS Nayanna", "value": 1000.00, "yield": 0.003, "currency": "BRL", "date": "2025-12-01", "created_at": "2025-12-01T10:00:00Z", "updated_at": "2025-12-01T10:00:00Z"}
+    {"id": 3, "user_id": "550e8400-e29b-41d4-a716-446655440000", "categories_id": 25, "asset_types_id": 25, "name": "FGTS Matheus", "value": 5000.00, "yield": 0.003, "currency": "BRL", "date": "2025-12-01", "created_at": "2025-12-01T10:00:00Z", "updated_at": "2025-12-01T10:00:00Z"},
+    {"id": 4, "user_id": "550e8400-e29b-41d4-a716-446655440000", "categories_id": 25, "asset_types_id": 25, "name": "FGTS Nayanna", "value": 1000.00, "yield": 0.003, "currency": "BRL", "date": "2025-12-01", "created_at": "2025-12-01T10:00:00Z", "updated_at": "2025-12-01T10:00:00Z"}
   ],
   "targets": [
     {"id": 1, "user_id": "550e8400-e29b-41d4-a716-446655440000", "title": "Entrada + Documentação (imóvel)", "goal": 80000.00, "progress": 80000.00, "status": "completed", "date": "2025-01-01", "created_at": "2025-01-01T10:00:00Z", "updated_at": "2025-01-01T10:00:00Z"},
@@ -78,12 +79,12 @@
     {"id": 5, "user_id": "550e8400-e29b-41d4-a716-446655440000", "category_id": 18, "transaction_type_id": 3, "date": "2025-07-15", "description": "Investimento poupança", "amount": -1109.50, "created_at": "2025-07-15T10:00:00Z", "updated_at": "2025-07-15T10:00:00Z"},
     {"id": 6, "user_id": "550e8400-e29b-41d4-a716-446655440000", "category_id": 1, "transaction_type_id": 1, "date": "2025-08-01", "description": "Salário Matheus", "amount": 2840.3, "created_at": "2025-08-01T10:00:00Z", "updated_at": "2025-08-01T10:00:00Z"},
     {"id": 7, "user_id": "550e8400-e29b-41d4-a716-446655440000", "category_id": 1, "transaction_type_id": 1, "date": "2025-08-01", "description": "Salário Nayanna", "amount": 3517.2, "created_at": "2025-08-01T10:00:00Z", "updated_at": "2025-08-01T10:00:00Z"},
-    {"id": 8, "user_id": "550e8400-e29b-41d4-a716-446655440000", "category_id": 22, "transaction_type_id": 2, "date": "2025-08-05", "description": "Parcela do apartamento", "amount": -1805.00, "created_at": "2025-08-05T10:00:00Z", "updated_at": "2025-08-05T10:00:00Z"},
+    {"id": 8, "user_id": "550e8400-e29b-41d4-a716-446655440000", "category_id": 5, "transaction_type_id": 2, "date": "2025-08-05", "description": "Parcela do apartamento", "amount": -1805.00, "created_at": "2025-08-05T10:00:00Z", "updated_at": "2025-08-05T10:00:00Z"},
     {"id": 9, "user_id": "550e8400-e29b-41d4-a716-446655440000", "category_id": 22, "transaction_type_id": 2, "date": "2025-08-10", "description": "Despesas diversas", "amount": -3900.00, "created_at": "2025-08-10T10:00:00Z", "updated_at": "2025-08-10T10:00:00Z"},
     {"id": 10, "user_id": "550e8400-e29b-41d4-a716-446655440000", "category_id": 18, "transaction_type_id": 3, "date": "2025-08-15", "description": "Investimento poupança", "amount": -1709.50, "created_at": "2025-08-15T10:00:00Z", "updated_at": "2025-08-15T10:00:00Z"},
     {"id": 11, "user_id": "550e8400-e29b-41d4-a716-446655440000", "category_id": 1, "transaction_type_id": 1, "date": "2025-09-01", "description": "Salário Matheus", "amount": 2840.3, "created_at": "2025-09-01T10:00:00Z", "updated_at": "2025-09-01T10:00:00Z"},
     {"id": 12, "user_id": "550e8400-e29b-41d4-a716-446655440000", "category_id": 1, "transaction_type_id": 1, "date": "2025-09-01", "description": "Salário Nayanna", "amount": 3517.2, "created_at": "2025-09-01T10:00:00Z", "updated_at": "2025-09-01T10:00:00Z"},
-    {"id": 13, "user_id": "550e8400-e29b-41d4-a716-446655440000", "category_id": 22, "transaction_type_id": 2, "date": "2025-09-05", "description": "Parcela do apartamento", "amount": -1805.00, "created_at": "2025-09-05T10:00:00Z", "updated_at": "2025-09-05T10:00:00Z"},
+    {"id": 13, "user_id": "550e8400-e29b-41d4-a716-446655440000", "category_id": 5, "transaction_type_id": 2, "date": "2025-09-05", "description": "Parcela do apartamento", "amount": -1805.00, "created_at": "2025-09-05T10:00:00Z", "updated_at": "2025-09-05T10:00:00Z"},
     {"id": 14, "user_id": "550e8400-e29b-41d4-a716-446655440000", "category_id": 22, "transaction_type_id": 2, "date": "2025-09-10", "description": "Despesas diversas", "amount": -4800.00, "created_at": "2025-09-10T10:00:00Z", "updated_at": "2025-09-10T10:00:00Z"},
     {"id": 15, "user_id": "550e8400-e29b-41d4-a716-446655440000", "category_id": 18, "transaction_type_id": 3, "date": "2025-09-15", "description": "Investimento poupança", "amount": -809.50, "created_at": "2025-09-15T10:00:00Z", "updated_at": "2025-09-15T10:00:00Z"},
     {"id": 16, "user_id": "550e8400-e29b-41d4-a716-446655440000", "category_id": 1, "transaction_type_id": 1, "date": "2025-10-01", "description": "Salário Matheus", "amount": 2840.3, "created_at": "2025-10-01T10:00:00Z", "updated_at": "2025-10-01T10:00:00Z"},

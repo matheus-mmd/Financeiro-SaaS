@@ -20,21 +20,18 @@ import {
   createCategory,
   updateCategory,
   deleteCategory,
-  addTransactionTypeToCategory,
-  removeTransactionTypeFromCategory,
 } from "../../src/utils/mockApi";
-import { Plus, Edit2, Trash2, Tag, ChevronDown, ChevronRight } from "lucide-react";
+import { Plus, Edit2, Trash2, Tag } from "lucide-react";
 
 /**
- * Página de Categorias - Gerenciamento segmentado de categorias
- * Categorias separadas por tipo: Receitas, Despesas e Patrimônio/Ativos
- * Cada seção gerencia apenas suas categorias específicas
+ * Página de Categorias - Gerenciamento de categorias
+ * Categorias organizadas por tipo: Receitas, Despesas e Patrimônio/Ativos
+ * Visualização simples e objetiva com ações diretas
  */
 export default function CategoriasPage() {
   const [categories, setCategories] = useState([]);
   const [transactionTypes, setTransactionTypes] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [expandedCategories, setExpandedCategories] = useState([]);
 
   // Estados para modal de categoria
   const [categoryModalOpen, setCategoryModalOpen] = useState(false);
@@ -80,30 +77,14 @@ export default function CategoriasPage() {
       cat.transactionTypes && cat.transactionTypes.includes(3) && !cat.transactionTypes.includes(1) && !cat.transactionTypes.includes(2)
     );
 
-    // Categoria "Outros" que pode ter múltiplos tipos
-    const multiTypeCategories = categories.filter(cat =>
-      cat.transactionTypes &&
-      (cat.transactionTypes.length > 1 ||
-      (cat.transactionTypes.length === 0))
-    );
-
     return {
       income: incomeCategories,
       expense: expenseCategories,
       asset: assetCategories,
-      multiType: multiTypeCategories,
     };
   };
 
-  const { income, expense, asset, multiType } = categorizeByType();
-
-  const toggleCategory = (categoryId) => {
-    setExpandedCategories(prev =>
-      prev.includes(categoryId)
-        ? prev.filter(id => id !== categoryId)
-        : [...prev, categoryId]
-    );
-  };
+  const { income, expense, asset } = categorizeByType();
 
   // ===== FUNÇÕES PARA CATEGORIAS =====
 
@@ -166,23 +147,6 @@ export default function CategoriasPage() {
     }));
   };
 
-  const handleQuickToggleTransactionType = async (category, typeId) => {
-    try {
-      const isEnabled = category.transactionTypes.includes(typeId);
-
-      if (isEnabled) {
-        await removeTransactionTypeFromCategory(category.id, typeId);
-      } else {
-        await addTransactionTypeToCategory(category.id, typeId);
-      }
-
-      await loadData();
-    } catch (error) {
-      console.error("Erro ao atualizar tipo de transação:", error);
-      alert("Erro ao atualizar. Tente novamente.");
-    }
-  };
-
   const getTransactionTypeById = (id) => {
     return transactionTypes.find(t => t.id === id);
   };
@@ -227,111 +191,55 @@ export default function CategoriasPage() {
 
           <div className="space-y-3">
             {sectionCategories.map((category) => (
-              <div key={category.id} className="border border-gray-200 rounded-lg overflow-hidden">
-                {/* Categoria Principal */}
-                <div className="flex items-center justify-between p-4 bg-gray-50">
-                  <div className="flex items-center gap-3 flex-1">
-                    <button
-                      onClick={() => toggleCategory(category.id)}
-                      className="p-1 hover:bg-gray-200 rounded transition-colors"
-                    >
-                      {expandedCategories.includes(category.id) ? (
-                        <ChevronDown className="w-4 h-4 text-gray-600" />
-                      ) : (
-                        <ChevronRight className="w-4 h-4 text-gray-600" />
-                      )}
-                    </button>
-                    <div
-                      className="w-4 h-4 rounded-full"
-                      style={{ backgroundColor: category.color }}
-                    />
-                    <div className="flex-1">
-                      <span className="font-semibold text-gray-900">{category.name}</span>
-                      <div className="flex items-center gap-2 mt-1">
-                        {category.transactionTypes && category.transactionTypes.length > 0 ? (
-                          category.transactionTypes.map(typeId => {
-                            const type = getTransactionTypeById(typeId);
-                            return type ? (
-                              <Badge
-                                key={typeId}
-                                variant="secondary"
-                                className="text-xs"
-                                style={{
-                                  backgroundColor: `${type.color}20`,
-                                  color: type.color,
-                                  borderColor: type.color,
-                                }}
-                              >
-                                {type.name}
-                              </Badge>
-                            ) : null;
-                          })
-                        ) : (
-                          <span className="text-xs text-gray-500">Nenhum tipo configurado</span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => handleOpenCategoryModal(category)}
-                      className="p-1.5 hover:bg-gray-200 rounded transition-colors"
-                    >
-                      <Edit2 className="w-4 h-4 text-gray-600" />
-                    </button>
-                    <button
-                      onClick={() => handleDeleteCategory(category.id)}
-                      className="p-1.5 hover:bg-red-100 rounded transition-colors"
-                    >
-                      <Trash2 className="w-4 h-4 text-red-600" />
-                    </button>
-                  </div>
-                </div>
-
-                {/* Tipos de Transação - Toggle rápido */}
-                {expandedCategories.includes(category.id) && (
-                  <div className="p-4 bg-white border-t">
-                    <p className="text-sm font-medium text-gray-700 mb-3">
-                      Tipos de transação permitidos:
-                    </p>
-                    <div className="flex flex-wrap gap-3">
-                      {transactionTypes.map(type => {
-                        const isEnabled = category.transactionTypes?.includes(type.id);
-                        return (
-                          <button
-                            key={type.id}
-                            onClick={() => handleQuickToggleTransactionType(category, type.id)}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-lg border-2 transition-all ${
-                              isEnabled
-                                ? 'border-current shadow-sm'
-                                : 'border-gray-200 hover:border-gray-300 opacity-50'
-                            }`}
-                            style={{
-                              borderColor: isEnabled ? type.color : undefined,
-                              backgroundColor: isEnabled ? `${type.color}10` : 'white',
-                            }}
-                          >
-                            <div
-                              className="w-3 h-3 rounded-full"
-                              style={{ backgroundColor: type.color }}
-                            />
-                            <span
-                              className="text-sm font-medium"
-                              style={{ color: isEnabled ? type.color : '#6b7280' }}
+              <div key={category.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
+                <div className="flex items-center gap-3 flex-1">
+                  <div
+                    className="w-4 h-4 rounded-full flex-shrink-0"
+                    style={{ backgroundColor: category.color }}
+                  />
+                  <div className="flex-1 min-w-0">
+                    <span className="font-semibold text-gray-900">{category.name}</span>
+                    <div className="flex items-center gap-2 mt-1">
+                      {category.transactionTypes && category.transactionTypes.length > 0 ? (
+                        category.transactionTypes.map(typeId => {
+                          const type = getTransactionTypeById(typeId);
+                          return type ? (
+                            <Badge
+                              key={typeId}
+                              variant="secondary"
+                              className="text-xs"
+                              style={{
+                                backgroundColor: `${type.color}20`,
+                                color: type.color,
+                                borderColor: type.color,
+                              }}
                             >
                               {type.name}
-                            </span>
-                            {isEnabled && (
-                              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20" style={{ color: type.color }}>
-                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                              </svg>
-                            )}
-                          </button>
-                        );
-                      })}
+                            </Badge>
+                          ) : null;
+                        })
+                      ) : (
+                        <span className="text-xs text-gray-500">Nenhum tipo configurado</span>
+                      )}
                     </div>
                   </div>
-                )}
+                </div>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <button
+                    onClick={() => handleOpenCategoryModal(category)}
+                    className="p-1.5 hover:bg-gray-200 rounded transition-colors"
+                    title="Editar categoria"
+                  >
+                    <Edit2 className="w-4 h-4 text-gray-600" />
+                  </button>
+                  <button
+                    onClick={() => handleDeleteCategory(category.id)}
+                    className="p-1.5 hover:bg-red-100 rounded transition-colors"
+                    title="Deletar categoria"
+                  >
+                    <Trash2 className="w-4 h-4 text-red-600" />
+                  </button>
+                </div>
               </div>
             ))}
           </div>
@@ -383,16 +291,6 @@ export default function CategoriasPage() {
         <Tag className="w-5 h-5 text-blue-600" />,
         "bg-blue-100",
         3 // ID do tipo "Aporte"
-      )}
-
-      {/* Seção: Categorias Compartilhadas (se houver) */}
-      {multiType.length > 0 && renderCategorySection(
-        multiType,
-        "Categorias Compartilhadas",
-        "Categorias que podem ser usadas em múltiplos contextos",
-        <Tag className="w-5 h-5 text-gray-600" />,
-        "bg-gray-100",
-        null
       )}
 
       {/* Modal de Categoria */}
