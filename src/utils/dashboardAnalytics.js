@@ -10,25 +10,31 @@ export { getPreviousMonth };
 
 /**
  * Calcula dados financeiros de um mês específico
+ * Usa type_internal_name para filtrar transações (income, expense, investment)
  */
 export const calculateMonthData = (transactions, expenses, month) => {
   const monthTransactions = transactions.filter(t => t.date.startsWith(month));
   const monthExpenses = expenses.filter(e => e.date.startsWith(month));
 
+  // Receitas: transações com type_internal_name === 'income'
   const credits = monthTransactions
-    .filter(t => t.type === 'credit')
-    .reduce((sum, t) => sum + t.amount, 0);
+    .filter(t => t.type_internal_name === 'income')
+    .reduce((sum, t) => sum + Math.abs(t.amount), 0);
 
+  // Débitos: transações com type_internal_name === 'expense' (sem considerar expenses, pois já são contados separadamente)
   const debits = monthTransactions
-    .filter(t => t.type === 'debit')
+    .filter(t => t.type_internal_name === 'expense')
     .reduce((sum, t) => sum + Math.abs(t.amount), 0);
 
+  // Aportes/Investimentos: transações com type_internal_name === 'investment'
   const investments = monthTransactions
-    .filter(t => t.type === 'investment')
+    .filter(t => t.type_internal_name === 'investment')
     .reduce((sum, t) => sum + Math.abs(t.amount), 0);
 
-  const totalExpenses = monthExpenses.reduce((sum, e) => sum + e.amount, 0);
+  // Total de despesas do mês (de expenses + transactions do tipo expense)
+  const totalExpenses = monthExpenses.reduce((sum, e) => sum + e.amount, 0) + debits;
 
+  // Saldo disponível = receitas - despesas - aportes
   const balance = credits - totalExpenses - investments;
 
   return {
@@ -158,39 +164,62 @@ export const generateAlerts = (currentMonthData, previousMonthData, projectionDa
 };
 
 /**
- * Calcula projeção para fim do mês
+ * Calcula projeção para fim do mês de forma clara e intuitiva
+ *
+ * LÓGICA DA PROJEÇÃO:
+ * 1. Pegamos as receitas confirmadas do mês (já recebidas)
+ * 2. Calculamos quanto já foi gasto até hoje
+ * 3. Calculamos a média diária de gastos (gasto total ÷ dias passados)
+ * 4. Projetamos os gastos futuros (média diária × dias restantes)
+ * 5. Calculamos o saldo final esperado: receitas - gastos totais - aportes
  */
 export const calculateMonthEndProjection = (transactions, expenses, currentMonth) => {
   const now = new Date();
   const [year, month] = currentMonth.split('-').map(Number);
 
-  // Calcular dias do mês
-  const daysInMonth = new Date(year, month, 0).getDate();
-  const currentDay = now.getMonth() + 1 === month ? now.getDate() : daysInMonth;
-  const daysRemaining = daysInMonth - currentDay;
+  // PASSO 1: Calcular informações de tempo
+  const daysInMonth = new Date(year, month, 0).getDate(); // Total de dias no mês
+  const currentDay = now.getMonth() + 1 === month ? now.getDate() : daysInMonth; // Dia atual
+  const daysRemaining = daysInMonth - currentDay; // Dias que faltam
+  const daysPassed = currentDay; // Dias que já passaram
 
-  // Dados atuais do mês
+  // PASSO 2: Buscar dados reais do mês até agora
   const monthData = calculateMonthData(transactions, expenses, currentMonth);
 
-  // Calcular média diária de despesas
-  const avgDailyExpense = currentDay > 0 ? monthData.expenses / currentDay : 0;
+  const confirmedIncome = monthData.credits; // Receitas já recebidas
+  const currentExpenses = monthData.expenses; // Despesas já realizadas
+  const investments = monthData.investments; // Aportes já feitos
 
-  // Projetar despesas para o resto do mês
-  const projectedAdditionalExpenses = avgDailyExpense * daysRemaining;
-  const projectedExpenses = monthData.expenses + projectedAdditionalExpenses;
+  // PASSO 3: Calcular média diária de gastos (baseado no histórico até hoje)
+  const avgDailyExpense = daysPassed > 0 ? currentExpenses / daysPassed : 0;
 
-  // Projetar saldo final
-  const projectedBalance = monthData.credits - projectedExpenses - monthData.investments;
+  // PASSO 4: Projetar despesas futuras
+  // Se ainda faltam dias no mês, estimamos quanto será gasto com base na média
+  const projectedFutureExpenses = avgDailyExpense * daysRemaining;
+  const projectedTotalExpenses = currentExpenses + projectedFutureExpenses;
+
+  // PASSO 5: Calcular saldo final projetado
+  // Fórmula simples: RECEITAS - DESPESAS TOTAIS - APORTES
+  const projectedBalance = confirmedIncome - projectedTotalExpenses - investments;
 
   return {
-    credits: monthData.credits,
-    currentExpenses: monthData.expenses,
-    projectedExpenses,
-    investments: monthData.investments,
-    projectedBalance,
-    daysRemaining,
-    avgDailyExpense,
+    // Valores reais
+    credits: confirmedIncome,
+    currentExpenses: currentExpenses,
+    investments: investments,
+
+    // Projeções
+    projectedExpenses: projectedTotalExpenses,
+    projectedBalance: projectedBalance,
+
+    // Métricas auxiliares
+    avgDailyExpense: avgDailyExpense,
+    daysRemaining: daysRemaining,
+    daysPassed: daysPassed,
     totalDaysInMonth: daysInMonth,
+
+    // Projeção futura específica (quanto ainda vai gastar)
+    projectedFutureExpenses: projectedFutureExpenses,
   };
 };
 

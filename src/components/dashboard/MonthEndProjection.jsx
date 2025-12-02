@@ -6,8 +6,13 @@ import { TrendingUp, Calendar, AlertCircle } from "lucide-react";
 import { formatCurrency } from "../../utils";
 
 /**
- * MonthEndProjection - Projeção para fim do mês
- * @param {Object} data - { credits, currentExpenses, projectedExpenses, investments, projectedBalance, daysRemaining, avgDailyExpense }
+ * MonthEndProjection - Projeção clara e intuitiva para fim do mês
+ *
+ * Mostra de forma simples:
+ * - Quanto já entrou (receitas confirmadas)
+ * - Quanto já saiu (despesas até agora)
+ * - Quanto ainda vai sair (estimativa baseada na média)
+ * - Saldo final esperado
  */
 export default function MonthEndProjection({ data }) {
   const {
@@ -19,6 +24,8 @@ export default function MonthEndProjection({ data }) {
     daysRemaining,
     avgDailyExpense,
     totalDaysInMonth,
+    daysPassed,
+    projectedFutureExpenses,
   } = data;
 
   const isNegative = projectedBalance < 0;
@@ -58,33 +65,53 @@ export default function MonthEndProjection({ data }) {
           </div>
         </div>
 
-        {/* Projeção */}
+        {/* Projeção - Explicação clara passo a passo */}
         <div className="space-y-3">
+          {/* 1. Receitas confirmadas */}
           <div className="flex justify-between items-center text-sm">
-            <span className="text-gray-600">Receitas confirmadas</span>
+            <div className="flex items-center gap-2">
+              <span className="text-gray-600">✅ Receitas confirmadas</span>
+            </div>
             <span className="font-semibold text-green-600">
-              {formatCurrency(credits)}
+              + {formatCurrency(credits)}
             </span>
           </div>
 
+          {/* 2. Despesas até agora */}
           <div className="flex justify-between items-center text-sm">
-            <span className="text-gray-600">Despesas até agora</span>
+            <div className="flex items-center gap-2">
+              <span className="text-gray-600">💸 Despesas até agora ({daysPassed || 0} dias)</span>
+            </div>
             <span className="font-medium text-gray-900">
-              {formatCurrency(currentExpenses)}
+              - {formatCurrency(currentExpenses)}
             </span>
           </div>
 
+          {/* 3. Projeção de despesas futuras */}
+          {daysRemaining > 0 && (
+            <div className="flex justify-between items-center text-sm bg-orange-50 -mx-2 px-2 py-2 rounded">
+              <div className="flex items-center gap-2">
+                <span className="text-gray-600">📊 Estimativa próximos {daysRemaining} dias</span>
+              </div>
+              <span className="font-medium text-orange-600">
+                - {formatCurrency(projectedFutureExpenses || 0)}
+              </span>
+            </div>
+          )}
+
+          {/* 4. Despesas totais projetadas */}
           <div className="flex justify-between items-center text-sm border-t pt-2">
-            <span className="text-gray-600">Despesas projetadas</span>
+            <span className="text-gray-600 font-medium">Total despesas projetadas</span>
             <span className="font-semibold text-orange-600">
-              {formatCurrency(projectedExpenses)}
+              - {formatCurrency(projectedExpenses)}
             </span>
           </div>
 
+          {/* 5. Aportes */}
           <div className="flex justify-between items-center text-sm">
-            <span className="text-gray-600">Aportes</span>
+            <span className="text-gray-600">💰 Aportes/Investimentos</span>
             <span className="font-medium text-blue-600">
-              {formatCurrency(investments)}
+              - {formatCurrency(investments)}
             </span>
           </div>
 

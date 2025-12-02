@@ -271,8 +271,8 @@ export default function Dashboard() {
     return grouped;
   }, [expenses, currentMonth, categories]);
 
-  // Preparar dados para IncomeVsExpensesChart - Evolução ao longo do mês
-  const incomeVsExpensesData = useMemo(() => {
+  // Preparar dados DIÁRIOS para IncomeVsExpensesChart - Evolução ao longo do mês
+  const incomeVsExpensesDailyData = useMemo(() => {
     // Agrupar transações por dia do mês atual
     const dailyData = {};
 
@@ -315,6 +315,47 @@ export default function Dashboard() {
         ...d,
         date: `${d.date}`,
       }));
+  }, [transactions, expenses, currentMonth]);
+
+  // Preparar dados MENSAIS para IncomeVsExpensesChart - Comparação de últimos meses
+  const incomeVsExpensesMonthlyData = useMemo(() => {
+    // Criar lista dos últimos 6 meses
+    const months = [];
+    for (let i = 5; i >= 0; i--) {
+      let tempMonth = currentMonth;
+      for (let j = 0; j < i; j++) {
+        tempMonth = getPreviousMonth(tempMonth);
+      }
+      months.push(tempMonth);
+    }
+
+    // Calcular receitas e despesas para cada mês
+    return months.map(month => {
+      const [year, monthNum] = month.split('-');
+      const monthName = new Date(year, monthNum - 1).toLocaleDateString('pt-BR', { month: 'short' });
+
+      // Receitas do mês
+      const monthIncome = transactions
+        .filter(t => t.date.startsWith(month) && t.type_internal_name === 'income')
+        .reduce((sum, t) => sum + Math.abs(t.amount), 0);
+
+      // Despesas do mês (transactions + expenses)
+      const monthExpenseFromTransactions = transactions
+        .filter(t => t.date.startsWith(month) && t.type_internal_name === 'expense')
+        .reduce((sum, t) => sum + Math.abs(t.amount), 0);
+
+      const monthExpenseFromExpenses = expenses
+        .filter(e => e.date.startsWith(month))
+        .reduce((sum, e) => sum + e.amount, 0);
+
+      const totalExpense = monthExpenseFromTransactions + monthExpenseFromExpenses;
+
+      return {
+        date: monthName.charAt(0).toUpperCase() + monthName.slice(1),
+        income: monthIncome,
+        expense: totalExpense,
+      };
+    });
   }, [transactions, expenses, currentMonth]);
 
   const handleEditTransaction = (transaction) => {
@@ -528,9 +569,10 @@ export default function Dashboard() {
         <BudgetRule503020 data={budgetRule503020Data} />
       </div>
 
-      {/* NOVO: Gráfico de Receitas x Despesas com métricas */}
+      {/* NOVO: Gráfico de Receitas x Despesas com métricas e toggle Dia/Mês */}
       <IncomeVsExpensesChart
-        data={incomeVsExpensesData}
+        dailyData={incomeVsExpensesDailyData}
+        monthlyData={incomeVsExpensesMonthlyData}
         period="PERÍODO ATUAL"
       />
 
