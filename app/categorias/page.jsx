@@ -13,8 +13,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "../../src/components/ui/dialog";
-import { Badge } from "../../src/components/ui/badge";
-import { Checkbox } from "../../src/components/ui/checkbox";
 import {
   fetchData,
   createCategory,
@@ -39,8 +37,7 @@ export default function CategoriasPage() {
   const [categoryFormData, setCategoryFormData] = useState({
     name: "",
     color: "#6366f1",
-    internal_name: "",
-    transactionTypes: [],
+    transaction_type_id: null,
   });
 
   useEffect(() => {
@@ -65,17 +62,9 @@ export default function CategoriasPage() {
 
   // Separar categorias por tipo
   const categorizeByType = () => {
-    const incomeCategories = categories.filter(cat =>
-      cat.transactionTypes && cat.transactionTypes.includes(1) && !cat.transactionTypes.includes(2) && !cat.transactionTypes.includes(3)
-    );
-
-    const expenseCategories = categories.filter(cat =>
-      cat.transactionTypes && cat.transactionTypes.includes(2) && !cat.transactionTypes.includes(1) && !cat.transactionTypes.includes(3)
-    );
-
-    const assetCategories = categories.filter(cat =>
-      cat.transactionTypes && cat.transactionTypes.includes(3) && !cat.transactionTypes.includes(1) && !cat.transactionTypes.includes(2)
-    );
+    const incomeCategories = categories.filter(cat => cat.transaction_type_id === 1);
+    const expenseCategories = categories.filter(cat => cat.transaction_type_id === 2);
+    const assetCategories = categories.filter(cat => cat.transaction_type_id === 3);
 
     return {
       income: incomeCategories,
@@ -88,21 +77,19 @@ export default function CategoriasPage() {
 
   // ===== FUNÇÕES PARA CATEGORIAS =====
 
-  const handleOpenCategoryModal = (category = null) => {
+  const handleOpenCategoryModal = (category = null, defaultType = null) => {
     setEditingCategory(category);
     if (category) {
       setCategoryFormData({
         name: category.name,
         color: category.color,
-        internal_name: category.internal_name || "",
-        transactionTypes: category.transactionTypes || [],
+        transaction_type_id: category.transaction_type_id,
       });
     } else {
       setCategoryFormData({
         name: "",
         color: "#6366f1",
-        internal_name: "",
-        transactionTypes: [],
+        transaction_type_id: defaultType,
       });
     }
     setCategoryModalOpen(true);
@@ -138,15 +125,6 @@ export default function CategoriasPage() {
     }
   };
 
-  const handleToggleTransactionType = (typeId) => {
-    setCategoryFormData(prev => ({
-      ...prev,
-      transactionTypes: prev.transactionTypes.includes(typeId)
-        ? prev.transactionTypes.filter(id => id !== typeId)
-        : [...prev.transactionTypes, typeId]
-    }));
-  };
-
   const getTransactionTypeById = (id) => {
     return transactionTypes.find(t => t.id === id);
   };
@@ -173,15 +151,7 @@ export default function CategoriasPage() {
               </div>
             </div>
             <Button
-              onClick={() => {
-                handleOpenCategoryModal();
-                if (defaultType) {
-                  setCategoryFormData(prev => ({
-                    ...prev,
-                    transactionTypes: [defaultType]
-                  }));
-                }
-              }}
+              onClick={() => handleOpenCategoryModal(null, defaultType)}
               className="flex items-center gap-2"
             >
               <Plus className="w-4 h-4" />
@@ -199,29 +169,6 @@ export default function CategoriasPage() {
                   />
                   <div className="flex-1 min-w-0">
                     <span className="font-semibold text-gray-900">{category.name}</span>
-                    <div className="flex items-center gap-2 mt-1">
-                      {category.transactionTypes && category.transactionTypes.length > 0 ? (
-                        category.transactionTypes.map(typeId => {
-                          const type = getTransactionTypeById(typeId);
-                          return type ? (
-                            <Badge
-                              key={typeId}
-                              variant="secondary"
-                              className="text-xs"
-                              style={{
-                                backgroundColor: `${type.color}20`,
-                                color: type.color,
-                                borderColor: type.color,
-                              }}
-                            >
-                              {type.name}
-                            </Badge>
-                          ) : null;
-                        })
-                      ) : (
-                        <span className="text-xs text-gray-500">Nenhum tipo configurado</span>
-                      )}
-                    </div>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
@@ -316,21 +263,6 @@ export default function CategoriasPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="category-internal-name">Nome Interno</Label>
-              <Input
-                id="category-internal-name"
-                value={categoryFormData.internal_name}
-                onChange={(e) =>
-                  setCategoryFormData({ ...categoryFormData, internal_name: e.target.value })
-                }
-                placeholder="Ex: salary, housing, food..."
-              />
-              <p className="text-xs text-gray-500">
-                Usado internamente no código (sem espaços, minúsculas)
-              </p>
-            </div>
-
-            <div className="space-y-2">
               <Label htmlFor="category-color">Cor</Label>
               <div className="flex items-center gap-3">
                 <input
@@ -351,34 +283,6 @@ export default function CategoriasPage() {
                   className="flex-1"
                 />
               </div>
-            </div>
-
-            <div className="space-y-3">
-              <Label>Tipos de Transação Permitidos</Label>
-              <div className="space-y-2">
-                {transactionTypes.map(type => (
-                  <div key={type.id} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={`type-${type.id}`}
-                      checked={categoryFormData.transactionTypes.includes(type.id)}
-                      onCheckedChange={() => handleToggleTransactionType(type.id)}
-                    />
-                    <label
-                      htmlFor={`type-${type.id}`}
-                      className="flex items-center gap-2 cursor-pointer"
-                    >
-                      <div
-                        className="w-3 h-3 rounded-full"
-                        style={{ backgroundColor: type.color }}
-                      />
-                      <span className="text-sm font-medium">{type.name}</span>
-                    </label>
-                  </div>
-                ))}
-              </div>
-              <p className="text-xs text-gray-500">
-                Selecione quais tipos de transação podem usar esta categoria
-              </p>
             </div>
 
             <DialogFooter>

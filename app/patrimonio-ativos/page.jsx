@@ -102,9 +102,9 @@ export default function PatrimonioAtivos() {
 
         setAssets(assetsWithDate);
         setFilteredAssets(assetsWithDate);
-        // Filtrar apenas categorias que permitem Aporte (transactionType = 3)
+        // Filtrar apenas categorias que permitem Aporte (transaction_type_id === 3)
         const assetCategories = categoriesRes.data.filter(cat =>
-          cat.transactionTypes && cat.transactionTypes.includes(3)
+          cat.transaction_type_id === 3
         );
         setCategories(assetCategories);
       } catch (error) {

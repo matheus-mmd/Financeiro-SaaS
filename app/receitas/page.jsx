@@ -98,9 +98,9 @@ export default function Receitas() {
         ]);
         setIncomes(incomesRes.data);
         setFilteredIncomes(incomesRes.data);
-        // Filtrar apenas categorias de receita (transactionTypes inclui 1)
+        // Filtrar apenas categorias de receita (transaction_type_id === 1)
         const incomeCategories = categoriesRes.data.filter(
-          (cat) => cat.transactionTypes && cat.transactionTypes.includes(1)
+          (cat) => cat.transaction_type_id === 1
         );
         setCategories(incomeCategories);
       } catch (error) {

@@ -96,9 +96,9 @@ export default function Despesas() {
         ]);
         setExpenses(expensesRes.data);
         setFilteredExpenses(expensesRes.data);
-        // Filtrar apenas categorias de despesa (transactionTypes inclui 2)
+        // Filtrar apenas categorias de despesa (transaction_type_id === 2)
         const expenseCategories = categoriesRes.data.filter(cat =>
-          cat.transactionTypes && cat.transactionTypes.includes(2)
+          cat.transaction_type_id === 2
         );
         setCategories(expenseCategories);
       } catch (error) {

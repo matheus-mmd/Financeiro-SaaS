@@ -257,12 +257,9 @@ export default function Transacoes() {
   // Quando muda a categoria, verificar se o tipo de transação selecionado é válido
   const handleCategoryChange = (categoryId) => {
     const category = categories.find(c => c.id === parseInt(categoryId));
-    let newTypeId = formData.transactionTypeId;
 
-    // Se o tipo atual não está disponível para a nova categoria, selecionar o primeiro disponível
-    if (category && !category.transactionTypes?.includes(formData.transactionTypeId)) {
-      newTypeId = category.transactionTypes?.[0] || transactionTypes[0]?.id;
-    }
+    // Definir o tipo de transação baseado no tipo da categoria
+    const newTypeId = category?.transaction_type_id || transactionTypes[0]?.id;
 
     setFormData({
       ...formData,
@@ -276,13 +273,8 @@ export default function Transacoes() {
     const category = categories.find(c => c.id === formData.categoryId);
     if (!category) return transactionTypes;
 
-    // Se a categoria não tem tipos especificados, retornar todos
-    if (!category.transactionTypes || category.transactionTypes.length === 0) {
-      return transactionTypes;
-    }
-
-    // Retornar apenas os tipos permitidos para esta categoria
-    return transactionTypes.filter(t => category.transactionTypes.includes(t.id));
+    // Retornar apenas o tipo associado à categoria
+    return transactionTypes.filter(t => t.id === category.transaction_type_id);
   };
 
   // Calcular estatísticas baseadas nas transações filtradas
