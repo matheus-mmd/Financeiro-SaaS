@@ -254,7 +254,7 @@ export default function Transacoes() {
     setFormData({ ...formData, [field]: value });
   };
 
-  // Quando muda a categoria, verificar se o tipo de transação selecionado é válido
+  // Quando muda a categoria, o tipo de transação é automaticamente definido
   const handleCategoryChange = (categoryId) => {
     const category = categories.find(c => c.id === parseInt(categoryId));
 
@@ -266,15 +266,6 @@ export default function Transacoes() {
       categoryId: parseInt(categoryId),
       transactionTypeId: newTypeId,
     });
-  };
-
-  // Obter tipos disponíveis para a categoria selecionada
-  const getAvailableTypes = () => {
-    const category = categories.find(c => c.id === formData.categoryId);
-    if (!category) return transactionTypes;
-
-    // Retornar apenas o tipo associado à categoria
-    return transactionTypes.filter(t => t.id === category.transaction_type_id);
   };
 
   // Calcular estatísticas baseadas nas transações filtradas
@@ -542,58 +533,30 @@ export default function Transacoes() {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              {/* Categoria */}
-              <div className="space-y-2">
-                <Label htmlFor="category">Categoria</Label>
-                <Select
-                  value={formData.categoryId?.toString() || ""}
-                  onValueChange={handleCategoryChange}
-                >
-                  <SelectTrigger id="category">
-                    <SelectValue placeholder="Selecione" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {categories.map((category) => (
-                      <SelectItem key={category.id} value={category.id.toString()}>
-                        <div className="flex items-center gap-2">
-                          <div
-                            className="w-3 h-3 rounded-full"
-                            style={{ backgroundColor: category.color }}
-                          />
-                          {category.name}
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Tipo de Transação */}
-              <div className="space-y-2">
-                <Label htmlFor="type">Tipo</Label>
-                <Select
-                  value={formData.transactionTypeId?.toString() || ""}
-                  onValueChange={(value) => handleInputChange("transactionTypeId", parseInt(value))}
-                >
-                  <SelectTrigger id="type">
-                    <SelectValue placeholder="Selecione" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {getAvailableTypes().map((type) => (
-                      <SelectItem key={type.id} value={type.id.toString()}>
-                        <div className="flex items-center gap-2">
-                          <div
-                            className="w-3 h-3 rounded-full"
-                            style={{ backgroundColor: type.color }}
-                          />
-                          {type.name}
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+            {/* Categoria */}
+            <div className="space-y-2">
+              <Label htmlFor="category">Categoria</Label>
+              <Select
+                value={formData.categoryId?.toString() || ""}
+                onValueChange={handleCategoryChange}
+              >
+                <SelectTrigger id="category">
+                  <SelectValue placeholder="Selecione" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map((category) => (
+                    <SelectItem key={category.id} value={category.id.toString()}>
+                      <div className="flex items-center gap-2">
+                        <div
+                          className="w-3 h-3 rounded-full"
+                          style={{ backgroundColor: category.color }}
+                        />
+                        {category.name}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">

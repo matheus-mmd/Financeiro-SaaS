@@ -28,6 +28,11 @@ import RunwayCard from "../src/components/dashboard/RunwayCard";
 import BudgetRule503020 from "../src/components/dashboard/BudgetRule503020";
 import CategoryBreakdownCard from "../src/components/dashboard/CategoryBreakdownCard";
 import IncomeVsExpensesChart from "../src/components/dashboard/IncomeVsExpensesChart";
+import FinancialHealthCard from "../src/components/dashboard/FinancialHealthCard";
+import SavingsRateCard from "../src/components/dashboard/SavingsRateCard";
+import DailyBudgetCard from "../src/components/dashboard/DailyBudgetCard";
+import GoalsProgressCard from "../src/components/dashboard/GoalsProgressCard";
+import AlertsSection from "../src/components/dashboard/AlertsSection";
 
 // Funções de análise
 import {
@@ -37,6 +42,9 @@ import {
   calculateMonthEndProjection,
   calculateExpensesByCategory,
   calculateBudgetRule503020,
+  calculateHealthScore,
+  calculateSavingsRate,
+  calculateDailyBudget,
 } from "../src/utils/dashboardAnalytics";
 
 /**
@@ -199,6 +207,32 @@ export default function Dashboard() {
     calculateBudgetRule503020(currentMonthExpenses, currentMonthData, categories),
     [currentMonthExpenses, currentMonthData, categories]
   );
+
+  // Calcular Health Score
+  const healthScoreData = useMemo(() =>
+    calculateHealthScore(currentMonthData, assets, avgMonthlyExpenses),
+    [currentMonthData, assets, avgMonthlyExpenses]
+  );
+
+  // Calcular Taxa de Poupança
+  const savingsRateData = useMemo(() =>
+    calculateSavingsRate(currentMonthData, 20), // Meta de 20%
+    [currentMonthData]
+  );
+
+  // Calcular Orçamento Diário
+  const dailyBudgetData = useMemo(() =>
+    calculateDailyBudget(currentMonthData, projectionData.daysRemaining, 20),
+    [currentMonthData, projectionData.daysRemaining]
+  );
+
+  // Calcular comparações mês a mês para os cards
+  const incomeComparison = useMemo(() => {
+    const currentIncome = currentMonthIncomes.reduce((sum, i) => sum + i.amount, 0);
+    const previousIncome = incomes.filter(i => i.date.startsWith(previousMonth)).reduce((sum, i) => sum + i.amount, 0);
+    const change = previousIncome > 0 ? ((currentIncome - previousIncome) / previousIncome) * 100 : 0;
+    return { current: currentIncome, previous: previousIncome, change };
+  }, [currentMonthIncomes, incomes, previousMonth]);
 
   // Filtrar e ordenar transações do mês atual para a tabela
   const recentTransactions = useMemo(() => {
@@ -511,76 +545,118 @@ export default function Dashboard() {
         description="Visão geral inteligente do seu controle financeiro"
       />
 
-      {/* Projeção de Fim de Mês */}
-      <MonthEndProjection data={projectionData} />
+      {/* 🚨 ALERTAS CRÍTICOS */}
+      {alerts.length > 0 && <AlertsSection alerts={alerts} />}
 
-      {/* Cards de resumo tradicionais */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 min-w-0">
-        <StatsCard
-          icon={ArrowUpRight}
-          label="Receitas Mensais"
-          value={formatCurrency(currentMonthIncomes.reduce((sum, income) => sum + income.amount, 0))}
-          subtitle={`${currentMonthIncomes.length} receita(s)`}
-          iconColor="green"
-          valueColor="text-green-600"
-        />
-        <StatsCard
-          icon={TrendingDown}
-          label="Despesas Mensais"
-          value={formatCurrency(currentMonthData.expenses)}
-          subtitle={
-            currentMonthData.debits > currentMonthData.expenses
-              ? `⚠️ Acima do previsto (+${formatCurrency(currentMonthData.debits - currentMonthData.expenses)})`
-              : currentMonthData.debits < currentMonthData.expenses
-              ? `✓ Abaixo do previsto (-${formatCurrency(currentMonthData.expenses - currentMonthData.debits)})`
-              : `✓ Igual ao previsto`
-          }
-          iconColor="red"
-          valueColor="text-red-600"
-        />
-        <StatsCard
-          icon={Target}
-          label="Aportes Mensais"
-          value={formatCurrency(currentMonthData.investments)}
-          iconColor="blue"
-          valueColor="text-blue-600"
-        />
-        <StatsCard
-          icon={Wallet}
-          label="Saldo Disponível"
-          value={formatCurrency(currentMonthData.balance)}
-          subtitle="Créditos - Despesas - Aportes"
-          iconColor={currentMonthData.balance >= 0 ? "blue" : "red"}
-          valueColor={currentMonthData.balance >= 0 ? "text-blue-600" : "text-red-600"}
-        />
+      {/* 📊 VISÃO GERAL - Cards Principais de Tomada de Decisão */}
+      <div>
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">Visão Geral</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 min-w-0">
+          <FinancialHealthCard
+            score={healthScoreData.score}
+            breakdown={healthScoreData.breakdown}
+          />
+          <SavingsRateCard
+            savingsRate={savingsRateData.savingsRate}
+            goal={savingsRateData.goal}
+            amountToGoal={savingsRateData.amountToGoal}
+            income={savingsRateData.totalIncome}
+          />
+          <DailyBudgetCard
+            availableBalance={dailyBudgetData.availableBalance}
+            daysRemaining={dailyBudgetData.daysRemaining}
+            savingsGoal={dailyBudgetData.savingsGoal}
+          />
+          <StatsCard
+            icon={Wallet}
+            label="Saldo Disponível"
+            value={formatCurrency(currentMonthData.balance)}
+            subtitle={`${formatCurrency(dailyBudgetData.dailyBudget)}/dia pelos próximos ${dailyBudgetData.daysRemaining} dias`}
+            iconColor={currentMonthData.balance >= 0 ? "blue" : "red"}
+            valueColor={currentMonthData.balance >= 0 ? "text-blue-600" : "text-red-600"}
+          />
+        </div>
+      </div>
+
+      {/* 💰 ANÁLISE MENSAL - Receitas, Despesas e Aportes */}
+      <div>
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">Análise Mensal</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 min-w-0">
+          <StatsCard
+            icon={ArrowUpRight}
+            label="Receitas Mensais"
+            value={formatCurrency(incomeComparison.current)}
+            subtitle={
+              incomeComparison.change !== 0
+                ? `vs mês anterior: ${incomeComparison.change > 0 ? '+' : ''}${incomeComparison.change.toFixed(1)}% ${incomeComparison.change > 0 ? '↗️' : '↘️'}`
+                : `${currentMonthIncomes.length} receita(s)`
+            }
+            iconColor="green"
+            valueColor="text-green-600"
+          />
+          <StatsCard
+            icon={TrendingDown}
+            label="Despesas Reais"
+            value={formatCurrency(currentMonthData.debits)}
+            subtitle={
+              currentMonthData.plannedExpenses > 0
+                ? currentMonthData.debits > currentMonthData.plannedExpenses
+                  ? `⚠️ Acima do planejado (+${formatCurrency(currentMonthData.debits - currentMonthData.plannedExpenses)})`
+                  : currentMonthData.debits < currentMonthData.plannedExpenses
+                  ? `✓ Abaixo do planejado (-${formatCurrency(currentMonthData.plannedExpenses - currentMonthData.debits)})`
+                  : `✓ Igual ao planejado (${formatCurrency(currentMonthData.plannedExpenses)})`
+                : `Planejado: ${formatCurrency(currentMonthData.plannedExpenses)}`
+            }
+            iconColor="red"
+            valueColor="text-red-600"
+          />
+          <StatsCard
+            icon={Target}
+            label="Aportes Mensais"
+            value={formatCurrency(currentMonthData.investments)}
+            subtitle={`${((currentMonthData.investments / incomeComparison.current) * 100).toFixed(1)}% da receita`}
+            iconColor="blue"
+            valueColor="text-blue-600"
+          />
+        </div>
+      </div>
+
+      {/* 🎯 PROGRESSO DE METAS E PATRIMÔNIO */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <GoalsProgressCard goals={targets} />
         <StatsCard
           icon={PiggyBank}
           label="Patrimônio Total"
           value={formatCurrency(totalAssets)}
-          subtitle={`${assets.length} ativo(s)`}
+          subtitle={`Runway: ${runwayMonths.toFixed(1)} meses • ${assets.length} ativo(s)`}
           iconColor="purple"
           valueColor="text-purple-600"
         />
       </div>
 
-      {/* NOVO: Métricas de runway e regra 50/30/20 */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <RunwayCard data={runwayData} />
-        <BudgetRule503020 data={budgetRule503020Data} />
+      {/* 📈 PROJEÇÃO E ANÁLISES DETALHADAS */}
+      <div>
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">Análises e Projeções</h2>
+        <div className="space-y-6">
+          <MonthEndProjection data={projectionData} />
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <RunwayCard data={runwayData} />
+            <BudgetRule503020 data={budgetRule503020Data} />
+          </div>
+
+          <IncomeVsExpensesChart
+            dailyData={incomeVsExpensesDailyData}
+            monthlyData={incomeVsExpensesMonthlyData}
+            period="PERÍODO ATUAL"
+          />
+
+          <CategoryBreakdownCard
+            incomeData={incomeByCategory}
+            expenseData={currentMonthExpensesByCategory}
+          />
+        </div>
       </div>
-
-      {/* NOVO: Gráfico de Receitas x Despesas com métricas e toggle Dia/Mês */}
-      <IncomeVsExpensesChart
-        dailyData={incomeVsExpensesDailyData}
-        monthlyData={incomeVsExpensesMonthlyData}
-        period="PERÍODO ATUAL"
-      />
-
-      {/* NOVO: Card de Categorias (Receitas/Despesas) */}
-      <CategoryBreakdownCard
-        incomeData={incomeByCategory}
-        expenseData={currentMonthExpensesByCategory}
-      />
 
       {/* Tabela de transações */}
       <Card>
@@ -631,57 +707,6 @@ export default function Dashboard() {
                 }
                 required
               />
-            </div>
-
-            <div className="space-y-2">
-              <Label>Tipo de Transação</Label>
-              <div className="grid grid-cols-3 gap-3">
-                <button
-                  type="button"
-                  onClick={() => handleInputChange("type", "credit")}
-                  className={`p-4 rounded-lg border-2 transition-all ${
-                    formData.type === "credit"
-                      ? "border-green-500 bg-green-50"
-                      : "border-gray-200 hover:border-gray-300"
-                  }`}
-                >
-                  <ArrowUpRight className="w-6 h-6 text-green-600 mx-auto mb-2" />
-                  <span className="block text-sm font-medium text-gray-900">
-                    Crédito
-                  </span>
-                  <span className="block text-xs text-gray-500">Entrada</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleInputChange("type", "debit")}
-                  className={`p-4 rounded-lg border-2 transition-all ${
-                    formData.type === "debit"
-                      ? "border-red-500 bg-red-50"
-                      : "border-gray-200 hover:border-gray-300"
-                  }`}
-                >
-                  <ArrowDownRight className="w-6 h-6 text-red-600 mx-auto mb-2" />
-                  <span className="block text-sm font-medium text-gray-900">
-                    Débito
-                  </span>
-                  <span className="block text-xs text-gray-500">Saída</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleInputChange("type", "investment")}
-                  className={`p-4 rounded-lg border-2 transition-all ${
-                    formData.type === "investment"
-                      ? "border-blue-500 bg-blue-50"
-                      : "border-gray-200 hover:border-gray-300"
-                  }`}
-                >
-                  <TrendingUp className="w-6 h-6 text-blue-600 mx-auto mb-2" />
-                  <span className="block text-sm font-medium text-gray-900">
-                    Aporte
-                  </span>
-                  <span className="block text-xs text-gray-500">Aplicação</span>
-                </button>
-              </div>
             </div>
 
             <div className="space-y-2">

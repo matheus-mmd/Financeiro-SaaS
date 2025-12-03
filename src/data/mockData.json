@@ -1,8 +1,8 @@
 {
   "transactionTypes": [
-    { "id": 1, "name": "Receita", "internal_name": "income", "color": "#22c55e" },
-    { "id": 2, "name": "Despesa", "internal_name": "expense", "color": "#ef4444" },
-    { "id": 3, "name": "Aporte", "internal_name": "investment", "color": "#3b82f6" }
+    { "id": 1, "name": "Receita", "color": "#22c55e" },
+    { "id": 2, "name": "Despesa", "color": "#ef4444" },
+    { "id": 3, "name": "Aporte", "color": "#3b82f6" }
   ],
   "categories": [
     { "id": 1, "name": "Salário", "color": "#10b981", "transaction_type_id": 1 },
@@ -68,7 +68,7 @@
   ],
   "targets": [
     {"id": 1, "user_id": "550e8400-e29b-41d4-a716-446655440000", "title": "Entrada + Documentação (imóvel)", "goal": 80000.00, "progress": 80000.00, "status": "completed", "date": "2025-01-01", "created_at": "2025-01-01T10:00:00Z", "updated_at": "2025-01-01T10:00:00Z"},
-    {"id": 2, "user_id": "550e8400-e29b-41d4-a716-446655440000", "title": "Reserva de emergência", "goal": 25000.00, "progress": 25000.00, "status": "completed", "date": "2025-01-01", "created_at": "2025-01-01T10:00:00Z", "updated_at": "2025-01-01T10:00:00Z"},
+    {"id": 2, "user_id": "550e8400-e29b-41d4-a716-446655440000", "title": "Reserva de emergência", "goal": 25000.00, "progress": 2500.00, "status": "in_progress", "date": "2025-01-01", "created_at": "2025-01-01T10:00:00Z", "updated_at": "2025-01-01T10:00:00Z"},
     {"id": 3, "user_id": "550e8400-e29b-41d4-a716-446655440000", "title": "Fundo Viagem 2026", "goal": 8000.00, "progress": 1250.00, "status": "in_progress", "date": "2025-01-01", "created_at": "2025-01-01T10:00:00Z", "updated_at": "2025-01-01T10:00:00Z"}
   ],
   "transactions": [

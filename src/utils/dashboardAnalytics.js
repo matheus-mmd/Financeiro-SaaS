@@ -21,26 +21,27 @@ export const calculateMonthData = (transactions, expenses, month) => {
     .filter(t => t.type_internal_name === 'income')
     .reduce((sum, t) => sum + Math.abs(t.amount), 0);
 
-  // Débitos: transações com type_internal_name === 'expense' (sem considerar expenses, pois já são contados separadamente)
+  // Débitos/Despesas Reais: transações com type_internal_name === 'expense'
   const debits = monthTransactions
     .filter(t => t.type_internal_name === 'expense')
     .reduce((sum, t) => sum + Math.abs(t.amount), 0);
+
+  // Despesas Planejadas: do módulo de expenses (orçamento)
+  const plannedExpenses = monthExpenses.reduce((sum, e) => sum + e.amount, 0);
 
   // Aportes/Investimentos: transações com type_internal_name === 'investment'
   const investments = monthTransactions
     .filter(t => t.type_internal_name === 'investment')
     .reduce((sum, t) => sum + Math.abs(t.amount), 0);
 
-  // Total de despesas do mês (de expenses + transactions do tipo expense)
-  const totalExpenses = monthExpenses.reduce((sum, e) => sum + e.amount, 0) + debits;
-
-  // Saldo disponível = receitas - despesas - aportes
-  const balance = credits - totalExpenses - investments;
+  // Saldo disponível = receitas - despesas reais - aportes
+  const balance = credits - debits - investments;
 
   return {
     credits,
-    debits,
-    expenses: totalExpenses,
+    debits, // Despesas reais (transactions)
+    expenses: debits, // Mantém compatibilidade (usa despesas reais)
+    plannedExpenses, // Despesas planejadas (expenses)
     investments,
     balance,
   };
@@ -314,5 +315,62 @@ export const calculateBudgetRule503020 = (expenses, currentMonthData, categories
     savings,
     totalIncome,
     percentages,
+  };
+};
+
+/**
+ * Calcula a taxa de poupança (savings rate)
+ * Retorna percentual e valor em reais
+ */
+export const calculateSavingsRate = (currentMonthData, savingsGoalPercentage = 20) => {
+  const totalIncome = currentMonthData.credits;
+
+  // Poupança = Saldo + Investimentos
+  const savings = (currentMonthData.balance > 0 ? currentMonthData.balance : 0) + currentMonthData.investments;
+
+  // Taxa de poupança (%)
+  const savingsRate = totalIncome > 0 ? (savings / totalIncome) * 100 : 0;
+
+  // Quanto falta para atingir a meta
+  const goalAmount = totalIncome * (savingsGoalPercentage / 100);
+  const amountToGoal = Math.max(0, goalAmount - savings);
+
+  return {
+    savingsRate,
+    savingsAmount: savings,
+    goal: savingsGoalPercentage,
+    amountToGoal,
+    totalIncome,
+  };
+};
+
+/**
+ * Calcula o orçamento diário disponível
+ * Considera saldo, dias restantes e meta de poupança
+ */
+export const calculateDailyBudget = (currentMonthData, daysRemaining, savingsGoalPercentage = 20) => {
+  const totalIncome = currentMonthData.credits;
+  const currentBalance = currentMonthData.balance;
+
+  // Meta de poupança em reais
+  const savingsGoal = totalIncome * (savingsGoalPercentage / 100);
+
+  // Quanto já foi guardado/investido
+  const alreadySaved = currentMonthData.investments;
+
+  // Quanto ainda precisa guardar
+  const remainingSavingsGoal = Math.max(0, savingsGoal - alreadySaved);
+
+  // Saldo disponível para gastar (descontando a meta de poupança)
+  const availableToSpend = currentBalance - remainingSavingsGoal;
+
+  // Orçamento diário
+  const dailyBudget = daysRemaining > 0 ? availableToSpend / daysRemaining : 0;
+
+  return {
+    dailyBudget,
+    availableBalance: currentBalance,
+    savingsGoal: remainingSavingsGoal,
+    daysRemaining,
   };
 };
