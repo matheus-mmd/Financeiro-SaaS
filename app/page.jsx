@@ -5,7 +5,6 @@ import Link from "next/link";
 import PageHeader from "../src/components/PageHeader";
 import StatsCard from "../src/components/StatsCard";
 import { Card, CardContent } from "../src/components/ui/card";
-import { Badge } from "../src/components/ui/badge";
 import { Button } from "../src/components/ui/button";
 import { Input } from "../src/components/ui/input";
 import { Label } from "../src/components/ui/label";
@@ -21,48 +20,35 @@ import DatePicker from "../src/components/DatePicker";
 import Table from "../src/components/Table";
 import { fetchData, formatCurrency, formatDate } from "../src/utils";
 import { getIconComponent } from "../src/components/IconPicker";
-import { Wallet, TrendingDown, ArrowUpRight, Target, PiggyBank, ArrowDownRight, TrendingUp, Coins } from "lucide-react";
+import { Wallet, TrendingDown, ArrowUpRight, PiggyBank, Coins } from "lucide-react";
 
 // Componentes de análise do dashboard
-import MonthEndProjection from "../src/components/dashboard/MonthEndProjection";
-import RunwayCard from "../src/components/dashboard/RunwayCard";
-import BudgetRule503020 from "../src/components/dashboard/BudgetRule503020";
 import CategoryBreakdownCard from "../src/components/dashboard/CategoryBreakdownCard";
 import IncomeVsExpensesChart from "../src/components/dashboard/IncomeVsExpensesChart";
 import FinancialHealthCard from "../src/components/dashboard/FinancialHealthCard";
 import SavingsRateCard from "../src/components/dashboard/SavingsRateCard";
 import DailyBudgetCard from "../src/components/dashboard/DailyBudgetCard";
-import GoalsProgressCard from "../src/components/dashboard/GoalsProgressCard";
-import AlertsSection from "../src/components/dashboard/AlertsSection";
 
 // Funções de análise
 import {
   getPreviousMonth,
   calculateMonthData,
-  generateAlerts,
-  calculateMonthEndProjection,
-  calculateExpensesByCategory,
-  calculateBudgetRule503020,
   calculateHealthScore,
   calculateSavingsRate,
   calculateDailyBudget,
 } from "../src/utils/dashboardAnalytics";
 
 /**
- * Página Dashboard - Visão geral do controle financeiro com análises inteligentes
- * Exibe resumo mensal, análises comparativas, projeções e insights acionáveis
+ * Página Dashboard - Visão geral do controle financeiro
+ * Exibe resumo mensal, análises comparativas e insights
  */
 export default function Dashboard() {
   const [expenses, setExpenses] = useState([]);
   const [incomes, setIncomes] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [transactionTypes, setTransactionTypes] = useState([]);
   const [transactions, setTransactions] = useState([]);
-  const [targets, setTargets] = useState([]);
   const [assets, setAssets] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeExpenseIndex, setActiveExpenseIndex] = useState(null);
-  const [activeInvestmentIndex, setActiveInvestmentIndex] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState(null);
   const [formData, setFormData] = useState({
@@ -79,28 +65,20 @@ export default function Dashboard() {
           expensesRes,
           incomesRes,
           categoriesRes,
-          transactionTypesRes,
           transactionsRes,
-          targetsRes,
           assetsRes,
         ] = await Promise.all([
           fetchData("/api/expenses"),
           fetchData("/api/incomes"),
           fetchData("/api/categories"),
-          fetchData("/api/transactionTypes"),
           fetchData("/api/transactions"),
-          fetchData("/api/targets"),
           fetchData("/api/assets"),
         ]);
 
         setExpenses(expensesRes.data);
         setIncomes(incomesRes.data);
         setCategories(categoriesRes.data);
-        setTransactionTypes(transactionTypesRes.data);
         setTransactions(transactionsRes.data);
-        setTargets(
-          targetsRes.data.filter((t) => t.status === "in_progress").slice(0, 2)
-        );
         setAssets(assetsRes.data);
       } catch (error) {
         console.error("Erro ao carregar dashboard:", error);
@@ -112,7 +90,7 @@ export default function Dashboard() {
     loadData();
   }, []);
 
-  // Mês atual para filtros - dinamicamente calculado
+  // Mês atual para filtros
   const currentMonth = useMemo(() => {
     const now = new Date();
     const year = now.getFullYear();
@@ -133,34 +111,12 @@ export default function Dashboard() {
     [incomes, currentMonth]
   );
 
-  const previousMonthExpenses = useMemo(() =>
-    expenses.filter((e) => e.date.startsWith(previousMonth)),
-    [expenses, previousMonth]
-  );
-
   const currentMonthData = useMemo(() =>
     calculateMonthData(transactions, currentMonthExpenses, currentMonth),
     [transactions, currentMonthExpenses, currentMonth]
   );
 
-  const previousMonthData = useMemo(() =>
-    calculateMonthData(transactions, previousMonthExpenses, previousMonth),
-    [transactions, previousMonthExpenses, previousMonth]
-  );
-
-  // Calcular projeção de fim de mês
-  const projectionData = useMemo(() =>
-    calculateMonthEndProjection(transactions, expenses, currentMonth),
-    [transactions, expenses, currentMonth]
-  );
-
-  // Calcular despesas por categoria com variação
-  const expensesByCategoryWithChange = useMemo(() =>
-    calculateExpensesByCategory(currentMonthExpenses, previousMonthExpenses, categories),
-    [currentMonthExpenses, previousMonthExpenses, categories]
-  );
-
-  // Calcular patrimônio total e métricas
+  // Calcular patrimônio total
   const totalAssets = assets.reduce((sum, asset) => sum + asset.value, 0);
 
   // Calcular média de despesas mensais (últimos 3 meses)
@@ -183,32 +139,6 @@ export default function Dashboard() {
     return count > 0 ? totalExpenses / count : currentMonthData.expenses;
   }, [expenses, currentMonth, previousMonth, currentMonthData.expenses]);
 
-  // Gerar alertas inteligentes
-  const alerts = useMemo(() =>
-    generateAlerts(
-      currentMonthData,
-      previousMonthData,
-      projectionData,
-      expensesByCategoryWithChange,
-      categories
-    ),
-    [currentMonthData, previousMonthData, projectionData, expensesByCategoryWithChange, categories]
-  );
-
-  // Calcular runway financeiro
-  const runwayMonths = avgMonthlyExpenses > 0 ? totalAssets / avgMonthlyExpenses : 0;
-  const runwayData = {
-    totalAssets: totalAssets,
-    avgMonthlyExpenses: avgMonthlyExpenses,
-    runwayMonths: runwayMonths,
-  };
-
-  // Calcular dados da regra 50/30/20
-  const budgetRule503020Data = useMemo(() =>
-    calculateBudgetRule503020(currentMonthExpenses, currentMonthData, categories),
-    [currentMonthExpenses, currentMonthData, categories]
-  );
-
   // Calcular Health Score
   const healthScoreData = useMemo(() =>
     calculateHealthScore(currentMonthData, assets, avgMonthlyExpenses),
@@ -217,14 +147,21 @@ export default function Dashboard() {
 
   // Calcular Taxa de Poupança
   const savingsRateData = useMemo(() =>
-    calculateSavingsRate(currentMonthData, 20), // Meta de 20%
+    calculateSavingsRate(currentMonthData, 20),
     [currentMonthData]
   );
 
+  // Dias restantes no mês
+  const daysRemaining = useMemo(() => {
+    const now = new Date();
+    const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    return lastDay.getDate() - now.getDate();
+  }, []);
+
   // Calcular Orçamento Diário
   const dailyBudgetData = useMemo(() =>
-    calculateDailyBudget(currentMonthData, projectionData.daysRemaining, 20),
-    [currentMonthData, projectionData.daysRemaining]
+    calculateDailyBudget(currentMonthData, daysRemaining, 20),
+    [currentMonthData, daysRemaining]
   );
 
   // Calcular comparações mês a mês para os cards
@@ -250,12 +187,10 @@ export default function Dashboard() {
       return Math.abs(b.amount) - Math.abs(a.amount);
     });
 
-    // Retornar todas as transações do mês - o componente Table controla a paginação
     return sorted;
   }, [transactions, currentMonth]);
 
   // Preparar dados para CategoryBreakdownCard - Receitas por Categoria
-  // Incluindo receitas (income) e aportes (investment)
   const incomeByCategory = useMemo(() => {
     const currentMonthTransactions = transactions.filter(t =>
       t.date.startsWith(currentMonth) &&
@@ -308,12 +243,10 @@ export default function Dashboard() {
     return grouped;
   }, [expenses, currentMonth, categories]);
 
-  // Preparar dados DIÁRIOS para IncomeVsExpensesChart - Evolução ao longo do mês
+  // Preparar dados DIÁRIOS para IncomeVsExpensesChart
   const incomeVsExpensesDailyData = useMemo(() => {
-    // Agrupar transações por dia do mês atual
     const dailyData = {};
 
-    // Processar receitas
     transactions
       .filter(t => t.date.startsWith(currentMonth) && t.type_internal_name === 'income')
       .forEach(t => {
@@ -324,7 +257,6 @@ export default function Dashboard() {
         dailyData[day].income += Math.abs(t.amount);
       });
 
-    // Processar despesas (incluindo de expenses e transactions com tipo expense)
     transactions
       .filter(t => t.date.startsWith(currentMonth) && t.type_internal_name === 'expense')
       .forEach(t => {
@@ -345,7 +277,6 @@ export default function Dashboard() {
         dailyData[day].expense += e.amount;
       });
 
-    // Converter para array e ordenar por dia
     return Object.values(dailyData)
       .sort((a, b) => parseInt(a.date) - parseInt(b.date))
       .map(d => ({
@@ -354,9 +285,8 @@ export default function Dashboard() {
       }));
   }, [transactions, expenses, currentMonth]);
 
-  // Preparar dados MENSAIS para IncomeVsExpensesChart - Comparação de últimos meses
+  // Preparar dados MENSAIS para IncomeVsExpensesChart
   const incomeVsExpensesMonthlyData = useMemo(() => {
-    // Criar lista dos últimos 6 meses
     const months = [];
     for (let i = 5; i >= 0; i--) {
       let tempMonth = currentMonth;
@@ -366,17 +296,14 @@ export default function Dashboard() {
       months.push(tempMonth);
     }
 
-    // Calcular receitas e despesas para cada mês
     return months.map(month => {
       const [year, monthNum] = month.split('-');
       const monthName = new Date(year, monthNum - 1).toLocaleDateString('pt-BR', { month: 'short' });
 
-      // Receitas do mês
       const monthIncome = transactions
         .filter(t => t.date.startsWith(month) && t.type_internal_name === 'income')
         .reduce((sum, t) => sum + Math.abs(t.amount), 0);
 
-      // Despesas do mês (transactions + expenses)
       const monthExpenseFromTransactions = transactions
         .filter(t => t.date.startsWith(month) && t.type_internal_name === 'expense')
         .reduce((sum, t) => sum + Math.abs(t.amount), 0);
@@ -411,52 +338,6 @@ export default function Dashboard() {
   const handleInputChange = (field, value) => {
     setFormData({ ...formData, [field]: value });
   };
-
-  // OTIMIZAÇÃO: Memoizar cálculos pesados para evitar recálculo em cada render
-  // Preparar dados para gráfico de despesas por categoria
-  const expensesByCategory = useMemo(() =>
-    expenses.reduce((acc, expense) => {
-      const existing = acc.find((item) => item.name === expense.category);
-      if (existing) {
-        existing.value += expense.amount;
-      } else {
-        const category = categories.find(
-          (c) =>
-            c.name === expense.category || c.id === expense.category.toLowerCase()
-        );
-        acc.push({
-          name: expense.category,
-          value: expense.amount,
-          color: category?.color || "#64748b",
-        });
-      }
-      return acc;
-    }, []),
-  [expenses, categories]);
-
-  const totalExpenses = useMemo(() =>
-    expenses.reduce((sum, e) => sum + e.amount, 0),
-  [expenses]);
-
-  // Agrupar patrimônio e ativos por tipo
-  const assetsByType = useMemo(() =>
-    assets.reduce((acc, asset) => {
-      const existing = acc.find((item) => item.name === asset.type);
-      if (existing) {
-        existing.value += asset.value;
-      } else {
-        // Usar type_color que já vem enriquecido do enrichAssets
-        acc.push({
-          name: asset.type,
-          value: asset.value,
-          color: asset.type_color || "#64748b",
-        });
-      }
-      return acc;
-    }, []),
-  [assets]);
-
-  const totalInvestmentsValue = assets.reduce((sum, a) => sum + a.value, 0);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -553,13 +434,10 @@ export default function Dashboard() {
     <div className="space-y-6 animate-fade-in">
       <PageHeader
         title="Dashboard"
-        description="Visão geral inteligente do seu controle financeiro"
+        description="Visão geral do seu controle financeiro"
       />
 
-      {/* 🚨 ALERTAS CRÍTICOS */}
-      {alerts.length > 0 && <AlertsSection alerts={alerts} />}
-
-      {/* 📊 VISÃO GERAL - Cards Principais de Tomada de Decisão */}
+      {/* 📊 VISÃO GERAL - Cards Principais */}
       <div>
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Visão Geral</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 min-w-0">
@@ -592,7 +470,7 @@ export default function Dashboard() {
       {/* 💰 ANÁLISE MENSAL - Receitas, Despesas e Aportes */}
       <div>
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Análise Mensal</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 min-w-0">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 min-w-0">
           <StatsCard
             icon={ArrowUpRight}
             label="Receitas Mensais"
@@ -625,48 +503,33 @@ export default function Dashboard() {
             icon={Coins}
             label="Aportes Mensais"
             value={formatCurrency(currentMonthData.investments)}
-            subtitle={`${((currentMonthData.investments / incomeComparison.current) * 100).toFixed(1)}% da receita`}
+            subtitle={incomeComparison.current > 0 ? `${((currentMonthData.investments / incomeComparison.current) * 100).toFixed(1)}% da receita` : "Sem receitas"}
             iconColor="info"
             valueColor="text-info-600"
           />
+          <StatsCard
+            icon={PiggyBank}
+            label="Patrimônio Total"
+            value={formatCurrency(totalAssets)}
+            subtitle={`${assets.length} ativo(s)`}
+            iconColor="purple"
+            valueColor="text-accent-600"
+          />
         </div>
       </div>
 
-      {/* 🎯 PROGRESSO DE METAS E PATRIMÔNIO */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <GoalsProgressCard goals={targets} />
-        <StatsCard
-          icon={PiggyBank}
-          label="Patrimônio Total"
-          value={formatCurrency(totalAssets)}
-          subtitle={`Runway: ${runwayMonths.toFixed(1)} meses • ${assets.length} ativo(s)`}
-          iconColor="purple"
-          valueColor="text-accent-600"
+      {/* 📈 GRÁFICOS E ANÁLISES */}
+      <div className="space-y-6">
+        <IncomeVsExpensesChart
+          dailyData={incomeVsExpensesDailyData}
+          monthlyData={incomeVsExpensesMonthlyData}
+          period="PERÍODO ATUAL"
         />
-      </div>
 
-      {/* 📈 PROJEÇÃO E ANÁLISES DETALHADAS */}
-      <div>
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Análises e Projeções</h2>
-        <div className="space-y-6">
-          <MonthEndProjection data={projectionData} />
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <RunwayCard data={runwayData} />
-            <BudgetRule503020 data={budgetRule503020Data} />
-          </div>
-
-          <IncomeVsExpensesChart
-            dailyData={incomeVsExpensesDailyData}
-            monthlyData={incomeVsExpensesMonthlyData}
-            period="PERÍODO ATUAL"
-          />
-
-          <CategoryBreakdownCard
-            incomeData={incomeByCategory}
-            expenseData={currentMonthExpensesByCategory}
-          />
-        </div>
+        <CategoryBreakdownCard
+          incomeData={incomeByCategory}
+          expenseData={currentMonthExpensesByCategory}
+        />
       </div>
 
       {/* Tabela de transações */}
