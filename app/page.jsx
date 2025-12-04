@@ -244,6 +244,7 @@ export default function Dashboard() {
   const incomeVsExpensesDailyData = useMemo(() => {
     const dailyData = {};
 
+    // Receitas vêm de transactions com type_internal_name === 'income'
     transactions
       .filter(t => t.date.startsWith(currentMonth) && t.type_internal_name === 'income')
       .forEach(t => {
@@ -254,16 +255,7 @@ export default function Dashboard() {
         dailyData[day].income += Math.abs(t.amount);
       });
 
-    transactions
-      .filter(t => t.date.startsWith(currentMonth) && t.type_internal_name === 'expense')
-      .forEach(t => {
-        const day = t.date.split('-')[2];
-        if (!dailyData[day]) {
-          dailyData[day] = { date: day, income: 0, expense: 0 };
-        }
-        dailyData[day].expense += Math.abs(t.amount);
-      });
-
+    // Despesas vêm APENAS da tabela expenses (evita duplicação)
     expenses
       .filter(e => e.date.startsWith(currentMonth))
       .forEach(e => {
@@ -297,24 +289,20 @@ export default function Dashboard() {
       const [year, monthNum] = month.split('-');
       const monthName = new Date(year, monthNum - 1).toLocaleDateString('pt-BR', { month: 'short' });
 
+      // Receitas vêm de transactions com type_internal_name === 'income'
       const monthIncome = transactions
         .filter(t => t.date.startsWith(month) && t.type_internal_name === 'income')
         .reduce((sum, t) => sum + Math.abs(t.amount), 0);
 
-      const monthExpenseFromTransactions = transactions
-        .filter(t => t.date.startsWith(month) && t.type_internal_name === 'expense')
-        .reduce((sum, t) => sum + Math.abs(t.amount), 0);
-
-      const monthExpenseFromExpenses = expenses
+      // Despesas vêm APENAS da tabela expenses (evita duplicação)
+      const monthExpense = expenses
         .filter(e => e.date.startsWith(month))
         .reduce((sum, e) => sum + e.amount, 0);
-
-      const totalExpense = monthExpenseFromTransactions + monthExpenseFromExpenses;
 
       return {
         date: monthName.charAt(0).toUpperCase() + monthName.slice(1),
         income: monthIncome,
-        expense: totalExpense,
+        expense: monthExpense,
       };
     });
   }, [transactions, expenses, currentMonth]);
@@ -545,7 +533,6 @@ export default function Dashboard() {
         <IncomeVsExpensesChart
           dailyData={incomeVsExpensesDailyData}
           monthlyData={incomeVsExpensesMonthlyData}
-          period="PERÍODO ATUAL"
         />
 
         <CategoryBreakdownCard

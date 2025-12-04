@@ -23,12 +23,10 @@ import SegmentedControl from '../ui/segmented-control';
  *
  * @param {Array} dailyData - Dados diários [{date, income, expense}, ...]
  * @param {Array} monthlyData - Dados mensais [{date, income, expense}, ...]
- * @param {string} period - Período de exibição (ex: "PERÍODO ATUAL")
  */
 export default function IncomeVsExpensesChart({
   dailyData = [],
-  monthlyData = [],
-  period = "PERÍODO ATUAL"
+  monthlyData = []
 }) {
   const [viewMode, setViewMode] = useState('monthly'); // 'daily' ou 'monthly'
 
@@ -58,7 +56,7 @@ export default function IncomeVsExpensesChart({
             {/* Receitas */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-green-500" />
+                <div className="w-3 h-3 rounded-full bg-success-500" />
                 <span className="text-xs font-medium text-gray-600">Receitas</span>
               </div>
               <span className="text-sm font-bold text-gray-900">
@@ -69,7 +67,7 @@ export default function IncomeVsExpensesChart({
             {/* Despesas */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-red-500" />
+                <div className="w-3 h-3 rounded-full bg-danger-500" />
                 <span className="text-xs font-medium text-gray-600">Despesas</span>
               </div>
               <span className="text-sm font-bold text-gray-900">
@@ -84,7 +82,7 @@ export default function IncomeVsExpensesChart({
             <div className="flex items-center justify-between">
               <span className="text-xs font-medium text-gray-500">Saldo</span>
               <span className={`text-sm font-bold ${
-                pointBalance >= 0 ? 'text-green-600' : 'text-red-600'
+                pointBalance >= 0 ? 'text-success-600' : 'text-danger-600'
               }`}>
                 {formatCurrency(pointBalance)}
               </span>
@@ -94,7 +92,7 @@ export default function IncomeVsExpensesChart({
             <div className="flex items-center justify-between">
               <span className="text-xs font-medium text-gray-500">Taxa poupança</span>
               <span className={`text-sm font-bold ${
-                parseFloat(pointSavingsRate) >= 0 ? 'text-green-600' : 'text-red-600'
+                parseFloat(pointSavingsRate) >= 0 ? 'text-success-600' : 'text-danger-600'
               }`}>
                 {pointSavingsRate}%
               </span>
@@ -111,31 +109,10 @@ export default function IncomeVsExpensesChart({
       <CardContent className="p-6">
         {/* Header */}
         <div className="flex flex-col gap-4 mb-6">
-          <div className="flex items-start justify-between">
-            <div className="flex items-start gap-3">
-              <div className="w-2 h-2 rounded-full bg-purple-500 mt-2" />
-              <div>
-                <h2 className="text-lg font-semibold text-gray-900">Receitas x Despesas</h2>
-                <p className="text-sm text-gray-500 mt-0.5">{period}</p>
-              </div>
-            </div>
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-gray-900">Receitas x Despesas</h2>
 
-            {/* Resumo Total */}
-            <div className="text-right">
-              <p className="text-xs text-gray-500 mb-1">Saldo Total</p>
-              <p className={`text-xl font-bold ${
-                balance >= 0 ? 'text-green-600' : 'text-red-600'
-              }`}>
-                {formatCurrency(balance)}
-              </p>
-              <p className="text-xs text-gray-500 mt-1">
-                Taxa: <span className="font-semibold">{savingsRate}%</span>
-              </p>
-            </div>
-          </div>
-
-          {/* Toggle de visualização */}
-          <div className="flex justify-center">
+            {/* Toggle de visualização */}
             <SegmentedControl
               options={[
                 { label: 'Mensal', value: 'monthly' },
@@ -162,8 +139,8 @@ export default function IncomeVsExpensesChart({
                     <stop offset="95%" stopColor="#10b981" stopOpacity={0.6}/>
                   </linearGradient>
                   <linearGradient id="colorExpense" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#f97316" stopOpacity={0.8}/>
-                    <stop offset="95%" stopColor="#f97316" stopOpacity={0.6}/>
+                    <stop offset="5%" stopColor="#ef4444" stopOpacity={0.8}/>
+                    <stop offset="95%" stopColor="#ef4444" stopOpacity={0.6}/>
                   </linearGradient>
                 </defs>
 
@@ -201,13 +178,13 @@ export default function IncomeVsExpensesChart({
                 margin={{ top: 20, right: 20, bottom: 20, left: 0 }}
               >
                 <defs>
-                  <linearGradient id="colorIncome" x1="0" y1="0" x2="0" y2="1">
+                  <linearGradient id="colorIncomeArea" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#10b981" stopOpacity={0.6}/>
                     <stop offset="95%" stopColor="#10b981" stopOpacity={0.1}/>
                   </linearGradient>
-                  <linearGradient id="colorExpense" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#f97316" stopOpacity={0.6}/>
-                    <stop offset="95%" stopColor="#f97316" stopOpacity={0.1}/>
+                  <linearGradient id="colorExpenseArea" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#ef4444" stopOpacity={0.6}/>
+                    <stop offset="95%" stopColor="#ef4444" stopOpacity={0.1}/>
                   </linearGradient>
                 </defs>
 
@@ -240,7 +217,7 @@ export default function IncomeVsExpensesChart({
                   dataKey="income"
                   stroke="#10b981"
                   strokeWidth={3}
-                  fill="url(#colorIncome)"
+                  fill="url(#colorIncomeArea)"
                   dot={{ fill: '#10b981', stroke: '#fff', strokeWidth: 2, r: 5 }}
                   activeDot={{ r: 7, fill: '#10b981', stroke: '#fff', strokeWidth: 2 }}
                 />
@@ -248,11 +225,11 @@ export default function IncomeVsExpensesChart({
                 <Area
                   type="monotone"
                   dataKey="expense"
-                  stroke="#f97316"
+                  stroke="#ef4444"
                   strokeWidth={3}
-                  fill="url(#colorExpense)"
-                  dot={{ fill: '#f97316', stroke: '#fff', strokeWidth: 2, r: 5 }}
-                  activeDot={{ r: 7, fill: '#f97316', stroke: '#fff', strokeWidth: 2 }}
+                  fill="url(#colorExpenseArea)"
+                  dot={{ fill: '#ef4444', stroke: '#fff', strokeWidth: 2, r: 5 }}
+                  activeDot={{ r: 7, fill: '#ef4444', stroke: '#fff', strokeWidth: 2 }}
                 />
               </AreaChart>
             )}
