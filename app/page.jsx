@@ -20,14 +20,11 @@ import DatePicker from "../src/components/DatePicker";
 import Table from "../src/components/Table";
 import { fetchData, formatCurrency, formatDate } from "../src/utils";
 import { getIconComponent } from "../src/components/IconPicker";
-import { Wallet, TrendingDown, ArrowUpRight, PiggyBank, Coins } from "lucide-react";
+import { Wallet, TrendingDown, ArrowUpRight, PiggyBank, Coins, Heart, Percent, CalendarDays } from "lucide-react";
 
 // Componentes de análise do dashboard
 import CategoryBreakdownCard from "../src/components/dashboard/CategoryBreakdownCard";
 import IncomeVsExpensesChart from "../src/components/dashboard/IncomeVsExpensesChart";
-import FinancialHealthCard from "../src/components/dashboard/FinancialHealthCard";
-import SavingsRateCard from "../src/components/dashboard/SavingsRateCard";
-import DailyBudgetCard from "../src/components/dashboard/DailyBudgetCard";
 
 // Funções de análise
 import {
@@ -441,20 +438,45 @@ export default function Dashboard() {
       <div>
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Visão Geral</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 min-w-0">
-          <FinancialHealthCard
-            score={healthScoreData.score}
-            breakdown={healthScoreData.breakdown}
+          <StatsCard
+            icon={Heart}
+            label="Saúde Financeira"
+            value={`${healthScoreData.score}/100`}
+            subtitle={
+              healthScoreData.score >= 80 ? "Excelente" :
+              healthScoreData.score >= 60 ? "Bom" :
+              healthScoreData.score >= 40 ? "Regular" : "Precisa atenção"
+            }
+            iconColor={
+              healthScoreData.score >= 80 ? "green" :
+              healthScoreData.score >= 60 ? "blue" :
+              healthScoreData.score >= 40 ? "yellow" : "red"
+            }
+            valueColor={
+              healthScoreData.score >= 80 ? "text-success-600" :
+              healthScoreData.score >= 60 ? "text-brand-600" :
+              healthScoreData.score >= 40 ? "text-warning-600" : "text-danger-600"
+            }
           />
-          <SavingsRateCard
-            savingsRate={savingsRateData.savingsRate}
-            goal={savingsRateData.goal}
-            amountToGoal={savingsRateData.amountToGoal}
-            income={savingsRateData.totalIncome}
+          <StatsCard
+            icon={Percent}
+            label="Taxa de Poupança"
+            value={`${savingsRateData.savingsRate.toFixed(1)}%`}
+            subtitle={
+              savingsRateData.savingsRate >= savingsRateData.goal
+                ? `Meta de ${savingsRateData.goal}% atingida`
+                : `Faltam ${formatCurrency(savingsRateData.amountToGoal)} para meta`
+            }
+            iconColor={savingsRateData.savingsRate >= savingsRateData.goal ? "green" : "yellow"}
+            valueColor={savingsRateData.savingsRate >= savingsRateData.goal ? "text-success-600" : "text-warning-600"}
           />
-          <DailyBudgetCard
-            availableBalance={dailyBudgetData.availableBalance}
-            daysRemaining={dailyBudgetData.daysRemaining}
-            savingsGoal={dailyBudgetData.savingsGoal}
+          <StatsCard
+            icon={CalendarDays}
+            label="Disponível por Dia"
+            value={formatCurrency(dailyBudgetData.dailyBudget)}
+            subtitle={`${dailyBudgetData.daysRemaining} dias restantes no mês`}
+            iconColor={dailyBudgetData.dailyBudget > 0 ? "purple" : "red"}
+            valueColor={dailyBudgetData.dailyBudget > 0 ? "text-accent-600" : "text-danger-600"}
           />
           <StatsCard
             icon={Wallet}
