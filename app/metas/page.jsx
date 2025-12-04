@@ -358,7 +358,7 @@ export default function Metas() {
   ];
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-4 animate-fade-in">
       <PageHeader
         title="Metas Financeiras"
         description="Defina e acompanhe suas metas"
@@ -422,7 +422,7 @@ export default function Metas() {
       </div>
 
       {/* Cards de resumo */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 min-w-0">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 min-w-0">
         <StatsCard
           icon={Target}
           label="Total de Metas"

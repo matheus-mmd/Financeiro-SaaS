@@ -217,7 +217,7 @@ export default function CategoriasPage() {
   }
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-4 animate-fade-in">
       <PageHeader
         title="Categorias"
         description="Gerencie categorias organizadas por tipo: Receitas, Despesas e Patrimônio/Ativos"

@@ -353,7 +353,7 @@ export default function Transacoes() {
   ];
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-4 animate-fade-in">
       <PageHeader
         title="Transações"
         description="Gerencie todas as suas transações financeiras"
@@ -436,7 +436,7 @@ export default function Transacoes() {
       </div>
 
       {/* Cards de resumo */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 min-w-0">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 min-w-0">
         <StatsCard
           icon={ArrowUpRight}
           label="Total de Receitas"

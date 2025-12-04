@@ -370,7 +370,7 @@ export default function PatrimonioAtivos() {
   ];
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-4 animate-fade-in">
       <PageHeader
         title="Patrimônio e Ativos"
         description="Gerencie seus ativos e acompanhe rendimentos"
@@ -453,7 +453,7 @@ export default function PatrimonioAtivos() {
       </div>
 
       {/* Cards de resumo */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 min-w-0">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 min-w-0">
         <StatsCard
           icon={DollarSign}
           label="Total em Patrimônio"
