@@ -41,7 +41,7 @@ export default function MonthEndProjection({ data }) {
     ((totalDaysInMonth - daysRemaining) / totalDaysInMonth) * 100;
 
   return (
-    <Card>
+    <Card className={`border-r-4 ${isNegative ? 'border-danger-500' : isWarning ? 'border-warning-500' : 'border-brand-500'}`}>
       <CardContent className="p-6">
         <div className="flex items-center gap-2 mb-4">
           <TrendingUp className="w-5 h-5 text-gray-700" />
@@ -59,7 +59,7 @@ export default function MonthEndProjection({ data }) {
           </div>
           <div className="w-full bg-gray-200 rounded-full h-2">
             <div
-              className="bg-blue-500 h-2 rounded-full transition-all"
+              className="bg-brand-500 h-2 rounded-full transition-all"
               style={{ width: `${progressPercentage}%` }}
             />
           </div>
@@ -72,7 +72,7 @@ export default function MonthEndProjection({ data }) {
             <div className="flex items-center gap-2">
               <span className="text-gray-600">✅ Receitas confirmadas</span>
             </div>
-            <span className="font-semibold text-green-600">
+            <span className="font-semibold text-success-600">
               + {formatCurrency(credits)}
             </span>
           </div>

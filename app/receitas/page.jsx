@@ -46,6 +46,7 @@ import {
   deleteIncome,
 } from "../../src/utils";
 import { exportToCSV } from "../../src/utils/exportData";
+import { getIconComponent } from "../../src/components/IconPicker";
 import FilterButton from "../../src/components/FilterButton";
 import FloatingActionButton from "../../src/components/FloatingActionButton";
 import {
@@ -292,12 +293,18 @@ export default function Receitas() {
         const category = categories.find(
           (c) => c.name === row.category || c.id === row.category.toLowerCase()
         );
+        const IconComponent = getIconComponent(category?.icon || row.category_icon || "Tag");
         return (
           <div className="flex items-center gap-2">
             <div
-              className="w-3 h-3 rounded-full flex-shrink-0"
-              style={{ backgroundColor: category?.color || "#64748b" }}
-            />
+              className="p-1 rounded flex-shrink-0"
+              style={{ backgroundColor: (category?.color || "#64748b") + '20' }}
+            >
+              <IconComponent
+                className="w-4 h-4"
+                style={{ color: category?.color || "#64748b" }}
+              />
+            </div>
             <span className="text-sm font-medium text-gray-900">
               {row.category}
             </span>
@@ -380,11 +387,25 @@ export default function Receitas() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todas as categorias</SelectItem>
-                  {categories.map((cat) => (
-                    <SelectItem key={cat.id} value={cat.name}>
-                      {cat.name}
-                    </SelectItem>
-                  ))}
+                  {categories.map((cat) => {
+                    const IconComponent = getIconComponent(cat.icon || "Tag");
+                    return (
+                      <SelectItem key={cat.id} value={cat.name}>
+                        <div className="flex items-center gap-2">
+                          <div
+                            className="p-1 rounded"
+                            style={{ backgroundColor: cat.color + '20' }}
+                          >
+                            <IconComponent
+                              className="w-4 h-4"
+                              style={{ color: cat.color }}
+                            />
+                          </div>
+                          <span>{cat.name}</span>
+                        </div>
+                      </SelectItem>
+                    );
+                  })}
                 </SelectContent>
               </Select>
             </div>
@@ -493,11 +514,25 @@ export default function Receitas() {
                   <SelectValue placeholder="Selecione uma categoria" />
                 </SelectTrigger>
                 <SelectContent>
-                  {categories.map((cat) => (
-                    <SelectItem key={cat.id} value={cat.name}>
-                      {cat.name}
-                    </SelectItem>
-                  ))}
+                  {categories.map((cat) => {
+                    const IconComponent = getIconComponent(cat.icon || "Tag");
+                    return (
+                      <SelectItem key={cat.id} value={cat.name}>
+                        <div className="flex items-center gap-2">
+                          <div
+                            className="p-1 rounded"
+                            style={{ backgroundColor: cat.color + '20' }}
+                          >
+                            <IconComponent
+                              className="w-4 h-4"
+                              style={{ color: cat.color }}
+                            />
+                          </div>
+                          <span>{cat.name}</span>
+                        </div>
+                      </SelectItem>
+                    );
+                  })}
                 </SelectContent>
               </Select>
             </div>

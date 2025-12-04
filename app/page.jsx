@@ -20,7 +20,7 @@ import DashboardSkeleton from "../src/components/DashboardSkeleton";
 import DatePicker from "../src/components/DatePicker";
 import Table from "../src/components/Table";
 import { fetchData, formatCurrency, formatDate } from "../src/utils";
-import { Wallet, TrendingDown, ArrowUpRight, Target, PiggyBank, ArrowDownRight, TrendingUp } from "lucide-react";
+import { Wallet, TrendingDown, ArrowUpRight, Target, PiggyBank, ArrowDownRight, TrendingUp, Coins } from "lucide-react";
 
 // Componentes de análise do dashboard
 import MonthEndProjection from "../src/components/dashboard/MonthEndProjection";
@@ -273,6 +273,7 @@ export default function Dashboard() {
           name: categoryName,
           value: Math.abs(transaction.amount),
           color: category?.color || transaction.category_color || "#10b981",
+          icon: category?.icon || transaction.category_icon || "Tag",
         });
       }
       return acc;
@@ -297,6 +298,7 @@ export default function Dashboard() {
           name: expense.category,
           value: expense.amount,
           color: category?.color || "#6366f1",
+          icon: category?.icon || expense.category_icon || "Tag",
         });
       }
       return acc;
@@ -525,7 +527,7 @@ export default function Dashboard() {
       label: "Valor",
       sortable: true,
       render: (row) => (
-        <span className={row.amount >= 0 ? "text-green-600 font-medium" : "text-red-600 font-medium"}>
+        <span className={row.amount >= 0 ? "text-success-600 font-medium" : "text-danger-600 font-medium"}>
           {row.amount >= 0 ? "+" : "-"} {formatCurrency(Math.abs(row.amount))}
         </span>
       ),
@@ -573,7 +575,7 @@ export default function Dashboard() {
             value={formatCurrency(currentMonthData.balance)}
             subtitle={`${formatCurrency(dailyBudgetData.dailyBudget)}/dia pelos próximos ${dailyBudgetData.daysRemaining} dias`}
             iconColor={currentMonthData.balance >= 0 ? "blue" : "red"}
-            valueColor={currentMonthData.balance >= 0 ? "text-blue-600" : "text-red-600"}
+            valueColor={currentMonthData.balance >= 0 ? "text-brand-600" : "text-danger-600"}
           />
         </div>
       </div>
@@ -592,7 +594,7 @@ export default function Dashboard() {
                 : `${currentMonthIncomes.length} receita(s)`
             }
             iconColor="green"
-            valueColor="text-green-600"
+            valueColor="text-success-600"
           />
           <StatsCard
             icon={TrendingDown}
@@ -608,15 +610,15 @@ export default function Dashboard() {
                 : `Planejado: ${formatCurrency(currentMonthData.plannedExpenses)}`
             }
             iconColor="red"
-            valueColor="text-red-600"
+            valueColor="text-danger-600"
           />
           <StatsCard
-            icon={Target}
+            icon={Coins}
             label="Aportes Mensais"
             value={formatCurrency(currentMonthData.investments)}
             subtitle={`${((currentMonthData.investments / incomeComparison.current) * 100).toFixed(1)}% da receita`}
-            iconColor="blue"
-            valueColor="text-blue-600"
+            iconColor="info"
+            valueColor="text-info-600"
           />
         </div>
       </div>
@@ -630,7 +632,7 @@ export default function Dashboard() {
           value={formatCurrency(totalAssets)}
           subtitle={`Runway: ${runwayMonths.toFixed(1)} meses • ${assets.length} ativo(s)`}
           iconColor="purple"
-          valueColor="text-purple-600"
+          valueColor="text-accent-600"
         />
       </div>
 

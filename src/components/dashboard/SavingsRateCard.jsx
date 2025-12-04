@@ -13,18 +13,18 @@ export default function SavingsRateCard({ savingsRate, goal = 20, amountToGoal, 
   const difference = Math.abs(savingsRate - goal);
 
   return (
-    <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-200">
+    <Card className={`overflow-hidden hover:shadow-lg transition-shadow duration-200 border-r-4 ${isAboveGoal ? 'border-r-success-500' : 'border-r-brand-500'}`}>
       <CardContent className="p-6">
         <div className="flex items-center gap-3 mb-4">
-          <div className={`p-2 rounded-lg ${isAboveGoal ? 'bg-green-50' : 'bg-blue-50'}`}>
-            <PiggyBank className={`w-5 h-5 ${isAboveGoal ? 'text-green-600' : 'text-blue-600'}`} />
+          <div className={`p-2 rounded-xl shadow-sm ${isAboveGoal ? 'bg-success-50' : 'bg-brand-50'}`}>
+            <PiggyBank className={`w-5 h-5 ${isAboveGoal ? 'text-success-600' : 'text-brand-600'}`} />
           </div>
           <h3 className="text-sm font-medium text-gray-600">Taxa de Poupança</h3>
         </div>
 
         {/* Taxa atual e meta */}
         <div className="flex items-baseline gap-2 mb-2">
-          <span className={`text-3xl font-bold ${isAboveGoal ? 'text-green-600' : 'text-blue-600'}`}>
+          <span className={`text-3xl font-bold ${isAboveGoal ? 'text-success-600' : 'text-brand-600'}`}>
             {savingsRate.toFixed(1)}%
           </span>
           <span className="text-lg text-gray-400">→ Meta: {goal}%</span>
@@ -35,7 +35,7 @@ export default function SavingsRateCard({ savingsRate, goal = 20, amountToGoal, 
           <div className="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
             <div
               className={`h-2.5 rounded-full transition-all duration-500 ${
-                isAboveGoal ? 'bg-green-500' : 'bg-blue-500'
+                isAboveGoal ? 'bg-success-500' : 'bg-brand-500'
               }`}
               style={{ width: `${percentage}%` }}
             />
@@ -46,8 +46,8 @@ export default function SavingsRateCard({ savingsRate, goal = 20, amountToGoal, 
         <div className="flex items-center gap-2">
           {isAboveGoal ? (
             <>
-              <TrendingUp className="w-4 h-4 text-green-600" />
-              <span className="text-sm text-green-600 font-medium">
+              <TrendingUp className="w-4 h-4 text-success-600" />
+              <span className="text-sm text-success-600 font-medium">
                 {difference.toFixed(1)}% acima da meta!
               </span>
             </>

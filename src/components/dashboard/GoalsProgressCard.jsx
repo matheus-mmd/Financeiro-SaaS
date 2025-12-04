@@ -14,11 +14,11 @@ export default function GoalsProgressCard({ goals = [] }) {
 
   if (activeGoals.length === 0) {
     return (
-      <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-200">
+      <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-200 border-r-4 border-accent-500">
         <CardContent className="p-6">
           <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 rounded-lg bg-purple-50">
-              <Target className="w-5 h-5 text-purple-600" />
+            <div className="p-2 rounded-xl shadow-sm bg-accent-50">
+              <Target className="w-5 h-5 text-accent-600" />
             </div>
             <h3 className="text-sm font-medium text-gray-600">Metas Ativas</h3>
           </div>
@@ -27,7 +27,7 @@ export default function GoalsProgressCard({ goals = [] }) {
             <p className="text-sm text-gray-500 mb-4">Você não tem metas ativas no momento</p>
             <Link
               href="/metas"
-              className="text-sm text-purple-600 hover:text-purple-700 font-medium"
+              className="text-sm text-accent-600 hover:text-accent-700 font-medium"
             >
               Criar nova meta →
             </Link>
@@ -38,18 +38,18 @@ export default function GoalsProgressCard({ goals = [] }) {
   }
 
   return (
-    <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-200">
+    <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-200 border-r-4 border-accent-500">
       <CardContent className="p-6">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-purple-50">
-              <Target className="w-5 h-5 text-purple-600" />
+            <div className="p-2 rounded-xl shadow-sm bg-accent-50">
+              <Target className="w-5 h-5 text-accent-600" />
             </div>
             <h3 className="text-sm font-medium text-gray-600">Metas Ativas</h3>
           </div>
           <Link
             href="/metas"
-            className="text-sm text-purple-600 hover:text-purple-700 font-medium"
+            className="text-sm text-accent-600 hover:text-accent-700 font-medium"
           >
             Ver todas →
           </Link>
@@ -91,12 +91,12 @@ function GoalItem({ goal }) {
       <div className="flex items-center justify-between">
         <h4 className="text-sm font-medium text-gray-900">{goal.title}</h4>
         {isNearCompletion && (
-          <TrendingUp className="w-4 h-4 text-green-600" />
+          <TrendingUp className="w-4 h-4 text-success-600" />
         )}
       </div>
 
       <div className="flex items-baseline gap-2 text-sm">
-        <span className="font-semibold text-purple-600">
+        <span className="font-semibold text-accent-600">
           {formatCurrency(goal.progress)}
         </span>
         <span className="text-gray-400">/</span>
@@ -108,7 +108,7 @@ function GoalItem({ goal }) {
       <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
         <div
           className={`h-2 rounded-full transition-all duration-500 ${
-            isNearCompletion ? 'bg-green-500' : 'bg-purple-500'
+            isNearCompletion ? 'bg-success-500' : 'bg-accent-500'
           }`}
           style={{ width: `${Math.min(percentage, 100)}%` }}
         />
@@ -119,8 +119,8 @@ function GoalItem({ goal }) {
         <div className="flex items-center gap-2 text-xs">
           {percentage >= 100 ? (
             <>
-              <CheckCircle2 className="w-3 h-3 text-green-600" />
-              <span className="text-green-600 font-medium">Meta atingida!</span>
+              <CheckCircle2 className="w-3 h-3 text-success-600" />
+              <span className="text-success-600 font-medium">Meta atingida!</span>
             </>
           ) : (
             <>

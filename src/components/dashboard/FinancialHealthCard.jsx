@@ -8,19 +8,19 @@ import { Activity, TrendingUp, TrendingDown, CheckCircle, AlertCircle } from 'lu
  * Mostra um resumo visual da saúde financeira com breakdown de critérios
  */
 export default function FinancialHealthCard({ score, breakdown }) {
-  // Determinar cor e status baseado no score
+  // Determinar cor e status baseado no score - Novas cores modernas
   const getScoreColor = (score) => {
-    if (score >= 80) return { color: 'text-green-600', bg: 'bg-green-50', label: 'Excelente' };
-    if (score >= 60) return { color: 'text-blue-600', bg: 'bg-blue-50', label: 'Bom' };
-    if (score >= 40) return { color: 'text-yellow-600', bg: 'bg-yellow-50', label: 'Regular' };
-    return { color: 'text-red-600', bg: 'bg-red-50', label: 'Atenção' };
+    if (score >= 80) return { color: 'text-success-600', bg: 'bg-success-50', label: 'Excelente', border: 'border-success-500' };
+    if (score >= 60) return { color: 'text-brand-600', bg: 'bg-brand-50', label: 'Bom', border: 'border-brand-500' };
+    if (score >= 40) return { color: 'text-warning-600', bg: 'bg-warning-50', label: 'Regular', border: 'border-warning-500' };
+    return { color: 'text-danger-600', bg: 'bg-danger-50', label: 'Atenção', border: 'border-danger-500' };
   };
 
   const scoreInfo = getScoreColor(score);
   const percentage = (score / 100) * 100;
 
   return (
-    <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-200">
+    <Card className={`overflow-hidden hover:shadow-lg transition-shadow duration-200 border-r-4 ${scoreInfo.border}`}>
       <CardContent className="p-6">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
@@ -45,10 +45,10 @@ export default function FinancialHealthCard({ score, breakdown }) {
           <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
             <div
               className={`h-3 rounded-full transition-all duration-500 ${
-                score >= 80 ? 'bg-green-500' :
-                score >= 60 ? 'bg-blue-500' :
-                score >= 40 ? 'bg-yellow-500' :
-                'bg-red-500'
+                score >= 80 ? 'bg-success-500' :
+                score >= 60 ? 'bg-brand-500' :
+                score >= 40 ? 'bg-warning-500' :
+                'bg-danger-500'
               }`}
               style={{ width: `${percentage}%` }}
             />
@@ -86,7 +86,7 @@ export default function FinancialHealthCard({ score, breakdown }) {
 function BreakdownItem({ icon: Icon, label, status }) {
   return (
     <div className="flex items-center gap-2 text-sm">
-      <Icon className={`w-4 h-4 ${status ? 'text-green-600' : 'text-gray-400'}`} />
+      <Icon className={`w-4 h-4 ${status ? 'text-success-600' : 'text-gray-400'}`} />
       <span className={status ? 'text-gray-900' : 'text-gray-500'}>{label}</span>
     </div>
   );

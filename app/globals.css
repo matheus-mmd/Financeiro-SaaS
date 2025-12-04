@@ -4,14 +4,46 @@
 
 /* Design Tokens */
 :root {
-  /* Cores primárias */
-  --brand-500: #0ea5a4;
-  --brand-600: #0d8f8e;
-  --brand-700: #0f766e;
+  /* Cor principal - Azul moderno */
+  --brand-50: #eff6ff;
+  --brand-100: #dbeafe;
+  --brand-200: #bfdbfe;
+  --brand-300: #93c5fd;
+  --brand-400: #60a5fa;
+  --brand-500: #3b82f6;
+  --brand-600: #2563eb;
+  --brand-700: #1d4ed8;
+  --brand-800: #1e40af;
+  --brand-900: #1e3a8a;
+
+  /* Cor secundária - Roxo/Violeta */
+  --accent-500: #a855f7;
+  --accent-600: #9333ea;
+  --accent-700: #7e22ce;
+
+  /* Cores semânticas */
+  --success-500: #10b981;
+  --success-600: #059669;
+  --warning-500: #f59e0b;
+  --warning-600: #d97706;
+  --danger-500: #ef4444;
+  --danger-600: #dc2626;
+  --info-500: #06b6d4;
+  --info-600: #0891b2;
 
   /* Cores neutras */
   --muted: #6b7280;
   --bg: #f8fafc;
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #94a3b8;
+
+  /* Gradientes modernos */
+  --gradient-primary: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  --gradient-secondary: linear-gradient(135deg, #a855f7 0%, #7e22ce 100%);
+  --gradient-success: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  --gradient-sunset: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
+  --gradient-ocean: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
 
   /* Spacing */
   --spacing-xs: 4px;
@@ -28,26 +60,26 @@
   --font-size-2xl: 1.5rem;
   --font-size-3xl: 1.875rem;
 
-  /* Shadcn UI Variables */
+  /* Shadcn UI Variables - Atualizadas com nova cor principal */
   --background: 0 0% 100%;
   --foreground: 222.2 84% 4.9%;
   --card: 0 0% 100%;
   --card-foreground: 222.2 84% 4.9%;
   --popover: 0 0% 100%;
   --popover-foreground: 222.2 84% 4.9%;
-  --primary: 174 94% 34%;
+  --primary: 217.2 91.2% 59.8%; /* Azul #3b82f6 */
   --primary-foreground: 0 0% 100%;
   --secondary: 210 40% 96.1%;
   --secondary-foreground: 222.2 47.4% 11.2%;
   --muted: 210 40% 96.1%;
   --muted-foreground: 215.4 16.3% 46.9%;
-  --accent: 210 40% 96.1%;
-  --accent-foreground: 222.2 47.4% 11.2%;
+  --accent: 262.1 83.3% 57.8%; /* Roxo #a855f7 */
+  --accent-foreground: 0 0% 100%;
   --destructive: 0 84.2% 60.2%;
   --destructive-foreground: 0 0% 100%;
   --border: 214.3 31.8% 91.4%;
   --input: 214.3 31.8% 91.4%;
-  --ring: 174 94% 34%;
+  --ring: 217.2 91.2% 59.8%;
   --radius: 0.5rem;
 }
 
@@ -94,21 +126,74 @@ body {
 
 /* Utilitários customizados */
 .card {
-  @apply bg-white rounded-2xl shadow-sm p-6;
+  @apply bg-white rounded-2xl shadow-sm p-6 border-r-4 border-brand-500;
+}
+
+.card-accent {
+  @apply border-r-accent-500;
+}
+
+.card-success {
+  @apply border-r-success-500;
+}
+
+.card-warning {
+  @apply border-r-warning-500;
+}
+
+.card-danger {
+  @apply border-r-danger-500;
+}
+
+.card-info {
+  @apply border-r-info-500;
 }
 
 .btn {
-  @apply px-4 py-2 rounded-lg font-medium transition-colors duration-200;
+  @apply px-4 py-2 rounded-lg font-medium transition-all duration-200;
 }
 
 .btn-primary {
-  @apply bg-brand-500 text-white hover:bg-brand-600;
+  @apply bg-brand-500 text-white hover:bg-brand-600 hover:shadow-md active:scale-95;
 }
 
 .btn-secondary {
-  @apply bg-gray-100 text-gray-700 hover:bg-gray-200;
+  @apply bg-gray-100 text-gray-700 hover:bg-gray-200 active:scale-95;
 }
 
 .btn-ghost {
-  @apply bg-transparent hover:bg-gray-100 text-gray-700;
+  @apply bg-transparent hover:bg-gray-100 text-gray-700 active:scale-95;
+}
+
+.btn-accent {
+  @apply bg-accent-500 text-white hover:bg-accent-600 hover:shadow-md active:scale-95;
+}
+
+.btn-success {
+  @apply bg-success-500 text-white hover:bg-success-600 hover:shadow-md active:scale-95;
+}
+
+.btn-danger {
+  @apply bg-danger-500 text-white hover:bg-danger-600 hover:shadow-md active:scale-95;
+}
+
+/* Gradientes */
+.gradient-primary {
+  background: var(--gradient-primary);
+}
+
+.gradient-secondary {
+  background: var(--gradient-secondary);
+}
+
+.gradient-success {
+  background: var(--gradient-success);
+}
+
+.gradient-sunset {
+  background: var(--gradient-sunset);
+}
+
+.gradient-ocean {
+  background: var(--gradient-ocean);
 }

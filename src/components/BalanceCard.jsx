@@ -16,12 +16,12 @@ export default function BalanceCard({
   className = "",
 }) {
   return (
-    <Card className={className}>
+    <Card className={`border-r-4 border-brand-500 ${className}`}>
       <CardContent className="p-6">
         <div className="flex items-start justify-between">
           <div className="flex-1">
-            <p className="text-sm text-gray-500 mb-1">{title}</p>
-            <p className="text-2xl md:text-3xl font-semibold text-gray-900">
+            <p className="text-sm text-gray-500 font-medium mb-1">{title}</p>
+            <p className="text-2xl md:text-3xl font-bold text-gray-900">
               {formatCurrency(amount)}
             </p>
             {subtitle && (
@@ -29,8 +29,8 @@ export default function BalanceCard({
             )}
           </div>
           {Icon && (
-            <div className="p-3 bg-brand-50 rounded-lg">
-              <Icon className="w-6 h-6 text-brand-500" />
+            <div className="p-3 bg-brand-100 rounded-xl shadow-sm">
+              <Icon className="w-6 h-6 text-brand-600" />
             </div>
           )}
         </div>
@@ -38,7 +38,7 @@ export default function BalanceCard({
         {trend && (
           <div
             className={`flex items-center gap-1 mt-3 text-sm ${
-              trend === "up" ? "text-green-600" : "text-red-600"
+              trend === "up" ? "text-success-600" : "text-danger-600"
             }`}
           >
             {trend === "up" ? (

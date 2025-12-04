@@ -6,6 +6,7 @@ const delay = (ms = 300) => new Promise((resolve) => setTimeout(resolve, ms));
 
 // Estado em memória para simular banco de dados
 let mockDatabase = {
+  icons: [...mockData.icons],
   expenses: [...mockData.expenses],
   incomes: [...mockData.incomes],
   assets: [...mockData.assets],
@@ -19,6 +20,7 @@ let mockDatabase = {
 // Função para resetar o banco de dados mock
 export const resetMockDatabase = () => {
   mockDatabase = {
+    icons: [...mockData.icons],
     expenses: [...mockData.expenses],
     incomes: [...mockData.incomes],
     assets: [...mockData.assets],
@@ -31,6 +33,20 @@ export const resetMockDatabase = () => {
 };
 
 /**
+ * Função helper para enriquecer categoria com ícone
+ */
+const enrichCategoryWithIcon = (category) => {
+  if (!category) return null;
+
+  const icon = mockDatabase.icons.find((i) => i.id === category.icon_id);
+  return {
+    ...category,
+    icon: icon?.name || "Tag", // Nome do ícone para compatibilidade
+    icon_name: icon?.name || "Tag",
+  };
+};
+
+/**
  * Enriquece expenses com dados de category
  */
 const enrichExpenses = (expenses) => {
@@ -38,11 +54,14 @@ const enrichExpenses = (expenses) => {
     const category = mockDatabase.categories.find(
       (c) => c.id === expense.categories_id
     );
+    const enrichedCategory = enrichCategoryWithIcon(category);
+
     return {
       ...expense,
       categoriesId: expense.categories_id, // Compatibilidade com código antigo
-      category: category?.name || "Desconhecido",
-      category_color: category?.color || "#64748b",
+      category: enrichedCategory?.name || "Desconhecido",
+      category_color: enrichedCategory?.color || "#64748b",
+      category_icon: enrichedCategory?.icon || "Tag",
     };
   });
 };
@@ -55,11 +74,14 @@ const enrichIncomes = (incomes) => {
     const category = mockDatabase.categories.find(
       (c) => c.id === income.categories_id
     );
+    const enrichedCategory = enrichCategoryWithIcon(category);
+
     return {
       ...income,
       categoriesId: income.categories_id, // Compatibilidade com código antigo
-      category: category?.name || "Desconhecido",
-      category_color: category?.color || "#64748b",
+      category: enrichedCategory?.name || "Desconhecido",
+      category_color: enrichedCategory?.color || "#64748b",
+      category_icon: enrichedCategory?.icon || "Tag",
     };
   });
 };
@@ -73,12 +95,15 @@ const enrichAssets = (assets) => {
     const category = mockDatabase.categories.find(
       (c) => c.id === asset.asset_types_id || c.id === asset.categories_id
     );
+    const enrichedCategory = enrichCategoryWithIcon(category);
+
     return {
       ...asset,
       assetTypesid: asset.asset_types_id || asset.categories_id, // Compatibilidade com código antigo
       categoriesId: asset.categories_id || asset.asset_types_id,
-      type: category?.name || "Desconhecido",
-      type_color: category?.color || "#64748b",
+      type: enrichedCategory?.name || "Desconhecido",
+      type_color: enrichedCategory?.color || "#64748b",
+      type_icon: enrichedCategory?.icon || "Tag",
     };
   });
 };
@@ -91,6 +116,7 @@ const enrichTransactions = (transactions) => {
     const category = mockDatabase.categories.find(
       (c) => c.id === transaction.category_id
     );
+    const enrichedCategory = enrichCategoryWithIcon(category);
 
     const transactionType = mockDatabase.transactionTypes.find(
       (t) => t.id === transaction.transaction_type_id
@@ -100,9 +126,10 @@ const enrichTransactions = (transactions) => {
       ...transaction,
       categoryId: transaction.category_id,
       transactionTypeId: transaction.transaction_type_id,
-      category_name: category?.name || "Desconhecido",
-      category_color: category?.color || "#64748b",
-      category_internal_name: category?.internal_name || "unknown",
+      category_name: enrichedCategory?.name || "Desconhecido",
+      category_color: enrichedCategory?.color || "#64748b",
+      category_icon: enrichedCategory?.icon || "Tag",
+      category_internal_name: enrichedCategory?.internal_name || "unknown",
       type_name: transactionType?.name || "Desconhecido",
       type_color: transactionType?.color || "#64748b",
       type_internal_name: transactionType?.internal_name || "unknown",
@@ -120,15 +147,18 @@ export const fetchData = async (endpoint) => {
 
   const routes = {
     "/api/users": mockDatabase.users,
+    "/api/icons": mockDatabase.icons,
     "/api/expenses": enrichExpenses(mockDatabase.expenses),
     "/api/incomes": enrichIncomes(mockDatabase.incomes),
     "/api/assets": enrichAssets(mockDatabase.assets),
     "/api/targets": mockDatabase.targets,
     "/api/transactions": enrichTransactions(mockDatabase.transactions),
-    "/api/categories": mockDatabase.categories,
+    "/api/categories": mockDatabase.categories.map(enrichCategoryWithIcon),
     "/api/transactionTypes": mockDatabase.transactionTypes,
     // assetTypes agora retorna categories com transactionType = 3 (Aporte) para compatibilidade
-    "/api/assetTypes": mockDatabase.categories.filter(c => c.transactionTypes && c.transactionTypes.includes(3)),
+    "/api/assetTypes": mockDatabase.categories
+      .filter(c => c.transaction_type_id === 3)
+      .map(enrichCategoryWithIcon),
   };
 
   if (routes[endpoint]) {
@@ -443,18 +473,28 @@ export const deleteTransaction = async (id) => {
 export const createCategory = async (category) => {
   await delay();
 
+  // Se receber icon (string), buscar o icon_id correspondente
+  let iconId = category.icon_id;
+  if (!iconId && category.icon) {
+    const icon = mockDatabase.icons.find((i) => i.name === category.icon);
+    iconId = icon?.id || 84; // 84 é o ID do ícone "Tag" (padrão)
+  }
+  if (!iconId) {
+    iconId = 84; // Ícone padrão "Tag"
+  }
+
   const newCategory = {
     id: Math.max(...mockDatabase.categories.map((c) => c.id), 0) + 1,
     name: category.name,
     color: category.color,
-    internal_name: category.internal_name || category.name.toLowerCase().replace(/\s+/g, '_'),
-    transactionTypes: category.transactionTypes || [],
+    icon_id: iconId,
+    transaction_type_id: category.transaction_type_id,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   };
 
   mockDatabase.categories.push(newCategory);
-  return newCategory;
+  return enrichCategoryWithIcon(newCategory);
 };
 
 export const updateCategory = async (id, updates) => {
@@ -465,16 +505,23 @@ export const updateCategory = async (id, updates) => {
     throw new Error("Categoria não encontrada");
   }
 
+  // Se receber icon (string), buscar o icon_id correspondente
+  let iconId = updates.icon_id;
+  if (!iconId && updates.icon) {
+    const icon = mockDatabase.icons.find((i) => i.name === updates.icon);
+    iconId = icon?.id;
+  }
+
   mockDatabase.categories[index] = {
     ...mockDatabase.categories[index],
     name: updates.name !== undefined ? updates.name : mockDatabase.categories[index].name,
     color: updates.color !== undefined ? updates.color : mockDatabase.categories[index].color,
-    internal_name: updates.internal_name !== undefined ? updates.internal_name : mockDatabase.categories[index].internal_name,
-    transactionTypes: updates.transactionTypes !== undefined ? updates.transactionTypes : mockDatabase.categories[index].transactionTypes,
+    icon_id: iconId !== undefined ? iconId : mockDatabase.categories[index].icon_id,
+    transaction_type_id: updates.transaction_type_id !== undefined ? updates.transaction_type_id : mockDatabase.categories[index].transaction_type_id,
     updated_at: new Date().toISOString(),
   };
 
-  return mockDatabase.categories[index];
+  return enrichCategoryWithIcon(mockDatabase.categories[index]);
 };
 
 export const deleteCategory = async (id) => {

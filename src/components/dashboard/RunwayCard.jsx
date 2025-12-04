@@ -15,31 +15,35 @@ export default function RunwayCard({ data }) {
   const getRunwayInfo = (months) => {
     if (months >= 12)
       return {
-        color: "text-green-600",
-        bg: "bg-green-500",
+        color: "text-success-600",
+        bg: "bg-success-500",
+        border: "border-success-500",
         label: "Seguro",
         emoji: "🟢",
         icon: Shield,
       };
     if (months >= 6)
       return {
-        color: "text-yellow-600",
-        bg: "bg-yellow-500",
+        color: "text-warning-600",
+        bg: "bg-warning-500",
+        border: "border-warning-500",
         label: "Razoável",
         emoji: "🟡",
         icon: Clock,
       };
     if (months >= 3)
       return {
-        color: "text-orange-600",
-        bg: "bg-orange-500",
+        color: "text-warning-600",
+        bg: "bg-warning-500",
+        border: "border-warning-500",
         label: "Atenção",
         emoji: "🟠",
         icon: Clock,
       };
     return {
-      color: "text-red-600",
-      bg: "bg-red-500",
+      color: "text-danger-600",
+      bg: "bg-danger-500",
+      border: "border-danger-500",
       label: "Emergência",
       emoji: "🔴",
       icon: Clock,
@@ -50,7 +54,7 @@ export default function RunwayCard({ data }) {
   const IconComponent = runwayInfo.icon;
 
   return (
-    <Card>
+    <Card className={`border-r-4 ${runwayInfo.border}`}>
       <CardContent className="p-6">
         <div className="flex items-center gap-2 mb-4">
           <IconComponent className="w-5 h-5 text-gray-700" />
@@ -97,7 +101,7 @@ export default function RunwayCard({ data }) {
           <div className="space-y-2 pt-4 border-t">
             <div className="flex justify-between text-sm">
               <span className="text-gray-600">Patrimônio total</span>
-              <span className="font-semibold text-green-600">
+              <span className="font-semibold text-success-600">
                 {formatCurrency(totalAssets)}
               </span>
             </div>
@@ -114,23 +118,23 @@ export default function RunwayCard({ data }) {
           <div
             className={`${
               runwayMonths >= 12
-                ? "bg-green-50 border-green-200"
+                ? "bg-success-50 border-success-200"
                 : runwayMonths >= 6
-                ? "bg-yellow-50 border-yellow-200"
+                ? "bg-warning-50 border-warning-200"
                 : runwayMonths >= 3
-                ? "bg-orange-50 border-orange-200"
-                : "bg-red-50 border-red-200"
+                ? "bg-warning-50 border-warning-200"
+                : "bg-danger-50 border-danger-200"
             } border rounded-lg p-3`}
           >
             <p
               className={`text-xs ${
                 runwayMonths >= 12
-                  ? "text-green-800"
+                  ? "text-success-800"
                   : runwayMonths >= 6
-                  ? "text-yellow-800"
+                  ? "text-warning-800"
                   : runwayMonths >= 3
-                  ? "text-orange-800"
-                  : "text-red-800"
+                  ? "text-warning-800"
+                  : "text-danger-800"
               }`}
             >
               💡{" "}

@@ -32,38 +32,42 @@ export default function AlertsSection({ alerts = [], onDismiss }) {
 function AlertCard({ alert, onDismiss }) {
   const { severity, message, action, icon } = alert;
 
-  // Configurações baseadas na severidade
+  // Configurações baseadas na severidade - Novas cores modernas
   const config = {
     critical: {
-      bgColor: 'bg-red-50',
-      borderColor: 'border-red-200',
-      iconColor: 'text-red-600',
-      textColor: 'text-red-900',
-      actionColor: 'text-red-700',
+      bgColor: 'bg-danger-50',
+      borderColor: 'border-danger-200',
+      iconColor: 'text-danger-600',
+      textColor: 'text-danger-900',
+      actionColor: 'text-danger-700',
+      borderRightColor: 'border-r-danger-500',
       Icon: AlertCircle,
     },
     warning: {
-      bgColor: 'bg-yellow-50',
-      borderColor: 'border-yellow-200',
-      iconColor: 'text-yellow-600',
-      textColor: 'text-yellow-900',
-      actionColor: 'text-yellow-700',
+      bgColor: 'bg-warning-50',
+      borderColor: 'border-warning-200',
+      iconColor: 'text-warning-600',
+      textColor: 'text-warning-900',
+      actionColor: 'text-warning-700',
+      borderRightColor: 'border-r-warning-500',
       Icon: AlertTriangle,
     },
     success: {
-      bgColor: 'bg-green-50',
-      borderColor: 'border-green-200',
-      iconColor: 'text-green-600',
-      textColor: 'text-green-900',
-      actionColor: 'text-green-700',
+      bgColor: 'bg-success-50',
+      borderColor: 'border-success-200',
+      iconColor: 'text-success-600',
+      textColor: 'text-success-900',
+      actionColor: 'text-success-700',
+      borderRightColor: 'border-r-success-500',
       Icon: CheckCircle,
     },
     info: {
-      bgColor: 'bg-blue-50',
-      borderColor: 'border-blue-200',
-      iconColor: 'text-blue-600',
-      textColor: 'text-blue-900',
-      actionColor: 'text-blue-700',
+      bgColor: 'bg-info-50',
+      borderColor: 'border-info-200',
+      iconColor: 'text-info-600',
+      textColor: 'text-info-900',
+      actionColor: 'text-info-700',
+      borderRightColor: 'border-r-info-500',
       Icon: Info,
     },
   };
@@ -72,7 +76,7 @@ function AlertCard({ alert, onDismiss }) {
   const IconComponent = style.Icon;
 
   return (
-    <Card className={`${style.bgColor} border-2 ${style.borderColor} overflow-hidden`}>
+    <Card className={`${style.bgColor} border-2 ${style.borderColor} border-r-4 ${style.borderRightColor} overflow-hidden`}>
       <CardContent className="p-4">
         <div className="flex items-start gap-3">
           {/* Ícone */}

@@ -20,6 +20,7 @@ import {
   deleteCategory,
 } from "../../src/utils/mockApi";
 import { Plus, Edit2, Trash2, Tag } from "lucide-react";
+import IconPicker, { getIconComponent } from "../../src/components/IconPicker";
 
 /**
  * Página de Categorias - Gerenciamento de categorias
@@ -37,6 +38,7 @@ export default function CategoriasPage() {
   const [categoryFormData, setCategoryFormData] = useState({
     name: "",
     color: "#6366f1",
+    icon: "Tag",
     transaction_type_id: null,
   });
 
@@ -83,12 +85,14 @@ export default function CategoriasPage() {
       setCategoryFormData({
         name: category.name,
         color: category.color,
+        icon: category.icon || "Tag",
         transaction_type_id: category.transaction_type_id,
       });
     } else {
       setCategoryFormData({
         name: "",
         color: "#6366f1",
+        icon: "Tag",
         transaction_type_id: defaultType,
       });
     }
@@ -160,35 +164,44 @@ export default function CategoriasPage() {
           </div>
 
           <div className="space-y-3">
-            {sectionCategories.map((category) => (
-              <div key={category.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
-                <div className="flex items-center gap-3 flex-1">
-                  <div
-                    className="w-4 h-4 rounded-full flex-shrink-0"
-                    style={{ backgroundColor: category.color }}
-                  />
-                  <div className="flex-1 min-w-0">
-                    <span className="font-semibold text-gray-900">{category.name}</span>
+            {sectionCategories.map((category) => {
+              const IconComponent = getIconComponent(category.icon || "Tag");
+
+              return (
+                <div key={category.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
+                  <div className="flex items-center gap-3 flex-1">
+                    <div
+                      className="p-2 rounded-lg flex-shrink-0"
+                      style={{ backgroundColor: category.color + '20' }}
+                    >
+                      <IconComponent
+                        className="w-5 h-5"
+                        style={{ color: category.color }}
+                      />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <span className="font-semibold text-gray-900">{category.name}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <button
+                      onClick={() => handleOpenCategoryModal(category)}
+                      className="p-1.5 hover:bg-gray-200 rounded transition-colors"
+                      title="Editar categoria"
+                    >
+                      <Edit2 className="w-4 h-4 text-gray-600" />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteCategory(category.id)}
+                      className="p-1.5 hover:bg-red-100 rounded transition-colors"
+                      title="Deletar categoria"
+                    >
+                      <Trash2 className="w-4 h-4 text-red-600" />
+                    </button>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  <button
-                    onClick={() => handleOpenCategoryModal(category)}
-                    className="p-1.5 hover:bg-gray-200 rounded transition-colors"
-                    title="Editar categoria"
-                  >
-                    <Edit2 className="w-4 h-4 text-gray-600" />
-                  </button>
-                  <button
-                    onClick={() => handleDeleteCategory(category.id)}
-                    className="p-1.5 hover:bg-red-100 rounded transition-colors"
-                    title="Deletar categoria"
-                  >
-                    <Trash2 className="w-4 h-4 text-red-600" />
-                  </button>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </CardContent>
       </Card>
@@ -242,7 +255,7 @@ export default function CategoriasPage() {
 
       {/* Modal de Categoria */}
       <Dialog open={categoryModalOpen} onOpenChange={setCategoryModalOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               {editingCategory ? "Editar Categoria" : "Criar Nova Categoria"}
@@ -284,6 +297,15 @@ export default function CategoriasPage() {
                 />
               </div>
             </div>
+
+            {/* Seletor de Ícone */}
+            <IconPicker
+              selectedIcon={categoryFormData.icon}
+              onIconSelect={(iconName) =>
+                setCategoryFormData({ ...categoryFormData, icon: iconName })
+              }
+              color={categoryFormData.color}
+            />
 
             <DialogFooter>
               <Button

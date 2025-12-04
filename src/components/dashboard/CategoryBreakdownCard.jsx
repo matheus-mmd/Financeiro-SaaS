@@ -5,6 +5,7 @@ import { Card, CardContent } from '../ui/card';
 import SegmentedControl from '../ui/segmented-control';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 import { formatCurrency } from '../../utils';
+import { getIconComponent } from '../IconPicker';
 
 /**
  * CategoryBreakdownCard - Card com gráfico de donut mostrando receitas ou despesas por categoria
@@ -25,9 +26,9 @@ export default function CategoryBreakdownCard({
   const data = activeTab === 'income' ? incomeData : expenseData;
   const total = data.reduce((sum, item) => sum + item.value, 0);
 
-  // Cores padrão para receitas (tons de verde) e despesas (coloridas)
-  const DEFAULT_INCOME_COLORS = ['#10b981', '#14b8a6', '#06b6d4'];
-  const DEFAULT_EXPENSE_COLORS = ['#6366f1', '#ec4899', '#10b981', '#f59e0b', '#ef4444'];
+  // Cores padrão modernas para receitas (tons de verde/sucesso) e despesas (coloridas)
+  const DEFAULT_INCOME_COLORS = ['#10b981', '#059669', '#06b6d4'];
+  const DEFAULT_EXPENSE_COLORS = ['#3b82f6', '#a855f7', '#10b981', '#f59e0b', '#ef4444'];
 
   const getColor = (item, index) => {
     if (item.color) return item.color;
@@ -46,16 +47,17 @@ export default function CategoryBreakdownCard({
     color: getColor(item, index)
   }));
 
-  const iconColor = activeTab === 'income' ? 'text-green-600' : 'text-purple-600';
-  const iconBgColor = activeTab === 'income' ? 'bg-green-100' : 'bg-purple-100';
+  const iconColor = activeTab === 'income' ? 'text-success-600' : 'text-accent-600';
+  const iconBgColor = activeTab === 'income' ? 'bg-success-100' : 'bg-accent-100';
+  const borderColor = activeTab === 'income' ? 'border-success-500' : 'border-accent-500';
 
   return (
-    <Card className="overflow-hidden">
+    <Card className={`overflow-hidden border-r-4 ${borderColor}`}>
       <CardContent className="p-6">
         {/* Header com título e toggle */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <div className="flex items-start gap-3">
-            <div className={`w-2 h-2 rounded-full mt-2 ${activeTab === 'income' ? 'bg-green-500' : 'bg-purple-500'}`} />
+            <div className={`w-2 h-2 rounded-full mt-2 ${activeTab === 'income' ? 'bg-success-500' : 'bg-accent-500'}`} />
             <div>
               <h2 className="text-lg font-semibold text-gray-900">
                 {title || (activeTab === 'income' ? 'Receitas por Categoria' : 'Gastos por Categoria')}
@@ -126,6 +128,7 @@ export default function CategoryBreakdownCard({
             {chartData.map((item, index) => {
               const percentage = ((item.value / total) * 100).toFixed(1);
               const isActive = activeIndex === index;
+              const IconComponent = getIconComponent(item.icon || "Tag");
 
               return (
                 <div
@@ -141,9 +144,14 @@ export default function CategoryBreakdownCard({
                       <span className="text-xs font-bold text-gray-600">{index + 1}</span>
                     </div>
                     <div
-                      className="w-3 h-3 rounded-full flex-shrink-0"
-                      style={{ backgroundColor: item.color }}
-                    />
+                      className="p-1 rounded flex-shrink-0"
+                      style={{ backgroundColor: item.color + '20' }}
+                    >
+                      <IconComponent
+                        className="w-4 h-4"
+                        style={{ color: item.color }}
+                      />
+                    </div>
                     <span className={`text-sm font-medium truncate ${
                       isActive ? 'text-gray-900' : 'text-gray-700'
                     }`}>

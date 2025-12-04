@@ -5,12 +5,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
-  ArrowLeftRight,
+  ArrowRightLeft,
   Receipt,
   TrendingUp,
   Target,
   Tag,
-  DollarSign,
+  CircleDollarSign,
   X,
 } from "lucide-react";
 
@@ -30,9 +30,9 @@ export default function Sidebar({
 
   const menuItems = [
     { path: "/", icon: LayoutDashboard, label: "Dashboard" },
-    { path: "/transacoes", icon: ArrowLeftRight, label: "Transações" },
+    { path: "/transacoes", icon: ArrowRightLeft, label: "Transações" },
     { path: "/despesas", icon: Receipt, label: "Despesas" },
-    { path: "/receitas", icon: DollarSign, label: "Receitas" },
+    { path: "/receitas", icon: CircleDollarSign, label: "Receitas" },
     { path: "/patrimonio-ativos", icon: TrendingUp, label: "Patrimônio e Ativos" },
     { path: "/metas", icon: Target, label: "Metas" },
     { path: "/categorias", icon: Tag, label: "Categorias" },
