@@ -14,7 +14,7 @@ export default function GoalsProgressCard({ goals = [] }) {
 
   if (activeGoals.length === 0) {
     return (
-      <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-200 border-r-4 border-accent-500">
+      <Card className="overflow-hidden border-0 shadow-sm">
         <CardContent className="p-6">
           <div className="flex items-center gap-3 mb-4">
             <div className="p-2 rounded-xl shadow-sm bg-accent-50">
@@ -38,7 +38,7 @@ export default function GoalsProgressCard({ goals = [] }) {
   }
 
   return (
-    <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-200 border-r-4 border-accent-500">
+    <Card className="overflow-hidden border-0 shadow-sm">
       <CardContent className="p-6">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">

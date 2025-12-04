@@ -41,7 +41,7 @@ export default function MonthEndProjection({ data }) {
     ((totalDaysInMonth - daysRemaining) / totalDaysInMonth) * 100;
 
   return (
-    <Card className={`border-r-4 ${isNegative ? 'border-danger-500' : isWarning ? 'border-warning-500' : 'border-brand-500'}`}>
+    <Card className="border-0 shadow-sm">
       <CardContent className="p-6">
         <div className="flex items-center gap-2 mb-4">
           <TrendingUp className="w-5 h-5 text-gray-700" />

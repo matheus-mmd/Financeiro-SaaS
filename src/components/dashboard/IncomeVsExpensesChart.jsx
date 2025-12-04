@@ -107,7 +107,7 @@ export default function IncomeVsExpensesChart({
   };
 
   return (
-    <Card className="overflow-hidden">
+    <Card className="overflow-hidden border-0 shadow-sm">
       <CardContent className="p-6">
         {/* Header */}
         <div className="flex flex-col gap-4 mb-6">

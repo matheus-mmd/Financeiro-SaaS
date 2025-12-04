@@ -52,7 +52,7 @@ export default function CategoryBreakdownCard({
   const borderColor = activeTab === 'income' ? 'border-success-500' : 'border-accent-500';
 
   return (
-    <Card className={`overflow-hidden border-r-4 ${borderColor}`}>
+    <Card className="overflow-hidden border-0 shadow-sm">
       <CardContent className="p-6">
         {/* Header com título e toggle */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">

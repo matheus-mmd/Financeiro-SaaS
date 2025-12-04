@@ -20,6 +20,7 @@ import DashboardSkeleton from "../src/components/DashboardSkeleton";
 import DatePicker from "../src/components/DatePicker";
 import Table from "../src/components/Table";
 import { fetchData, formatCurrency, formatDate } from "../src/utils";
+import { getIconComponent } from "../src/components/IconPicker";
 import { Wallet, TrendingDown, ArrowUpRight, Target, PiggyBank, ArrowDownRight, TrendingUp, Coins } from "lucide-react";
 
 // Componentes de análise do dashboard
@@ -510,17 +511,25 @@ export default function Dashboard() {
       key: "category",
       label: "Categoria",
       sortable: true,
-      render: (row) => (
-        <div className="flex items-center gap-2">
-          <div
-            className="w-3 h-3 rounded-full flex-shrink-0"
-            style={{ backgroundColor: row.category_color }}
-          />
-          <span className="text-sm font-medium text-gray-900">
-            {row.category_name}
-          </span>
-        </div>
-      ),
+      render: (row) => {
+        const IconComponent = getIconComponent(row.category_icon || "Tag");
+        return (
+          <div className="flex items-center gap-2">
+            <div
+              className="p-1 rounded flex-shrink-0"
+              style={{ backgroundColor: row.category_color + '20' }}
+            >
+              <IconComponent
+                className="w-4 h-4"
+                style={{ color: row.category_color }}
+              />
+            </div>
+            <span className="text-sm font-medium text-gray-900">
+              {row.category_name}
+            </span>
+          </div>
+        );
+      },
     },
     {
       key: "amount",
