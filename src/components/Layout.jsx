@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Sidebar from './Sidebar';
 import Topbar from './Topbar';
@@ -22,8 +22,13 @@ export default function Layout({ children }) {
   const publicRoutes = ['/login'];
   const isPublicRoute = publicRoutes.includes(pathname);
 
+  // Fechar sidebar mobile ao mudar de rota
+  useEffect(() => {
+    setIsMobileSidebarOpen(false);
+  }, [pathname]);
+
   // Redirecionar para login se não autenticado (exceto em rotas públicas)
-  React.useEffect(() => {
+  useEffect(() => {
     // IMPORTANTE: Só redireciona se NÃO estiver carregando E não tiver usuário E não for rota pública
     if (!loading && !user && !isPublicRoute) {
       router.replace('/login');
@@ -38,8 +43,14 @@ export default function Layout({ children }) {
   // Mostrar loading enquanto verifica autenticação (APENAS para rotas protegidas)
   if (loading || !user) {
     return (
-      <div className="flex items-center justify-center h-screen bg-bg">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-brand-600"></div>
+      <div className="flex flex-col items-center justify-center h-screen bg-bg gap-4">
+        <div className="relative">
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center shadow-lg shadow-brand-500/30">
+            <span className="text-white font-bold text-2xl">F</span>
+          </div>
+          <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-brand-400 animate-ping" />
+        </div>
+        <p className="text-sm text-gray-500 animate-pulse">Carregando...</p>
       </div>
     );
   }
@@ -72,6 +83,7 @@ export default function Layout({ children }) {
         isCollapsed={isSidebarCollapsed}
         isOpen={isMobileSidebarOpen}
         onClose={() => setIsMobileSidebarOpen(false)}
+        onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
       />
 
       <div className="flex-1 flex flex-col min-w-0">

@@ -128,17 +128,22 @@ export default function GlobalSearch() {
 
   return (
     <>
-      {/* Campo de busca no header */}
-      <div className="relative flex-1 max-w-md mx-4">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-        <Input
-          type="text"
-          placeholder="Buscar... (Ctrl+K)"
-          className="pl-10 pr-4"
-          onClick={() => setOpen(true)}
-          readOnly
-        />
-      </div>
+      {/* Campo de busca no header - Design moderno */}
+      <button
+        onClick={() => setOpen(true)}
+        className="flex items-center gap-3 w-full px-4 py-2.5
+          bg-gray-50 hover:bg-gray-100
+          border border-gray-200 rounded-xl
+          text-gray-500 text-sm
+          transition-all duration-200
+          focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-300"
+      >
+        <Search className="w-4 h-4 text-gray-400 flex-shrink-0" />
+        <span className="flex-1 text-left hidden sm:block">Buscar...</span>
+        <kbd className="hidden md:inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium text-gray-400 bg-white border border-gray-200 rounded-md">
+          <span className="text-xs">⌘</span>K
+        </kbd>
+      </button>
 
       {/* Dialog de resultados */}
       <Dialog open={open} onOpenChange={setOpen}>
