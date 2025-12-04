@@ -12,23 +12,13 @@ import {
   Layers,
   PiggyBank,
   X,
-  ChevronLeft,
 } from "lucide-react";
 
-/**
- * Componente Sidebar - Menu lateral de navegação
- *
- * Solução para animação suave:
- * - Ícones ficam sempre fixos na mesma posição
- * - Apenas a largura da sidebar anima
- * - Texto fica oculto por clip (overflow-hidden) sem transição de opacity/width
- * - Estrutura interna fixa, sem justify-center dinâmico
- */
+
 export default function Sidebar({
   isCollapsed = false,
   isOpen = false,
   onClose,
-  onToggleCollapse,
 }) {
   const pathname = usePathname();
 
@@ -44,6 +34,7 @@ export default function Sidebar({
 
   const isActive = (path) => pathname === path;
 
+  // Largura colapsada: 72px, Ícone: 40px, Padding: (72-40)/2 = 16px (px-4)
   return (
     <>
       {/* Overlay para mobile */}
@@ -72,13 +63,13 @@ export default function Sidebar({
       >
         {/* Header */}
         <div className="flex items-center h-16 px-4 border-b border-gray-200 flex-shrink-0">
-          {/* Logo - sempre alinhado à esquerda */}
           <div className="flex items-center gap-3 min-w-0">
+            {/* Logo icon - sempre fixo */}
             <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center">
               <span className="text-white font-bold text-lg">F</span>
             </div>
 
-            {/* Texto do logo - oculto por overflow quando colapsado */}
+            {/* Logo texto - oculto por overflow */}
             <div className={`
               overflow-hidden transition-all duration-300 ease-in-out
               ${isCollapsed ? "lg:w-0" : "lg:w-40"}
@@ -104,8 +95,8 @@ export default function Sidebar({
         </div>
 
         {/* Navegação */}
-        <nav className="flex-1 overflow-y-auto overflow-x-hidden py-4 px-3">
-          <ul className="space-y-1">
+        <nav className="flex-1 overflow-y-auto overflow-x-hidden py-4">
+          <ul className="space-y-1 px-4">
             {menuItems.map((item) => {
               const Icon = item.icon;
               const active = isActive(item.path);
@@ -116,7 +107,7 @@ export default function Sidebar({
                     href={item.path}
                     onClick={onClose}
                     className={`
-                      group relative flex items-center gap-3 h-11 px-2 rounded-xl
+                      group relative flex items-center gap-3 h-11 rounded-xl
                       transition-colors duration-200
                       ${active
                         ? "bg-brand-50 text-brand-600"
@@ -125,7 +116,7 @@ export default function Sidebar({
                     `}
                     aria-current={active ? "page" : undefined}
                   >
-                    {/* Ícone - sempre fixo, nunca muda de posição */}
+                    {/* Ícone - posição fixa, sempre centralizado */}
                     <div className={`
                       flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center
                       transition-colors duration-200
@@ -178,33 +169,7 @@ export default function Sidebar({
           </ul>
         </nav>
 
-        {/* Botão de colapsar (desktop) */}
-        <div className="hidden lg:block p-3 border-t border-gray-200">
-          <button
-            onClick={onToggleCollapse}
-            className="flex items-center gap-3 h-11 px-2 w-full rounded-xl text-gray-500 hover:bg-gray-50 hover:text-gray-700 transition-colors duration-200"
-            aria-label={isCollapsed ? "Expandir menu" : "Recolher menu"}
-          >
-            <div className={`
-              flex-shrink-0 w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center
-              transition-transform duration-300
-              ${isCollapsed ? "rotate-180" : ""}
-            `}>
-              <ChevronLeft className="w-5 h-5" />
-            </div>
-
-            <div className={`
-              overflow-hidden transition-all duration-300 ease-in-out
-              ${isCollapsed ? "w-0" : "w-32"}
-            `}>
-              <span className="text-sm font-medium whitespace-nowrap">
-                Recolher menu
-              </span>
-            </div>
-          </button>
-        </div>
-
-        {/* Footer */}
+        {/* Footer - oculto quando colapsado */}
         <div className={`
           flex-shrink-0 px-4 py-3 border-t border-gray-200
           overflow-hidden transition-all duration-300 ease-in-out
