@@ -6,7 +6,6 @@ import PageHeader from "../../src/components/PageHeader";
 import StatsCard from "../../src/components/StatsCard";
 import DateRangePicker from "../../src/components/DateRangePicker";
 import { Card, CardContent } from "../../src/components/ui/card";
-import { Badge } from "../../src/components/ui/badge";
 import { Button } from "../../src/components/ui/button";
 import { Input } from "../../src/components/ui/input";
 import { Label } from "../../src/components/ui/label";
@@ -37,21 +36,23 @@ import {
 import PageSkeleton from "../../src/components/PageSkeleton";
 import Table from "../../src/components/Table";
 import DatePicker from "../../src/components/DatePicker";
-import { fetchData, formatCurrency, formatDate, createAsset, updateAsset, deleteAsset } from "../../src/utils";
+import {
+  fetchData,
+  formatCurrency,
+  formatDate,
+  createAsset,
+  updateAsset,
+  deleteAsset,
+  getCurrentMonthRange,
+  parseDateString,
+  isDateInRange,
+} from "../../src/utils";
 import { exportToCSV } from "../../src/utils/exportData";
 import { getIconComponent } from "../../src/components/IconPicker";
 import FilterButton from "../../src/components/FilterButton";
 import FloatingActionButton from "../../src/components/FloatingActionButton";
-import {
-  TrendingUp,
-  DollarSign,
-  Percent,
-  Plus,
-  Download,
-  Trash2,
-  Wallet,
-  PieChart,
-} from "lucide-react";
+import { TRANSACTION_TYPE_IDS, DEFAULT_CATEGORY_COLOR } from "../../src/constants";
+import { DollarSign, Percent, Plus, Download, Trash2, Wallet } from "lucide-react";
 
 /**
  * Página Patrimônio e Ativos - Gerenciamento de patrimônio e ativos
@@ -69,15 +70,6 @@ export default function PatrimonioAtivos() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [assetToDelete, setAssetToDelete] = useState(null);
   const [categories, setCategories] = useState([]);
-
-  // Função para obter intervalo do mês atual
-  const getCurrentMonthRange = () => {
-    const now = new Date();
-    const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
-    const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-    return { from: firstDay, to: lastDay };
-  };
-
   const [filterMonth, setFilterMonth] = useState(getCurrentMonthRange());
   const [formData, setFormData] = useState({
     name: "",
@@ -103,9 +95,9 @@ export default function PatrimonioAtivos() {
 
         setAssets(assetsWithDate);
         setFilteredAssets(assetsWithDate);
-        // Filtrar apenas categorias que permitem Aporte (transaction_type_id === 3)
-        const assetCategories = categoriesRes.data.filter(cat =>
-          cat.transaction_type_id === 3
+        // Filtrar apenas categorias que permitem Aporte
+        const assetCategories = categoriesRes.data.filter(
+          (cat) => cat.transaction_type_id === TRANSACTION_TYPE_IDS.INVESTMENT
         );
         setCategories(assetCategories);
       } catch (error) {
@@ -128,19 +120,7 @@ export default function PatrimonioAtivos() {
 
     // Filtrar por intervalo de datas
     if (filterMonth?.from && filterMonth?.to) {
-      filtered = filtered.filter((a) => {
-        const [year, month, day] = a.date.split("-");
-        const assetDate = new Date(year, month - 1, day);
-        assetDate.setHours(0, 0, 0, 0);
-
-        const from = new Date(filterMonth.from);
-        from.setHours(0, 0, 0, 0);
-
-        const to = new Date(filterMonth.to);
-        to.setHours(23, 59, 59, 999);
-
-        return assetDate >= from && assetDate <= to;
-      });
+      filtered = filtered.filter((a) => isDateInRange(a.date, filterMonth));
     }
 
     setFilteredAssets(filtered);
@@ -165,15 +145,12 @@ export default function PatrimonioAtivos() {
 
   const handleEditAsset = (asset) => {
     setEditingAsset(asset);
-    // Converter string de data para Date object
-    const [year, month, day] = asset.date.split("-");
-    const dateObj = new Date(year, month - 1, day);
     setFormData({
       name: asset.name,
       type: asset.type,
       value: asset.value.toString(),
       yield: asset.yield ? (asset.yield * 100).toString() : "",
-      date: dateObj,
+      date: parseDateString(asset.date) || new Date(),
     });
     setModalOpen(true);
   };

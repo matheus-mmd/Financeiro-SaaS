@@ -6,7 +6,6 @@ import PageHeader from "../../src/components/PageHeader";
 import StatsCard from "../../src/components/StatsCard";
 import DateRangePicker from "../../src/components/DateRangePicker";
 import { Card, CardContent } from "../../src/components/ui/card";
-import { Badge } from "../../src/components/ui/badge";
 import { Button } from "../../src/components/ui/button";
 import { Input } from "../../src/components/ui/input";
 import { Label } from "../../src/components/ui/label";
@@ -37,18 +36,22 @@ import {
 import PageSkeleton from "../../src/components/PageSkeleton";
 import Table from "../../src/components/Table";
 import DatePicker from "../../src/components/DatePicker";
-import { fetchData, formatCurrency, formatDate, createTransaction, updateTransaction, deleteTransaction } from "../../src/utils";
+import {
+  fetchData,
+  formatCurrency,
+  formatDate,
+  createTransaction,
+  updateTransaction,
+  deleteTransaction,
+  getCurrentMonthRange,
+  parseDateString,
+  isDateInRange,
+} from "../../src/utils";
 import { getIconComponent } from "../../src/components/IconPicker";
 import FilterButton from "../../src/components/FilterButton";
 import FloatingActionButton from "../../src/components/FloatingActionButton";
-import {
-  ArrowUpRight,
-  ArrowDownRight,
-  TrendingUp,
-  Plus,
-  Download,
-  Trash2,
-} from "lucide-react";
+import { TRANSACTION_TYPES } from "../../src/constants";
+import { ArrowUpRight, ArrowDownRight, TrendingUp, Plus, Trash2 } from "lucide-react";
 
 /**
  * Página Transações - Gerenciamento de transações
@@ -67,15 +70,6 @@ export default function Transacoes() {
   const [filterTransactionType, setFilterTransactionType] = useState("all");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [transactionToDelete, setTransactionToDelete] = useState(null);
-
-  // Função para obter intervalo do mês atual
-  const getCurrentMonthRange = () => {
-    const now = new Date();
-    const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
-    const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-    return { from: firstDay, to: lastDay };
-  };
-
   const [filterMonth, setFilterMonth] = useState(getCurrentMonthRange());
   const [formData, setFormData] = useState({
     description: "",
@@ -133,19 +127,7 @@ export default function Transacoes() {
 
     // Filtrar por intervalo de datas
     if (filterMonth?.from && filterMonth?.to) {
-      filtered = filtered.filter((t) => {
-        const [year, month, day] = t.date.split("-");
-        const transactionDate = new Date(year, month - 1, day);
-        transactionDate.setHours(0, 0, 0, 0);
-
-        const from = new Date(filterMonth.from);
-        from.setHours(0, 0, 0, 0);
-
-        const to = new Date(filterMonth.to);
-        to.setHours(23, 59, 59, 999);
-
-        return transactionDate >= from && transactionDate <= to;
-      });
+      filtered = filtered.filter((t) => isDateInRange(t.date, filterMonth));
     }
 
     setFilteredTransactions(filtered);
@@ -167,14 +149,12 @@ export default function Transacoes() {
 
   const handleEditTransaction = (transaction) => {
     setEditingTransaction(transaction);
-    const [year, month, day] = transaction.date.split("-");
-    const dateObj = new Date(year, month - 1, day);
     setFormData({
       description: transaction.description,
       amount: Math.abs(transaction.amount).toString(),
       categoryId: transaction.category_id,
       transactionTypeId: transaction.transaction_type_id,
-      date: dateObj,
+      date: parseDateString(transaction.date) || new Date(),
     });
     setModalOpen(true);
   };
@@ -209,7 +189,7 @@ export default function Transacoes() {
       let amount = parseFloat(formData.amount);
 
       // Receitas são positivas, Despesas e Aportes são negativos
-      if (transactionType?.internal_name === "income") {
+      if (transactionType?.internal_name === TRANSACTION_TYPES.INCOME) {
         amount = Math.abs(amount);
       } else {
         amount = -Math.abs(amount);
@@ -271,15 +251,15 @@ export default function Transacoes() {
 
   // Calcular estatísticas baseadas nas transações filtradas
   const totalIncome = filteredTransactions
-    .filter((t) => t.type_internal_name === "income")
+    .filter((t) => t.type_internal_name === TRANSACTION_TYPES.INCOME)
     .reduce((sum, t) => sum + t.amount, 0);
 
   const totalExpense = filteredTransactions
-    .filter((t) => t.type_internal_name === "expense")
+    .filter((t) => t.type_internal_name === TRANSACTION_TYPES.EXPENSE)
     .reduce((sum, t) => sum + Math.abs(t.amount), 0);
 
   const totalInvestment = filteredTransactions
-    .filter((t) => t.type_internal_name === "investment")
+    .filter((t) => t.type_internal_name === TRANSACTION_TYPES.INVESTMENT)
     .reduce((sum, t) => sum + Math.abs(t.amount), 0);
 
   const balance = totalIncome - totalExpense - totalInvestment;

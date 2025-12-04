@@ -39,17 +39,21 @@ import Table from "../../src/components/Table";
 import DatePicker from "../../src/components/DatePicker";
 import FilterButton from "../../src/components/FilterButton";
 import FloatingActionButton from "../../src/components/FloatingActionButton";
-import { fetchData, formatCurrency, formatDate, createExpense, updateExpense, deleteExpense } from "../../src/utils";
+import {
+  fetchData,
+  formatCurrency,
+  formatDate,
+  createExpense,
+  updateExpense,
+  deleteExpense,
+  getCurrentMonthRange,
+  parseDateString,
+  isDateInRange,
+} from "../../src/utils";
 import { exportToCSV } from "../../src/utils/exportData";
 import { getIconComponent } from "../../src/components/IconPicker";
-import {
-  Receipt,
-  Plus,
-  Trash2,
-  TrendingDown,
-  PieChart,
-  Download,
-} from "lucide-react";
+import { TRANSACTION_TYPE_IDS, PAYMENT_STATUS, PAYMENT_METHODS, DEFAULT_CATEGORY_COLOR } from "../../src/constants";
+import { Receipt, Plus, Trash2, TrendingDown, PieChart, Download } from "lucide-react";
 
 /**
  * Página Despesas - Gerenciamento detalhado de despesas por categoria
@@ -66,15 +70,6 @@ export default function Despesas() {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [expenseToDelete, setExpenseToDelete] = useState(null);
-
-  // Função para obter intervalo do mês atual
-  const getCurrentMonthRange = () => {
-    const now = new Date();
-    const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
-    const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-    return { from: firstDay, to: lastDay };
-  };
-
   const [filterMonth, setFilterMonth] = useState(getCurrentMonthRange());
   const [formData, setFormData] = useState({
     title: "",
@@ -82,7 +77,7 @@ export default function Despesas() {
     amount: "",
     date: new Date(),
     paid_date: null,
-    status: "pending",
+    status: PAYMENT_STATUS.PENDING,
     payment_method: "",
     installments_current: "",
     installments_total: "",
@@ -97,9 +92,9 @@ export default function Despesas() {
         ]);
         setExpenses(expensesRes.data);
         setFilteredExpenses(expensesRes.data);
-        // Filtrar apenas categorias de despesa (transaction_type_id === 2)
-        const expenseCategories = categoriesRes.data.filter(cat =>
-          cat.transaction_type_id === 2
+        // Filtrar apenas categorias de despesa
+        const expenseCategories = categoriesRes.data.filter(
+          (cat) => cat.transaction_type_id === TRANSACTION_TYPE_IDS.EXPENSE
         );
         setCategories(expenseCategories);
       } catch (error) {
@@ -123,20 +118,7 @@ export default function Despesas() {
 
     // Filtrar por intervalo de datas
     if (filterMonth?.from && filterMonth?.to) {
-      filtered = filtered.filter((e) => {
-        // Separar a string de data para evitar problemas com timezone
-        const [year, month, day] = e.date.split("-");
-        const expenseDate = new Date(year, month - 1, day);
-        expenseDate.setHours(0, 0, 0, 0);
-
-        const from = new Date(filterMonth.from);
-        from.setHours(0, 0, 0, 0);
-
-        const to = new Date(filterMonth.to);
-        to.setHours(23, 59, 59, 999);
-
-        return expenseDate >= from && expenseDate <= to;
-      });
+      filtered = filtered.filter((e) => isDateInRange(e.date, filterMonth));
     }
 
     setFilteredExpenses(filtered);
@@ -150,7 +132,7 @@ export default function Despesas() {
       amount: "",
       date: new Date(),
       paid_date: null,
-      status: "pending",
+      status: PAYMENT_STATUS.PENDING,
       payment_method: "",
       installments_current: "",
       installments_total: "",
@@ -160,23 +142,13 @@ export default function Despesas() {
 
   const handleEditExpense = (expense) => {
     setEditingExpense(expense);
-    // Converter string de data para Date object
-    const [year, month, day] = expense.date.split("-");
-    const dateObj = new Date(year, month - 1, day);
-
-    let paidDateObj = null;
-    if (expense.paid_date) {
-      const [pYear, pMonth, pDay] = expense.paid_date.split("-");
-      paidDateObj = new Date(pYear, pMonth - 1, pDay);
-    }
-
     setFormData({
       title: expense.title,
       category: expense.category,
       amount: expense.amount.toString(),
-      date: dateObj,
-      paid_date: paidDateObj,
-      status: expense.status || "pending",
+      date: parseDateString(expense.date) || new Date(),
+      paid_date: parseDateString(expense.paid_date),
+      status: expense.status || PAYMENT_STATUS.PENDING,
       payment_method: expense.payment_method || "",
       installments_current: expense.installments?.current?.toString() || "",
       installments_total: expense.installments?.total?.toString() || "",
@@ -260,7 +232,7 @@ export default function Despesas() {
         amount: "",
         date: new Date(),
         paid_date: null,
-        status: "pending",
+        status: PAYMENT_STATUS.PENDING,
         payment_method: "",
         installments_current: "",
         installments_total: "",
@@ -376,8 +348,8 @@ export default function Despesas() {
       label: "Status",
       sortable: true,
       render: (row) => (
-        <Badge variant={row.status === "paid" ? "success" : "warning"}>
-          {row.status === "paid" ? "Pago" : "Pendente"}
+        <Badge variant={row.status === PAYMENT_STATUS.PAID ? "success" : "warning"}>
+          {row.status === PAYMENT_STATUS.PAID ? "Pago" : "Pendente"}
         </Badge>
       ),
     },
@@ -649,7 +621,7 @@ export default function Despesas() {
               </Select>
             </div>
 
-            {formData.status === "paid" && (
+            {formData.status === PAYMENT_STATUS.PAID && (
               <div className="space-y-2">
                 <Label htmlFor="paid_date">Data do Pagamento</Label>
                 <DatePicker

@@ -2,8 +2,22 @@
  * Funções de análise financeira para o Dashboard
  */
 
-// Importar getPreviousMonth de formatters/date (função única)
 import { getPreviousMonth } from '../formatters/date';
+import {
+  MIN_GOOD_SAVINGS_RATE,
+  MAX_EXPENSE_RATIO,
+  MIN_RUNWAY_MONTHS,
+  HEALTH_SCORE_POINTS,
+  EXPENSE_INCREASE_ALERT_THRESHOLD,
+  CATEGORY_INCREASE_ALERT_THRESHOLD,
+  LOW_BALANCE_ALERT_THRESHOLD,
+  LOW_BALANCE_MIN_DAYS_REMAINING,
+  EXCELLENT_SAVINGS_RATE,
+  DEFAULT_SAVINGS_GOAL_PERCENTAGE,
+  ESSENTIAL_CATEGORIES,
+  PERSONAL_CATEGORIES,
+  TRANSACTION_TYPES,
+} from '../constants';
 
 // Re-exportar para manter compatibilidade
 export { getPreviousMonth };
@@ -18,12 +32,12 @@ export const calculateMonthData = (transactions, expenses, month) => {
 
   // Receitas: transações com type_internal_name === 'income'
   const credits = monthTransactions
-    .filter(t => t.type_internal_name === 'income')
+    .filter(t => t.type_internal_name === TRANSACTION_TYPES.INCOME)
     .reduce((sum, t) => sum + Math.abs(t.amount), 0);
 
   // Débitos/Despesas Reais: transações com type_internal_name === 'expense'
   const debits = monthTransactions
-    .filter(t => t.type_internal_name === 'expense')
+    .filter(t => t.type_internal_name === TRANSACTION_TYPES.EXPENSE)
     .reduce((sum, t) => sum + Math.abs(t.amount), 0);
 
   // Despesas Planejadas: do módulo de expenses (orçamento)
@@ -31,7 +45,7 @@ export const calculateMonthData = (transactions, expenses, month) => {
 
   // Aportes/Investimentos: transações com type_internal_name === 'investment'
   const investments = monthTransactions
-    .filter(t => t.type_internal_name === 'investment')
+    .filter(t => t.type_internal_name === TRANSACTION_TYPES.INVESTMENT)
     .reduce((sum, t) => sum + Math.abs(t.amount), 0);
 
   // Saldo disponível = receitas - despesas reais - aportes
@@ -39,9 +53,9 @@ export const calculateMonthData = (transactions, expenses, month) => {
 
   return {
     credits,
-    debits, // Despesas reais (transactions)
-    expenses: debits, // Mantém compatibilidade (usa despesas reais)
-    plannedExpenses, // Despesas planejadas (expenses)
+    debits,
+    expenses: debits,
+    plannedExpenses,
     investments,
     balance,
   };
@@ -59,39 +73,39 @@ export const calculateHealthScore = (currentMonthData, assets, avgExpenses) => {
     growthTrend: false,
   };
 
-  // 1. Saldo positivo no mês? +25 pontos
+  // 1. Saldo positivo no mês?
   if (currentMonthData.balance > 0) {
-    score += 25;
+    score += HEALTH_SCORE_POINTS.BALANCE_POSITIVE;
     breakdown.balancePositive = true;
   }
 
-  // 2. Taxa de poupança > 10%? +25 pontos
+  // 2. Taxa de poupança acima do mínimo?
   const savings = currentMonthData.balance + currentMonthData.investments;
   const savingsRate = currentMonthData.credits > 0
     ? (savings / currentMonthData.credits) * 100
     : 0;
 
-  if (savingsRate >= 10) {
-    score += 25;
+  if (savingsRate >= MIN_GOOD_SAVINGS_RATE) {
+    score += HEALTH_SCORE_POINTS.SAVINGS_RATE;
     breakdown.savingsRate = true;
   }
 
-  // 3. Despesas < 70% da receita? +25 pontos
+  // 3. Despesas abaixo do limiar máximo?
   const expenseRatio = currentMonthData.credits > 0
     ? (currentMonthData.expenses / currentMonthData.credits) * 100
     : 100;
 
-  if (expenseRatio < 70) {
-    score += 25;
+  if (expenseRatio < MAX_EXPENSE_RATIO) {
+    score += HEALTH_SCORE_POINTS.EXPENSE_RATIO;
     breakdown.expenseRatio = true;
   }
 
-  // 4. Patrimônio suficiente (>3 meses de despesas)? +25 pontos
+  // 4. Patrimônio suficiente para runway mínimo?
   const totalAssets = assets.reduce((sum, a) => sum + a.value, 0);
   const runwayMonths = avgExpenses > 0 ? totalAssets / avgExpenses : 0;
 
-  if (runwayMonths >= 3) {
-    score += 25;
+  if (runwayMonths >= MIN_RUNWAY_MONTHS) {
+    score += HEALTH_SCORE_POINTS.RUNWAY;
     breakdown.growthTrend = true;
   }
 
@@ -105,7 +119,7 @@ export const generateAlerts = (currentMonthData, previousMonthData, projectionDa
   const alerts = [];
 
   // Alerta: Despesas muito acima do mês anterior
-  if (previousMonthData && currentMonthData.expenses > previousMonthData.expenses * 1.2) {
+  if (previousMonthData && currentMonthData.expenses > previousMonthData.expenses * EXPENSE_INCREASE_ALERT_THRESHOLD) {
     const increase = ((currentMonthData.expenses - previousMonthData.expenses) / previousMonthData.expenses * 100).toFixed(0);
     alerts.push({
       severity: 'critical',
@@ -127,7 +141,7 @@ export const generateAlerts = (currentMonthData, previousMonthData, projectionDa
 
   // Alerta: Categoria com gasto muito acima da média
   expensesByCategory.forEach(cat => {
-    if (cat.change > 40) {
+    if (cat.change > CATEGORY_INCREASE_ALERT_THRESHOLD) {
       alerts.push({
         severity: 'warning',
         message: `Categoria ${cat.category} está ${cat.change.toFixed(0)}% acima do mês anterior`,
@@ -142,7 +156,7 @@ export const generateAlerts = (currentMonthData, previousMonthData, projectionDa
     ? ((currentMonthData.balance + currentMonthData.investments) / currentMonthData.credits) * 100
     : 0;
 
-  if (savingsRate >= 20) {
+  if (savingsRate >= EXCELLENT_SAVINGS_RATE) {
     alerts.push({
       severity: 'success',
       message: `Parabéns! Você está poupando ${savingsRate.toFixed(1)}% da sua receita`,
@@ -152,7 +166,7 @@ export const generateAlerts = (currentMonthData, previousMonthData, projectionDa
   }
 
   // Alerta: Saldo disponível baixo
-  if (currentMonthData.balance > 0 && currentMonthData.balance < 500 && projectionData.daysRemaining > 5) {
+  if (currentMonthData.balance > 0 && currentMonthData.balance < LOW_BALANCE_ALERT_THRESHOLD && projectionData.daysRemaining > LOW_BALANCE_MIN_DAYS_REMAINING) {
     alerts.push({
       severity: 'warning',
       message: `Saldo disponível está baixo (R$ ${currentMonthData.balance.toFixed(2)})`,
@@ -280,19 +294,13 @@ export const calculateExpensesByCategory = (expenses, previousExpenses, categori
  * Calcula dados para a regra 50/30/20
  */
 export const calculateBudgetRule503020 = (expenses, currentMonthData, categories) => {
-  // Categorias essenciais (moradia, transporte, alimentação, saúde)
-  const essentialCategories = ['Moradia', 'Transporte', 'Alimentação', 'Saúde'];
-
-  // Categorias pessoais (lazer, educação, outros)
-  const personalCategories = ['Lazer', 'Educação', 'Outros'];
-
   let essentials = 0;
   let personal = 0;
 
   expenses.forEach(e => {
-    if (essentialCategories.includes(e.category)) {
+    if (ESSENTIAL_CATEGORIES.includes(e.category)) {
       essentials += e.amount;
-    } else if (personalCategories.includes(e.category)) {
+    } else if (PERSONAL_CATEGORIES.includes(e.category)) {
       personal += e.amount;
     }
   });
@@ -322,7 +330,7 @@ export const calculateBudgetRule503020 = (expenses, currentMonthData, categories
  * Calcula a taxa de poupança (savings rate)
  * Retorna percentual e valor em reais
  */
-export const calculateSavingsRate = (currentMonthData, savingsGoalPercentage = 20) => {
+export const calculateSavingsRate = (currentMonthData, savingsGoalPercentage = DEFAULT_SAVINGS_GOAL_PERCENTAGE) => {
   const totalIncome = currentMonthData.credits;
 
   // Poupança = Saldo + Investimentos
@@ -348,7 +356,7 @@ export const calculateSavingsRate = (currentMonthData, savingsGoalPercentage = 2
  * Calcula o orçamento diário disponível
  * Considera saldo, dias restantes e meta de poupança
  */
-export const calculateDailyBudget = (currentMonthData, daysRemaining, savingsGoalPercentage = 20) => {
+export const calculateDailyBudget = (currentMonthData, daysRemaining, savingsGoalPercentage = DEFAULT_SAVINGS_GOAL_PERCENTAGE) => {
   const totalIncome = currentMonthData.credits;
   const currentBalance = currentMonthData.balance;
 

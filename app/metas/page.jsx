@@ -40,16 +40,19 @@ import PageSkeleton from "../../src/components/PageSkeleton";
 import Table from "../../src/components/Table";
 import ProgressBar from "../../src/components/ProgressBar";
 import DatePicker from "../../src/components/DatePicker";
-import { fetchData, formatCurrency, formatDate, createTarget, updateTarget, deleteTarget } from "../../src/utils";
-import { exportToCSV } from "../../src/utils/exportData";
 import {
-  Target,
-  Plus,
-  Trash2,
-  CheckCircle,
-  Download,
-  TrendingUp,
-} from "lucide-react";
+  fetchData,
+  formatCurrency,
+  formatDate,
+  createTarget,
+  updateTarget,
+  deleteTarget,
+  parseDateString,
+  isDateInRange,
+} from "../../src/utils";
+import { exportToCSV } from "../../src/utils/exportData";
+import { GOAL_STATUS } from "../../src/constants";
+import { Target, Plus, Trash2, CheckCircle, Download, TrendingUp } from "lucide-react";
 
 /**
  * Página Metas - Gerenciamento de metas financeiras
@@ -105,19 +108,7 @@ export default function Metas() {
 
     // Filtrar por intervalo de datas
     if (filterMonth?.from && filterMonth?.to) {
-      filtered = filtered.filter((t) => {
-        const [year, month, day] = t.date.split("-");
-        const targetDate = new Date(year, month - 1, day);
-        targetDate.setHours(0, 0, 0, 0);
-
-        const from = new Date(filterMonth.from);
-        from.setHours(0, 0, 0, 0);
-
-        const to = new Date(filterMonth.to);
-        to.setHours(23, 59, 59, 999);
-
-        return targetDate >= from && targetDate <= to;
-      });
+      filtered = filtered.filter((t) => isDateInRange(t.date, filterMonth));
     }
 
     setFilteredTargets(filtered);
@@ -137,15 +128,12 @@ export default function Metas() {
 
   const handleEditTarget = (target) => {
     setEditingTarget(target);
-    // Converter string de data para Date object
-    const [year, month, day] = target.date.split("-");
-    const dateObj = new Date(year, month - 1, day);
     setFormData({
       title: target.title,
       goal: target.goal.toString(),
       progress: target.progress.toString(),
       monthlyAmount: target.monthlyAmount?.toString() || "",
-      date: dateObj,
+      date: parseDateString(target.date) || new Date(),
     });
     setModalOpen(true);
   };
@@ -192,8 +180,8 @@ export default function Metas() {
         progress: parseFloat(formData.progress || 0),
         status:
           parseFloat(formData.progress || 0) >= parseFloat(formData.goal)
-            ? "completed"
-            : "in_progress",
+            ? GOAL_STATUS.COMPLETED
+            : GOAL_STATUS.IN_PROGRESS,
         date: dateString,
       };
 
@@ -278,10 +266,10 @@ export default function Metas() {
 
   // Calcular estatísticas baseadas nas metas filtradas
   const completedTargets = filteredTargets.filter(
-    (t) => t.status === "completed"
+    (t) => t.status === GOAL_STATUS.COMPLETED
   );
   const inProgressTargets = filteredTargets.filter(
-    (t) => t.status === "in_progress"
+    (t) => t.status === GOAL_STATUS.IN_PROGRESS
   );
   const totalGoalAmount = filteredTargets.reduce((sum, t) => sum + t.goal, 0);
   const totalProgressAmount = filteredTargets.reduce(
@@ -314,7 +302,7 @@ export default function Metas() {
       label: "Status",
       sortable: true,
       render: (row) => {
-        if (row.status === "completed") {
+        if (row.status === GOAL_STATUS.COMPLETED) {
           return (
             <Badge variant="default" className="bg-green-500">
               <span className="flex items-center gap-1">

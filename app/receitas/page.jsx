@@ -6,7 +6,6 @@ import PageHeader from "../../src/components/PageHeader";
 import StatsCard from "../../src/components/StatsCard";
 import DateRangePicker from "../../src/components/DateRangePicker";
 import { Card, CardContent } from "../../src/components/ui/card";
-import { Badge } from "../../src/components/ui/badge";
 import { Button } from "../../src/components/ui/button";
 import { Input } from "../../src/components/ui/input";
 import { Label } from "../../src/components/ui/label";
@@ -44,19 +43,16 @@ import {
   createIncome,
   updateIncome,
   deleteIncome,
+  getCurrentMonthRange,
+  parseDateString,
+  isDateInRange,
 } from "../../src/utils";
 import { exportToCSV } from "../../src/utils/exportData";
 import { getIconComponent } from "../../src/components/IconPicker";
 import FilterButton from "../../src/components/FilterButton";
 import FloatingActionButton from "../../src/components/FloatingActionButton";
-import {
-  Receipt,
-  Plus,
-  Trash2,
-  TrendingUp,
-  PieChart,
-  Download,
-} from "lucide-react";
+import { TRANSACTION_TYPE_IDS, DEFAULT_CATEGORY_COLOR } from "../../src/constants";
+import { Receipt, Plus, Trash2, TrendingUp, PieChart, Download } from "lucide-react";
 
 /**
  * Página Receitas - Gerenciamento detalhado de receitas por categoria
@@ -73,15 +69,6 @@ export default function Receitas() {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [incomeToDelete, setIncomeToDelete] = useState(null);
-
-  // Função para obter intervalo do mês atual
-  const getCurrentMonthRange = () => {
-    const now = new Date();
-    const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
-    const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-    return { from: firstDay, to: lastDay };
-  };
-
   const [filterMonth, setFilterMonth] = useState(getCurrentMonthRange());
   const [formData, setFormData] = useState({
     title: "",
@@ -99,9 +86,9 @@ export default function Receitas() {
         ]);
         setIncomes(incomesRes.data);
         setFilteredIncomes(incomesRes.data);
-        // Filtrar apenas categorias de receita (transaction_type_id === 1)
+        // Filtrar apenas categorias de receita
         const incomeCategories = categoriesRes.data.filter(
-          (cat) => cat.transaction_type_id === 1
+          (cat) => cat.transaction_type_id === TRANSACTION_TYPE_IDS.INCOME
         );
         setCategories(incomeCategories);
       } catch (error) {
@@ -125,20 +112,7 @@ export default function Receitas() {
 
     // Filtrar por intervalo de datas
     if (filterMonth?.from && filterMonth?.to) {
-      filtered = filtered.filter((i) => {
-        // Separar a string de data para evitar problemas com timezone
-        const [year, month, day] = i.date.split("-");
-        const incomeDate = new Date(year, month - 1, day);
-        incomeDate.setHours(0, 0, 0, 0);
-
-        const from = new Date(filterMonth.from);
-        from.setHours(0, 0, 0, 0);
-
-        const to = new Date(filterMonth.to);
-        to.setHours(23, 59, 59, 999);
-
-        return incomeDate >= from && incomeDate <= to;
-      });
+      filtered = filtered.filter((i) => isDateInRange(i.date, filterMonth));
     }
 
     setFilteredIncomes(filtered);
@@ -157,14 +131,11 @@ export default function Receitas() {
 
   const handleEditIncome = (income) => {
     setEditingIncome(income);
-    // Converter string de data para Date object
-    const [year, month, day] = income.date.split("-");
-    const dateObj = new Date(year, month - 1, day);
     setFormData({
       title: income.title,
       category: income.category,
       amount: income.amount.toString(),
-      date: dateObj,
+      date: parseDateString(income.date) || new Date(),
     });
     setModalOpen(true);
   };
