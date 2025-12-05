@@ -83,16 +83,16 @@ export default function Layout({ children }) {
         isCollapsed={isSidebarCollapsed}
         isOpen={isMobileSidebarOpen}
         onClose={() => setIsMobileSidebarOpen(false)}
+        user={userData}
+        onLogout={handleLogout}
       />
 
       <div className="flex-1 flex flex-col min-w-0">
         <Topbar
-          user={userData}
           isSidebarCollapsed={isSidebarCollapsed}
           onToggleSidebar={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
           isMobileSidebarOpen={isMobileSidebarOpen}
           onToggleMobileSidebar={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
-          onLogout={handleLogout}
         />
 
         <main className="flex-1 overflow-y-auto p-4 sm:p-6">

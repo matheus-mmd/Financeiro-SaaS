@@ -1,37 +1,29 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Card, CardContent } from '../ui/card';
 import {
-  AreaChart,
-  Area,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  Legend,
   BarChart,
   Bar
 } from 'recharts';
 import { formatCurrency } from '../../utils';
-import SegmentedControl from '../ui/segmented-control';
 
 /**
  * IncomeVsExpensesChart - Gráfico comparando Receitas x Despesas
- * Suporta visualização diária (gráfico de área) e mensal (gráfico de barras)
+ * Visualização mensal com gráfico de barras
  *
- * @param {Array} dailyData - Dados diários [{date, income, expense}, ...]
  * @param {Array} monthlyData - Dados mensais [{date, income, expense}, ...]
  */
 export default function IncomeVsExpensesChart({
-  dailyData = [],
   monthlyData = []
 }) {
-  const [viewMode, setViewMode] = useState('monthly'); // 'daily' ou 'monthly'
-
-  // Selecionar dados com base no modo de visualização
-  const data = viewMode === 'daily' ? dailyData : monthlyData;
+  // Usar apenas dados mensais
+  const data = monthlyData;
   // Calcular totais
   const totalIncome = data.reduce((sum, item) => sum + (item.income || 0), 0);
   const totalExpense = data.reduce((sum, item) => sum + (item.expense || 0), 0);
@@ -46,12 +38,9 @@ export default function IncomeVsExpensesChart({
       const pointBalance = income - expense;
       const pointSavingsRate = income > 0 ? ((pointBalance / income) * 100).toFixed(1) : '0.0';
 
-      // Determinar título do tooltip baseado no modo
-      const title = viewMode === 'daily' ? `Dia ${label}` : label;
-
       return (
         <div className="bg-white/95 backdrop-blur-sm rounded-lg shadow-lg border border-gray-200 p-4 min-w-[220px]">
-          <p className="text-sm font-semibold text-gray-700 mb-3">{title}</p>
+          <p className="text-sm font-semibold text-gray-700 mb-3">{label}</p>
           <div className="space-y-2">
             {/* Receitas */}
             <div className="flex items-center justify-between">
@@ -109,30 +98,16 @@ export default function IncomeVsExpensesChart({
       <CardContent className="p-6">
         {/* Header */}
         <div className="flex flex-col gap-4 mb-6">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-gray-900">Receitas x Despesas</h2>
-
-            {/* Toggle de visualização */}
-            <SegmentedControl
-              options={[
-                { label: 'Mensal', value: 'monthly' },
-                { label: 'Diário', value: 'daily' }
-              ]}
-              value={viewMode}
-              onChange={setViewMode}
-            />
-          </div>
+          <h2 className="text-lg font-semibold text-gray-900">Receitas x Despesas</h2>
         </div>
 
-        {/* Gráfico - Alterna entre Barras (mensal) e Área (diário) */}
+        {/* Gráfico de Barras */}
         {data.length > 0 ? (
           <ResponsiveContainer width="100%" height={400}>
-            {viewMode === 'monthly' ? (
-              // Gráfico de Barras para visualização mensal
-              <BarChart
-                data={data}
-                margin={{ top: 20, right: 20, bottom: 20, left: 0 }}
-              >
+            <BarChart
+              data={data}
+              margin={{ top: 20, right: 20, bottom: 20, left: 0 }}
+            >
                 <defs>
                   <linearGradient id="colorIncome" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#10b981" stopOpacity={0.8}/>
@@ -170,69 +145,7 @@ export default function IncomeVsExpensesChart({
 
                 <Bar dataKey="income" fill="url(#colorIncome)" radius={[8, 8, 0, 0]} />
                 <Bar dataKey="expense" fill="url(#colorExpense)" radius={[8, 8, 0, 0]} />
-              </BarChart>
-            ) : (
-              // Gráfico de Área para visualização diária
-              <AreaChart
-                data={data}
-                margin={{ top: 20, right: 20, bottom: 20, left: 0 }}
-              >
-                <defs>
-                  <linearGradient id="colorIncomeArea" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.6}/>
-                    <stop offset="95%" stopColor="#10b981" stopOpacity={0.1}/>
-                  </linearGradient>
-                  <linearGradient id="colorExpenseArea" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#ef4444" stopOpacity={0.6}/>
-                    <stop offset="95%" stopColor="#ef4444" stopOpacity={0.1}/>
-                  </linearGradient>
-                </defs>
-
-                <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" vertical={false} />
-
-                <XAxis
-                  dataKey="date"
-                  stroke="#9ca3af"
-                  style={{ fontSize: '12px', fontWeight: 500 }}
-                  tickLine={false}
-                  axisLine={false}
-                />
-
-                <YAxis
-                  stroke="#9ca3af"
-                  style={{ fontSize: '11px', fontWeight: 500 }}
-                  tickFormatter={(value) => {
-                    if (value >= 1000) return `${(value / 1000).toFixed(0)}k`;
-                    return value;
-                  }}
-                  width={45}
-                  tickLine={false}
-                  axisLine={false}
-                />
-
-                <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#94a3b8', strokeWidth: 1 }} />
-
-                <Area
-                  type="monotone"
-                  dataKey="income"
-                  stroke="#10b981"
-                  strokeWidth={3}
-                  fill="url(#colorIncomeArea)"
-                  dot={{ fill: '#10b981', stroke: '#fff', strokeWidth: 2, r: 5 }}
-                  activeDot={{ r: 7, fill: '#10b981', stroke: '#fff', strokeWidth: 2 }}
-                />
-
-                <Area
-                  type="monotone"
-                  dataKey="expense"
-                  stroke="#ef4444"
-                  strokeWidth={3}
-                  fill="url(#colorExpenseArea)"
-                  dot={{ fill: '#ef4444', stroke: '#fff', strokeWidth: 2, r: 5 }}
-                  activeDot={{ r: 7, fill: '#ef4444', stroke: '#fff', strokeWidth: 2 }}
-                />
-              </AreaChart>
-            )}
+            </BarChart>
           </ResponsiveContainer>
         ) : (
           <div className="w-full h-[400px] flex items-center justify-center">

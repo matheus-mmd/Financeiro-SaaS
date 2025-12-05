@@ -13,12 +13,34 @@ import {
   PiggyBank,
   X,
 } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "./ui/tooltip";
+import { Avatar, AvatarFallback } from "./ui/avatar";
+import { LogOut } from "lucide-react";
 
+/**
+ * Gera iniciais a partir do nome
+ */
+const getInitials = (name) => {
+  if (!name) return '??';
+  return name
+    .split(' ')
+    .map(word => word[0])
+    .slice(0, 2)
+    .join('')
+    .toUpperCase();
+};
 
 export default function Sidebar({
   isCollapsed = false,
   isOpen = false,
   onClose,
+  user = null,
+  onLogout,
 }) {
   const pathname = usePathname();
 
@@ -96,89 +118,119 @@ export default function Sidebar({
 
         {/* Navegação */}
         <nav className="flex-1 overflow-y-auto overflow-x-hidden py-4">
-          <ul className="space-y-1 px-4">
-            {menuItems.map((item) => {
-              const Icon = item.icon;
-              const active = isActive(item.path);
+          <TooltipProvider delayDuration={200}>
+            <ul className="space-y-1 px-4">
+              {menuItems.map((item) => {
+                const Icon = item.icon;
+                const active = isActive(item.path);
 
-              return (
-                <li key={item.path}>
-                  <Link
-                    href={item.path}
-                    onClick={onClose}
-                    className={`
-                      group relative flex items-center gap-3 h-11 rounded-xl
-                      transition-colors duration-200
-                      ${active
-                        ? "bg-brand-50 text-brand-600"
-                        : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-                      }
-                    `}
-                    aria-current={active ? "page" : undefined}
-                  >
-                    {/* Ícone - posição fixa, sempre centralizado */}
-                    <div className={`
-                      flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center
-                      transition-colors duration-200
-                      ${active
-                        ? "bg-brand-500 text-white"
-                        : "bg-gray-100 text-gray-500 group-hover:bg-gray-200"
-                      }
-                    `}>
-                      <Icon className="w-5 h-5" strokeWidth={active ? 2.5 : 2} />
-                    </div>
+                return (
+                  <li key={item.path}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Link
+                          href={item.path}
+                          onClick={onClose}
+                          className={`
+                            group relative flex items-center gap-3 h-11 rounded-xl
+                            transition-colors duration-200
+                            ${active
+                              ? "bg-brand-50 text-brand-600"
+                              : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                            }
+                          `}
+                          aria-current={active ? "page" : undefined}
+                        >
+                          {/* Ícone - posição fixa, sempre centralizado */}
+                          <div className={`
+                            flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center
+                            transition-colors duration-200
+                            ${active
+                              ? "bg-brand-500 text-white"
+                              : "bg-gray-100 text-gray-500 group-hover:bg-gray-200"
+                            }
+                          `}>
+                            <Icon className="w-5 h-5" strokeWidth={active ? 2.5 : 2} />
+                          </div>
 
-                    {/* Label - oculto por overflow quando colapsado */}
-                    <div className={`
-                      overflow-hidden transition-all duration-300 ease-in-out
-                      ${isCollapsed ? "lg:w-0" : "lg:w-32"}
-                      w-32
-                    `}>
-                      <span className={`
-                        text-sm whitespace-nowrap block
-                        ${active ? "font-semibold" : "font-medium"}
-                      `}>
+                          {/* Label - oculto por overflow quando colapsado */}
+                          <div className={`
+                            overflow-hidden transition-all duration-300 ease-in-out
+                            ${isCollapsed ? "lg:w-0" : "lg:w-32"}
+                            w-32
+                          `}>
+                            <span className={`
+                              text-sm whitespace-nowrap block
+                              ${active ? "font-semibold" : "font-medium"}
+                            `}>
+                              {item.label}
+                            </span>
+                          </div>
+
+                          {/* Indicador ativo */}
+                          {active && !isCollapsed && (
+                            <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-brand-500 rounded-l-full hidden lg:block" />
+                          )}
+                        </Link>
+                      </TooltipTrigger>
+                      <TooltipContent side="right" className="font-medium">
                         {item.label}
-                      </span>
-                    </div>
-
-                    {/* Indicador ativo */}
-                    {active && !isCollapsed && (
-                      <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-brand-500 rounded-l-full hidden lg:block" />
-                    )}
-
-                    {/* Tooltip (colapsado) */}
-                    {isCollapsed && (
-                      <div className="
-                        absolute left-full ml-3 px-3 py-2
-                        bg-gray-900 text-white text-sm font-medium
-                        rounded-lg shadow-lg whitespace-nowrap z-50
-                        opacity-0 pointer-events-none
-                        group-hover:opacity-100
-                        transition-opacity duration-200
-                        hidden lg:block
-                      ">
-                        {item.label}
-                        <div className="absolute left-0 top-1/2 -translate-x-1 -translate-y-1/2 border-4 border-transparent border-r-gray-900" />
-                      </div>
-                    )}
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
+                      </TooltipContent>
+                    </Tooltip>
+                  </li>
+                );
+              })}
+            </ul>
+          </TooltipProvider>
         </nav>
 
-        {/* Footer - oculto quando colapsado */}
-        <div className={`
-          flex-shrink-0 px-4 py-3 border-t border-gray-200
-          overflow-hidden transition-all duration-300 ease-in-out
-          ${isCollapsed ? "lg:h-0 lg:py-0 lg:border-0 lg:opacity-0" : "h-auto opacity-100"}
-        `}>
-          <p className="text-xs text-gray-400 text-center whitespace-nowrap">
-            © 2025 Financeiro SaaS
-          </p>
-        </div>
+        {/* Informações do usuário e Logout */}
+        {user && (
+          <div className={`
+            flex-shrink-0 px-4 py-3 border-t border-gray-200
+            transition-all duration-300 ease-in-out
+          `}>
+            <div className="flex items-center gap-3">
+              {/* Avatar */}
+              <Avatar className="w-10 h-10 ring-2 ring-gray-100 flex-shrink-0">
+                <AvatarFallback className="bg-gradient-to-br from-brand-500 to-brand-600 text-white text-sm font-medium">
+                  {getInitials(user.name)}
+                </AvatarFallback>
+              </Avatar>
+
+              {/* Nome e Email - oculto quando colapsado */}
+              <div className={`
+                flex-1 min-w-0 overflow-hidden transition-all duration-300 ease-in-out
+                ${isCollapsed ? "lg:w-0 lg:opacity-0" : "lg:w-auto lg:opacity-100"}
+                w-auto opacity-100
+              `}>
+                <p className="text-sm font-medium text-gray-900 truncate">
+                  {user.name}
+                </p>
+                {user.email && (
+                  <p className="text-xs text-gray-500 truncate">
+                    {user.email}
+                  </p>
+                )}
+              </div>
+
+              {/* Botão Logout - oculto quando colapsado */}
+              <button
+                onClick={onLogout}
+                className={`
+                  flex-shrink-0 p-2 rounded-lg text-gray-500 hover:text-red-600 hover:bg-red-50 transition-colors
+                  overflow-hidden transition-all duration-300 ease-in-out
+                  ${isCollapsed ? "lg:w-0 lg:p-0 lg:opacity-0" : "lg:w-auto lg:p-2 lg:opacity-100"}
+                  w-auto p-2 opacity-100
+                `}
+                aria-label="Sair"
+                title="Sair"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        )}
       </aside>
     </>
   );
