@@ -163,37 +163,35 @@ export default function CategoriasPage() {
             </Button>
           </div>
 
-          <div className="space-y-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {sectionCategories.map((category) => {
               const IconComponent = getIconComponent(category.icon || "Tag");
 
               return (
-                <div key={category.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
-                  <div className="flex items-center gap-3 flex-1">
+                <div key={category.id} className="group relative bg-white border border-gray-200 rounded-lg p-5 hover:shadow-md hover:border-gray-300 transition-all">
+                  <div className="flex flex-col items-center text-center gap-3">
                     <div
-                      className="p-2 rounded-lg flex-shrink-0"
+                      className="p-4 rounded-xl"
                       style={{ backgroundColor: category.color + '20' }}
                     >
                       <IconComponent
-                        className="w-5 h-5"
+                        className="w-8 h-8"
                         style={{ color: category.color }}
                       />
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <span className="font-semibold text-gray-900">{category.name}</span>
-                    </div>
+                    <span className="font-semibold text-gray-900">{category.name}</span>
                   </div>
-                  <div className="flex items-center gap-2 flex-shrink-0">
+                  <div className="absolute top-3 right-3 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button
                       onClick={() => handleOpenCategoryModal(category)}
-                      className="p-1.5 hover:bg-gray-200 rounded transition-colors"
+                      className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                       title="Editar categoria"
                     >
                       <Edit2 className="w-4 h-4 text-gray-600" />
                     </button>
                     <button
                       onClick={() => handleDeleteCategory(category.id)}
-                      className="p-1.5 hover:bg-red-100 rounded transition-colors"
+                      className="p-2 hover:bg-red-100 rounded-lg transition-colors"
                       title="Deletar categoria"
                     >
                       <Trash2 className="w-4 h-4 text-red-600" />
@@ -277,25 +275,15 @@ export default function CategoriasPage() {
 
             <div className="space-y-2">
               <Label htmlFor="category-color">Cor</Label>
-              <div className="flex items-center gap-3">
-                <input
-                  id="category-color"
-                  type="color"
-                  value={categoryFormData.color}
-                  onChange={(e) =>
-                    setCategoryFormData({ ...categoryFormData, color: e.target.value })
-                  }
-                  className="w-16 h-10 rounded border border-gray-300 cursor-pointer"
-                />
-                <Input
-                  value={categoryFormData.color}
-                  onChange={(e) =>
-                    setCategoryFormData({ ...categoryFormData, color: e.target.value })
-                  }
-                  placeholder="#6366f1"
-                  className="flex-1"
-                />
-              </div>
+              <input
+                id="category-color"
+                type="color"
+                value={categoryFormData.color}
+                onChange={(e) =>
+                  setCategoryFormData({ ...categoryFormData, color: e.target.value })
+                }
+                className="w-20 h-12 rounded-lg border border-gray-300 cursor-pointer"
+              />
             </div>
 
             {/* Seletor de Ícone */}

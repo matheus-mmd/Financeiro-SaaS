@@ -219,7 +219,7 @@ export default function Sidebar({
                 onClick={onLogout}
                 className={`
                   flex-shrink-0 p-2 rounded-lg text-gray-500 hover:text-red-600 hover:bg-red-50 transition-colors
-                  overflow-hidden transition-all duration-300 ease-in-out
+                  overflow-hidden duration-300 ease-in-out
                   ${isCollapsed ? "lg:w-0 lg:p-0 lg:opacity-0" : "lg:w-auto lg:p-2 lg:opacity-100"}
                   w-auto p-2 opacity-100
                 `}

@@ -179,6 +179,7 @@ const ICON_CATEGORIES = {
 export default function IconPicker({ selectedIcon = "Tag", onIconSelect, color = "#6366f1" }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [expandedCategory, setExpandedCategory] = useState(null);
+  const [showIconPicker, setShowIconPicker] = useState(false);
 
   // Função para filtrar ícones baseado na busca
   const filterIcons = () => {
@@ -200,22 +201,14 @@ export default function IconPicker({ selectedIcon = "Tag", onIconSelect, color =
 
   return (
     <div className="space-y-4">
-      {/* Campo de busca */}
-      <div className="space-y-2">
-        <Label>Buscar Ícone</Label>
-        <Input
-          type="text"
-          placeholder="Ex: wallet, home, car..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full"
-        />
-      </div>
-
       {/* Ícone selecionado */}
       <div className="space-y-2">
         <Label>Ícone Selecionado</Label>
-        <div className="flex items-center gap-3 p-4 border border-gray-300 rounded-lg bg-gray-50">
+        <button
+          type="button"
+          onClick={() => setShowIconPicker(!showIconPicker)}
+          className="flex items-center justify-center p-4 border border-gray-300 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors w-full"
+        >
           {(() => {
             // Encontrar o ícone selecionado em todas as categorias
             for (const icons of Object.values(ICON_CATEGORIES)) {
@@ -223,30 +216,40 @@ export default function IconPicker({ selectedIcon = "Tag", onIconSelect, color =
               if (icon) {
                 const IconComponent = icon.icon;
                 return (
-                  <div className="flex items-center gap-3">
-                    <div
-                      className="p-2 rounded-lg"
-                      style={{ backgroundColor: color + '20' }}
-                    >
-                      <IconComponent
-                        className="w-6 h-6"
-                        style={{ color: color }}
-                      />
-                    </div>
-                    <span className="font-medium text-gray-900">{icon.name}</span>
+                  <div
+                    className="p-3 rounded-lg"
+                    style={{ backgroundColor: color + '20' }}
+                  >
+                    <IconComponent
+                      className="w-8 h-8"
+                      style={{ color: color }}
+                    />
                   </div>
                 );
               }
             }
             return <span className="text-gray-500">Nenhum ícone selecionado</span>;
           })()}
-        </div>
+        </button>
       </div>
 
-      {/* Grid de ícones por categoria */}
-      <div className="space-y-2">
-        <Label>Escolher Ícone</Label>
-        <div className="max-h-96 overflow-y-auto border border-gray-300 rounded-lg">
+      {/* Grid de ícones por categoria - Mostrar apenas quando showIconPicker for true */}
+      {showIconPicker && (
+        <div className="space-y-2">
+          {/* Campo de busca */}
+          <div className="space-y-2">
+            <Label>Buscar Ícone</Label>
+            <Input
+              type="text"
+              placeholder="Ex: wallet, home, car..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full"
+            />
+          </div>
+
+          <Label>Escolher Ícone</Label>
+          <div className="max-h-96 overflow-y-auto border border-gray-300 rounded-lg">
           {Object.entries(filteredCategories).map(([category, icons]) => (
             <div key={category} className="border-b border-gray-200 last:border-b-0">
               <button
@@ -297,7 +300,8 @@ export default function IconPicker({ selectedIcon = "Tag", onIconSelect, color =
             </div>
           )}
         </div>
-      </div>
+        </div>
+      )}
     </div>
   );
 }
