@@ -19,8 +19,10 @@ import {
   updateCategory,
   deleteCategory,
 } from "../../src/utils/mockApi";
-import { Plus, Edit2, Trash2, Tag } from "lucide-react";
-import IconPicker, { getIconComponent } from "../../src/components/IconPicker";
+import { Plus, Trash2, Tag } from "lucide-react";
+import { getIconComponent } from "../../src/components/IconPicker";
+import ColorPicker from "../../src/components/ColorPicker";
+import IconPickerModal from "../../src/components/IconPickerModal";
 
 /**
  * Página de Categorias - Gerenciamento de categorias
@@ -34,6 +36,7 @@ export default function CategoriasPage() {
 
   // Estados para modal de categoria
   const [categoryModalOpen, setCategoryModalOpen] = useState(false);
+  const [iconPickerModalOpen, setIconPickerModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState(null);
   const [categoryFormData, setCategoryFormData] = useState({
     name: "",
@@ -168,30 +171,28 @@ export default function CategoriasPage() {
               const IconComponent = getIconComponent(category.icon || "Tag");
 
               return (
-                <div key={category.id} className="group relative bg-white border border-gray-200 rounded-lg p-5 hover:shadow-md hover:border-gray-300 transition-all">
-                  <div className="flex flex-col items-center text-center gap-3">
+                <div
+                  key={category.id}
+                  onClick={() => handleOpenCategoryModal(category)}
+                  className="group relative bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md hover:border-gray-300 transition-all cursor-pointer"
+                >
+                  <div className="flex items-center gap-3">
                     <div
-                      className="p-4 rounded-xl"
+                      className="flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center"
                       style={{ backgroundColor: category.color + '20' }}
                     >
                       <IconComponent
-                        className="w-8 h-8"
+                        className="w-5 h-5"
                         style={{ color: category.color }}
                       />
                     </div>
-                    <span className="font-semibold text-gray-900">{category.name}</span>
-                  </div>
-                  <div className="absolute top-3 right-3 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <span className="font-semibold text-gray-900 flex-1 truncate">{category.name}</span>
                     <button
-                      onClick={() => handleOpenCategoryModal(category)}
-                      className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                      title="Editar categoria"
-                    >
-                      <Edit2 className="w-4 h-4 text-gray-600" />
-                    </button>
-                    <button
-                      onClick={() => handleDeleteCategory(category.id)}
-                      className="p-2 hover:bg-red-100 rounded-lg transition-colors"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteCategory(category.id);
+                      }}
+                      className="flex-shrink-0 p-1.5 opacity-0 group-hover:opacity-100 hover:bg-red-100 rounded-lg transition-all"
                       title="Deletar categoria"
                     >
                       <Trash2 className="w-4 h-4 text-red-600" />
@@ -253,7 +254,7 @@ export default function CategoriasPage() {
 
       {/* Modal de Categoria */}
       <Dialog open={categoryModalOpen} onOpenChange={setCategoryModalOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>
               {editingCategory ? "Editar Categoria" : "Criar Nova Categoria"}
@@ -273,26 +274,38 @@ export default function CategoriasPage() {
               />
             </div>
 
+            {/* Seletor de Ícone */}
             <div className="space-y-2">
-              <Label htmlFor="category-color">Cor</Label>
-              <input
-                id="category-color"
-                type="color"
-                value={categoryFormData.color}
-                onChange={(e) =>
-                  setCategoryFormData({ ...categoryFormData, color: e.target.value })
-                }
-                className="w-20 h-12 rounded-lg border border-gray-300 cursor-pointer"
-              />
+              <Label>Ícone da Categoria</Label>
+              <button
+                type="button"
+                onClick={() => setIconPickerModalOpen(true)}
+                className="w-full flex items-center gap-3 p-3 border border-gray-300 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors"
+              >
+                <div
+                  className="flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center"
+                  style={{ backgroundColor: categoryFormData.color + '20' }}
+                >
+                  {(() => {
+                    const IconComponent = getIconComponent(categoryFormData.icon);
+                    return (
+                      <IconComponent
+                        className="w-5 h-5"
+                        style={{ color: categoryFormData.color }}
+                      />
+                    );
+                  })()}
+                </div>
+                <span className="text-sm text-gray-600">Clique para escolher o ícone</span>
+              </button>
             </div>
 
-            {/* Seletor de Ícone */}
-            <IconPicker
-              selectedIcon={categoryFormData.icon}
-              onIconSelect={(iconName) =>
-                setCategoryFormData({ ...categoryFormData, icon: iconName })
+            {/* Seletor de Cor */}
+            <ColorPicker
+              selectedColor={categoryFormData.color}
+              onColorSelect={(color) =>
+                setCategoryFormData({ ...categoryFormData, color })
               }
-              color={categoryFormData.color}
             />
 
             <DialogFooter>
@@ -310,6 +323,17 @@ export default function CategoriasPage() {
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* Modal de Seleção de Ícone */}
+      <IconPickerModal
+        open={iconPickerModalOpen}
+        onOpenChange={setIconPickerModalOpen}
+        selectedIcon={categoryFormData.icon}
+        onIconSelect={(iconName) =>
+          setCategoryFormData({ ...categoryFormData, icon: iconName })
+        }
+        color={categoryFormData.color}
+      />
     </div>
   );
 }
