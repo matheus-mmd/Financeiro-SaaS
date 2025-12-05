@@ -340,7 +340,7 @@ export default function Receitas() {
             setFilterMonth(null);
           }}
         >
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4">
             {/* Filtro por categoria */}
             <div className="space-y-2">
               <Label

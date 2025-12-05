@@ -17,11 +17,13 @@ import { Badge } from './ui/badge';
  * @param {React.ReactNode} children - Conteúdo dos filtros (campos de formulário)
  * @param {number} activeFiltersCount - Quantidade de filtros ativos
  * @param {Function} onClearFilters - Função para limpar todos os filtros
+ * @param {string} width - Largura customizada do popover (opcional)
  */
 export default function FilterButton({
   children,
   activeFiltersCount = 0,
-  onClearFilters
+  onClearFilters,
+  width = "w-[calc(100vw-2rem)] sm:w-[36rem] lg:w-[48rem]"
 }) {
   const [open, setOpen] = useState(false);
 
@@ -45,7 +47,7 @@ export default function FilterButton({
         </Button>
       </PopoverTrigger>
       <PopoverContent
-        className="w-[calc(100vw-2rem)] sm:w-[36rem] lg:w-[48rem] p-0"
+        className={`${width} p-0`}
         align="start"
         sideOffset={5}
       >

@@ -327,11 +327,23 @@ export default function Transacoes() {
       key: "amount",
       label: "Valor",
       sortable: true,
-      render: (row) => (
-        <span className={row.amount >= 0 ? "text-green-600 font-medium" : "text-red-600 font-medium"}>
-          {row.amount >= 0 ? "+" : "-"} {formatCurrency(Math.abs(row.amount))}
-        </span>
-      ),
+      render: (row) => {
+        // Determinar cor baseada no tipo de transação
+        let colorClass = "text-gray-900";
+        if (row.type_internal_name === "income") {
+          colorClass = "text-green-600";
+        } else if (row.type_internal_name === "expense") {
+          colorClass = "text-red-600";
+        } else if (row.type_internal_name === "investment") {
+          colorClass = "text-blue-600";
+        }
+
+        return (
+          <span className={`${colorClass} font-medium`}>
+            {row.amount >= 0 ? "+" : "-"} {formatCurrency(Math.abs(row.amount))}
+          </span>
+        );
+      },
     },
     {
       key: "date",
@@ -381,7 +393,7 @@ export default function Transacoes() {
             setFilterMonth(null);
           }}
         >
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 gap-4">
             {/* Filtro por categoria */}
             <div className="space-y-2">
               <Label htmlFor="filter-category" className="text-sm font-medium text-gray-700">
@@ -498,11 +510,21 @@ export default function Transacoes() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todos os tipos</SelectItem>
-                  {transactionTypes.map((type) => (
-                    <SelectItem key={type.id} value={type.internal_name}>
-                      {type.name}
-                    </SelectItem>
-                  ))}
+                  {transactionTypes.map((type) => {
+                    const colorMap = {
+                      income: 'text-green-600',
+                      expense: 'text-red-600',
+                      investment: 'text-blue-600'
+                    };
+                    const color = colorMap[type.internal_name] || 'text-gray-900';
+                    return (
+                      <SelectItem key={type.id} value={type.internal_name}>
+                        <span className={`font-medium ${color}`}>
+                          {type.name}
+                        </span>
+                      </SelectItem>
+                    );
+                  })}
                 </SelectContent>
               </Select>
             </div>
