@@ -9,6 +9,9 @@ import { Card, CardContent } from "../../src/components/ui/card";
 import { Button } from "../../src/components/ui/button";
 import { Input } from "../../src/components/ui/input";
 import { Label } from "../../src/components/ui/label";
+import { Textarea } from "../../src/components/ui/textarea";
+import { Checkbox } from "../../src/components/ui/checkbox";
+import { Badge } from "../../src/components/ui/badge";
 import {
   Select,
   SelectContent,
@@ -53,8 +56,22 @@ import { exportToCSV } from "../../src/utils/exportData";
 import { getIconComponent } from "../../src/components/IconPicker";
 import FilterButton from "../../src/components/FilterButton";
 import FloatingActionButton from "../../src/components/FloatingActionButton";
-import { TRANSACTION_TYPES } from "../../src/constants";
-import { ArrowUpRight, ArrowDownRight, TrendingUp, Plus, Trash2, Download } from "lucide-react";
+import { TRANSACTION_TYPES, PAYMENT_STATUS, PAYMENT_METHODS } from "../../src/constants";
+import {
+  ArrowUpRight,
+  ArrowDownRight,
+  TrendingUp,
+  Plus,
+  Trash2,
+  Download,
+  Copy,
+  Search,
+  Upload,
+  Repeat,
+  CheckCircle2,
+  Clock,
+  X,
+} from "lucide-react";
 
 /**
  * Página Transações - Gerenciamento de transações
@@ -71,15 +88,27 @@ export default function Transacoes() {
   const [editingTransaction, setEditingTransaction] = useState(null);
   const [filterCategory, setFilterCategory] = useState("all");
   const [filterTransactionType, setFilterTransactionType] = useState("all");
+  const [filterStatus, setFilterStatus] = useState("all");
+  const [searchTerm, setSearchTerm] = useState("");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [transactionToDelete, setTransactionToDelete] = useState(null);
   const [filterMonth, setFilterMonth] = useState(getCurrentMonthRange());
+  const [selectedTransactions, setSelectedTransactions] = useState([]);
+  const [importModalOpen, setImportModalOpen] = useState(false);
+  const [recurringModalOpen, setRecurringModalOpen] = useState(false);
   const [formData, setFormData] = useState({
     description: "",
     amount: "",
     categoryId: null,
     transactionTypeId: null,
     date: new Date(),
+    notes: "",
+    status: PAYMENT_STATUS.PENDING,
+    payment_method: "",
+    installments_current: "",
+    installments_total: "",
+    is_recurring: false,
+    recurrence_frequency: "monthly",
   });
 
   useEffect(() => {
@@ -128,13 +157,31 @@ export default function Transacoes() {
       filtered = filtered.filter((t) => t.type_internal_name === filterTransactionType);
     }
 
+    // Filtrar por status de pagamento
+    if (filterStatus !== "all") {
+      filtered = filtered.filter((t) => t.status === filterStatus);
+    }
+
     // Filtrar por intervalo de datas
     if (filterMonth?.from && filterMonth?.to) {
       filtered = filtered.filter((t) => isDateInRange(t.date, filterMonth));
     }
 
+    // Filtrar por busca (descrição, categoria, notas)
+    if (searchTerm) {
+      const search = searchTerm.toLowerCase();
+      filtered = filtered.filter((t) => {
+        return (
+          t.description?.toLowerCase().includes(search) ||
+          t.category_name?.toLowerCase().includes(search) ||
+          t.notes?.toLowerCase().includes(search) ||
+          formatCurrency(Math.abs(t.amount)).includes(search)
+        );
+      });
+    }
+
     setFilteredTransactions(filtered);
-  }, [filterCategory, filterTransactionType, filterMonth, transactions]);
+  }, [filterCategory, filterTransactionType, filterStatus, filterMonth, searchTerm, transactions]);
 
   const handleAddTransaction = () => {
     setEditingTransaction(null);
@@ -146,6 +193,13 @@ export default function Transacoes() {
       categoryId: defaultCategory?.id || null,
       transactionTypeId: defaultType?.id || null,
       date: new Date(),
+      notes: "",
+      status: PAYMENT_STATUS.PENDING,
+      payment_method: "",
+      installments_current: "",
+      installments_total: "",
+      is_recurring: false,
+      recurrence_frequency: "monthly",
     });
     setModalOpen(true);
   };
@@ -158,8 +212,133 @@ export default function Transacoes() {
       categoryId: transaction.category_id,
       transactionTypeId: transaction.transaction_type_id,
       date: parseDateString(transaction.date) || new Date(),
+      notes: transaction.notes || "",
+      status: transaction.status || PAYMENT_STATUS.PENDING,
+      payment_method: transaction.payment_method || "",
+      installments_current: transaction.installments?.current || "",
+      installments_total: transaction.installments?.total || "",
+      is_recurring: transaction.is_recurring || false,
+      recurrence_frequency: transaction.recurrence_frequency || "monthly",
     });
     setModalOpen(true);
+  };
+
+  // Duplicar transação
+  const handleDuplicateTransaction = (transaction) => {
+    setEditingTransaction(null);
+    setFormData({
+      description: transaction.description + " (Cópia)",
+      amount: Math.abs(transaction.amount).toString(),
+      categoryId: transaction.category_id,
+      transactionTypeId: transaction.transaction_type_id,
+      date: new Date(),
+      notes: transaction.notes || "",
+      status: PAYMENT_STATUS.PENDING,
+      payment_method: transaction.payment_method || "",
+      installments_current: "",
+      installments_total: "",
+      is_recurring: false,
+      recurrence_frequency: "monthly",
+    });
+    setModalOpen(true);
+  };
+
+  // Toggle status de pagamento (pago/pendente)
+  const handleToggleStatus = async (transaction) => {
+    try {
+      const newStatus = transaction.status === PAYMENT_STATUS.PAID ? PAYMENT_STATUS.PENDING : PAYMENT_STATUS.PAID;
+      await updateTransaction(transaction.id, { ...transaction, status: newStatus });
+      const response = await fetchData("/api/transactions");
+      setTransactions(response.data);
+    } catch (error) {
+      console.error("Erro ao atualizar status:", error);
+    }
+  };
+
+  // Seleção em lote
+  const handleSelectTransaction = (transactionId) => {
+    setSelectedTransactions(prev => {
+      if (prev.includes(transactionId)) {
+        return prev.filter(id => id !== transactionId);
+      } else {
+        return [...prev, transactionId];
+      }
+    });
+  };
+
+  const handleSelectAll = () => {
+    if (selectedTransactions.length === sortedTransactions.length) {
+      setSelectedTransactions([]);
+    } else {
+      setSelectedTransactions(sortedTransactions.map(t => t.id));
+    }
+  };
+
+  // Deletar múltiplas transações
+  const handleBulkDelete = async () => {
+    if (selectedTransactions.length === 0) return;
+
+    if (!confirm(`Tem certeza que deseja excluir ${selectedTransactions.length} transação(ões)?`)) return;
+
+    try {
+      for (const id of selectedTransactions) {
+        await deleteTransaction(id);
+      }
+      const response = await fetchData("/api/transactions");
+      setTransactions(response.data);
+      setSelectedTransactions([]);
+    } catch (error) {
+      console.error("Erro ao deletar transações:", error);
+      alert("Erro ao deletar transações.");
+    }
+  };
+
+  // Categorização inteligente - sugere categoria baseado na descrição
+  const suggestCategory = (description) => {
+    if (!description) return null;
+
+    const desc = description.toLowerCase();
+
+    // Mapear palavras-chave para categorias
+    const keywords = {
+      // Receitas
+      'salário': { type: 1, keywords: ['salário', 'pagamento', 'vencimento'] },
+      'freelance': { type: 1, keywords: ['freelance', 'freela', 'projeto'] },
+
+      // Despesas
+      'mercado': { type: 2, keywords: ['mercado', 'supermercado', 'feira', 'alimentação'] },
+      'aluguel': { type: 2, keywords: ['aluguel', 'rent', 'moradia'] },
+      'uber': { type: 2, keywords: ['uber', '99', 'taxi', 'transporte'] },
+      'netflix': { type: 2, keywords: ['netflix', 'spotify', 'streaming', 'assinatura'] },
+      'gasolina': { type: 2, keywords: ['gasolina', 'combustível', 'posto'] },
+      'restaurante': { type: 2, keywords: ['restaurante', 'ifood', 'delivery'] },
+
+      // Investimentos
+      'ação': { type: 3, keywords: ['ação', 'ações', 'bolsa', 'b3'] },
+      'cdb': { type: 3, keywords: ['cdb', 'tesouro', 'renda fixa'] },
+    };
+
+    // Procurar categoria correspondente
+    for (const category of categories) {
+      const categoryName = category.name.toLowerCase();
+      if (desc.includes(categoryName)) {
+        return category.id;
+      }
+    }
+
+    // Buscar por palavras-chave
+    for (const [catName, config] of Object.entries(keywords)) {
+      for (const keyword of config.keywords) {
+        if (desc.includes(keyword)) {
+          const matchedCategory = categories.find(c =>
+            c.name.toLowerCase().includes(catName) && c.transaction_type_id === config.type
+          );
+          if (matchedCategory) return matchedCategory.id;
+        }
+      }
+    }
+
+    return null;
   };
 
   const handleDeleteTransaction = (transaction) => {
@@ -200,12 +379,27 @@ export default function Transacoes() {
 
       const dateString = formData.date.toISOString().split("T")[0];
 
+      // Preparar dados de parcelas
+      let installments = null;
+      if (formData.installments_total && parseInt(formData.installments_total) > 1) {
+        installments = {
+          current: parseInt(formData.installments_current) || 1,
+          total: parseInt(formData.installments_total),
+        };
+      }
+
       const transactionData = {
         categoryId: formData.categoryId,
         transactionTypeId: formData.transactionTypeId,
         description: formData.description,
         amount: amount,
         date: dateString,
+        notes: formData.notes || null,
+        status: formData.status,
+        payment_method: formData.payment_method || null,
+        installments: installments,
+        is_recurring: formData.is_recurring || false,
+        recurrence_frequency: formData.is_recurring ? formData.recurrence_frequency : null,
       };
 
       if (editingTransaction) {
@@ -227,6 +421,13 @@ export default function Transacoes() {
         categoryId: defaultCategory?.id || null,
         transactionTypeId: defaultType?.id || null,
         date: new Date(),
+        notes: "",
+        status: PAYMENT_STATUS.PENDING,
+        payment_method: "",
+        installments_current: "",
+        installments_total: "",
+        is_recurring: false,
+        recurrence_frequency: "monthly",
       });
     } catch (error) {
       console.error("Erro ao salvar transação:", error);
@@ -235,7 +436,21 @@ export default function Transacoes() {
   };
 
   const handleInputChange = (field, value) => {
-    setFormData({ ...formData, [field]: value });
+    const newFormData = { ...formData, [field]: value };
+
+    // Categorização inteligente: sugerir categoria baseado na descrição
+    if (field === "description" && !editingTransaction) {
+      const suggestedCategoryId = suggestCategory(value);
+      if (suggestedCategoryId && !formData.categoryId) {
+        const category = categories.find(c => c.id === suggestedCategoryId);
+        if (category) {
+          newFormData.categoryId = suggestedCategoryId;
+          newFormData.transactionTypeId = category.transaction_type_id;
+        }
+      }
+    }
+
+    setFormData(newFormData);
   };
 
   // Quando muda a categoria, o tipo de transação é automaticamente definido
@@ -312,9 +527,33 @@ export default function Transacoes() {
   // Configuração de colunas da tabela
   const transactionColumns = [
     {
+      key: "select",
+      label: (
+        <Checkbox
+          checked={selectedTransactions.length === sortedTransactions.length && sortedTransactions.length > 0}
+          onCheckedChange={handleSelectAll}
+        />
+      ),
+      render: (row) => (
+        <Checkbox
+          checked={selectedTransactions.includes(row.id)}
+          onCheckedChange={() => handleSelectTransaction(row.id)}
+          onClick={(e) => e.stopPropagation()}
+        />
+      ),
+    },
+    {
       key: "description",
       label: "Descrição",
       sortable: true,
+      render: (row) => (
+        <div className="flex flex-col">
+          <span className="font-medium text-gray-900">{row.description}</span>
+          {row.notes && (
+            <span className="text-xs text-gray-500 mt-0.5">{row.notes}</span>
+          )}
+        </div>
+      ),
     },
     {
       key: "category",
@@ -345,7 +584,6 @@ export default function Transacoes() {
       label: "Valor",
       sortable: true,
       render: (row) => {
-        // Determinar cor baseada no tipo de transação
         let colorClass = "text-gray-900";
         if (row.type_internal_name === "income") {
           colorClass = "text-green-600";
@@ -356,29 +594,86 @@ export default function Transacoes() {
         }
 
         return (
-          <span className={`${colorClass} font-medium`}>
-            {row.amount >= 0 ? "+" : "-"} {formatCurrency(Math.abs(row.amount))}
-          </span>
+          <div className="flex flex-col">
+            <span className={`${colorClass} font-medium`}>
+              {row.amount >= 0 ? "+" : "-"} {formatCurrency(Math.abs(row.amount))}
+            </span>
+            {row.installments && (
+              <span className="text-xs text-gray-500">
+                {row.installments.current}/{row.installments.total}x
+              </span>
+            )}
+          </div>
         );
       },
+    },
+    {
+      key: "status",
+      label: "Status",
+      render: (row) => (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            handleToggleStatus(row);
+          }}
+          className="hover:scale-105 transition-transform"
+        >
+          {row.status === PAYMENT_STATUS.PAID ? (
+            <Badge className="bg-green-100 text-green-700 hover:bg-green-200">
+              <CheckCircle2 className="w-3 h-3 mr-1" />
+              Pago
+            </Badge>
+          ) : (
+            <Badge variant="outline" className="text-amber-700 border-amber-300 hover:bg-amber-50">
+              <Clock className="w-3 h-3 mr-1" />
+              Pendente
+            </Badge>
+          )}
+        </button>
+      ),
     },
     {
       key: "date",
       label: "Data",
       sortable: true,
-      render: (row) => formatDate(row.date),
+      render: (row) => (
+        <div className="flex flex-col">
+          <span>{formatDate(row.date)}</span>
+          {row.is_recurring && (
+            <Badge variant="outline" className="text-xs w-fit mt-1">
+              <Repeat className="w-3 h-3 mr-1" />
+              Recorrente
+            </Badge>
+          )}
+        </div>
+      ),
     },
     {
       key: "actions",
       label: "Ações",
       render: (row) => (
-        <button
-          onClick={() => handleDeleteTransaction(row)}
-          className="p-1 hover:bg-red-50 rounded transition-colors"
-          aria-label="Excluir transação"
-        >
-          <Trash2 className="w-4 h-4 text-red-600" />
-        </button>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              handleDuplicateTransaction(row);
+            }}
+            className="p-1.5 hover:bg-blue-50 rounded transition-colors"
+            title="Duplicar transação"
+          >
+            <Copy className="w-4 h-4 text-blue-600" />
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              handleDeleteTransaction(row);
+            }}
+            className="p-1.5 hover:bg-red-50 rounded transition-colors"
+            title="Excluir transação"
+          >
+            <Trash2 className="w-4 h-4 text-red-600" />
+          </button>
+        </div>
       ),
     },
   ];
@@ -390,6 +685,10 @@ export default function Transacoes() {
         description="Gerencie todas as suas transações financeiras"
         actions={
           <>
+            <Button variant="secondary" onClick={() => setImportModalOpen(true)}>
+              <Upload className="w-4 h-4" />
+              Importar CSV
+            </Button>
             <Button variant="secondary" onClick={handleExport}>
               <Download className="w-4 h-4" />
               Exportar
@@ -402,19 +701,69 @@ export default function Transacoes() {
         }
       />
 
+      {/* Busca e Ações em Lote */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+        {/* Campo de Busca */}
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <Input
+            type="text"
+            placeholder="Buscar por descrição, categoria, valor ou observações..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10"
+          />
+          {searchTerm && (
+            <button
+              onClick={() => setSearchTerm("")}
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
+        </div>
+
+        {/* Ações em Lote */}
+        {selectedTransactions.length > 0 && (
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-600 whitespace-nowrap">
+              {selectedTransactions.length} selecionada(s)
+            </span>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={handleBulkDelete}
+            >
+              <Trash2 className="w-4 h-4 mr-1" />
+              Deletar
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setSelectedTransactions([])}
+            >
+              Cancelar
+            </Button>
+          </div>
+        )}
+      </div>
+
       {/* Filtros */}
       <div className="flex items-center gap-3">
         <FilterButton
           activeFiltersCount={
             (filterCategory !== "all" ? 1 : 0) +
             (filterTransactionType !== "all" ? 1 : 0) +
+            (filterStatus !== "all" ? 1 : 0) +
             (filterMonth ? 1 : 0)
           }
           onClearFilters={() => {
             setFilterCategory("all");
             setFilterTransactionType("all");
+            setFilterStatus("all");
             setFilterMonth(null);
           }}
+          width="w-[calc(100vw-2rem)] sm:w-[28rem]"
         >
           <div className="grid grid-cols-1 gap-4">
             {/* Filtro por categoria */}
@@ -548,6 +897,27 @@ export default function Transacoes() {
                       </SelectItem>
                     );
                   })}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Filtro por status de pagamento */}
+            <div className="space-y-2">
+              <Label htmlFor="filter-status" className="text-sm font-medium text-gray-700">
+                Status
+              </Label>
+              <Select value={filterStatus} onValueChange={setFilterStatus}>
+                <SelectTrigger id="filter-status">
+                  <SelectValue placeholder="Selecione o status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os status</SelectItem>
+                  <SelectItem value={PAYMENT_STATUS.PAID}>
+                    <span className="font-medium text-green-600">Pago</span>
+                  </SelectItem>
+                  <SelectItem value={PAYMENT_STATUS.PENDING}>
+                    <span className="font-medium text-amber-600">Pendente</span>
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -778,6 +1148,126 @@ export default function Transacoes() {
                 onChange={(date) => handleInputChange("date", date)}
               />
             </div>
+
+            {/* Observações */}
+            <div className="space-y-2">
+              <Label htmlFor="notes">Observações (Opcional)</Label>
+              <Textarea
+                id="notes"
+                placeholder="Ex: Compra relacionada ao projeto X..."
+                value={formData.notes}
+                onChange={(e) => handleInputChange("notes", e.target.value)}
+                rows={3}
+              />
+            </div>
+
+            {/* Status de Pagamento */}
+            <div className="space-y-2">
+              <Label htmlFor="status">Status de Pagamento</Label>
+              <Select
+                value={formData.status}
+                onValueChange={(value) => handleInputChange("status", value)}
+              >
+                <SelectTrigger id="status">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={PAYMENT_STATUS.PENDING}>
+                    <div className="flex items-center gap-2">
+                      <Clock className="w-4 h-4 text-amber-600" />
+                      <span>Pendente</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value={PAYMENT_STATUS.PAID}>
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-green-600" />
+                      <span>Pago</span>
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Forma de Pagamento */}
+            <div className="space-y-2">
+              <Label htmlFor="payment-method">Forma de Pagamento (Opcional)</Label>
+              <Select
+                value={formData.payment_method}
+                onValueChange={(value) => handleInputChange("payment_method", value)}
+              >
+                <SelectTrigger id="payment-method">
+                  <SelectValue placeholder="Selecione..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Nenhuma</SelectItem>
+                  {PAYMENT_METHODS.map((method) => (
+                    <SelectItem key={method} value={method}>
+                      {method}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Parcelas */}
+            <div className="space-y-2">
+              <Label>Parcelas (Opcional)</Label>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Input
+                    type="number"
+                    placeholder="Atual"
+                    value={formData.installments_current}
+                    onChange={(e) => handleInputChange("installments_current", e.target.value)}
+                    min="1"
+                  />
+                </div>
+                <div>
+                  <Input
+                    type="number"
+                    placeholder="Total"
+                    value={formData.installments_total}
+                    onChange={(e) => handleInputChange("installments_total", e.target.value)}
+                    min="1"
+                  />
+                </div>
+              </div>
+              <p className="text-xs text-gray-500">Ex: Parcela 1 de 12</p>
+            </div>
+
+            {/* Recorrência */}
+            <div className="space-y-3 p-3 border border-gray-200 rounded-lg">
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="is-recurring"
+                  checked={formData.is_recurring}
+                  onCheckedChange={(checked) => handleInputChange("is_recurring", checked)}
+                />
+                <Label htmlFor="is-recurring" className="cursor-pointer">
+                  Transação recorrente
+                </Label>
+              </div>
+
+              {formData.is_recurring && (
+                <div className="space-y-2">
+                  <Label htmlFor="recurrence-frequency">Frequência</Label>
+                  <Select
+                    value={formData.recurrence_frequency}
+                    onValueChange={(value) => handleInputChange("recurrence_frequency", value)}
+                  >
+                    <SelectTrigger id="recurrence-frequency">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="daily">Diário</SelectItem>
+                      <SelectItem value="weekly">Semanal</SelectItem>
+                      <SelectItem value="monthly">Mensal</SelectItem>
+                      <SelectItem value="yearly">Anual</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+            </div>
           </form>
           <DialogFooter>
             <Button
@@ -816,6 +1306,61 @@ export default function Transacoes() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Modal de Importação CSV */}
+      <Dialog open={importModalOpen} onOpenChange={setImportModalOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Importar Transações via CSV</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <h4 className="font-semibold text-blue-900 mb-2">Formato do arquivo CSV</h4>
+              <p className="text-sm text-blue-800 mb-3">
+                O arquivo deve conter as seguintes colunas (nesta ordem):
+              </p>
+              <div className="bg-white p-3 rounded border border-blue-200 font-mono text-xs">
+                data,descrição,valor,categoria,tipo,status,notas
+              </div>
+              <p className="text-xs text-blue-700 mt-2">
+                • Data: formato AAAA-MM-DD (ex: 2024-01-15)<br />
+                • Valor: número positivo ou negativo (ex: 1500.00 ou -350.50)<br />
+                • Tipo: income, expense ou investment<br />
+                • Status: paid ou pending (opcional)<br />
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="csv-file">Selecionar arquivo CSV</Label>
+              <Input
+                id="csv-file"
+                type="file"
+                accept=".csv"
+                className="cursor-pointer"
+              />
+            </div>
+
+            <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
+              <p className="text-sm text-amber-800">
+                <strong>Atenção:</strong> Esta funcionalidade está em desenvolvimento.
+                Por enquanto, as transações precisam ser adicionadas manualmente.
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setImportModalOpen(false)}
+            >
+              Fechar
+            </Button>
+            <Button disabled>
+              <Upload className="w-4 h-4 mr-2" />
+              Importar (Em breve)
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <FloatingActionButton
         onClick={handleAddTransaction}
