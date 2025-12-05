@@ -1192,14 +1192,14 @@ export default function Transacoes() {
             <div className="space-y-2">
               <Label htmlFor="payment-method">Forma de Pagamento (Opcional)</Label>
               <Select
-                value={formData.payment_method}
-                onValueChange={(value) => handleInputChange("payment_method", value)}
+                value={formData.payment_method || "none"}
+                onValueChange={(value) => handleInputChange("payment_method", value === "none" ? "" : value)}
               >
                 <SelectTrigger id="payment-method">
                   <SelectValue placeholder="Selecione..." />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Nenhuma</SelectItem>
+                  <SelectItem value="none">Nenhuma</SelectItem>
                   {PAYMENT_METHODS.map((method) => (
                     <SelectItem key={method} value={method}>
                       {method}
