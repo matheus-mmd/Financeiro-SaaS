@@ -12,7 +12,9 @@ import { Label } from "../../src/components/ui/label";
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "../../src/components/ui/select";
@@ -391,11 +393,96 @@ export default function Transacoes() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todas as categorias</SelectItem>
-                  {categories.map((category) => (
-                    <SelectItem key={category.id} value={category.id.toString()}>
-                      {category.name}
-                    </SelectItem>
-                  ))}
+
+                  {/* Receitas */}
+                  {categories.filter(cat => cat.transaction_type_id === 1).length > 0 && (
+                    <SelectGroup>
+                      <SelectLabel className="text-green-600 font-bold text-xs uppercase">
+                        Receitas
+                      </SelectLabel>
+                      {categories
+                        .filter(cat => cat.transaction_type_id === 1)
+                        .map((category) => {
+                          const IconComponent = getIconComponent(category.icon || "Tag");
+                          return (
+                            <SelectItem key={category.id} value={category.id.toString()} className="pl-6">
+                              <div className="flex items-center gap-2">
+                                <div
+                                  className="w-6 h-6 rounded-md flex items-center justify-center"
+                                  style={{ backgroundColor: category.color + '20' }}
+                                >
+                                  <IconComponent
+                                    className="w-4 h-4"
+                                    style={{ color: category.color }}
+                                  />
+                                </div>
+                                {category.name}
+                              </div>
+                            </SelectItem>
+                          );
+                        })}
+                    </SelectGroup>
+                  )}
+
+                  {/* Despesas */}
+                  {categories.filter(cat => cat.transaction_type_id === 2).length > 0 && (
+                    <SelectGroup>
+                      <SelectLabel className="text-red-600 font-bold text-xs uppercase">
+                        Despesas
+                      </SelectLabel>
+                      {categories
+                        .filter(cat => cat.transaction_type_id === 2)
+                        .map((category) => {
+                          const IconComponent = getIconComponent(category.icon || "Tag");
+                          return (
+                            <SelectItem key={category.id} value={category.id.toString()} className="pl-6">
+                              <div className="flex items-center gap-2">
+                                <div
+                                  className="w-6 h-6 rounded-md flex items-center justify-center"
+                                  style={{ backgroundColor: category.color + '20' }}
+                                >
+                                  <IconComponent
+                                    className="w-4 h-4"
+                                    style={{ color: category.color }}
+                                  />
+                                </div>
+                                {category.name}
+                              </div>
+                            </SelectItem>
+                          );
+                        })}
+                    </SelectGroup>
+                  )}
+
+                  {/* Aportes/Investimentos */}
+                  {categories.filter(cat => cat.transaction_type_id === 3).length > 0 && (
+                    <SelectGroup>
+                      <SelectLabel className="text-blue-600 font-bold text-xs uppercase">
+                        Aportes
+                      </SelectLabel>
+                      {categories
+                        .filter(cat => cat.transaction_type_id === 3)
+                        .map((category) => {
+                          const IconComponent = getIconComponent(category.icon || "Tag");
+                          return (
+                            <SelectItem key={category.id} value={category.id.toString()} className="pl-6">
+                              <div className="flex items-center gap-2">
+                                <div
+                                  className="w-6 h-6 rounded-md flex items-center justify-center"
+                                  style={{ backgroundColor: category.color + '20' }}
+                                >
+                                  <IconComponent
+                                    className="w-4 h-4"
+                                    style={{ color: category.color }}
+                                  />
+                                </div>
+                                {category.name}
+                              </div>
+                            </SelectItem>
+                          );
+                        })}
+                    </SelectGroup>
+                  )}
                 </SelectContent>
               </Select>
             </div>
@@ -533,17 +620,95 @@ export default function Transacoes() {
                   <SelectValue placeholder="Selecione" />
                 </SelectTrigger>
                 <SelectContent>
-                  {categories.map((category) => (
-                    <SelectItem key={category.id} value={category.id.toString()}>
-                      <div className="flex items-center gap-2">
-                        <div
-                          className="w-3 h-3 rounded-full"
-                          style={{ backgroundColor: category.color }}
-                        />
-                        {category.name}
-                      </div>
-                    </SelectItem>
-                  ))}
+                  {/* Receitas */}
+                  {categories.filter(cat => cat.transaction_type_id === 1).length > 0 && (
+                    <SelectGroup>
+                      <SelectLabel className="text-green-600 font-bold text-xs uppercase">
+                        Receitas
+                      </SelectLabel>
+                      {categories
+                        .filter(cat => cat.transaction_type_id === 1)
+                        .map((category) => {
+                          const IconComponent = getIconComponent(category.icon || "Tag");
+                          return (
+                            <SelectItem key={category.id} value={category.id.toString()} className="pl-6">
+                              <div className="flex items-center gap-2">
+                                <div
+                                  className="w-6 h-6 rounded-md flex items-center justify-center"
+                                  style={{ backgroundColor: category.color + '20' }}
+                                >
+                                  <IconComponent
+                                    className="w-4 h-4"
+                                    style={{ color: category.color }}
+                                  />
+                                </div>
+                                {category.name}
+                              </div>
+                            </SelectItem>
+                          );
+                        })}
+                    </SelectGroup>
+                  )}
+
+                  {/* Despesas */}
+                  {categories.filter(cat => cat.transaction_type_id === 2).length > 0 && (
+                    <SelectGroup>
+                      <SelectLabel className="text-red-600 font-bold text-xs uppercase">
+                        Despesas
+                      </SelectLabel>
+                      {categories
+                        .filter(cat => cat.transaction_type_id === 2)
+                        .map((category) => {
+                          const IconComponent = getIconComponent(category.icon || "Tag");
+                          return (
+                            <SelectItem key={category.id} value={category.id.toString()} className="pl-6">
+                              <div className="flex items-center gap-2">
+                                <div
+                                  className="w-6 h-6 rounded-md flex items-center justify-center"
+                                  style={{ backgroundColor: category.color + '20' }}
+                                >
+                                  <IconComponent
+                                    className="w-4 h-4"
+                                    style={{ color: category.color }}
+                                  />
+                                </div>
+                                {category.name}
+                              </div>
+                            </SelectItem>
+                          );
+                        })}
+                    </SelectGroup>
+                  )}
+
+                  {/* Aportes/Investimentos */}
+                  {categories.filter(cat => cat.transaction_type_id === 3).length > 0 && (
+                    <SelectGroup>
+                      <SelectLabel className="text-blue-600 font-bold text-xs uppercase">
+                        Aportes
+                      </SelectLabel>
+                      {categories
+                        .filter(cat => cat.transaction_type_id === 3)
+                        .map((category) => {
+                          const IconComponent = getIconComponent(category.icon || "Tag");
+                          return (
+                            <SelectItem key={category.id} value={category.id.toString()} className="pl-6">
+                              <div className="flex items-center gap-2">
+                                <div
+                                  className="w-6 h-6 rounded-md flex items-center justify-center"
+                                  style={{ backgroundColor: category.color + '20' }}
+                                >
+                                  <IconComponent
+                                    className="w-4 h-4"
+                                    style={{ color: category.color }}
+                                  />
+                                </div>
+                                {category.name}
+                              </div>
+                            </SelectItem>
+                          );
+                        })}
+                    </SelectGroup>
+                  )}
                 </SelectContent>
               </Select>
             </div>

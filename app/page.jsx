@@ -541,36 +541,6 @@ export default function Dashboard() {
         />
       </div>
 
-      {/* Tabela de transações */}
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-            <h2 className="text-lg font-semibold text-gray-900">
-              Transações Recentes
-            </h2>
-            <Link
-              href="/transacoes"
-              className="text-sm text-brand-600 hover:text-brand-700 font-medium"
-            >
-              Ver todas as transações →
-            </Link>
-          </div>
-          {recentTransactions.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-gray-500">
-                Nenhuma transação encontrada.
-              </p>
-            </div>
-          ) : (
-            <Table
-              columns={transactionColumns}
-              data={recentTransactions}
-              pageSize={10}
-              onRowClick={handleEditTransaction}
-            />
-          )}
-        </CardContent>
-      </Card>
 
       {/* Dialog de editar transação */}
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
