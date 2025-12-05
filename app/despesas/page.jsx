@@ -470,21 +470,13 @@ export default function Despesas() {
       </div>
 
       {/* Cards de resumo */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 min-w-0">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 min-w-0">
         <StatsCard
           icon={TrendingDown}
           label="Total de Despesas"
           value={formatCurrency(totalExpenses)}
           iconColor="red"
           valueColor="text-red-600"
-        />
-
-        <StatsCard
-          icon={Receipt}
-          label="Total de Itens"
-          value={expenses.length}
-          iconColor="blue"
-          valueColor="text-blue-600"
         />
 
         <StatsCard

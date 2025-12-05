@@ -397,21 +397,13 @@ export default function Receitas() {
       </div>
 
       {/* Cards de resumo */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 min-w-0">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 min-w-0">
         <StatsCard
           icon={TrendingUp}
           label="Total de Receitas"
           value={formatCurrency(totalIncomes)}
           iconColor="green"
           valueColor="text-green-600"
-        />
-
-        <StatsCard
-          icon={Receipt}
-          label="Total de Itens"
-          value={incomes.length}
-          iconColor="blue"
-          valueColor="text-blue-600"
         />
 
         <StatsCard
@@ -428,7 +420,7 @@ export default function Receitas() {
         <CardContent className="p-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
             <h2 className="text-lg font-semibold text-gray-900">
-              Todas as Receitas
+              Todas as Receitas ({filteredIncomes.length})
             </h2>
           </div>
 

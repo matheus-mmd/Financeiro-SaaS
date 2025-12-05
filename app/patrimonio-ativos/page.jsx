@@ -453,21 +453,13 @@ export default function PatrimonioAtivos() {
       </div>
 
       {/* Cards de resumo */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 min-w-0">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 min-w-0">
         <StatsCard
           icon={DollarSign}
           label="Total em Patrimônio"
           value={formatCurrency(totalAssets)}
           iconColor="green"
           valueColor="text-green-600"
-        />
-
-        <StatsCard
-          icon={Wallet}
-          label="Total de Ativos"
-          value={filteredAssets.length}
-          iconColor="blue"
-          valueColor="text-blue-600"
         />
 
         <StatsCard
@@ -484,7 +476,7 @@ export default function PatrimonioAtivos() {
         <CardContent className="p-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
             <h2 className="text-lg font-semibold text-gray-900">
-              Todos os Ativos
+              Todos os Ativos ({sortedAssets.length})
             </h2>
           </div>
 

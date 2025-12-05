@@ -49,11 +49,12 @@ import {
   parseDateString,
   isDateInRange,
 } from "../../src/utils";
+import { exportToCSV } from "../../src/utils/exportData";
 import { getIconComponent } from "../../src/components/IconPicker";
 import FilterButton from "../../src/components/FilterButton";
 import FloatingActionButton from "../../src/components/FloatingActionButton";
 import { TRANSACTION_TYPES } from "../../src/constants";
-import { ArrowUpRight, ArrowDownRight, TrendingUp, Plus, Trash2 } from "lucide-react";
+import { ArrowUpRight, ArrowDownRight, TrendingUp, Plus, Trash2, Download } from "lucide-react";
 
 /**
  * Página Transações - Gerenciamento de transações
@@ -278,6 +279,22 @@ export default function Transacoes() {
     });
   }, [filteredTransactions]);
 
+  const handleExport = () => {
+    const columns = [
+      { key: "date", label: "Data", format: (row) => formatDate(row.date) },
+      { key: "description", label: "Descrição" },
+      { key: "category_name", label: "Categoria" },
+      { key: "type_name", label: "Tipo" },
+      {
+        key: "amount",
+        label: "Valor",
+        format: (row) => formatCurrency(Math.abs(row.amount)),
+      },
+    ];
+
+    exportToCSV(sortedTransactions, columns, "transacoes");
+  };
+
   if (loading) {
     return <PageSkeleton />;
   }
@@ -372,10 +389,16 @@ export default function Transacoes() {
         title="Transações"
         description="Gerencie todas as suas transações financeiras"
         actions={
-          <Button onClick={handleAddTransaction}>
-            <Plus className="w-4 h-4" />
-            Nova Transação
-          </Button>
+          <>
+            <Button variant="secondary" onClick={handleExport}>
+              <Download className="w-4 h-4" />
+              Exportar
+            </Button>
+            <Button onClick={handleAddTransaction}>
+              <Plus className="w-4 h-4" />
+              Nova Transação
+            </Button>
+          </>
         }
       />
 
@@ -584,7 +607,7 @@ export default function Transacoes() {
         <CardContent className="p-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
             <h2 className="text-lg font-semibold text-gray-900">
-              Todas as Transações
+              Todas as Transações ({sortedTransactions.length})
             </h2>
           </div>
 
