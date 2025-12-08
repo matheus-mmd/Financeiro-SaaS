@@ -1006,13 +1006,13 @@ export default function Transacoes() {
 
       {/* Dialog de adicionar/editar transação */}
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
-        <DialogContent>
-          <DialogHeader>
+        <DialogContent className="max-w-[95vw] sm:max-w-md max-h-[92vh] sm:max-h-[90vh] p-0 gap-0">
+          <DialogHeader className="px-4 sm:px-6 pt-5 sm:pt-6 pb-3 sm:pb-4">
             <DialogTitle>
               {editingTransaction ? "Editar Transação" : "Nova Transação"}
             </DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-3 px-4 sm:px-6 pb-4 sm:pb-6 overflow-y-auto max-h-[calc(92vh-140px)] sm:max-h-[calc(90vh-140px)]">
             <div className="space-y-2">
               <Label htmlFor="description">Descrição</Label>
               <Input
@@ -1157,18 +1157,19 @@ export default function Transacoes() {
                 placeholder="Ex: Compra relacionada ao projeto X..."
                 value={formData.notes}
                 onChange={(e) => handleInputChange("notes", e.target.value)}
-                rows={3}
+                rows={2}
+                className="resize-none"
               />
             </div>
 
             {/* Status de Pagamento */}
             <div className="space-y-2">
-              <Label htmlFor="status">Status de Pagamento</Label>
+              <Label htmlFor="status" className="text-sm">Status</Label>
               <Select
                 value={formData.status}
                 onValueChange={(value) => handleInputChange("status", value)}
               >
-                <SelectTrigger id="status">
+                <SelectTrigger id="status" className="text-sm">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -1190,12 +1191,12 @@ export default function Transacoes() {
 
             {/* Forma de Pagamento */}
             <div className="space-y-2">
-              <Label htmlFor="payment-method">Forma de Pagamento (Opcional)</Label>
+              <Label htmlFor="payment-method" className="text-sm">Pagamento (Opcional)</Label>
               <Select
                 value={formData.payment_method || "none"}
                 onValueChange={(value) => handleInputChange("payment_method", value === "none" ? "" : value)}
               >
-                <SelectTrigger id="payment-method">
+                <SelectTrigger id="payment-method" className="text-sm">
                   <SelectValue placeholder="Selecione..." />
                 </SelectTrigger>
                 <SelectContent>
@@ -1211,51 +1212,48 @@ export default function Transacoes() {
 
             {/* Parcelas */}
             <div className="space-y-2">
-              <Label>Parcelas (Opcional)</Label>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <Input
-                    type="number"
-                    placeholder="Atual"
-                    value={formData.installments_current}
-                    onChange={(e) => handleInputChange("installments_current", e.target.value)}
-                    min="1"
-                  />
-                </div>
-                <div>
-                  <Input
-                    type="number"
-                    placeholder="Total"
-                    value={formData.installments_total}
-                    onChange={(e) => handleInputChange("installments_total", e.target.value)}
-                    min="1"
-                  />
-                </div>
+              <Label className="text-sm">Parcelas (Opcional)</Label>
+              <div className="grid grid-cols-2 gap-2">
+                <Input
+                  type="number"
+                  placeholder="Atual"
+                  value={formData.installments_current}
+                  onChange={(e) => handleInputChange("installments_current", e.target.value)}
+                  min="1"
+                  className="text-sm"
+                />
+                <Input
+                  type="number"
+                  placeholder="Total"
+                  value={formData.installments_total}
+                  onChange={(e) => handleInputChange("installments_total", e.target.value)}
+                  min="1"
+                  className="text-sm"
+                />
               </div>
-              <p className="text-xs text-gray-500">Ex: Parcela 1 de 12</p>
             </div>
 
             {/* Recorrência */}
-            <div className="space-y-3 p-3 border border-gray-200 rounded-lg">
+            <div className="space-y-2 p-2.5 border border-gray-200 rounded-lg bg-gray-50/50">
               <div className="flex items-center gap-2">
                 <Checkbox
                   id="is-recurring"
                   checked={formData.is_recurring}
                   onCheckedChange={(checked) => handleInputChange("is_recurring", checked)}
                 />
-                <Label htmlFor="is-recurring" className="cursor-pointer">
-                  Transação recorrente
+                <Label htmlFor="is-recurring" className="cursor-pointer text-sm font-medium">
+                  Recorrente
                 </Label>
               </div>
 
               {formData.is_recurring && (
-                <div className="space-y-2">
-                  <Label htmlFor="recurrence-frequency">Frequência</Label>
+                <div className="space-y-1.5 pl-6">
+                  <Label htmlFor="recurrence-frequency" className="text-xs text-gray-600">Frequência</Label>
                   <Select
                     value={formData.recurrence_frequency}
                     onValueChange={(value) => handleInputChange("recurrence_frequency", value)}
                   >
-                    <SelectTrigger id="recurrence-frequency">
+                    <SelectTrigger id="recurrence-frequency" className="text-sm h-9">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -1269,16 +1267,17 @@ export default function Transacoes() {
               )}
             </div>
           </form>
-          <DialogFooter>
+          <DialogFooter className="px-4 sm:px-6 py-3 sm:py-4 border-t bg-gray-50/50 gap-2">
             <Button
               type="button"
               variant="outline"
               onClick={() => setModalOpen(false)}
+              className="flex-1 sm:flex-none"
             >
               Cancelar
             </Button>
-            <Button type="submit" onClick={handleSubmit}>
-              {editingTransaction ? "Salvar" : "Adicionar Transação"}
+            <Button type="submit" onClick={handleSubmit} className="flex-1 sm:flex-none">
+              {editingTransaction ? "Salvar" : "Adicionar"}
             </Button>
           </DialogFooter>
         </DialogContent>
