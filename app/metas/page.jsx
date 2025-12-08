@@ -6,7 +6,7 @@ import PageHeader from "../../src/components/PageHeader";
 import StatsCard from "../../src/components/StatsCard";
 import DateRangePicker from "../../src/components/DateRangePicker";
 import FilterButton from "../../src/components/FilterButton";
-import FloatingActionButton from "../../src/components/FloatingActionButton";
+import FABMenu from "../../src/components/FABMenu";
 import { Card, CardContent } from "../../src/components/ui/card";
 import { Badge } from "../../src/components/ui/badge";
 import { Button } from "../../src/components/ui/button";
@@ -362,18 +362,6 @@ export default function Metas() {
       <PageHeader
         title="Metas Financeiras"
         description="Defina e acompanhe suas metas"
-        actions={
-          <>
-            <Button variant="secondary" onClick={handleExport}>
-              <Download className="w-4 h-4" />
-              Exportar
-            </Button>
-            <Button onClick={handleAddTarget}>
-              <Plus className="w-4 h-4" />
-              Nova Meta
-            </Button>
-          </>
-        }
       />
 
       {/* Filtros */}
@@ -624,10 +612,22 @@ export default function Metas() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Floating Action Button */}
-      <FloatingActionButton
-        onClick={handleAddTarget}
-        label="Nova Meta"
+      {/* Floating Action Menu */}
+      <FABMenu
+        primaryIcon={<Plus className="w-6 h-6" />}
+        primaryLabel="Nova Meta"
+        actions={[
+          {
+            icon: <Download className="w-5 h-5" />,
+            label: "Exportar",
+            onClick: handleExport,
+          },
+          {
+            icon: <Plus className="w-5 h-5" />,
+            label: "Nova Meta",
+            onClick: handleAddTarget,
+          },
+        ]}
       />
     </div>
   );

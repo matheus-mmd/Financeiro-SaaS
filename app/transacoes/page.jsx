@@ -55,7 +55,7 @@ import {
 import { exportToCSV } from "../../src/utils/exportData";
 import { getIconComponent } from "../../src/components/IconPicker";
 import FilterButton from "../../src/components/FilterButton";
-import FloatingActionButton from "../../src/components/FloatingActionButton";
+import FABMenu from "../../src/components/FABMenu";
 import { TRANSACTION_TYPES, PAYMENT_STATUS, PAYMENT_METHODS } from "../../src/constants";
 import {
   ArrowUpRight,
@@ -683,22 +683,6 @@ export default function Transacoes() {
       <PageHeader
         title="Transações"
         description="Gerencie todas as suas transações financeiras"
-        actions={
-          <>
-            <Button variant="secondary" onClick={() => setImportModalOpen(true)}>
-              <Upload className="w-4 h-4" />
-              Importar CSV
-            </Button>
-            <Button variant="secondary" onClick={handleExport}>
-              <Download className="w-4 h-4" />
-              Exportar
-            </Button>
-            <Button onClick={handleAddTransaction}>
-              <Plus className="w-4 h-4" />
-              Nova Transação
-            </Button>
-          </>
-        }
       />
 
       {/* Busca e Ações em Lote */}
@@ -1361,9 +1345,26 @@ export default function Transacoes() {
         </DialogContent>
       </Dialog>
 
-      <FloatingActionButton
-        onClick={handleAddTransaction}
-        label="Nova Transação"
+      <FABMenu
+        primaryIcon={<Plus className="w-6 h-6" />}
+        primaryLabel="Nova Transação"
+        actions={[
+          {
+            icon: <Upload className="w-5 h-5" />,
+            label: "Importar CSV",
+            onClick: () => setImportModalOpen(true),
+          },
+          {
+            icon: <Download className="w-5 h-5" />,
+            label: "Exportar",
+            onClick: handleExport,
+          },
+          {
+            icon: <Plus className="w-5 h-5" />,
+            label: "Nova Transação",
+            onClick: handleAddTransaction,
+          },
+        ]}
       />
     </div>
   );

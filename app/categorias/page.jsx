@@ -19,10 +19,12 @@ import {
   updateCategory,
   deleteCategory,
 } from "../../src/utils/mockApi";
-import { Plus, Trash2, Tag } from "lucide-react";
+import { exportToCSV } from "../../src/utils/exportData";
+import { Plus, Trash2, Tag, Download, TrendingUp, TrendingDown, Wallet } from "lucide-react";
 import { getIconComponent } from "../../src/components/IconPicker";
 import ColorPicker from "../../src/components/ColorPicker";
 import IconPickerModal from "../../src/components/IconPickerModal";
+import FABMenu from "../../src/components/FABMenu";
 
 /**
  * Página de Categorias - Gerenciamento de categorias
@@ -132,6 +134,24 @@ export default function CategoriasPage() {
     }
   };
 
+  const handleExport = () => {
+    const columns = [
+      { key: "name", label: "Nome" },
+      {
+        key: "transaction_type_id",
+        label: "Tipo",
+        format: (row) => {
+          const type = transactionTypes.find(t => t.id === row.transaction_type_id);
+          return type ? type.name : "";
+        }
+      },
+      { key: "color", label: "Cor" },
+      { key: "icon", label: "Ícone" },
+    ];
+
+    exportToCSV(categories, columns, "categorias");
+  };
+
   const getTransactionTypeById = (id) => {
     return transactionTypes.find(t => t.id === id);
   };
@@ -145,25 +165,16 @@ export default function CategoriasPage() {
     return (
       <Card>
         <CardContent className="p-6">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <div className={`p-2 ${iconColor} rounded-lg`}>
-                {icon}
-              </div>
-              <div>
-                <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
-                <p className="text-sm text-gray-500">
-                  {description} ({sectionCategories.length})
-                </p>
-              </div>
+          <div className="flex items-center gap-3 mb-6">
+            <div className={`p-2 ${iconColor} rounded-lg`}>
+              {icon}
             </div>
-            <Button
-              onClick={() => handleOpenCategoryModal(null, defaultType)}
-              className="flex items-center gap-2"
-            >
-              <Plus className="w-4 h-4" />
-              Nova Categoria
-            </Button>
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
+              <p className="text-sm text-gray-500">
+                {description} ({sectionCategories.length})
+              </p>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -333,6 +344,34 @@ export default function CategoriasPage() {
           setCategoryFormData({ ...categoryFormData, icon: iconName })
         }
         color={categoryFormData.color}
+      />
+
+      {/* Floating Action Menu */}
+      <FABMenu
+        primaryIcon={<Plus className="w-6 h-6" />}
+        primaryLabel="Nova Categoria"
+        actions={[
+          {
+            icon: <Download className="w-5 h-5" />,
+            label: "Exportar",
+            onClick: handleExport,
+          },
+          {
+            icon: <TrendingUp className="w-5 h-5" />,
+            label: "Nova Categoria de Receita",
+            onClick: () => handleOpenCategoryModal(null, 1),
+          },
+          {
+            icon: <TrendingDown className="w-5 h-5" />,
+            label: "Nova Categoria de Despesa",
+            onClick: () => handleOpenCategoryModal(null, 2),
+          },
+          {
+            icon: <Wallet className="w-5 h-5" />,
+            label: "Nova Categoria de Patrimônio",
+            onClick: () => handleOpenCategoryModal(null, 3),
+          },
+        ]}
       />
     </div>
   );

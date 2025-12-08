@@ -50,7 +50,7 @@ import {
 import { exportToCSV } from "../../src/utils/exportData";
 import { getIconComponent } from "../../src/components/IconPicker";
 import FilterButton from "../../src/components/FilterButton";
-import FloatingActionButton from "../../src/components/FloatingActionButton";
+import FABMenu from "../../src/components/FABMenu";
 import { TRANSACTION_TYPE_IDS, DEFAULT_CATEGORY_COLOR } from "../../src/constants";
 import { Receipt, Plus, Trash2, TrendingUp, PieChart, Download } from "lucide-react";
 
@@ -315,18 +315,6 @@ export default function Receitas() {
       <PageHeader
         title="Receitas"
         description="Gerencie suas receitas por categoria"
-        actions={
-          <>
-            <Button variant="secondary" onClick={handleExport}>
-              <Download className="w-4 h-4" />
-              Exportar
-            </Button>
-            <Button onClick={handleAddIncome}>
-              <Plus className="w-4 h-4" />
-              Nova Receita
-            </Button>
-          </>
-        }
       />
 
       {/* Filtros */}
@@ -558,7 +546,22 @@ export default function Receitas() {
         </AlertDialogContent>
       </AlertDialog>
 
-      <FloatingActionButton onClick={handleAddIncome} label="Nova Receita" />
+      <FABMenu
+        primaryIcon={<Plus className="w-6 h-6" />}
+        primaryLabel="Nova Receita"
+        actions={[
+          {
+            icon: <Download className="w-5 h-5" />,
+            label: "Exportar",
+            onClick: handleExport,
+          },
+          {
+            icon: <Plus className="w-5 h-5" />,
+            label: "Nova Receita",
+            onClick: handleAddIncome,
+          },
+        ]}
+      />
     </div>
   );
 }

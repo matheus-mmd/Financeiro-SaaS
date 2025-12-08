@@ -50,7 +50,7 @@ import {
 import { exportToCSV } from "../../src/utils/exportData";
 import { getIconComponent } from "../../src/components/IconPicker";
 import FilterButton from "../../src/components/FilterButton";
-import FloatingActionButton from "../../src/components/FloatingActionButton";
+import FABMenu from "../../src/components/FABMenu";
 import { TRANSACTION_TYPE_IDS, DEFAULT_CATEGORY_COLOR } from "../../src/constants";
 import { DollarSign, Percent, Plus, Download, Trash2, Wallet } from "lucide-react";
 
@@ -374,18 +374,6 @@ export default function PatrimonioAtivos() {
       <PageHeader
         title="Patrimônio e Ativos"
         description="Gerencie seus ativos e acompanhe rendimentos"
-        actions={
-          <>
-            <Button variant="secondary" onClick={handleExport}>
-              <Download className="w-4 h-4" />
-              Exportar
-            </Button>
-            <Button onClick={handleAddAsset}>
-              <Plus className="w-4 h-4" />
-              Novo Ativo
-            </Button>
-          </>
-        }
       />
 
       {/* Filtros */}
@@ -632,9 +620,21 @@ export default function PatrimonioAtivos() {
         </AlertDialogContent>
       </AlertDialog>
 
-      <FloatingActionButton
-        onClick={handleAddAsset}
-        label="Novo Ativo"
+      <FABMenu
+        primaryIcon={<Plus className="w-6 h-6" />}
+        primaryLabel="Novo Ativo"
+        actions={[
+          {
+            icon: <Download className="w-5 h-5" />,
+            label: "Exportar",
+            onClick: handleExport,
+          },
+          {
+            icon: <Plus className="w-5 h-5" />,
+            label: "Novo Ativo",
+            onClick: handleAddAsset,
+          },
+        ]}
       />
     </div>
   );

@@ -38,7 +38,7 @@ import PageSkeleton from "../../src/components/PageSkeleton";
 import Table from "../../src/components/Table";
 import DatePicker from "../../src/components/DatePicker";
 import FilterButton from "../../src/components/FilterButton";
-import FloatingActionButton from "../../src/components/FloatingActionButton";
+import FABMenu from "../../src/components/FABMenu";
 import {
   fetchData,
   formatCurrency,
@@ -387,18 +387,6 @@ export default function Despesas() {
       <PageHeader
         title="Despesas"
         description="Gerencie suas despesas por categoria"
-        actions={
-          <>
-            <Button variant="secondary" onClick={handleExport}>
-              <Download className="w-4 h-4" />
-              Exportar
-            </Button>
-            <Button onClick={handleAddExpense}>
-              <Plus className="w-4 h-4" />
-              Nova Despesa
-            </Button>
-          </>
-        }
       />
 
       {/* Filtros */}
@@ -711,10 +699,22 @@ export default function Despesas() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Floating Action Button */}
-      <FloatingActionButton
-        onClick={handleAddExpense}
-        label="Nova Despesa"
+      {/* Floating Action Menu */}
+      <FABMenu
+        primaryIcon={<Plus className="w-6 h-6" />}
+        primaryLabel="Nova Despesa"
+        actions={[
+          {
+            icon: <Download className="w-5 h-5" />,
+            label: "Exportar",
+            onClick: handleExport,
+          },
+          {
+            icon: <Plus className="w-5 h-5" />,
+            label: "Nova Despesa",
+            onClick: handleAddExpense,
+          },
+        ]}
       />
     </div>
   );
