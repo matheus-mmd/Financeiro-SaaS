@@ -19,7 +19,6 @@ import {
   updateCategory,
   deleteCategory,
 } from "../../src/utils/mockApi";
-import { exportToCSV } from "../../src/utils/exportData";
 import { Plus, Trash2, Tag, Download, TrendingUp, TrendingDown, Wallet } from "lucide-react";
 import { getIconComponent } from "../../src/components/IconPicker";
 import ColorPicker from "../../src/components/ColorPicker";
@@ -132,24 +131,6 @@ export default function CategoriasPage() {
       console.error("Erro ao deletar categoria:", error);
       alert("Erro ao deletar categoria. Tente novamente.");
     }
-  };
-
-  const handleExport = () => {
-    const columns = [
-      { key: "name", label: "Nome" },
-      {
-        key: "transaction_type_id",
-        label: "Tipo",
-        format: (row) => {
-          const type = transactionTypes.find(t => t.id === row.transaction_type_id);
-          return type ? type.name : "";
-        }
-      },
-      { key: "color", label: "Cor" },
-      { key: "icon", label: "Ícone" },
-    ];
-
-    exportToCSV(categories, columns, "categorias");
   };
 
   const getTransactionTypeById = (id) => {
@@ -351,11 +332,6 @@ export default function CategoriasPage() {
         primaryIcon={<Plus className="w-6 h-6" />}
         primaryLabel="Ações de Categorias"
         actions={[
-          {
-            icon: <Download className="w-5 h-5" />,
-            label: "Exportar",
-            onClick: handleExport,
-          },
           {
             icon: <TrendingUp className="w-5 h-5" />,
             label: "Nova Categoria de Receita",
