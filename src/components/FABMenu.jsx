@@ -28,17 +28,17 @@ export default function FABMenu({
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-50">
-      {/* Overlay quando menu está aberto */}
+    <div className="fixed bottom-6 right-6 z-30">
+      {/* Overlay quando menu está aberto - z-20 para ficar atrás do Sidebar (z-50) */}
       {isOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/10"
+          className="fixed inset-0 z-20 bg-black/10"
           onClick={() => setIsOpen(false)}
         />
       )}
 
-      {/* Container dos botões */}
-      <div className="relative z-50">
+      {/* Container dos botões - z-30 mesmo nível do container principal */}
+      <div className="relative z-30">
         {/* Botões de ação secundários */}
         {isOpen && (
           <div className="absolute bottom-20 right-0 flex flex-col items-end gap-3 mb-2">
@@ -48,7 +48,7 @@ export default function FABMenu({
                 className="flex items-center justify-end gap-3 group"
               >
                 {/* Label do botão secundário (tooltip à esquerda) */}
-                <span className="bg-gray-900 text-white text-sm px-3 py-2 rounded-xl whitespace-nowrap shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+                <span className="relative bg-gray-900 text-white text-sm px-3 py-2 rounded-xl whitespace-nowrap shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
                   {action.label}
                   {/* Seta apontando para o botão */}
                   <span className="absolute right-0 top-1/2 translate-x-1 -translate-y-1/2 border-4 border-transparent border-l-gray-900" />
@@ -80,7 +80,7 @@ export default function FABMenu({
           </div>
         )}
 
-        {/* Botão principal (FAB) */}
+        {/* Botão principal (FAB) - SEM animações no carregamento */}
         <button
           onClick={toggleMenu}
           aria-label={isOpen ? "Fechar menu" : primaryLabel}
@@ -106,7 +106,7 @@ export default function FABMenu({
               whitespace-nowrap shadow-lg
               opacity-0 group-hover:opacity-100
               transition-opacity duration-200
-              pointer-events-none z-50">
+              pointer-events-none z-10">
               {primaryLabel}
               {/* Seta apontando para o botão */}
               <span className="absolute right-0 top-1/2 translate-x-1 -translate-y-1/2
