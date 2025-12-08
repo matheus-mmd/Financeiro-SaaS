@@ -548,7 +548,7 @@ export default function Receitas() {
 
       <FABMenu
         primaryIcon={<Plus className="w-6 h-6" />}
-        primaryLabel="Nova Receita"
+        primaryLabel="Ações de Receitas"
         actions={[
           {
             icon: <Download className="w-5 h-5" />,

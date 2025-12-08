@@ -702,7 +702,7 @@ export default function Despesas() {
       {/* Floating Action Menu */}
       <FABMenu
         primaryIcon={<Plus className="w-6 h-6" />}
-        primaryLabel="Nova Despesa"
+        primaryLabel="Ações de Despesas"
         actions={[
           {
             icon: <Download className="w-5 h-5" />,

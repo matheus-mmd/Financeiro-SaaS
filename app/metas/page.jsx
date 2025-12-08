@@ -615,7 +615,7 @@ export default function Metas() {
       {/* Floating Action Menu */}
       <FABMenu
         primaryIcon={<Plus className="w-6 h-6" />}
-        primaryLabel="Nova Meta"
+        primaryLabel="Ações de Metas"
         actions={[
           {
             icon: <Download className="w-5 h-5" />,

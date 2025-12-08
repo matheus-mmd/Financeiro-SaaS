@@ -622,7 +622,7 @@ export default function PatrimonioAtivos() {
 
       <FABMenu
         primaryIcon={<Plus className="w-6 h-6" />}
-        primaryLabel="Novo Ativo"
+        primaryLabel="Ações de Patrimônio"
         actions={[
           {
             icon: <Download className="w-5 h-5" />,

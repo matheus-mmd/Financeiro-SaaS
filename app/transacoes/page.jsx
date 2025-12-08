@@ -1347,7 +1347,7 @@ export default function Transacoes() {
 
       <FABMenu
         primaryIcon={<Plus className="w-6 h-6" />}
-        primaryLabel="Nova Transação"
+        primaryLabel="Ações de Transações"
         actions={[
           {
             icon: <Upload className="w-5 h-5" />,

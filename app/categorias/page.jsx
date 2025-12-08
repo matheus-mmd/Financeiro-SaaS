@@ -349,7 +349,7 @@ export default function CategoriasPage() {
       {/* Floating Action Menu */}
       <FABMenu
         primaryIcon={<Plus className="w-6 h-6" />}
-        primaryLabel="Nova Categoria"
+        primaryLabel="Ações de Categorias"
         actions={[
           {
             icon: <Download className="w-5 h-5" />,
