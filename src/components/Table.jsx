@@ -275,7 +275,7 @@ export default function Table({
             className="gap-2 h-9 hover:bg-accent hover:text-accent-foreground transition-colors"
           >
             <Settings className="w-4 h-4" />
-            <span className="hidden sm:inline">Colunas</span>
+            <span>Colunas</span>
             <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-medium rounded-full bg-primary/10 text-primary">
               {visibleCount}/{totalCount}
             </span>
