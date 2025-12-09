@@ -10,6 +10,7 @@ import { Button } from "../../src/components/ui/button";
 import { Input } from "../../src/components/ui/input";
 import { Label } from "../../src/components/ui/label";
 import { Textarea } from "../../src/components/ui/textarea";
+import { Checkbox } from "../../src/components/ui/checkbox";
 import { Badge } from "../../src/components/ui/badge";
 import {
   Select,

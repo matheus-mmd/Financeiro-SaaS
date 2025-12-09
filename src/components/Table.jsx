@@ -1,7 +1,23 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { ChevronUp, ChevronDown, Settings } from 'lucide-react';
+import { ChevronUp, ChevronDown, Settings, GripVertical } from 'lucide-react';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import {
   Table as ShadcnTable,
   TableBody,
@@ -48,20 +64,34 @@ export default function Table({
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(pageSize);
 
-  // State para colunas visíveis (com persistência no localStorage)
-  const [visibleColumns, setVisibleColumns] = useState(() => {
+  // State para ordem e visibilidade das colunas (com persistência no localStorage)
+  const [columnOrder, setColumnOrder] = useState(() => {
     if (tableId && typeof window !== 'undefined') {
       const saved = localStorage.getItem(`table-columns-${tableId}`);
       if (saved) {
         try {
-          return JSON.parse(saved);
+          const data = JSON.parse(saved);
+          // Verificar se é o novo formato (objeto com order e visible)
+          if (data && typeof data === 'object' && data.order && data.visible) {
+            return data;
+          }
+          // Compatibilidade com formato antigo (array de strings)
+          if (Array.isArray(data)) {
+            return {
+              order: columns.map(col => col.key),
+              visible: data
+            };
+          }
         } catch (e) {
           console.error('Erro ao carregar preferências de colunas:', e);
         }
       }
     }
-    // Padrão: todas as colunas visíveis
-    return columns.map(col => col.key);
+    // Padrão: todas as colunas visíveis na ordem original
+    return {
+      order: columns.map(col => col.key),
+      visible: columns.map(col => col.key)
+    };
   });
 
   // Salvar preferências no localStorage sempre que mudar
@@ -69,15 +99,21 @@ export default function Table({
     if (tableId && typeof window !== 'undefined') {
       localStorage.setItem(
         `table-columns-${tableId}`,
-        JSON.stringify(visibleColumns)
+        JSON.stringify(columnOrder)
       );
     }
-  }, [visibleColumns, tableId]);
+  }, [columnOrder, tableId]);
 
-  // Filtrar apenas colunas visíveis
+  // Aplicar ordem personalizada e filtrar apenas colunas visíveis
   const displayColumns = useMemo(() => {
-    return columns.filter(col => visibleColumns.includes(col.key));
-  }, [columns, visibleColumns]);
+    // Ordenar colunas baseado em columnOrder.order
+    const orderedColumns = columnOrder.order
+      .map(key => columns.find(col => col.key === key))
+      .filter(Boolean); // Remover undefined (colunas que não existem mais)
+
+    // Filtrar apenas visíveis
+    return orderedColumns.filter(col => columnOrder.visible.includes(col.key));
+  }, [columns, columnOrder]);
 
   // Ordenação
   const sortedData = React.useMemo(() => {
@@ -128,13 +164,12 @@ export default function Table({
 
   // Função para alternar visibilidade de uma coluna
   const toggleColumn = (columnKey) => {
-    setVisibleColumns(prev => {
-      if (prev.includes(columnKey)) {
-        return prev.filter(k => k !== columnKey);
-      } else {
-        return [...prev, columnKey];
-      }
-    });
+    setColumnOrder(prev => ({
+      ...prev,
+      visible: prev.visible.includes(columnKey)
+        ? prev.visible.filter(k => k !== columnKey)
+        : [...prev.visible, columnKey]
+    }));
   };
 
   // Verificar se uma coluna é obrigatória (apenas coluna 'actions')
@@ -142,9 +177,82 @@ export default function Table({
     return col.key === 'actions';
   };
 
-  // Componente ColumnSelector (Dropdown de seleção de colunas)
+  // Componente para item arrastável do dropdown
+  const SortableColumnItem = ({ col, required, visible, onToggle }) => {
+    const {
+      attributes,
+      listeners,
+      setNodeRef,
+      transform,
+      transition,
+      isDragging,
+    } = useSortable({ id: col.key });
+
+    const style = {
+      transform: CSS.Transform.toString(transform),
+      transition,
+      opacity: isDragging ? 0.5 : 1,
+    };
+
+    return (
+      <div
+        ref={setNodeRef}
+        style={style}
+        className="flex items-center gap-2"
+      >
+        <div
+          {...attributes}
+          {...listeners}
+          className="cursor-grab active:cursor-grabbing p-1 hover:bg-gray-100 rounded"
+        >
+          <GripVertical className="w-4 h-4 text-gray-400" />
+        </div>
+        <DropdownMenuCheckboxItem
+          checked={visible}
+          onCheckedChange={() => !required && onToggle(col.key)}
+          disabled={required}
+          className="flex-1"
+        >
+          {col.label}
+          {required && <span className="ml-2 text-xs text-gray-500">(obrigatório)</span>}
+        </DropdownMenuCheckboxItem>
+      </div>
+    );
+  };
+
+  // Componente ColumnSelector (Dropdown de seleção de colunas com drag and drop)
   const ColumnSelector = () => {
     const [isOpen, setIsOpen] = useState(false);
+
+    // Configurar sensores para drag and drop
+    const sensors = useSensors(
+      useSensor(PointerSensor),
+      useSensor(KeyboardSensor, {
+        coordinateGetter: sortableKeyboardCoordinates,
+      })
+    );
+
+    // Handler para quando o drag termina
+    const handleDragEnd = (event) => {
+      const { active, over } = event;
+
+      if (active.id !== over.id) {
+        setColumnOrder(prev => {
+          const oldIndex = prev.order.indexOf(active.id);
+          const newIndex = prev.order.indexOf(over.id);
+
+          return {
+            ...prev,
+            order: arrayMove(prev.order, oldIndex, newIndex)
+          };
+        });
+      }
+    };
+
+    // Ordenar colunas para exibição no dropdown
+    const orderedColumnsForDisplay = columnOrder.order
+      .map(key => columns.find(col => col.key === key))
+      .filter(Boolean);
 
     return (
       <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
@@ -154,26 +262,44 @@ export default function Table({
             Colunas
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-56">
-          <DropdownMenuLabel>Colunas Visíveis</DropdownMenuLabel>
+        <DropdownMenuContent align="end" className="w-64">
+          <DropdownMenuLabel>
+            Colunas Visíveis
+            <p className="text-xs text-gray-500 font-normal mt-1">
+              Arraste para reordenar
+            </p>
+          </DropdownMenuLabel>
           <DropdownMenuSeparator />
-          {columns.map((col) => {
-            const required = isColumnRequired(col);
-            return (
-              <DropdownMenuCheckboxItem
-                key={col.key}
-                checked={visibleColumns.includes(col.key)}
-                onCheckedChange={() => !required && toggleColumn(col.key)}
-                disabled={required}
-              >
-                {col.label}
-                {required && <span className="ml-2 text-xs text-gray-500">(obrigatório)</span>}
-              </DropdownMenuCheckboxItem>
-            );
-          })}
+
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+          >
+            <SortableContext
+              items={columnOrder.order}
+              strategy={verticalListSortingStrategy}
+            >
+              {orderedColumnsForDisplay.map((col) => (
+                <SortableColumnItem
+                  key={col.key}
+                  col={col}
+                  required={isColumnRequired(col)}
+                  visible={columnOrder.visible.includes(col.key)}
+                  onToggle={toggleColumn}
+                />
+              ))}
+            </SortableContext>
+          </DndContext>
+
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => setVisibleColumns(columns.map(c => c.key))}>
-            Mostrar Todas
+          <DropdownMenuItem
+            onClick={() => setColumnOrder({
+              order: columns.map(c => c.key),
+              visible: columns.map(c => c.key)
+            })}
+          >
+            Restaurar Padrão
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

@@ -477,7 +477,7 @@ export default function Metas() {
         <CardContent className="p-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
             <h2 className="text-lg font-semibold text-gray-900">
-              Todas as Metas
+              Todas as Metas ({sortedTargets.length})
             </h2>
           </div>
 
