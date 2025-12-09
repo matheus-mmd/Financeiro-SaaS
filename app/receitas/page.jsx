@@ -457,6 +457,7 @@ export default function Receitas() {
               data={filteredIncomes}
               pageSize={10}
               onRowClick={handleEditIncome}
+              tableId="incomes-table"
             />
           )}
         </CardContent>

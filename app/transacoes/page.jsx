@@ -10,7 +10,6 @@ import { Button } from "../../src/components/ui/button";
 import { Input } from "../../src/components/ui/input";
 import { Label } from "../../src/components/ui/label";
 import { Textarea } from "../../src/components/ui/textarea";
-import { Checkbox } from "../../src/components/ui/checkbox";
 import { Badge } from "../../src/components/ui/badge";
 import {
   Select,
@@ -90,7 +89,6 @@ export default function Transacoes() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [transactionToDelete, setTransactionToDelete] = useState(null);
   const [filterMonth, setFilterMonth] = useState(getCurrentMonthRange());
-  const [selectedTransactions, setSelectedTransactions] = useState([]);
   const [importModalOpen, setImportModalOpen] = useState(false);
   const [recurringModalOpen, setRecurringModalOpen] = useState(false);
   const [formData, setFormData] = useState({
@@ -236,44 +234,6 @@ export default function Transacoes() {
       setTransactions(response.data);
     } catch (error) {
       console.error("Erro ao atualizar status:", error);
-    }
-  };
-
-  // Seleção em lote
-  const handleSelectTransaction = (transactionId) => {
-    setSelectedTransactions(prev => {
-      if (prev.includes(transactionId)) {
-        return prev.filter(id => id !== transactionId);
-      } else {
-        return [...prev, transactionId];
-      }
-    });
-  };
-
-  const handleSelectAll = () => {
-    if (selectedTransactions.length === sortedTransactions.length) {
-      setSelectedTransactions([]);
-    } else {
-      setSelectedTransactions(sortedTransactions.map(t => t.id));
-    }
-  };
-
-  // Deletar múltiplas transações
-  const handleBulkDelete = async () => {
-    if (selectedTransactions.length === 0) return;
-
-    if (!confirm(`Tem certeza que deseja excluir ${selectedTransactions.length} transação(ões)?`)) return;
-
-    try {
-      for (const id of selectedTransactions) {
-        await deleteTransaction(id);
-      }
-      const response = await fetchData("/api/transactions");
-      setTransactions(response.data);
-      setSelectedTransactions([]);
-    } catch (error) {
-      console.error("Erro ao deletar transações:", error);
-      alert("Erro ao deletar transações.");
     }
   };
 
@@ -511,22 +471,6 @@ export default function Transacoes() {
   // Configuração de colunas da tabela
   const transactionColumns = [
     {
-      key: "select",
-      label: (
-        <Checkbox
-          checked={selectedTransactions.length === sortedTransactions.length && sortedTransactions.length > 0}
-          onCheckedChange={handleSelectAll}
-        />
-      ),
-      render: (row) => (
-        <Checkbox
-          checked={selectedTransactions.includes(row.id)}
-          onCheckedChange={() => handleSelectTransaction(row.id)}
-          onClick={(e) => e.stopPropagation()}
-        />
-      ),
-    },
-    {
       key: "description",
       label: "Descrição",
       sortable: true,
@@ -668,30 +612,6 @@ export default function Transacoes() {
         title="Transações"
         description="Gerencie todas as suas transações financeiras"
       />
-
-      {/* Ações em Lote */}
-      {selectedTransactions.length > 0 && (
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-600 whitespace-nowrap">
-            {selectedTransactions.length} selecionada(s)
-          </span>
-          <Button
-            variant="destructive"
-            size="sm"
-            onClick={handleBulkDelete}
-            >
-              <Trash2 className="w-4 h-4 mr-1" />
-              Deletar
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setSelectedTransactions([])}
-            >
-              Cancelar
-            </Button>
-          </div>
-        )}
 
       {/* Filtros */}
       <div className="flex items-center gap-3">
@@ -944,6 +864,7 @@ export default function Transacoes() {
               data={sortedTransactions}
               pageSize={10}
               onRowClick={handleEditTransaction}
+              tableId="transactions-table"
             />
           )}
         </CardContent>

@@ -538,6 +538,7 @@ export default function Despesas() {
               data={filteredExpenses}
               pageSize={10}
               onRowClick={handleEditExpense}
+              tableId="expenses-table"
             />
           )}
         </CardContent>

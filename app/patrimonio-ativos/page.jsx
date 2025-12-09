@@ -514,6 +514,7 @@ export default function PatrimonioAtivos() {
               data={sortedAssets}
               pageSize={10}
               onRowClick={handleEditAsset}
+              tableId="assets-table"
             />
           )}
         </CardContent>

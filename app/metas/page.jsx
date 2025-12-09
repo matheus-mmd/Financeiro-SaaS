@@ -499,6 +499,7 @@ export default function Metas() {
               data={sortedTargets}
               pageSize={10}
               onRowClick={handleEditTarget}
+              tableId="targets-table"
             />
           )}
         </CardContent>
