@@ -52,7 +52,7 @@ import { getIconComponent } from "../../src/components/IconPicker";
 import FilterButton from "../../src/components/FilterButton";
 import FABMenu from "../../src/components/FABMenu";
 import { TRANSACTION_TYPE_IDS, DEFAULT_CATEGORY_COLOR } from "../../src/constants";
-import { Receipt, Plus, Trash2, TrendingUp, PieChart, Download } from "lucide-react";
+import { Receipt, Plus, Trash2, TrendingUp, PieChart, Download, Copy } from "lucide-react";
 
 /**
  * Página Receitas - Gerenciamento detalhado de receitas por categoria
@@ -136,6 +136,18 @@ export default function Receitas() {
       category: income.category,
       amount: income.amount.toString(),
       date: parseDateString(income.date) || new Date(),
+    });
+    setModalOpen(true);
+  };
+
+  // Duplicar receita
+  const handleDuplicateIncome = (income) => {
+    setEditingIncome(null);
+    setFormData({
+      title: income.title + " (Cópia)",
+      category: income.category,
+      amount: income.amount.toString(),
+      date: new Date(),
     });
     setModalOpen(true);
   };
@@ -299,13 +311,28 @@ export default function Receitas() {
       key: "actions",
       label: "Ações",
       render: (row) => (
-        <button
-          onClick={() => handleDeleteIncome(row)}
-          className="p-1 hover:bg-red-50 rounded transition-colors"
-          aria-label="Excluir receita"
-        >
-          <Trash2 className="w-4 h-4 text-red-600" />
-        </button>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              handleDuplicateIncome(row);
+            }}
+            className="p-1.5 hover:bg-blue-50 rounded transition-colors"
+            title="Duplicar receita"
+          >
+            <Copy className="w-4 h-4 text-blue-600" />
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              handleDeleteIncome(row);
+            }}
+            className="p-1.5 hover:bg-red-50 rounded transition-colors"
+            title="Excluir receita"
+          >
+            <Trash2 className="w-4 h-4 text-red-600" />
+          </button>
+        </div>
       ),
     },
   ];

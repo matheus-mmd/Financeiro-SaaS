@@ -52,7 +52,7 @@ import {
 } from "../../src/utils";
 import { exportToCSV } from "../../src/utils/exportData";
 import { GOAL_STATUS } from "../../src/constants";
-import { Target, Plus, Trash2, CheckCircle, Download, TrendingUp } from "lucide-react";
+import { Target, Plus, Trash2, CheckCircle, Download, TrendingUp, Copy } from "lucide-react";
 
 /**
  * Página Metas - Gerenciamento de metas financeiras
@@ -134,6 +134,19 @@ export default function Metas() {
       progress: target.progress.toString(),
       monthlyAmount: target.monthlyAmount?.toString() || "",
       date: parseDateString(target.date) || new Date(),
+    });
+    setModalOpen(true);
+  };
+
+  // Duplicar meta
+  const handleDuplicateTarget = (target) => {
+    setEditingTarget(null);
+    setFormData({
+      title: target.title + " (Cópia)",
+      goal: target.goal.toString(),
+      progress: "0",
+      monthlyAmount: target.monthlyAmount?.toString() || "",
+      date: new Date(),
     });
     setModalOpen(true);
   };
@@ -346,13 +359,28 @@ export default function Metas() {
       key: "actions",
       label: "Ações",
       render: (row) => (
-        <button
-          onClick={() => handleDeleteTarget(row)}
-          className="p-1 hover:bg-red-50 rounded transition-colors"
-          aria-label="Excluir meta"
-        >
-          <Trash2 className="w-4 h-4 text-red-600" />
-        </button>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              handleDuplicateTarget(row);
+            }}
+            className="p-1.5 hover:bg-blue-50 rounded transition-colors"
+            title="Duplicar meta"
+          >
+            <Copy className="w-4 h-4 text-blue-600" />
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              handleDeleteTarget(row);
+            }}
+            className="p-1.5 hover:bg-red-50 rounded transition-colors"
+            title="Excluir meta"
+          >
+            <Trash2 className="w-4 h-4 text-red-600" />
+          </button>
+        </div>
       ),
     },
   ];

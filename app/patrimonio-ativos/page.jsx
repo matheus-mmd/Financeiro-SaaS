@@ -52,7 +52,7 @@ import { getIconComponent } from "../../src/components/IconPicker";
 import FilterButton from "../../src/components/FilterButton";
 import FABMenu from "../../src/components/FABMenu";
 import { TRANSACTION_TYPE_IDS, DEFAULT_CATEGORY_COLOR } from "../../src/constants";
-import { DollarSign, Percent, Plus, Download, Trash2, Wallet } from "lucide-react";
+import { DollarSign, Percent, Plus, Download, Trash2, Wallet, Copy } from "lucide-react";
 
 /**
  * Página Patrimônio e Ativos - Gerenciamento de patrimônio e ativos
@@ -151,6 +151,19 @@ export default function PatrimonioAtivos() {
       value: asset.value.toString(),
       yield: asset.yield ? (asset.yield * 100).toString() : "",
       date: parseDateString(asset.date) || new Date(),
+    });
+    setModalOpen(true);
+  };
+
+  // Duplicar ativo
+  const handleDuplicateAsset = (asset) => {
+    setEditingAsset(null);
+    setFormData({
+      name: asset.name + " (Cópia)",
+      type: asset.type,
+      value: asset.value.toString(),
+      yield: asset.yield ? (asset.yield * 100).toString() : "",
+      date: new Date(),
     });
     setModalOpen(true);
   };
@@ -358,13 +371,28 @@ export default function PatrimonioAtivos() {
       key: "actions",
       label: "Ações",
       render: (row) => (
-        <button
-          onClick={() => handleDeleteAsset(row)}
-          className="p-1 hover:bg-red-50 rounded transition-colors"
-          aria-label="Excluir ativo"
-        >
-          <Trash2 className="w-4 h-4 text-red-600" />
-        </button>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              handleDuplicateAsset(row);
+            }}
+            className="p-1.5 hover:bg-blue-50 rounded transition-colors"
+            title="Duplicar ativo"
+          >
+            <Copy className="w-4 h-4 text-blue-600" />
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              handleDeleteAsset(row);
+            }}
+            className="p-1.5 hover:bg-red-50 rounded transition-colors"
+            title="Excluir ativo"
+          >
+            <Trash2 className="w-4 h-4 text-red-600" />
+          </button>
+        </div>
       ),
     },
   ];

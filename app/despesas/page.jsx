@@ -53,7 +53,7 @@ import {
 import { exportToCSV } from "../../src/utils/exportData";
 import { getIconComponent } from "../../src/components/IconPicker";
 import { TRANSACTION_TYPE_IDS, PAYMENT_STATUS, PAYMENT_METHODS, DEFAULT_CATEGORY_COLOR } from "../../src/constants";
-import { Receipt, Plus, Trash2, TrendingDown, PieChart, Download } from "lucide-react";
+import { Receipt, Plus, Trash2, TrendingDown, PieChart, Download, Copy } from "lucide-react";
 
 /**
  * Página Despesas - Gerenciamento detalhado de despesas por categoria
@@ -152,6 +152,23 @@ export default function Despesas() {
       payment_method: expense.payment_method || "",
       installments_current: expense.installments?.current?.toString() || "",
       installments_total: expense.installments?.total?.toString() || "",
+    });
+    setModalOpen(true);
+  };
+
+  // Duplicar despesa
+  const handleDuplicateExpense = (expense) => {
+    setEditingExpense(null);
+    setFormData({
+      title: expense.title + " (Cópia)",
+      category: expense.category,
+      amount: expense.amount.toString(),
+      date: new Date(),
+      paid_date: null,
+      status: PAYMENT_STATUS.PENDING,
+      payment_method: expense.payment_method || "",
+      installments_current: "",
+      installments_total: "",
     });
     setModalOpen(true);
   };
@@ -371,13 +388,28 @@ export default function Despesas() {
       key: "actions",
       label: "Ações",
       render: (row) => (
-        <button
-          onClick={() => handleDeleteExpense(row)}
-          className="p-1 hover:bg-red-50 rounded transition-colors"
-          aria-label="Excluir despesa"
-        >
-          <Trash2 className="w-4 h-4 text-red-600" />
-        </button>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              handleDuplicateExpense(row);
+            }}
+            className="p-1.5 hover:bg-blue-50 rounded transition-colors"
+            title="Duplicar despesa"
+          >
+            <Copy className="w-4 h-4 text-blue-600" />
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              handleDeleteExpense(row);
+            }}
+            className="p-1.5 hover:bg-red-50 rounded transition-colors"
+            title="Excluir despesa"
+          >
+            <Trash2 className="w-4 h-4 text-red-600" />
+          </button>
+        </div>
       ),
     },
   ];
