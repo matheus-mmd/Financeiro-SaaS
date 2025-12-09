@@ -92,6 +92,7 @@ export default function Transacoes() {
   const [filterMonth, setFilterMonth] = useState(getCurrentMonthRange());
   const [importModalOpen, setImportModalOpen] = useState(false);
   const [recurringModalOpen, setRecurringModalOpen] = useState(false);
+  const [columnSelectorElement, setColumnSelectorElement] = useState(null);
   const [formData, setFormData] = useState({
     description: "",
     amount: "",
@@ -845,6 +846,7 @@ export default function Transacoes() {
             <h2 className="text-lg font-semibold text-gray-900">
               Todas as Transações ({sortedTransactions.length})
             </h2>
+            {columnSelectorElement}
           </div>
 
           {sortedTransactions.length === 0 ? (
@@ -866,6 +868,7 @@ export default function Transacoes() {
               pageSize={10}
               onRowClick={handleEditTransaction}
               tableId="transactions-table"
+              renderColumnSelector={setColumnSelectorElement}
             />
           )}
         </CardContent>

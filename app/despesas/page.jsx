@@ -71,6 +71,7 @@ export default function Despesas() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [expenseToDelete, setExpenseToDelete] = useState(null);
   const [filterMonth, setFilterMonth] = useState(getCurrentMonthRange());
+  const [columnSelectorElement, setColumnSelectorElement] = useState(null);
   const [formData, setFormData] = useState({
     title: "",
     category: "",
@@ -518,6 +519,7 @@ export default function Despesas() {
                 : `Despesas - ${selectedCategory}`}{" "}
               ({filteredExpenses.length})
             </h2>
+            {columnSelectorElement}
           </div>
 
           {filteredExpenses.length === 0 ? (
@@ -539,6 +541,7 @@ export default function Despesas() {
               pageSize={10}
               onRowClick={handleEditExpense}
               tableId="expenses-table"
+              renderColumnSelector={setColumnSelectorElement}
             />
           )}
         </CardContent>

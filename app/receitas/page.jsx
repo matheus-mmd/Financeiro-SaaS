@@ -70,6 +70,7 @@ export default function Receitas() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [incomeToDelete, setIncomeToDelete] = useState(null);
   const [filterMonth, setFilterMonth] = useState(getCurrentMonthRange());
+  const [columnSelectorElement, setColumnSelectorElement] = useState(null);
   const [formData, setFormData] = useState({
     title: "",
     category: "",
@@ -437,6 +438,7 @@ export default function Receitas() {
             <h2 className="text-lg font-semibold text-gray-900">
               Todas as Receitas ({filteredIncomes.length})
             </h2>
+            {columnSelectorElement}
           </div>
 
           {filteredIncomes.length === 0 ? (
@@ -458,6 +460,7 @@ export default function Receitas() {
               pageSize={10}
               onRowClick={handleEditIncome}
               tableId="incomes-table"
+              renderColumnSelector={setColumnSelectorElement}
             />
           )}
         </CardContent>

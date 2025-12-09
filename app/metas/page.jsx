@@ -69,6 +69,7 @@ export default function Metas() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [targetToDelete, setTargetToDelete] = useState(null);
   const [filterMonth, setFilterMonth] = useState(null);
+  const [columnSelectorElement, setColumnSelectorElement] = useState(null);
   const [formData, setFormData] = useState({
     title: "",
     goal: "",
@@ -479,6 +480,7 @@ export default function Metas() {
             <h2 className="text-lg font-semibold text-gray-900">
               Todas as Metas ({sortedTargets.length})
             </h2>
+            {columnSelectorElement}
           </div>
 
           {sortedTargets.length === 0 ? (
@@ -500,6 +502,7 @@ export default function Metas() {
               pageSize={10}
               onRowClick={handleEditTarget}
               tableId="targets-table"
+              renderColumnSelector={setColumnSelectorElement}
             />
           )}
         </CardContent>

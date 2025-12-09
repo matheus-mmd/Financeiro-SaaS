@@ -52,6 +52,7 @@ import {
  * @param {number} pageSize - Itens por página padrão
  * @param {Function} onRowClick - Função opcional chamada ao clicar em uma linha
  * @param {string} tableId - ID único para salvar preferências de colunas no localStorage
+ * @param {React.ReactNode} renderColumnSelector - Função para renderizar o seletor de colunas externamente
  */
 export default function Table({
   columns,
@@ -59,6 +60,7 @@ export default function Table({
   pageSize = 10,
   onRowClick,
   tableId,
+  renderColumnSelector,
 }) {
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
   const [currentPage, setCurrentPage] = useState(1);
@@ -330,6 +332,13 @@ export default function Table({
     );
   };
 
+  // Expor o ColumnSelector para uso externo via renderColumnSelector
+  useEffect(() => {
+    if (renderColumnSelector && tableId) {
+      renderColumnSelector(<ColumnSelector />);
+    }
+  }, [columnOrder, renderColumnSelector, tableId]);
+
   return (
     <div className="w-full">
       {/* Tabela responsiva com overflow controlado */}
@@ -353,14 +362,6 @@ export default function Table({
                   </div>
                 </TableHead>
               ))}
-              {/* Controle de Colunas - Alinhado com headers */}
-              {tableId && (
-                <TableHead className="w-[140px]">
-                  <div className="flex items-center justify-end">
-                    <ColumnSelector />
-                  </div>
-                </TableHead>
-              )}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -375,8 +376,6 @@ export default function Table({
                     {column.render ? column.render(row) : row[column.key]}
                   </TableCell>
                 ))}
-                {/* Célula vazia para alinhar com botão de colunas */}
-                {tableId && <TableCell />}
               </TableRow>
             ))}
           </TableBody>

@@ -71,6 +71,7 @@ export default function PatrimonioAtivos() {
   const [assetToDelete, setAssetToDelete] = useState(null);
   const [categories, setCategories] = useState([]);
   const [filterMonth, setFilterMonth] = useState(getCurrentMonthRange());
+  const [columnSelectorElement, setColumnSelectorElement] = useState(null);
   const [formData, setFormData] = useState({
     name: "",
     type: "Poupança",
@@ -494,6 +495,7 @@ export default function PatrimonioAtivos() {
             <h2 className="text-lg font-semibold text-gray-900">
               Todos os Ativos ({sortedAssets.length})
             </h2>
+            {columnSelectorElement}
           </div>
 
           {sortedAssets.length === 0 ? (
@@ -515,6 +517,7 @@ export default function PatrimonioAtivos() {
               pageSize={10}
               onRowClick={handleEditAsset}
               tableId="assets-table"
+              renderColumnSelector={setColumnSelectorElement}
             />
           )}
         </CardContent>
