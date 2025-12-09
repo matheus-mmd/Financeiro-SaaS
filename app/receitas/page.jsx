@@ -51,8 +51,19 @@ import { exportToCSV } from "../../src/utils/exportData";
 import { getIconComponent } from "../../src/components/IconPicker";
 import FilterButton from "../../src/components/FilterButton";
 import FABMenu from "../../src/components/FABMenu";
-import { TRANSACTION_TYPE_IDS, DEFAULT_CATEGORY_COLOR } from "../../src/constants";
-import { Receipt, Plus, Trash2, TrendingUp, PieChart, Download, Copy } from "lucide-react";
+import {
+  TRANSACTION_TYPE_IDS,
+  DEFAULT_CATEGORY_COLOR,
+} from "../../src/constants";
+import {
+  Receipt,
+  Plus,
+  Trash2,
+  TrendingUp,
+  PieChart,
+  Download,
+  Copy,
+} from "lucide-react";
 
 /**
  * Página Receitas - Gerenciamento detalhado de receitas por categoria
@@ -277,12 +288,14 @@ export default function Receitas() {
         const category = categories.find(
           (c) => c.name === row.category || c.id === row.category.toLowerCase()
         );
-        const IconComponent = getIconComponent(category?.icon || row.category_icon || "Tag");
+        const IconComponent = getIconComponent(
+          category?.icon || row.category_icon || "Tag"
+        );
         return (
           <div className="flex items-center gap-2">
             <div
               className="p-1 rounded flex-shrink-0"
-              style={{ backgroundColor: (category?.color || "#64748b") + '20' }}
+              style={{ backgroundColor: (category?.color || "#64748b") + "20" }}
             >
               <IconComponent
                 className="w-4 h-4"
@@ -381,7 +394,7 @@ export default function Receitas() {
                         <div className="flex items-center gap-2">
                           <div
                             className="p-1 rounded"
-                            style={{ backgroundColor: cat.color + '20' }}
+                            style={{ backgroundColor: cat.color + "20" }}
                           >
                             <IconComponent
                               className="w-4 h-4"
@@ -433,7 +446,7 @@ export default function Receitas() {
 
       {/* Tabela de receitas */}
       <Card>
-        <CardContent className="p-6">
+        <CardContent className="p-4 sm:p-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
             <h2 className="text-lg font-semibold text-gray-900">
               Todas as Receitas ({filteredIncomes.length})
@@ -503,7 +516,7 @@ export default function Receitas() {
                         <div className="flex items-center gap-2">
                           <div
                             className="p-1 rounded"
-                            style={{ backgroundColor: cat.color + '20' }}
+                            style={{ backgroundColor: cat.color + "20" }}
                           >
                             <IconComponent
                               className="w-4 h-4"

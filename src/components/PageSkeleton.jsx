@@ -1,6 +1,6 @@
-import React from 'react';
-import { Card, CardContent } from './ui/card';
-import { Skeleton } from './ui/skeleton';
+import React from "react";
+import { Card, CardContent } from "./ui/card";
+import { Skeleton } from "./ui/skeleton";
 
 /**
  * PageSkeleton - Skeleton loading genérico para páginas de lista
@@ -22,7 +22,7 @@ export default function PageSkeleton() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {[1, 2, 3, 4].map((i) => (
           <Card key={i}>
-            <CardContent className="p-6">
+            <CardContent className="p-4 sm:p-6">
               <div className="flex items-center justify-between">
                 <div className="space-y-2 flex-1">
                   <Skeleton className="h-4 w-24" />
@@ -37,7 +37,7 @@ export default function PageSkeleton() {
 
       {/* Filters Skeleton */}
       <Card>
-        <CardContent className="p-6">
+        <CardContent className="p-4 sm:p-6">
           <div className="flex flex-col sm:flex-row gap-4">
             <Skeleton className="h-10 w-full sm:w-48" />
             <Skeleton className="h-10 w-full sm:w-64" />
@@ -48,7 +48,7 @@ export default function PageSkeleton() {
 
       {/* Table Skeleton */}
       <Card>
-        <CardContent className="p-6">
+        <CardContent className="p-4 sm:p-6">
           <div className="space-y-4">
             {/* Table Header */}
             <div className="flex items-center gap-4 pb-4 border-b">

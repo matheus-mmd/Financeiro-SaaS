@@ -56,7 +56,11 @@ import { exportToCSV } from "../../src/utils/exportData";
 import { getIconComponent } from "../../src/components/IconPicker";
 import FilterButton from "../../src/components/FilterButton";
 import FABMenu from "../../src/components/FABMenu";
-import { TRANSACTION_TYPES, PAYMENT_STATUS, PAYMENT_METHODS } from "../../src/constants";
+import {
+  TRANSACTION_TYPES,
+  PAYMENT_STATUS,
+  PAYMENT_METHODS,
+} from "../../src/constants";
 import {
   ArrowUpRight,
   ArrowDownRight,
@@ -111,21 +115,25 @@ export default function Transacoes() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [transactionsRes, categoriesRes, transactionTypesRes] = await Promise.all([
-          fetchData("/api/transactions"),
-          fetchData("/api/categories"),
-          fetchData("/api/transactionTypes"),
-        ]);
+        const [transactionsRes, categoriesRes, transactionTypesRes] =
+          await Promise.all([
+            fetchData("/api/transactions"),
+            fetchData("/api/categories"),
+            fetchData("/api/transactionTypes"),
+          ]);
         setTransactions(transactionsRes.data);
         setFilteredTransactions(transactionsRes.data);
         setCategories(categoriesRes.data);
         setTransactionTypes(transactionTypesRes.data);
 
         // Definir categoria e tipo padrão após carregar os dados
-        if (categoriesRes.data.length > 0 && transactionTypesRes.data.length > 0) {
+        if (
+          categoriesRes.data.length > 0 &&
+          transactionTypesRes.data.length > 0
+        ) {
           const defaultCategory = categoriesRes.data[0];
           const defaultType = transactionTypesRes.data[0];
-          setFormData(prev => ({
+          setFormData((prev) => ({
             ...prev,
             categoryId: defaultCategory.id,
             transactionTypeId: defaultType.id,
@@ -146,12 +154,16 @@ export default function Transacoes() {
 
     // Filtrar por categoria
     if (filterCategory !== "all") {
-      filtered = filtered.filter((t) => t.category_id === parseInt(filterCategory));
+      filtered = filtered.filter(
+        (t) => t.category_id === parseInt(filterCategory)
+      );
     }
 
     // Filtrar por tipo de transação
     if (filterTransactionType !== "all") {
-      filtered = filtered.filter((t) => t.type_internal_name === filterTransactionType);
+      filtered = filtered.filter(
+        (t) => t.type_internal_name === filterTransactionType
+      );
     }
 
     // Filtrar por status de pagamento
@@ -165,7 +177,13 @@ export default function Transacoes() {
     }
 
     setFilteredTransactions(filtered);
-  }, [filterCategory, filterTransactionType, filterStatus, filterMonth, transactions]);
+  }, [
+    filterCategory,
+    filterTransactionType,
+    filterStatus,
+    filterMonth,
+    transactions,
+  ]);
 
   const handleAddTransaction = () => {
     setEditingTransaction(null);
@@ -230,8 +248,14 @@ export default function Transacoes() {
   // Toggle status de pagamento (pago/pendente)
   const handleToggleStatus = async (transaction) => {
     try {
-      const newStatus = transaction.status === PAYMENT_STATUS.PAID ? PAYMENT_STATUS.PENDING : PAYMENT_STATUS.PAID;
-      await updateTransaction(transaction.id, { ...transaction, status: newStatus });
+      const newStatus =
+        transaction.status === PAYMENT_STATUS.PAID
+          ? PAYMENT_STATUS.PENDING
+          : PAYMENT_STATUS.PAID;
+      await updateTransaction(transaction.id, {
+        ...transaction,
+        status: newStatus,
+      });
       const response = await fetchData("/api/transactions");
       setTransactions(response.data);
     } catch (error) {
@@ -248,20 +272,26 @@ export default function Transacoes() {
     // Mapear palavras-chave para categorias
     const keywords = {
       // Receitas
-      'salário': { type: 1, keywords: ['salário', 'pagamento', 'vencimento'] },
-      'freelance': { type: 1, keywords: ['freelance', 'freela', 'projeto'] },
+      salário: { type: 1, keywords: ["salário", "pagamento", "vencimento"] },
+      freelance: { type: 1, keywords: ["freelance", "freela", "projeto"] },
 
       // Despesas
-      'mercado': { type: 2, keywords: ['mercado', 'supermercado', 'feira', 'alimentação'] },
-      'aluguel': { type: 2, keywords: ['aluguel', 'rent', 'moradia'] },
-      'uber': { type: 2, keywords: ['uber', '99', 'taxi', 'transporte'] },
-      'netflix': { type: 2, keywords: ['netflix', 'spotify', 'streaming', 'assinatura'] },
-      'gasolina': { type: 2, keywords: ['gasolina', 'combustível', 'posto'] },
-      'restaurante': { type: 2, keywords: ['restaurante', 'ifood', 'delivery'] },
+      mercado: {
+        type: 2,
+        keywords: ["mercado", "supermercado", "feira", "alimentação"],
+      },
+      aluguel: { type: 2, keywords: ["aluguel", "rent", "moradia"] },
+      uber: { type: 2, keywords: ["uber", "99", "taxi", "transporte"] },
+      netflix: {
+        type: 2,
+        keywords: ["netflix", "spotify", "streaming", "assinatura"],
+      },
+      gasolina: { type: 2, keywords: ["gasolina", "combustível", "posto"] },
+      restaurante: { type: 2, keywords: ["restaurante", "ifood", "delivery"] },
 
       // Investimentos
-      'ação': { type: 3, keywords: ['ação', 'ações', 'bolsa', 'b3'] },
-      'cdb': { type: 3, keywords: ['cdb', 'tesouro', 'renda fixa'] },
+      ação: { type: 3, keywords: ["ação", "ações", "bolsa", "b3"] },
+      cdb: { type: 3, keywords: ["cdb", "tesouro", "renda fixa"] },
     };
 
     // Procurar categoria correspondente
@@ -276,8 +306,10 @@ export default function Transacoes() {
     for (const [catName, config] of Object.entries(keywords)) {
       for (const keyword of config.keywords) {
         if (desc.includes(keyword)) {
-          const matchedCategory = categories.find(c =>
-            c.name.toLowerCase().includes(catName) && c.transaction_type_id === config.type
+          const matchedCategory = categories.find(
+            (c) =>
+              c.name.toLowerCase().includes(catName) &&
+              c.transaction_type_id === config.type
           );
           if (matchedCategory) return matchedCategory.id;
         }
@@ -313,7 +345,9 @@ export default function Transacoes() {
 
     try {
       // Determinar o sinal do valor baseado no tipo de transação
-      const transactionType = transactionTypes.find(t => t.id === formData.transactionTypeId);
+      const transactionType = transactionTypes.find(
+        (t) => t.id === formData.transactionTypeId
+      );
       let amount = parseFloat(formData.amount);
 
       // Receitas são positivas, Despesas e Aportes são negativos
@@ -327,7 +361,10 @@ export default function Transacoes() {
 
       // Preparar dados de parcelas
       let installments = null;
-      if (formData.installments_total && parseInt(formData.installments_total) > 1) {
+      if (
+        formData.installments_total &&
+        parseInt(formData.installments_total) > 1
+      ) {
         installments = {
           current: parseInt(formData.installments_current) || 1,
           total: parseInt(formData.installments_total),
@@ -345,7 +382,9 @@ export default function Transacoes() {
         payment_method: formData.payment_method || null,
         installments: installments,
         is_recurring: formData.is_recurring || false,
-        recurrence_frequency: formData.is_recurring ? formData.recurrence_frequency : null,
+        recurrence_frequency: formData.is_recurring
+          ? formData.recurrence_frequency
+          : null,
       };
 
       if (editingTransaction) {
@@ -388,7 +427,7 @@ export default function Transacoes() {
     if (field === "description" && !editingTransaction) {
       const suggestedCategoryId = suggestCategory(value);
       if (suggestedCategoryId && !formData.categoryId) {
-        const category = categories.find(c => c.id === suggestedCategoryId);
+        const category = categories.find((c) => c.id === suggestedCategoryId);
         if (category) {
           newFormData.categoryId = suggestedCategoryId;
           newFormData.transactionTypeId = category.transaction_type_id;
@@ -401,7 +440,7 @@ export default function Transacoes() {
 
   // Quando muda a categoria, o tipo de transação é automaticamente definido
   const handleCategoryChange = (categoryId) => {
-    const category = categories.find(c => c.id === parseInt(categoryId));
+    const category = categories.find((c) => c.id === parseInt(categoryId));
 
     // Definir o tipo de transação baseado no tipo da categoria
     const newTypeId = category?.transaction_type_id || transactionTypes[0]?.id;
@@ -495,7 +534,7 @@ export default function Transacoes() {
           <div className="flex items-center gap-2">
             <div
               className="p-1 rounded flex-shrink-0"
-              style={{ backgroundColor: row.category_color + '20' }}
+              style={{ backgroundColor: row.category_color + "20" }}
             >
               <IconComponent
                 className="w-4 h-4"
@@ -526,7 +565,8 @@ export default function Transacoes() {
         return (
           <div className="flex flex-col">
             <span className={`${colorClass} font-medium`}>
-              {row.amount >= 0 ? "+" : "-"} {formatCurrency(Math.abs(row.amount))}
+              {row.amount >= 0 ? "+" : "-"}{" "}
+              {formatCurrency(Math.abs(row.amount))}
             </span>
             {row.installments && (
               <span className="text-xs text-gray-500">
@@ -554,7 +594,10 @@ export default function Transacoes() {
               Pago
             </Badge>
           ) : (
-            <Badge variant="outline" className="text-amber-700 border-amber-300 hover:bg-amber-50">
+            <Badge
+              variant="outline"
+              className="text-amber-700 border-amber-300 hover:bg-amber-50"
+            >
               <Clock className="w-3 h-3 mr-1" />
               Pendente
             </Badge>
@@ -635,7 +678,10 @@ export default function Transacoes() {
           <div className="grid grid-cols-1 gap-4">
             {/* Filtro por categoria */}
             <div className="space-y-2">
-              <Label htmlFor="filter-category" className="text-sm font-medium text-gray-700">
+              <Label
+                htmlFor="filter-category"
+                className="text-sm font-medium text-gray-700"
+              >
                 Categoria
               </Label>
               <Select value={filterCategory} onValueChange={setFilterCategory}>
@@ -646,21 +692,30 @@ export default function Transacoes() {
                   <SelectItem value="all">Todas as categorias</SelectItem>
 
                   {/* Receitas */}
-                  {categories.filter(cat => cat.transaction_type_id === 1).length > 0 && (
+                  {categories.filter((cat) => cat.transaction_type_id === 1)
+                    .length > 0 && (
                     <SelectGroup>
                       <SelectLabel className="text-green-600 font-bold text-xs uppercase">
                         Receitas
                       </SelectLabel>
                       {categories
-                        .filter(cat => cat.transaction_type_id === 1)
+                        .filter((cat) => cat.transaction_type_id === 1)
                         .map((category) => {
-                          const IconComponent = getIconComponent(category.icon || "Tag");
+                          const IconComponent = getIconComponent(
+                            category.icon || "Tag"
+                          );
                           return (
-                            <SelectItem key={category.id} value={category.id.toString()} className="pl-6">
+                            <SelectItem
+                              key={category.id}
+                              value={category.id.toString()}
+                              className="pl-6"
+                            >
                               <div className="flex items-center gap-2">
                                 <div
                                   className="w-6 h-6 rounded-md flex items-center justify-center"
-                                  style={{ backgroundColor: category.color + '20' }}
+                                  style={{
+                                    backgroundColor: category.color + "20",
+                                  }}
                                 >
                                   <IconComponent
                                     className="w-4 h-4"
@@ -676,21 +731,30 @@ export default function Transacoes() {
                   )}
 
                   {/* Despesas */}
-                  {categories.filter(cat => cat.transaction_type_id === 2).length > 0 && (
+                  {categories.filter((cat) => cat.transaction_type_id === 2)
+                    .length > 0 && (
                     <SelectGroup>
                       <SelectLabel className="text-red-600 font-bold text-xs uppercase">
                         Despesas
                       </SelectLabel>
                       {categories
-                        .filter(cat => cat.transaction_type_id === 2)
+                        .filter((cat) => cat.transaction_type_id === 2)
                         .map((category) => {
-                          const IconComponent = getIconComponent(category.icon || "Tag");
+                          const IconComponent = getIconComponent(
+                            category.icon || "Tag"
+                          );
                           return (
-                            <SelectItem key={category.id} value={category.id.toString()} className="pl-6">
+                            <SelectItem
+                              key={category.id}
+                              value={category.id.toString()}
+                              className="pl-6"
+                            >
                               <div className="flex items-center gap-2">
                                 <div
                                   className="w-6 h-6 rounded-md flex items-center justify-center"
-                                  style={{ backgroundColor: category.color + '20' }}
+                                  style={{
+                                    backgroundColor: category.color + "20",
+                                  }}
                                 >
                                   <IconComponent
                                     className="w-4 h-4"
@@ -706,21 +770,30 @@ export default function Transacoes() {
                   )}
 
                   {/* Aportes/Investimentos */}
-                  {categories.filter(cat => cat.transaction_type_id === 3).length > 0 && (
+                  {categories.filter((cat) => cat.transaction_type_id === 3)
+                    .length > 0 && (
                     <SelectGroup>
                       <SelectLabel className="text-blue-600 font-bold text-xs uppercase">
                         Aportes
                       </SelectLabel>
                       {categories
-                        .filter(cat => cat.transaction_type_id === 3)
+                        .filter((cat) => cat.transaction_type_id === 3)
                         .map((category) => {
-                          const IconComponent = getIconComponent(category.icon || "Tag");
+                          const IconComponent = getIconComponent(
+                            category.icon || "Tag"
+                          );
                           return (
-                            <SelectItem key={category.id} value={category.id.toString()} className="pl-6">
+                            <SelectItem
+                              key={category.id}
+                              value={category.id.toString()}
+                              className="pl-6"
+                            >
                               <div className="flex items-center gap-2">
                                 <div
                                   className="w-6 h-6 rounded-md flex items-center justify-center"
-                                  style={{ backgroundColor: category.color + '20' }}
+                                  style={{
+                                    backgroundColor: category.color + "20",
+                                  }}
                                 >
                                   <IconComponent
                                     className="w-4 h-4"
@@ -740,10 +813,16 @@ export default function Transacoes() {
 
             {/* Filtro por tipo de transação */}
             <div className="space-y-2">
-              <Label htmlFor="filter-type" className="text-sm font-medium text-gray-700">
+              <Label
+                htmlFor="filter-type"
+                className="text-sm font-medium text-gray-700"
+              >
                 Tipo
               </Label>
-              <Select value={filterTransactionType} onValueChange={setFilterTransactionType}>
+              <Select
+                value={filterTransactionType}
+                onValueChange={setFilterTransactionType}
+              >
                 <SelectTrigger id="filter-type">
                   <SelectValue placeholder="Selecione o tipo" />
                 </SelectTrigger>
@@ -751,11 +830,12 @@ export default function Transacoes() {
                   <SelectItem value="all">Todos os tipos</SelectItem>
                   {transactionTypes.map((type) => {
                     const colorMap = {
-                      income: 'text-green-600',
-                      expense: 'text-red-600',
-                      investment: 'text-blue-600'
+                      income: "text-green-600",
+                      expense: "text-red-600",
+                      investment: "text-blue-600",
                     };
-                    const color = colorMap[type.internal_name] || 'text-gray-900';
+                    const color =
+                      colorMap[type.internal_name] || "text-gray-900";
                     return (
                       <SelectItem key={type.id} value={type.internal_name}>
                         <span className={`font-medium ${color}`}>
@@ -770,7 +850,10 @@ export default function Transacoes() {
 
             {/* Filtro por status de pagamento */}
             <div className="space-y-2">
-              <Label htmlFor="filter-status" className="text-sm font-medium text-gray-700">
+              <Label
+                htmlFor="filter-status"
+                className="text-sm font-medium text-gray-700"
+              >
                 Status
               </Label>
               <Select value={filterStatus} onValueChange={setFilterStatus}>
@@ -841,7 +924,7 @@ export default function Transacoes() {
 
       {/* Tabela de transações */}
       <Card>
-        <CardContent className="p-6">
+        <CardContent className="p-4 sm:p-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
             <h2 className="text-lg font-semibold text-gray-900">
               Todas as Transações ({sortedTransactions.length})
@@ -882,14 +965,19 @@ export default function Transacoes() {
               {editingTransaction ? "Editar Transação" : "Nova Transação"}
             </DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleSubmit} className="space-y-3 px-4 sm:px-6 pb-4 sm:pb-6 overflow-y-auto max-h-[calc(92vh-140px)] sm:max-h-[calc(90vh-140px)]">
+          <form
+            onSubmit={handleSubmit}
+            className="space-y-3 px-4 sm:px-6 pb-4 sm:pb-6 overflow-y-auto max-h-[calc(92vh-140px)] sm:max-h-[calc(90vh-140px)]"
+          >
             <div className="space-y-2">
               <Label htmlFor="description">Descrição</Label>
               <Input
                 id="description"
                 placeholder="Ex: Salário, Mercado, Investimento..."
                 value={formData.description}
-                onChange={(e) => handleInputChange("description", e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("description", e.target.value)
+                }
                 required
               />
             </div>
@@ -906,21 +994,30 @@ export default function Transacoes() {
                 </SelectTrigger>
                 <SelectContent>
                   {/* Receitas */}
-                  {categories.filter(cat => cat.transaction_type_id === 1).length > 0 && (
+                  {categories.filter((cat) => cat.transaction_type_id === 1)
+                    .length > 0 && (
                     <SelectGroup>
                       <SelectLabel className="text-green-600 font-bold text-xs uppercase">
                         Receitas
                       </SelectLabel>
                       {categories
-                        .filter(cat => cat.transaction_type_id === 1)
+                        .filter((cat) => cat.transaction_type_id === 1)
                         .map((category) => {
-                          const IconComponent = getIconComponent(category.icon || "Tag");
+                          const IconComponent = getIconComponent(
+                            category.icon || "Tag"
+                          );
                           return (
-                            <SelectItem key={category.id} value={category.id.toString()} className="pl-6">
+                            <SelectItem
+                              key={category.id}
+                              value={category.id.toString()}
+                              className="pl-6"
+                            >
                               <div className="flex items-center gap-2">
                                 <div
                                   className="w-6 h-6 rounded-md flex items-center justify-center"
-                                  style={{ backgroundColor: category.color + '20' }}
+                                  style={{
+                                    backgroundColor: category.color + "20",
+                                  }}
                                 >
                                   <IconComponent
                                     className="w-4 h-4"
@@ -936,21 +1033,30 @@ export default function Transacoes() {
                   )}
 
                   {/* Despesas */}
-                  {categories.filter(cat => cat.transaction_type_id === 2).length > 0 && (
+                  {categories.filter((cat) => cat.transaction_type_id === 2)
+                    .length > 0 && (
                     <SelectGroup>
                       <SelectLabel className="text-red-600 font-bold text-xs uppercase">
                         Despesas
                       </SelectLabel>
                       {categories
-                        .filter(cat => cat.transaction_type_id === 2)
+                        .filter((cat) => cat.transaction_type_id === 2)
                         .map((category) => {
-                          const IconComponent = getIconComponent(category.icon || "Tag");
+                          const IconComponent = getIconComponent(
+                            category.icon || "Tag"
+                          );
                           return (
-                            <SelectItem key={category.id} value={category.id.toString()} className="pl-6">
+                            <SelectItem
+                              key={category.id}
+                              value={category.id.toString()}
+                              className="pl-6"
+                            >
                               <div className="flex items-center gap-2">
                                 <div
                                   className="w-6 h-6 rounded-md flex items-center justify-center"
-                                  style={{ backgroundColor: category.color + '20' }}
+                                  style={{
+                                    backgroundColor: category.color + "20",
+                                  }}
                                 >
                                   <IconComponent
                                     className="w-4 h-4"
@@ -966,21 +1072,30 @@ export default function Transacoes() {
                   )}
 
                   {/* Aportes/Investimentos */}
-                  {categories.filter(cat => cat.transaction_type_id === 3).length > 0 && (
+                  {categories.filter((cat) => cat.transaction_type_id === 3)
+                    .length > 0 && (
                     <SelectGroup>
                       <SelectLabel className="text-blue-600 font-bold text-xs uppercase">
                         Aportes
                       </SelectLabel>
                       {categories
-                        .filter(cat => cat.transaction_type_id === 3)
+                        .filter((cat) => cat.transaction_type_id === 3)
                         .map((category) => {
-                          const IconComponent = getIconComponent(category.icon || "Tag");
+                          const IconComponent = getIconComponent(
+                            category.icon || "Tag"
+                          );
                           return (
-                            <SelectItem key={category.id} value={category.id.toString()} className="pl-6">
+                            <SelectItem
+                              key={category.id}
+                              value={category.id.toString()}
+                              className="pl-6"
+                            >
                               <div className="flex items-center gap-2">
                                 <div
                                   className="w-6 h-6 rounded-md flex items-center justify-center"
-                                  style={{ backgroundColor: category.color + '20' }}
+                                  style={{
+                                    backgroundColor: category.color + "20",
+                                  }}
                                 >
                                   <IconComponent
                                     className="w-4 h-4"
@@ -1034,7 +1149,9 @@ export default function Transacoes() {
 
             {/* Status de Pagamento */}
             <div className="space-y-2">
-              <Label htmlFor="status" className="text-sm">Status</Label>
+              <Label htmlFor="status" className="text-sm">
+                Status
+              </Label>
               <Select
                 value={formData.status}
                 onValueChange={(value) => handleInputChange("status", value)}
@@ -1061,10 +1178,17 @@ export default function Transacoes() {
 
             {/* Forma de Pagamento */}
             <div className="space-y-2">
-              <Label htmlFor="payment-method" className="text-sm">Pagamento (Opcional)</Label>
+              <Label htmlFor="payment-method" className="text-sm">
+                Pagamento (Opcional)
+              </Label>
               <Select
                 value={formData.payment_method || "none"}
-                onValueChange={(value) => handleInputChange("payment_method", value === "none" ? "" : value)}
+                onValueChange={(value) =>
+                  handleInputChange(
+                    "payment_method",
+                    value === "none" ? "" : value
+                  )
+                }
               >
                 <SelectTrigger id="payment-method" className="text-sm">
                   <SelectValue placeholder="Selecione..." />
@@ -1088,7 +1212,9 @@ export default function Transacoes() {
                   type="number"
                   placeholder="Atual"
                   value={formData.installments_current}
-                  onChange={(e) => handleInputChange("installments_current", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("installments_current", e.target.value)
+                  }
                   min="1"
                   className="text-sm"
                 />
@@ -1096,7 +1222,9 @@ export default function Transacoes() {
                   type="number"
                   placeholder="Total"
                   value={formData.installments_total}
-                  onChange={(e) => handleInputChange("installments_total", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("installments_total", e.target.value)
+                  }
                   min="1"
                   className="text-sm"
                 />
@@ -1109,21 +1237,36 @@ export default function Transacoes() {
                 <Checkbox
                   id="is-recurring"
                   checked={formData.is_recurring}
-                  onCheckedChange={(checked) => handleInputChange("is_recurring", checked)}
+                  onCheckedChange={(checked) =>
+                    handleInputChange("is_recurring", checked)
+                  }
                 />
-                <Label htmlFor="is-recurring" className="cursor-pointer text-sm font-medium">
+                <Label
+                  htmlFor="is-recurring"
+                  className="cursor-pointer text-sm font-medium"
+                >
                   Recorrente
                 </Label>
               </div>
 
               {formData.is_recurring && (
                 <div className="space-y-1.5 pl-6">
-                  <Label htmlFor="recurrence-frequency" className="text-xs text-gray-600">Frequência</Label>
+                  <Label
+                    htmlFor="recurrence-frequency"
+                    className="text-xs text-gray-600"
+                  >
+                    Frequência
+                  </Label>
                   <Select
                     value={formData.recurrence_frequency}
-                    onValueChange={(value) => handleInputChange("recurrence_frequency", value)}
+                    onValueChange={(value) =>
+                      handleInputChange("recurrence_frequency", value)
+                    }
                   >
-                    <SelectTrigger id="recurrence-frequency" className="text-sm h-9">
+                    <SelectTrigger
+                      id="recurrence-frequency"
+                      className="text-sm h-9"
+                    >
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -1146,7 +1289,11 @@ export default function Transacoes() {
             >
               Cancelar
             </Button>
-            <Button type="submit" onClick={handleSubmit} className="flex-1 sm:flex-none">
+            <Button
+              type="submit"
+              onClick={handleSubmit}
+              className="flex-1 sm:flex-none"
+            >
               {editingTransaction ? "Salvar" : "Adicionar"}
             </Button>
           </DialogFooter>
@@ -1184,7 +1331,9 @@ export default function Transacoes() {
           </DialogHeader>
           <div className="space-y-4">
             <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-              <h4 className="font-semibold text-blue-900 mb-2">Formato do arquivo CSV</h4>
+              <h4 className="font-semibold text-blue-900 mb-2">
+                Formato do arquivo CSV
+              </h4>
               <p className="text-sm text-blue-800 mb-3">
                 O arquivo deve conter as seguintes colunas (nesta ordem):
               </p>
@@ -1192,10 +1341,14 @@ export default function Transacoes() {
                 data,descrição,valor,categoria,tipo,status,notas
               </div>
               <p className="text-xs text-blue-700 mt-2">
-                • Data: formato AAAA-MM-DD (ex: 2024-01-15)<br />
-                • Valor: número positivo ou negativo (ex: 1500.00 ou -350.50)<br />
-                • Tipo: income, expense ou investment<br />
-                • Status: paid ou pending (opcional)<br />
+                • Data: formato AAAA-MM-DD (ex: 2024-01-15)
+                <br />
+                • Valor: número positivo ou negativo (ex: 1500.00 ou -350.50)
+                <br />
+                • Tipo: income, expense ou investment
+                <br />
+                • Status: paid ou pending (opcional)
+                <br />
               </p>
             </div>
 
@@ -1211,16 +1364,14 @@ export default function Transacoes() {
 
             <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
               <p className="text-sm text-amber-800">
-                <strong>Atenção:</strong> Esta funcionalidade está em desenvolvimento.
-                Por enquanto, as transações precisam ser adicionadas manualmente.
+                <strong>Atenção:</strong> Esta funcionalidade está em
+                desenvolvimento. Por enquanto, as transações precisam ser
+                adicionadas manualmente.
               </p>
             </div>
           </div>
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setImportModalOpen(false)}
-            >
+            <Button variant="outline" onClick={() => setImportModalOpen(false)}>
               Fechar
             </Button>
             <Button disabled>

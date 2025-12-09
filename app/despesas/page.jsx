@@ -52,8 +52,21 @@ import {
 } from "../../src/utils";
 import { exportToCSV } from "../../src/utils/exportData";
 import { getIconComponent } from "../../src/components/IconPicker";
-import { TRANSACTION_TYPE_IDS, PAYMENT_STATUS, PAYMENT_METHODS, DEFAULT_CATEGORY_COLOR } from "../../src/constants";
-import { Receipt, Plus, Trash2, TrendingDown, PieChart, Download, Copy } from "lucide-react";
+import {
+  TRANSACTION_TYPE_IDS,
+  PAYMENT_STATUS,
+  PAYMENT_METHODS,
+  DEFAULT_CATEGORY_COLOR,
+} from "../../src/constants";
+import {
+  Receipt,
+  Plus,
+  Trash2,
+  TrendingDown,
+  PieChart,
+  Download,
+  Copy,
+} from "lucide-react";
 
 /**
  * Página Despesas - Gerenciamento detalhado de despesas por categoria
@@ -194,7 +207,9 @@ export default function Despesas() {
         setExpenseToDelete(null);
       } catch (error) {
         console.error("Erro ao deletar despesa:", error);
-        alert("Erro ao deletar despesa. Verifique o console para mais detalhes.");
+        alert(
+          "Erro ao deletar despesa. Verifique o console para mais detalhes."
+        );
       }
     }
   };
@@ -205,10 +220,12 @@ export default function Despesas() {
     try {
       // Converter Date object para string YYYY-MM-DD
       const dateString = formData.date.toISOString().split("T")[0];
-      const paidDateString = formData.paid_date ? formData.paid_date.toISOString().split("T")[0] : null;
+      const paidDateString = formData.paid_date
+        ? formData.paid_date.toISOString().split("T")[0]
+        : null;
 
       // Buscar o ID da categoria pelo nome
-      const category = categories.find(c => c.name === formData.category);
+      const category = categories.find((c) => c.name === formData.category);
 
       // Processar parcelamento
       let installments = null;
@@ -320,12 +337,14 @@ export default function Despesas() {
         const category = categories.find(
           (c) => c.name === row.category || c.id === row.category.toLowerCase()
         );
-        const IconComponent = getIconComponent(category?.icon || row.category_icon || "Tag");
+        const IconComponent = getIconComponent(
+          category?.icon || row.category_icon || "Tag"
+        );
         return (
           <div className="flex items-center gap-2">
             <div
               className="p-1 rounded flex-shrink-0"
-              style={{ backgroundColor: (category?.color || "#64748b") + '20' }}
+              style={{ backgroundColor: (category?.color || "#64748b") + "20" }}
             >
               <IconComponent
                 className="w-4 h-4"
@@ -343,11 +362,7 @@ export default function Despesas() {
       key: "amount",
       label: "Valor",
       sortable: true,
-      render: (row) => (
-        <span>
-          {formatCurrency(row.amount)}
-        </span>
-      ),
+      render: (row) => <span>{formatCurrency(row.amount)}</span>,
     },
     {
       key: "date",
@@ -359,14 +374,21 @@ export default function Despesas() {
       key: "paid_date",
       label: "Data Pago",
       sortable: true,
-      render: (row) => row.paid_date ? formatDate(row.paid_date) : <span className="text-gray-400">-</span>,
+      render: (row) =>
+        row.paid_date ? (
+          formatDate(row.paid_date)
+        ) : (
+          <span className="text-gray-400">-</span>
+        ),
     },
     {
       key: "status",
       label: "Status",
       sortable: true,
       render: (row) => (
-        <Badge variant={row.status === PAYMENT_STATUS.PAID ? "success" : "warning"}>
+        <Badge
+          variant={row.status === PAYMENT_STATUS.PAID ? "success" : "warning"}
+        >
           {row.status === PAYMENT_STATUS.PAID ? "Pago" : "Pendente"}
         </Badge>
       ),
@@ -376,7 +398,9 @@ export default function Despesas() {
       label: "Pagamento",
       render: (row) => (
         <div className="text-sm">
-          <div className="font-medium text-gray-900">{row.payment_method || "-"}</div>
+          <div className="font-medium text-gray-900">
+            {row.payment_method || "-"}
+          </div>
           {row.installments && (
             <div className="text-gray-500 text-xs">
               {row.installments.current}/{row.installments.total}x
@@ -426,8 +450,7 @@ export default function Despesas() {
       <div className="flex items-center gap-3">
         <FilterButton
           activeFiltersCount={
-            (selectedCategory !== "all" ? 1 : 0) +
-            (filterMonth ? 1 : 0)
+            (selectedCategory !== "all" ? 1 : 0) + (filterMonth ? 1 : 0)
           }
           onClearFilters={() => {
             setSelectedCategory("all");
@@ -459,7 +482,7 @@ export default function Despesas() {
                         <div className="flex items-center gap-2">
                           <div
                             className="p-1 rounded"
-                            style={{ backgroundColor: cat.color + '20' }}
+                            style={{ backgroundColor: cat.color + "20" }}
                           >
                             <IconComponent
                               className="w-4 h-4"
@@ -511,7 +534,7 @@ export default function Despesas() {
 
       {/* Tabela de despesas */}
       <Card>
-        <CardContent className="p-6">
+        <CardContent className="p-4 sm:p-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
             <h2 className="text-lg font-semibold text-gray-900">
               {selectedCategory === "all"
@@ -584,7 +607,7 @@ export default function Despesas() {
                         <div className="flex items-center gap-2">
                           <div
                             className="p-1 rounded"
-                            style={{ backgroundColor: cat.color + '20' }}
+                            style={{ backgroundColor: cat.color + "20" }}
                           >
                             <IconComponent
                               className="w-4 h-4"
@@ -651,7 +674,9 @@ export default function Despesas() {
               <Label htmlFor="payment_method">Forma de Pagamento</Label>
               <Select
                 value={formData.payment_method}
-                onValueChange={(value) => handleInputChange("payment_method", value)}
+                onValueChange={(value) =>
+                  handleInputChange("payment_method", value)
+                }
               >
                 <SelectTrigger id="payment_method">
                   <SelectValue placeholder="Selecione a forma de pagamento" />
@@ -659,9 +684,15 @@ export default function Despesas() {
                 <SelectContent>
                   <SelectItem value="Dinheiro">Dinheiro</SelectItem>
                   <SelectItem value="Pix">Pix</SelectItem>
-                  <SelectItem value="Débito Automático">Débito Automático</SelectItem>
-                  <SelectItem value="Cartão de Crédito">Cartão de Crédito</SelectItem>
-                  <SelectItem value="Cartão de Débito">Cartão de Débito</SelectItem>
+                  <SelectItem value="Débito Automático">
+                    Débito Automático
+                  </SelectItem>
+                  <SelectItem value="Cartão de Crédito">
+                    Cartão de Crédito
+                  </SelectItem>
+                  <SelectItem value="Cartão de Débito">
+                    Cartão de Débito
+                  </SelectItem>
                   <SelectItem value="Boleto">Boleto</SelectItem>
                   <SelectItem value="Transferência">Transferência</SelectItem>
                 </SelectContent>
@@ -677,7 +708,9 @@ export default function Despesas() {
                   min="1"
                   placeholder="1"
                   value={formData.installments_current}
-                  onChange={(e) => handleInputChange("installments_current", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("installments_current", e.target.value)
+                  }
                 />
               </div>
               <div className="space-y-2">
@@ -688,13 +721,16 @@ export default function Despesas() {
                   min="1"
                   placeholder="1"
                   value={formData.installments_total}
-                  onChange={(e) => handleInputChange("installments_total", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("installments_total", e.target.value)
+                  }
                 />
               </div>
             </div>
             {formData.installments_current && formData.installments_total && (
               <p className="text-xs text-gray-500">
-                Parcela {formData.installments_current} de {formData.installments_total}
+                Parcela {formData.installments_current} de{" "}
+                {formData.installments_total}
               </p>
             )}
           </form>

@@ -252,13 +252,15 @@ export default function ContasPage() {
 
     return (
       <Card>
-        <CardContent className="p-6">
+        <CardContent className="p-4 sm:p-6">
           <div className="flex items-center gap-3 mb-6">
             <div className="p-2 bg-blue-100 rounded-lg">
               <Landmark className="w-5 h-5 text-blue-600" />
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-gray-900">Bancos e Contas</h2>
+              <h2 className="text-lg font-semibold text-gray-900">
+                Bancos e Contas
+              </h2>
               <p className="text-sm text-gray-500">
                 Gerencie suas contas bancárias ({banks.length})
               </p>
@@ -278,7 +280,7 @@ export default function ContasPage() {
                   <div className="flex items-start gap-3">
                     <div
                       className="flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center"
-                      style={{ backgroundColor: bank.color + '20' }}
+                      style={{ backgroundColor: bank.color + "20" }}
                     >
                       <IconComponent
                         className="w-6 h-6"
@@ -286,7 +288,9 @@ export default function ContasPage() {
                       />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-gray-900 truncate">{bank.name}</h3>
+                      <h3 className="font-semibold text-gray-900 truncate">
+                        {bank.name}
+                      </h3>
                       <p className="text-sm text-gray-500">
                         {getAccountTypeLabel(bank.account_type)}
                       </p>
@@ -295,11 +299,12 @@ export default function ContasPage() {
                           Ag: {bank.agency} • Cc: {bank.account}
                         </p>
                       )}
-                      {bank.initial_balance !== null && bank.initial_balance !== undefined && (
-                        <p className="text-sm font-medium text-gray-700 mt-2">
-                          {formatCurrency(bank.initial_balance)}
-                        </p>
-                      )}
+                      {bank.initial_balance !== null &&
+                        bank.initial_balance !== undefined && (
+                          <p className="text-sm font-medium text-gray-700 mt-2">
+                            {formatCurrency(bank.initial_balance)}
+                          </p>
+                        )}
                     </div>
                     <button
                       onClick={(e) => {
@@ -329,7 +334,7 @@ export default function ContasPage() {
 
     return (
       <Card>
-        <CardContent className="p-6">
+        <CardContent className="p-4 sm:p-6">
           <div className="flex items-center gap-3 mb-6">
             <div className="p-2 bg-purple-100 rounded-lg">
               <CreditCard className="w-5 h-5 text-purple-600" />
@@ -345,7 +350,7 @@ export default function ContasPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {cards.map((card) => {
               const IconComponent = getIconComponent(card.icon || "CreditCard");
-              const bank = banks.find(b => b.id === card.bank_id);
+              const bank = banks.find((b) => b.id === card.bank_id);
 
               return (
                 <div
@@ -356,7 +361,7 @@ export default function ContasPage() {
                   <div className="flex items-start gap-3">
                     <div
                       className="flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center"
-                      style={{ backgroundColor: card.color + '20' }}
+                      style={{ backgroundColor: card.color + "20" }}
                     >
                       <IconComponent
                         className="w-6 h-6"
@@ -364,7 +369,9 @@ export default function ContasPage() {
                       />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-gray-900 truncate">{card.name}</h3>
+                      <h3 className="font-semibold text-gray-900 truncate">
+                        {card.name}
+                      </h3>
                       <p className="text-sm text-gray-500">
                         {getCardTypeLabel(card.card_type)} • {card.card_brand}
                       </p>
@@ -378,11 +385,14 @@ export default function ContasPage() {
                           Limite: {formatCurrency(card.limit)}
                         </p>
                       )}
-                      {card.card_type === "credito" && card.closing_day && card.due_day && (
-                        <p className="text-xs text-gray-400 mt-1">
-                          Fecha dia {card.closing_day} • Vence dia {card.due_day}
-                        </p>
-                      )}
+                      {card.card_type === "credito" &&
+                        card.closing_day &&
+                        card.due_day && (
+                          <p className="text-xs text-gray-400 mt-1">
+                            Fecha dia {card.closing_day} • Vence dia{" "}
+                            {card.due_day}
+                          </p>
+                        )}
                     </div>
                     <button
                       onClick={(e) => {
@@ -481,7 +491,7 @@ export default function ContasPage() {
               >
                 <div
                   className="flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center"
-                  style={{ backgroundColor: bankFormData.color + '20' }}
+                  style={{ backgroundColor: bankFormData.color + "20" }}
                 >
                   {(() => {
                     const IconComponent = getIconComponent(bankFormData.icon);
@@ -493,7 +503,9 @@ export default function ContasPage() {
                     );
                   })()}
                 </div>
-                <span className="text-sm text-gray-600">Clique para escolher o ícone</span>
+                <span className="text-sm text-gray-600">
+                  Clique para escolher o ícone
+                </span>
               </button>
             </div>
 
@@ -524,7 +536,10 @@ export default function ContasPage() {
                   id="bank-account"
                   value={bankFormData.account}
                   onChange={(e) =>
-                    setBankFormData({ ...bankFormData, account: e.target.value })
+                    setBankFormData({
+                      ...bankFormData,
+                      account: e.target.value,
+                    })
                   }
                   placeholder="12345-6"
                 />
@@ -559,7 +574,10 @@ export default function ContasPage() {
                 step="0.01"
                 value={bankFormData.initial_balance}
                 onChange={(e) =>
-                  setBankFormData({ ...bankFormData, initial_balance: parseFloat(e.target.value) || 0 })
+                  setBankFormData({
+                    ...bankFormData,
+                    initial_balance: parseFloat(e.target.value) || 0,
+                  })
                 }
                 placeholder="0.00"
               />
@@ -573,9 +591,7 @@ export default function ContasPage() {
               >
                 Cancelar
               </Button>
-              <Button type="submit">
-                {editingBank ? "Salvar" : "Criar"}
-              </Button>
+              <Button type="submit">{editingBank ? "Salvar" : "Criar"}</Button>
             </DialogFooter>
           </form>
         </DialogContent>
@@ -616,7 +632,7 @@ export default function ContasPage() {
               >
                 <div
                   className="flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center"
-                  style={{ backgroundColor: cardFormData.color + '20' }}
+                  style={{ backgroundColor: cardFormData.color + "20" }}
                 >
                   {(() => {
                     const IconComponent = getIconComponent(cardFormData.icon);
@@ -628,7 +644,9 @@ export default function ContasPage() {
                     );
                   })()}
                 </div>
-                <span className="text-sm text-gray-600">Clique para escolher o ícone</span>
+                <span className="text-sm text-gray-600">
+                  Clique para escolher o ícone
+                </span>
               </button>
             </div>
 
@@ -675,7 +693,9 @@ export default function ContasPage() {
                     <SelectItem value="Visa">Visa</SelectItem>
                     <SelectItem value="Mastercard">Mastercard</SelectItem>
                     <SelectItem value="Elo">Elo</SelectItem>
-                    <SelectItem value="American Express">American Express</SelectItem>
+                    <SelectItem value="American Express">
+                      American Express
+                    </SelectItem>
                     <SelectItem value="Hipercard">Hipercard</SelectItem>
                     <SelectItem value="Outros">Outros</SelectItem>
                   </SelectContent>
@@ -686,9 +706,14 @@ export default function ContasPage() {
             <div className="space-y-2">
               <Label htmlFor="card-bank">Banco Associado (Opcional)</Label>
               <Select
-                value={cardFormData.bank_id ? String(cardFormData.bank_id) : "none"}
+                value={
+                  cardFormData.bank_id ? String(cardFormData.bank_id) : "none"
+                }
                 onValueChange={(value) =>
-                  setCardFormData({ ...cardFormData, bank_id: value === "none" ? null : parseInt(value) })
+                  setCardFormData({
+                    ...cardFormData,
+                    bank_id: value === "none" ? null : parseInt(value),
+                  })
                 }
               >
                 <SelectTrigger id="card-bank">
@@ -715,7 +740,10 @@ export default function ContasPage() {
                     step="0.01"
                     value={cardFormData.limit || ""}
                     onChange={(e) =>
-                      setCardFormData({ ...cardFormData, limit: parseFloat(e.target.value) || 0 })
+                      setCardFormData({
+                        ...cardFormData,
+                        limit: parseFloat(e.target.value) || 0,
+                      })
                     }
                     placeholder="0.00"
                   />
@@ -731,7 +759,10 @@ export default function ContasPage() {
                       max="31"
                       value={cardFormData.closing_day || ""}
                       onChange={(e) =>
-                        setCardFormData({ ...cardFormData, closing_day: parseInt(e.target.value) || 1 })
+                        setCardFormData({
+                          ...cardFormData,
+                          closing_day: parseInt(e.target.value) || 1,
+                        })
                       }
                       placeholder="10"
                     />
@@ -746,7 +777,10 @@ export default function ContasPage() {
                       max="31"
                       value={cardFormData.due_day || ""}
                       onChange={(e) =>
-                        setCardFormData({ ...cardFormData, due_day: parseInt(e.target.value) || 10 })
+                        setCardFormData({
+                          ...cardFormData,
+                          due_day: parseInt(e.target.value) || 10,
+                        })
                       }
                       placeholder="17"
                     />
@@ -763,9 +797,7 @@ export default function ContasPage() {
               >
                 Cancelar
               </Button>
-              <Button type="submit">
-                {editingCard ? "Salvar" : "Criar"}
-              </Button>
+              <Button type="submit">{editingCard ? "Salvar" : "Criar"}</Button>
             </DialogFooter>
           </form>
         </DialogContent>
@@ -775,7 +807,9 @@ export default function ContasPage() {
       <IconPickerModal
         open={iconPickerModalOpen}
         onOpenChange={setIconPickerModalOpen}
-        selectedIcon={iconPickerFor === "bank" ? bankFormData.icon : cardFormData.icon}
+        selectedIcon={
+          iconPickerFor === "bank" ? bankFormData.icon : cardFormData.icon
+        }
         onIconSelect={(iconName) => {
           if (iconPickerFor === "bank") {
             setBankFormData({ ...bankFormData, icon: iconName });
@@ -783,7 +817,9 @@ export default function ContasPage() {
             setCardFormData({ ...cardFormData, icon: iconName });
           }
         }}
-        color={iconPickerFor === "bank" ? bankFormData.color : cardFormData.color}
+        color={
+          iconPickerFor === "bank" ? bankFormData.color : cardFormData.color
+        }
       />
 
       {/* Floating Action Menu */}

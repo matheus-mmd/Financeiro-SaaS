@@ -19,7 +19,15 @@ import {
   updateCategory,
   deleteCategory,
 } from "../../src/utils/mockApi";
-import { Plus, Trash2, Tag, Download, TrendingUp, TrendingDown, Wallet } from "lucide-react";
+import {
+  Plus,
+  Trash2,
+  Tag,
+  Download,
+  TrendingUp,
+  TrendingDown,
+  Wallet,
+} from "lucide-react";
 import { getIconComponent } from "../../src/components/IconPicker";
 import ColorPicker from "../../src/components/ColorPicker";
 import IconPickerModal from "../../src/components/IconPickerModal";
@@ -68,9 +76,15 @@ export default function CategoriasPage() {
 
   // Separar categorias por tipo
   const categorizeByType = () => {
-    const incomeCategories = categories.filter(cat => cat.transaction_type_id === 1);
-    const expenseCategories = categories.filter(cat => cat.transaction_type_id === 2);
-    const assetCategories = categories.filter(cat => cat.transaction_type_id === 3);
+    const incomeCategories = categories.filter(
+      (cat) => cat.transaction_type_id === 1
+    );
+    const expenseCategories = categories.filter(
+      (cat) => cat.transaction_type_id === 2
+    );
+    const assetCategories = categories.filter(
+      (cat) => cat.transaction_type_id === 3
+    );
 
     return {
       income: incomeCategories,
@@ -134,22 +148,27 @@ export default function CategoriasPage() {
   };
 
   const getTransactionTypeById = (id) => {
-    return transactionTypes.find(t => t.id === id);
+    return transactionTypes.find((t) => t.id === id);
   };
 
   // Função para renderizar uma seção de categorias
-  const renderCategorySection = (sectionCategories, title, description, icon, iconColor, defaultType = null) => {
+  const renderCategorySection = (
+    sectionCategories,
+    title,
+    description,
+    icon,
+    iconColor,
+    defaultType = null
+  ) => {
     if (sectionCategories.length === 0) {
       return null;
     }
 
     return (
       <Card>
-        <CardContent className="p-6">
+        <CardContent className="p-4 sm:p-6">
           <div className="flex items-center gap-3 mb-6">
-            <div className={`p-2 ${iconColor} rounded-lg`}>
-              {icon}
-            </div>
+            <div className={`p-2 ${iconColor} rounded-lg`}>{icon}</div>
             <div>
               <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
               <p className="text-sm text-gray-500">
@@ -171,14 +190,16 @@ export default function CategoriasPage() {
                   <div className="flex items-center gap-3">
                     <div
                       className="flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center"
-                      style={{ backgroundColor: category.color + '20' }}
+                      style={{ backgroundColor: category.color + "20" }}
                     >
                       <IconComponent
                         className="w-5 h-5"
                         style={{ color: category.color }}
                       />
                     </div>
-                    <span className="font-semibold text-gray-900 flex-1 truncate">{category.name}</span>
+                    <span className="font-semibold text-gray-900 flex-1 truncate">
+                      {category.name}
+                    </span>
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
@@ -259,7 +280,10 @@ export default function CategoriasPage() {
                 id="category-name"
                 value={categoryFormData.name}
                 onChange={(e) =>
-                  setCategoryFormData({ ...categoryFormData, name: e.target.value })
+                  setCategoryFormData({
+                    ...categoryFormData,
+                    name: e.target.value,
+                  })
                 }
                 placeholder="Ex: Salário, Moradia, Alimentação..."
                 required
@@ -276,10 +300,12 @@ export default function CategoriasPage() {
               >
                 <div
                   className="flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center"
-                  style={{ backgroundColor: categoryFormData.color + '20' }}
+                  style={{ backgroundColor: categoryFormData.color + "20" }}
                 >
                   {(() => {
-                    const IconComponent = getIconComponent(categoryFormData.icon);
+                    const IconComponent = getIconComponent(
+                      categoryFormData.icon
+                    );
                     return (
                       <IconComponent
                         className="w-5 h-5"
@@ -288,7 +314,9 @@ export default function CategoriasPage() {
                     );
                   })()}
                 </div>
-                <span className="text-sm text-gray-600">Clique para escolher o ícone</span>
+                <span className="text-sm text-gray-600">
+                  Clique para escolher o ícone
+                </span>
               </button>
             </div>
 
