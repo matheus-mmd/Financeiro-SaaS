@@ -1,6 +1,6 @@
 "use client"
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Bar, BarChart, XAxis, YAxis, CartesianGrid } from "recharts"
 import {
   Card,
@@ -14,18 +14,34 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "../ui/chart"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select"
 import { formatCurrency } from '../../utils';
 
 /**
  * IncomeVsExpensesChart - Gráfico comparando Receitas x Despesas
- * Visualização mensal com gráfico de barras estilo shadcn/ui
+ * Visualização por período (semestral, trimestral, mensal) com gráfico de barras estilo shadcn/ui
  *
  * @param {Array} monthlyData - Dados mensais [{date, income, expense}, ...]
+ * @param {Array} quarterlyData - Dados trimestrais [{date, income, expense}, ...]
+ * @param {Array} semesterData - Dados semestrais [{date, income, expense}, ...]
  */
 export default function IncomeVsExpensesChart({
-  monthlyData = []
+  monthlyData = [],
+  quarterlyData = [],
+  semesterData = []
 }) {
-  const data = monthlyData;
+  const [period, setPeriod] = useState('monthly');
+
+  // Selecionar dados baseado no período escolhido
+  const data = period === 'monthly' ? monthlyData :
+               period === 'quarterly' ? quarterlyData :
+               semesterData;
 
   // Calcular totais
   const totalIncome = data.reduce((sum, item) => sum + (item.income || 0), 0);
@@ -53,21 +69,23 @@ export default function IncomeVsExpensesChart({
   return (
     <Card className="overflow-hidden border-0 shadow-sm">
       <CardHeader className="pb-4">
-        <CardTitle className="text-lg font-semibold text-gray-900">
-          Receitas x Despesas
-        </CardTitle>
-        <CardDescription className="flex items-center gap-4 mt-2">
-          <span className="text-sm text-gray-600">
-            Balanço: <span className={`font-semibold ${balance >= 0 ? 'text-success-600' : 'text-danger-600'}`}>
-              {formatCurrency(balance)}
-            </span>
-          </span>
-          <span className="text-sm text-gray-600">
-            Taxa de poupança: <span className={`font-semibold ${parseFloat(savingsRate) >= 0 ? 'text-success-600' : 'text-danger-600'}`}>
-              {savingsRate}%
-            </span>
-          </span>
-        </CardDescription>
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex-1">
+            <CardTitle className="text-lg font-semibold text-gray-900">
+              Receitas x Despesas
+            </CardTitle>
+          </div>
+          <Select value={period} onValueChange={setPeriod}>
+            <SelectTrigger className="w-[160px]">
+              <SelectValue placeholder="Selecione o período" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="monthly">Mensal</SelectItem>
+              <SelectItem value="quarterly">Trimestral</SelectItem>
+              <SelectItem value="semester">Semestral</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </CardHeader>
       <CardContent className="pb-6">
         {data.length > 0 ? (

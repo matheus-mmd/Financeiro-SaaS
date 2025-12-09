@@ -187,11 +187,11 @@ export default function Dashboard() {
     return sorted;
   }, [transactions, currentMonth]);
 
-  // Preparar dados para CategoryBreakdownCard - Receitas por Categoria
+  // Preparar dados para CategoryBreakdownCard - Receitas por Categoria (apenas receitas reais)
   const incomeByCategory = useMemo(() => {
     const currentMonthTransactions = transactions.filter(t =>
       t.date.startsWith(currentMonth) &&
-      (t.type_internal_name === 'income' || t.type_internal_name === 'investment')
+      t.type_internal_name === 'income'
     );
 
     const grouped = currentMonthTransactions.reduce((acc, transaction) => {
@@ -207,6 +207,34 @@ export default function Dashboard() {
           value: Math.abs(transaction.amount),
           color: category?.color || transaction.category_color || "#10b981",
           icon: category?.icon || transaction.category_icon || "Tag",
+        });
+      }
+      return acc;
+    }, []);
+
+    return grouped;
+  }, [transactions, currentMonth, categories]);
+
+  // Preparar dados para CategoryBreakdownCard - Investimentos/Aportes por Categoria
+  const investmentsByCategory = useMemo(() => {
+    const currentMonthTransactions = transactions.filter(t =>
+      t.date.startsWith(currentMonth) &&
+      t.type_internal_name === 'investment'
+    );
+
+    const grouped = currentMonthTransactions.reduce((acc, transaction) => {
+      const categoryName = transaction.category_name || 'Outros';
+      const existing = acc.find(item => item.name === categoryName);
+
+      if (existing) {
+        existing.value += Math.abs(transaction.amount);
+      } else {
+        const category = categories.find(c => c.name === categoryName || c.id === transaction.category_id);
+        acc.push({
+          name: categoryName,
+          value: Math.abs(transaction.amount),
+          color: category?.color || transaction.category_color || "#06b6d4",
+          icon: category?.icon || transaction.category_icon || "TrendingUp",
         });
       }
       return acc;
@@ -295,6 +323,83 @@ export default function Dashboard() {
         .reduce((sum, t) => sum + Math.abs(t.amount), 0);
 
       // Despesas vêm APENAS da tabela expenses (evita duplicação)
+      const monthExpense = expenses
+        .filter(e => e.date.startsWith(month))
+        .reduce((sum, e) => sum + e.amount, 0);
+
+      return {
+        date: monthName.charAt(0).toUpperCase() + monthName.slice(1),
+        income: monthIncome,
+        expense: monthExpense,
+      };
+    });
+  }, [transactions, expenses, currentMonth]);
+
+  // Preparar dados TRIMESTRAIS para IncomeVsExpensesChart (3 meses do trimestre atual)
+  const incomeVsExpensesQuarterlyData = useMemo(() => {
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonthNum = now.getMonth() + 1; // 1-12
+
+    // Determinar trimestre atual (Q1, Q2, Q3, Q4)
+    const currentQuarter = Math.ceil(currentMonthNum / 3);
+
+    // Meses do trimestre atual
+    const startMonth = (currentQuarter - 1) * 3 + 1;
+    const quarterMonths = [
+      `${currentYear}-${String(startMonth).padStart(2, '0')}`,
+      `${currentYear}-${String(startMonth + 1).padStart(2, '0')}`,
+      `${currentYear}-${String(startMonth + 2).padStart(2, '0')}`,
+    ];
+
+    return quarterMonths.map(month => {
+      const [year, monthNum] = month.split('-');
+      const monthName = new Date(year, monthNum - 1).toLocaleDateString('pt-BR', { month: 'short' });
+
+      // Receitas do mês
+      const monthIncome = transactions
+        .filter(t => t.date.startsWith(month) && t.type_internal_name === 'income')
+        .reduce((sum, t) => sum + Math.abs(t.amount), 0);
+
+      // Despesas do mês
+      const monthExpense = expenses
+        .filter(e => e.date.startsWith(month))
+        .reduce((sum, e) => sum + e.amount, 0);
+
+      return {
+        date: monthName.charAt(0).toUpperCase() + monthName.slice(1),
+        income: monthIncome,
+        expense: monthExpense,
+      };
+    });
+  }, [transactions, expenses, currentMonth]);
+
+  // Preparar dados SEMESTRAIS para IncomeVsExpensesChart (6 meses do semestre atual)
+  const incomeVsExpensesSemesterData = useMemo(() => {
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonthNum = now.getMonth() + 1; // 1-12
+
+    // Determinar semestre atual (1 ou 2)
+    const currentSemester = currentMonthNum <= 6 ? 1 : 2;
+
+    // Meses do semestre atual
+    const startMonth = currentSemester === 1 ? 1 : 7;
+    const semesterMonths = [];
+    for (let m = 0; m < 6; m++) {
+      semesterMonths.push(`${currentYear}-${String(startMonth + m).padStart(2, '0')}`);
+    }
+
+    return semesterMonths.map(month => {
+      const [year, monthNum] = month.split('-');
+      const monthName = new Date(year, monthNum - 1).toLocaleDateString('pt-BR', { month: 'short' });
+
+      // Receitas do mês
+      const monthIncome = transactions
+        .filter(t => t.date.startsWith(month) && t.type_internal_name === 'income')
+        .reduce((sum, t) => sum + Math.abs(t.amount), 0);
+
+      // Despesas do mês
       const monthExpense = expenses
         .filter(e => e.date.startsWith(month))
         .reduce((sum, e) => sum + e.amount, 0);
@@ -531,13 +636,15 @@ export default function Dashboard() {
       {/* 📈 GRÁFICOS E ANÁLISES */}
       <div className="space-y-4">
         <IncomeVsExpensesChart
-          dailyData={incomeVsExpensesDailyData}
-          monthlyData={incomeVsExpensesMonthlyData}
+          monthlyData={incomeVsExpensesDailyData}
+          quarterlyData={incomeVsExpensesQuarterlyData}
+          semesterData={incomeVsExpensesSemesterData}
         />
 
         <CategoryBreakdownCard
           incomeData={incomeByCategory}
           expenseData={currentMonthExpensesByCategory}
+          investmentData={investmentsByCategory}
         />
       </div>
 

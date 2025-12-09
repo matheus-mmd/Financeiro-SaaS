@@ -8,32 +8,39 @@ import { formatCurrency } from '../../utils';
 import { getIconComponent } from '../IconPicker';
 
 /**
- * CategoryBreakdownCard - Card com gráfico de donut mostrando receitas ou despesas por categoria
- * Design baseado em dashboards financeiros modernos com toggle entre receitas/despesas
+ * CategoryBreakdownCard - Card com gráfico de donut mostrando receitas, despesas ou investimentos por categoria
+ * Design baseado em dashboards financeiros modernos com toggle entre receitas/despesas/investimentos
  *
  * @param {Array} incomeData - Dados de receitas por categoria [{name, value, color}]
  * @param {Array} expenseData - Dados de despesas por categoria [{name, value, color}]
+ * @param {Array} investmentData - Dados de investimentos por categoria [{name, value, color}]
  * @param {string} title - Título opcional do card
  */
 export default function CategoryBreakdownCard({
   incomeData = [],
   expenseData = [],
+  investmentData = [],
   title = null
 }) {
   const [activeTab, setActiveTab] = useState('expenses');
   const [activeIndex, setActiveIndex] = useState(null);
 
-  const data = activeTab === 'income' ? incomeData : expenseData;
+  const data = activeTab === 'income' ? incomeData :
+               activeTab === 'investments' ? investmentData :
+               expenseData;
   const total = data.reduce((sum, item) => sum + item.value, 0);
 
-  // Cores padrão modernas para receitas (tons de verde/sucesso) e despesas (coloridas)
+  // Cores padrão modernas para receitas, despesas e investimentos
   const DEFAULT_INCOME_COLORS = ['#10b981', '#059669', '#06b6d4'];
   const DEFAULT_EXPENSE_COLORS = ['#3b82f6', '#a855f7', '#10b981', '#f59e0b', '#ef4444'];
+  const DEFAULT_INVESTMENT_COLORS = ['#06b6d4', '#0891b2', '#0e7490', '#155e75', '#164e63'];
 
   const getColor = (item, index) => {
     if (item.color) return item.color;
     return activeTab === 'income'
       ? DEFAULT_INCOME_COLORS[index % DEFAULT_INCOME_COLORS.length]
+      : activeTab === 'investments'
+      ? DEFAULT_INVESTMENT_COLORS[index % DEFAULT_INVESTMENT_COLORS.length]
       : DEFAULT_EXPENSE_COLORS[index % DEFAULT_EXPENSE_COLORS.length];
   };
 
@@ -47,9 +54,15 @@ export default function CategoryBreakdownCard({
     color: getColor(item, index)
   }));
 
-  const iconColor = activeTab === 'income' ? 'text-success-600' : 'text-accent-600';
-  const iconBgColor = activeTab === 'income' ? 'bg-success-100' : 'bg-accent-100';
-  const borderColor = activeTab === 'income' ? 'border-success-500' : 'border-accent-500';
+  const iconColor = activeTab === 'income' ? 'text-success-600' :
+                    activeTab === 'investments' ? 'text-info-600' :
+                    'text-accent-600';
+  const iconBgColor = activeTab === 'income' ? 'bg-success-100' :
+                      activeTab === 'investments' ? 'bg-info-100' :
+                      'bg-accent-100';
+  const borderColor = activeTab === 'income' ? 'border-success-500' :
+                      activeTab === 'investments' ? 'border-info-500' :
+                      'border-accent-500';
 
   return (
     <Card className="overflow-hidden border-0 shadow-sm">
@@ -57,10 +70,18 @@ export default function CategoryBreakdownCard({
         {/* Header com título e toggle */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <div className="flex items-start gap-3">
-            <div className={`w-2 h-2 rounded-full mt-2 ${activeTab === 'income' ? 'bg-success-500' : 'bg-accent-500'}`} />
+            <div className={`w-2 h-2 rounded-full mt-2 ${
+              activeTab === 'income' ? 'bg-success-500' :
+              activeTab === 'investments' ? 'bg-info-500' :
+              'bg-accent-500'
+            }`} />
             <div>
               <h2 className="text-lg font-semibold text-gray-900">
-                {title || (activeTab === 'income' ? 'Receitas por Categoria' : 'Gastos por Categoria')}
+                {title || (
+                  activeTab === 'income' ? 'Receitas por Categoria' :
+                  activeTab === 'investments' ? 'Investimentos por Categoria' :
+                  'Gastos por Categoria'
+                )}
               </h2>
               <p className="text-sm text-gray-500 mt-0.5">TOP 5 CATEGORIAS</p>
             </div>
@@ -69,7 +90,8 @@ export default function CategoryBreakdownCard({
           <SegmentedControl
             options={[
               { label: 'Despesas', value: 'expenses' },
-              { label: 'Receitas', value: 'income' }
+              { label: 'Receitas', value: 'income' },
+              { label: 'Investimentos', value: 'investments' }
             ]}
             value={activeTab}
             onChange={setActiveTab}
