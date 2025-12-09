@@ -24,26 +24,25 @@ export { getPreviousMonth };
 
 /**
  * Calcula dados financeiros de um mês específico
- * Usa type_internal_name para filtrar transações (income, expense, investment)
+ * Usa APENAS transactions como fonte única de verdade (dados não estão duplicados)
  */
-export const calculateMonthData = (transactions, expenses, month) => {
+export const calculateMonthData = (transactions, month) => {
   const monthTransactions = transactions.filter(t => t.date.startsWith(month));
-  const monthExpenses = expenses.filter(e => e.date.startsWith(month));
 
-  // Receitas: transações com type_internal_name === 'income'
+  // Receitas: APENAS transações com type_internal_name === 'income'
   const credits = monthTransactions
     .filter(t => t.type_internal_name === TRANSACTION_TYPES.INCOME)
     .reduce((sum, t) => sum + Math.abs(t.amount), 0);
 
-  // Débitos/Despesas Reais: transações com type_internal_name === 'expense'
+  // Débitos/Despesas Reais: APENAS transações com type_internal_name === 'expense'
   const debits = monthTransactions
     .filter(t => t.type_internal_name === TRANSACTION_TYPES.EXPENSE)
     .reduce((sum, t) => sum + Math.abs(t.amount), 0);
 
-  // Despesas Planejadas: do módulo de expenses (orçamento)
-  const plannedExpenses = monthExpenses.reduce((sum, e) => sum + e.amount, 0);
+  // Despesas Planejadas: mesmos valores (transactions é a fonte única)
+  const plannedExpenses = debits;
 
-  // Aportes/Investimentos: transações com type_internal_name === 'investment'
+  // Aportes/Investimentos: APENAS transações com type_internal_name === 'investment'
   const investments = monthTransactions
     .filter(t => t.type_internal_name === TRANSACTION_TYPES.INVESTMENT)
     .reduce((sum, t) => sum + Math.abs(t.amount), 0);
@@ -188,7 +187,7 @@ export const generateAlerts = (currentMonthData, previousMonthData, projectionDa
  * 4. Projetamos os gastos futuros (média diária × dias restantes)
  * 5. Calculamos o saldo final esperado: receitas - gastos totais - aportes
  */
-export const calculateMonthEndProjection = (transactions, expenses, currentMonth) => {
+export const calculateMonthEndProjection = (transactions, currentMonth) => {
   const now = new Date();
   const [year, month] = currentMonth.split('-').map(Number);
 
@@ -199,7 +198,7 @@ export const calculateMonthEndProjection = (transactions, expenses, currentMonth
   const daysPassed = currentDay; // Dias que já passaram
 
   // PASSO 2: Buscar dados reais do mês até agora
-  const monthData = calculateMonthData(transactions, expenses, currentMonth);
+  const monthData = calculateMonthData(transactions, currentMonth);
 
   const confirmedIncome = monthData.credits; // Receitas já recebidas
   const currentExpenses = monthData.expenses; // Despesas já realizadas

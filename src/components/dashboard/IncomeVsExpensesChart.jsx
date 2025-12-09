@@ -24,12 +24,12 @@ import {
 import { formatCurrency } from '../../utils';
 
 /**
- * IncomeVsExpensesChart - Gráfico comparando Receitas x Despesas
+ * IncomeVsExpensesChart - Gráfico comparando Receitas x Despesas x Aportes
  * Visualização por período (semestral, trimestral, mensal) com gráfico de barras estilo shadcn/ui
  *
- * @param {Array} monthlyData - Dados mensais [{date, income, expense}, ...]
- * @param {Array} quarterlyData - Dados trimestrais [{date, income, expense}, ...]
- * @param {Array} semesterData - Dados semestrais [{date, income, expense}, ...]
+ * @param {Array} monthlyData - Dados mensais [{date, income, expense, investment}, ...]
+ * @param {Array} quarterlyData - Dados trimestrais [{date, income, expense, investment}, ...]
+ * @param {Array} semesterData - Dados semestrais [{date, income, expense, investment}, ...]
  */
 export default function IncomeVsExpensesChart({
   monthlyData = [],
@@ -46,8 +46,9 @@ export default function IncomeVsExpensesChart({
   // Calcular totais
   const totalIncome = data.reduce((sum, item) => sum + (item.income || 0), 0);
   const totalExpense = data.reduce((sum, item) => sum + (item.expense || 0), 0);
-  const balance = totalIncome - totalExpense;
-  const savingsRate = totalIncome > 0 ? ((balance / totalIncome) * 100).toFixed(1) : '0.0';
+  const totalInvestment = data.reduce((sum, item) => sum + (item.investment || 0), 0);
+  const balance = totalIncome - totalExpense - totalInvestment;
+  const savingsRate = totalIncome > 0 ? (((totalInvestment + balance) / totalIncome) * 100).toFixed(1) : '0.0';
 
   // Configuração do chart seguindo padrão shadcn
   const chartConfig = {
@@ -58,6 +59,10 @@ export default function IncomeVsExpensesChart({
     expense: {
       label: "Despesas",
       color: "#ef4444", // red-500
+    },
+    investment: {
+      label: "Aportes",
+      color: "#3b82f6", // blue-500
     },
   }
 
@@ -72,7 +77,7 @@ export default function IncomeVsExpensesChart({
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1">
             <CardTitle className="text-lg font-semibold text-gray-900">
-              Receitas x Despesas
+              Receitas x Despesas x Aportes
             </CardTitle>
           </div>
           <Select value={period} onValueChange={setPeriod}>
@@ -104,6 +109,10 @@ export default function IncomeVsExpensesChart({
                   <stop offset="5%" stopColor="#ef4444" stopOpacity={0.8}/>
                   <stop offset="95%" stopColor="#ef4444" stopOpacity={0.6}/>
                 </linearGradient>
+                <linearGradient id="colorInvestment" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8}/>
+                  <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.6}/>
+                </linearGradient>
               </defs>
 
               <CartesianGrid
@@ -133,30 +142,40 @@ export default function IncomeVsExpensesChart({
 
               <Bar
                 dataKey="income"
-                stackId="a"
                 fill="url(#colorIncome)"
-                radius={[0, 0, 4, 4]}
+                radius={[4, 4, 0, 0]}
               />
               <Bar
                 dataKey="expense"
-                stackId="a"
                 fill="url(#colorExpense)"
+                radius={[4, 4, 0, 0]}
+              />
+              <Bar
+                dataKey="investment"
+                fill="url(#colorInvestment)"
                 radius={[4, 4, 0, 0]}
               />
 
               <ChartTooltip
                 content={
                   <ChartTooltipContent
-                    formatter={(value, name) => (
-                      <div className="flex items-center justify-between gap-4 w-full">
-                        <span className="text-xs font-medium text-gray-600">
-                          {name === "income" ? "Receitas" : "Despesas"}
-                        </span>
-                        <span className="text-sm font-bold text-gray-900">
-                          {formatValue(value)}
-                        </span>
-                      </div>
-                    )}
+                    formatter={(value, name) => {
+                      const labels = {
+                        income: "Receitas",
+                        expense: "Despesas",
+                        investment: "Aportes"
+                      };
+                      return (
+                        <div className="flex items-center justify-between gap-4 w-full">
+                          <span className="text-xs font-medium text-gray-600">
+                            {labels[name] || name}
+                          </span>
+                          <span className="text-sm font-bold text-gray-900">
+                            {formatValue(value)}
+                          </span>
+                        </div>
+                      );
+                    }}
                   />
                 }
                 cursor={{ fill: 'rgba(148, 163, 184, 0.1)' }}
