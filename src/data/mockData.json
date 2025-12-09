@@ -167,6 +167,16 @@
     {"id": 2, "user_id": "550e8400-e29b-41d4-a716-446655440000", "title": "Reserva de emergência", "goal": 25000.00, "progress": 2500.00, "status": "in_progress", "date": "2025-01-01", "created_at": "2025-01-01T10:00:00Z", "updated_at": "2025-01-01T10:00:00Z"},
     {"id": 3, "user_id": "550e8400-e29b-41d4-a716-446655440000", "title": "Fundo Viagem 2026", "goal": 8000.00, "progress": 1250.00, "status": "in_progress", "date": "2025-01-01", "created_at": "2025-01-01T10:00:00Z", "updated_at": "2025-01-01T10:00:00Z"}
   ],
+  "banks": [
+    {"id": 1, "user_id": "550e8400-e29b-41d4-a716-446655440000", "name": "Nubank", "icon_id": 1, "color": "#8A05BE", "agency": "0001", "account": "12345678-9", "account_type": "corrente", "initial_balance": 5000.00, "created_at": "2025-01-01T10:00:00Z", "updated_at": "2025-01-01T10:00:00Z"},
+    {"id": 2, "user_id": "550e8400-e29b-41d4-a716-446655440000", "name": "Banco Inter", "icon_id": 2, "color": "#FF7A00", "agency": "0001", "account": "98765432-1", "account_type": "poupanca", "initial_balance": 3000.00, "created_at": "2025-01-01T10:00:00Z", "updated_at": "2025-01-01T10:00:00Z"},
+    {"id": 3, "user_id": "550e8400-e29b-41d4-a716-446655440000", "name": "Caixa Econômica", "icon_id": 75, "color": "#0066B3", "agency": "1234", "account": "00012345-6", "account_type": "poupanca", "initial_balance": 10000.00, "created_at": "2025-01-01T10:00:00Z", "updated_at": "2025-01-01T10:00:00Z"}
+  ],
+  "cards": [
+    {"id": 1, "user_id": "550e8400-e29b-41d4-a716-446655440000", "name": "Nubank Crédito", "icon_id": 4, "color": "#8A05BE", "card_type": "credito", "card_brand": "Mastercard", "limit": 5000.00, "closing_day": 10, "due_day": 17, "bank_id": 1, "created_at": "2025-01-01T10:00:00Z", "updated_at": "2025-01-01T10:00:00Z"},
+    {"id": 2, "user_id": "550e8400-e29b-41d4-a716-446655440000", "name": "Inter Débito", "icon_id": 4, "color": "#FF7A00", "card_type": "debito", "card_brand": "Visa", "limit": null, "closing_day": null, "due_day": null, "bank_id": 2, "created_at": "2025-01-01T10:00:00Z", "updated_at": "2025-01-01T10:00:00Z"},
+    {"id": 3, "user_id": "550e8400-e29b-41d4-a716-446655440000", "name": "Santander Black", "icon_id": 4, "color": "#EC0000", "card_type": "credito", "card_brand": "Visa", "limit": 8000.00, "closing_day": 15, "due_day": 22, "bank_id": null, "created_at": "2025-01-01T10:00:00Z", "updated_at": "2025-01-01T10:00:00Z"}
+  ],
   "transactions": [
     {"id": 1, "user_id": "550e8400-e29b-41d4-a716-446655440000", "category_id": 1, "transaction_type_id": 1, "date": "2025-07-01", "description": "Salário Matheus", "amount": 2840.3, "notes": null, "status": "paid", "payment_method": "Transferência", "installments": null, "is_recurring": true, "recurrence_frequency": "monthly", "created_at": "2025-07-01T10:00:00Z", "updated_at": "2025-07-01T10:00:00Z"},
     {"id": 2, "user_id": "550e8400-e29b-41d4-a716-446655440000", "category_id": 1, "transaction_type_id": 1, "date": "2025-07-01", "description": "Salário Nayanna", "amount": 3517.2, "notes": null, "status": "paid", "payment_method": "Transferência", "installments": null, "is_recurring": true, "recurrence_frequency": "monthly", "created_at": "2025-07-01T10:00:00Z", "updated_at": "2025-07-01T10:00:00Z"},

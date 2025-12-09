@@ -12,6 +12,7 @@ import {
   Layers,
   PiggyBank,
   X,
+  Landmark,
 } from "lucide-react";
 import {
   Tooltip,
@@ -51,6 +52,7 @@ export default function Sidebar({
     { path: "/receitas", icon: TrendingUp, label: "Receitas" },
     { path: "/patrimonio-ativos", icon: PiggyBank, label: "Patrimônio" },
     { path: "/metas", icon: Target, label: "Metas" },
+    { path: "/contas", icon: Landmark, label: "Contas" },
     { path: "/categorias", icon: Layers, label: "Categorias" },
   ];
 

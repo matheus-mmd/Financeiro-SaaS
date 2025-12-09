@@ -15,6 +15,8 @@ let mockDatabase = {
   categories: [...mockData.categories],
   transactionTypes: [...mockData.transactionTypes],
   users: [...mockData.users],
+  banks: [...mockData.banks],
+  cards: [...mockData.cards],
 };
 
 // Função para resetar o banco de dados mock
@@ -29,6 +31,8 @@ export const resetMockDatabase = () => {
     categories: [...mockData.categories],
     transactionTypes: [...mockData.transactionTypes],
     users: [...mockData.users],
+    banks: [...mockData.banks],
+    cards: [...mockData.cards],
   };
 };
 
@@ -138,6 +142,39 @@ const enrichTransactions = (transactions) => {
 };
 
 /**
+ * Enriquece banks com dados de ícone
+ */
+const enrichBankWithIcon = (bank) => {
+  if (!bank) return null;
+
+  const icon = mockDatabase.icons.find((i) => i.id === bank.icon_id);
+  return {
+    ...bank,
+    icon: icon?.name || "Wallet",
+    icon_name: icon?.name || "Wallet",
+  };
+};
+
+/**
+ * Enriquece cards com dados de ícone e banco
+ */
+const enrichCardWithIcon = (card) => {
+  if (!card) return null;
+
+  const icon = mockDatabase.icons.find((i) => i.id === card.icon_id);
+  const bank = card.bank_id
+    ? mockDatabase.banks.find((b) => b.id === card.bank_id)
+    : null;
+
+  return {
+    ...card,
+    icon: icon?.name || "CreditCard",
+    icon_name: icon?.name || "CreditCard",
+    bank_name: bank?.name || null,
+  };
+};
+
+/**
  * Função genérica para "buscar" dados mock
  * @param {string} endpoint - Caminho da API mock
  * @returns {Promise} - Retorna os dados correspondentes
@@ -155,6 +192,8 @@ export const fetchData = async (endpoint) => {
     "/api/transactions": enrichTransactions(mockDatabase.transactions),
     "/api/categories": mockDatabase.categories.map(enrichCategoryWithIcon),
     "/api/transactionTypes": mockDatabase.transactionTypes,
+    "/api/banks": mockDatabase.banks.map(enrichBankWithIcon),
+    "/api/cards": mockDatabase.cards.map(enrichCardWithIcon),
     // assetTypes agora retorna categories com transactionType = 3 (Aporte) para compatibilidade
     "/api/assetTypes": mockDatabase.categories
       .filter(c => c.transaction_type_id === 3)
@@ -598,4 +637,162 @@ export const removeTransactionTypeFromCategory = async (categoryId, transactionT
   category.updated_at = new Date().toISOString();
 
   return category;
+};
+
+// =====================================================
+// FUNÇÕES CRUD PARA BANKS
+// =====================================================
+
+export const createBank = async (bank, userId = null) => {
+  await delay();
+
+  // Se receber icon (string), buscar o icon_id correspondente
+  let iconId = bank.icon_id;
+  if (!iconId && bank.icon) {
+    const icon = mockDatabase.icons.find((i) => i.name === bank.icon);
+    iconId = icon?.id || 1; // 1 é o ID do ícone "Wallet" (padrão)
+  }
+  if (!iconId) {
+    iconId = 1; // Ícone padrão "Wallet"
+  }
+
+  const newBank = {
+    id: Math.max(...mockDatabase.banks.map((b) => b.id), 0) + 1,
+    user_id: userId || mockDatabase.users[0]?.id,
+    name: bank.name,
+    icon_id: iconId,
+    color: bank.color || "#6366f1",
+    agency: bank.agency || "",
+    account: bank.account || "",
+    account_type: bank.account_type || "corrente",
+    initial_balance: bank.initial_balance || 0,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  };
+
+  mockDatabase.banks.push(newBank);
+  return enrichBankWithIcon(newBank);
+};
+
+export const updateBank = async (id, updates) => {
+  await delay();
+
+  const index = mockDatabase.banks.findIndex((b) => b.id === id);
+  if (index === -1) {
+    throw new Error("Banco não encontrado");
+  }
+
+  // Se receber icon (string), buscar o icon_id correspondente
+  let iconId = updates.icon_id;
+  if (!iconId && updates.icon) {
+    const icon = mockDatabase.icons.find((i) => i.name === updates.icon);
+    iconId = icon?.id;
+  }
+
+  mockDatabase.banks[index] = {
+    ...mockDatabase.banks[index],
+    name: updates.name !== undefined ? updates.name : mockDatabase.banks[index].name,
+    icon_id: iconId !== undefined ? iconId : mockDatabase.banks[index].icon_id,
+    color: updates.color !== undefined ? updates.color : mockDatabase.banks[index].color,
+    agency: updates.agency !== undefined ? updates.agency : mockDatabase.banks[index].agency,
+    account: updates.account !== undefined ? updates.account : mockDatabase.banks[index].account,
+    account_type: updates.account_type !== undefined ? updates.account_type : mockDatabase.banks[index].account_type,
+    initial_balance: updates.initial_balance !== undefined ? updates.initial_balance : mockDatabase.banks[index].initial_balance,
+    updated_at: new Date().toISOString(),
+  };
+
+  return enrichBankWithIcon(mockDatabase.banks[index]);
+};
+
+export const deleteBank = async (id) => {
+  await delay();
+
+  const index = mockDatabase.banks.findIndex((b) => b.id === id);
+  if (index === -1) {
+    throw new Error("Banco não encontrado");
+  }
+
+  mockDatabase.banks.splice(index, 1);
+  return true;
+};
+
+// =====================================================
+// FUNÇÕES CRUD PARA CARDS
+// =====================================================
+
+export const createCard = async (card, userId = null) => {
+  await delay();
+
+  // Se receber icon (string), buscar o icon_id correspondente
+  let iconId = card.icon_id;
+  if (!iconId && card.icon) {
+    const icon = mockDatabase.icons.find((i) => i.name === card.icon);
+    iconId = icon?.id || 4; // 4 é o ID do ícone "CreditCard" (padrão)
+  }
+  if (!iconId) {
+    iconId = 4; // Ícone padrão "CreditCard"
+  }
+
+  const newCard = {
+    id: Math.max(...mockDatabase.cards.map((c) => c.id), 0) + 1,
+    user_id: userId || mockDatabase.users[0]?.id,
+    name: card.name,
+    icon_id: iconId,
+    color: card.color || "#6366f1",
+    card_type: card.card_type || "credito",
+    card_brand: card.card_brand || "Visa",
+    limit: card.limit || null,
+    closing_day: card.closing_day || null,
+    due_day: card.due_day || null,
+    bank_id: card.bank_id || null,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  };
+
+  mockDatabase.cards.push(newCard);
+  return enrichCardWithIcon(newCard);
+};
+
+export const updateCard = async (id, updates) => {
+  await delay();
+
+  const index = mockDatabase.cards.findIndex((c) => c.id === id);
+  if (index === -1) {
+    throw new Error("Cartão não encontrado");
+  }
+
+  // Se receber icon (string), buscar o icon_id correspondente
+  let iconId = updates.icon_id;
+  if (!iconId && updates.icon) {
+    const icon = mockDatabase.icons.find((i) => i.name === updates.icon);
+    iconId = icon?.id;
+  }
+
+  mockDatabase.cards[index] = {
+    ...mockDatabase.cards[index],
+    name: updates.name !== undefined ? updates.name : mockDatabase.cards[index].name,
+    icon_id: iconId !== undefined ? iconId : mockDatabase.cards[index].icon_id,
+    color: updates.color !== undefined ? updates.color : mockDatabase.cards[index].color,
+    card_type: updates.card_type !== undefined ? updates.card_type : mockDatabase.cards[index].card_type,
+    card_brand: updates.card_brand !== undefined ? updates.card_brand : mockDatabase.cards[index].card_brand,
+    limit: updates.limit !== undefined ? updates.limit : mockDatabase.cards[index].limit,
+    closing_day: updates.closing_day !== undefined ? updates.closing_day : mockDatabase.cards[index].closing_day,
+    due_day: updates.due_day !== undefined ? updates.due_day : mockDatabase.cards[index].due_day,
+    bank_id: updates.bank_id !== undefined ? updates.bank_id : mockDatabase.cards[index].bank_id,
+    updated_at: new Date().toISOString(),
+  };
+
+  return enrichCardWithIcon(mockDatabase.cards[index]);
+};
+
+export const deleteCard = async (id) => {
+  await delay();
+
+  const index = mockDatabase.cards.findIndex((c) => c.id === id);
+  if (index === -1) {
+    throw new Error("Cartão não encontrado");
+  }
+
+  mockDatabase.cards.splice(index, 1);
+  return true;
 };
