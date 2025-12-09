@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { ChevronUp, ChevronDown, Settings, GripVertical } from 'lucide-react';
+import { ChevronUp, ChevronDown, Settings, GripVertical, RotateCcw } from 'lucide-react';
 import {
   DndContext,
   closestCenter,
@@ -198,14 +198,15 @@ export default function Table({
       <div
         ref={setNodeRef}
         style={style}
-        className="flex items-center gap-2"
+        className={`flex items-center gap-1 rounded-md ${isDragging ? 'bg-accent/50 shadow-lg' : ''}`}
       >
         <div
           {...attributes}
           {...listeners}
-          className="cursor-grab active:cursor-grabbing p-1 hover:bg-gray-100 rounded"
+          className="cursor-grab active:cursor-grabbing p-1.5 hover:bg-accent/50 rounded transition-colors"
+          title="Arraste para reordenar"
         >
-          <GripVertical className="w-4 h-4 text-gray-400" />
+          <GripVertical className="w-4 h-4 text-muted-foreground" />
         </div>
         <DropdownMenuCheckboxItem
           checked={visible}
@@ -213,8 +214,14 @@ export default function Table({
           disabled={required}
           className="flex-1"
         >
-          {col.label}
-          {required && <span className="ml-2 text-xs text-gray-500">(obrigatório)</span>}
+          <span className={visible ? 'font-medium' : 'text-muted-foreground'}>
+            {col.label}
+          </span>
+          {required && (
+            <span className="ml-2 text-xs text-muted-foreground italic">
+              (obrigatório)
+            </span>
+          )}
         </DropdownMenuCheckboxItem>
       </div>
     );
@@ -254,18 +261,33 @@ export default function Table({
       .map(key => columns.find(col => col.key === key))
       .filter(Boolean);
 
+    const visibleCount = columnOrder.visible.length;
+    const totalCount = columns.length;
+
     return (
       <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
         <DropdownMenuTrigger asChild>
-          <Button variant="outline" size="sm" className="gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-2 h-9 hover:bg-accent hover:text-accent-foreground transition-colors"
+          >
             <Settings className="w-4 h-4" />
-            Colunas
+            <span className="hidden sm:inline">Colunas</span>
+            <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-medium rounded-full bg-primary/10 text-primary">
+              {visibleCount}/{totalCount}
+            </span>
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-64">
           <DropdownMenuLabel>
-            Colunas Visíveis
-            <p className="text-xs text-gray-500 font-normal mt-1">
+            <div className="flex items-center justify-between">
+              <span>Colunas Visíveis</span>
+              <span className="text-xs font-normal text-muted-foreground">
+                {visibleCount} de {totalCount}
+              </span>
+            </div>
+            <p className="text-xs text-muted-foreground font-normal mt-1">
               Arraste para reordenar
             </p>
           </DropdownMenuLabel>
@@ -298,8 +320,10 @@ export default function Table({
               order: columns.map(c => c.key),
               visible: columns.map(c => c.key)
             })}
+            className="gap-2"
           >
-            Restaurar Padrão
+            <RotateCcw className="w-4 h-4" />
+            <span>Restaurar Padrão</span>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -308,13 +332,6 @@ export default function Table({
 
   return (
     <div className="w-full">
-      {/* Controle de Colunas - Topo Superior Direito */}
-      {tableId && (
-        <div className="flex justify-end mb-3">
-          <ColumnSelector />
-        </div>
-      )}
-
       {/* Tabela responsiva com overflow controlado */}
       <div className="rounded-lg border overflow-x-auto">
         <ShadcnTable>
@@ -336,6 +353,14 @@ export default function Table({
                   </div>
                 </TableHead>
               ))}
+              {/* Controle de Colunas - Alinhado com headers */}
+              {tableId && (
+                <TableHead className="w-[140px]">
+                  <div className="flex items-center justify-end">
+                    <ColumnSelector />
+                  </div>
+                </TableHead>
+              )}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -350,6 +375,8 @@ export default function Table({
                     {column.render ? column.render(row) : row[column.key]}
                   </TableCell>
                 ))}
+                {/* Célula vazia para alinhar com botão de colunas */}
+                {tableId && <TableCell />}
               </TableRow>
             ))}
           </TableBody>
