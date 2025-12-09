@@ -2,7 +2,6 @@
 
 import React from 'react';
 import { Menu, Bell, PanelLeftClose, PanelLeft } from 'lucide-react';
-import GlobalSearch from './GlobalSearch';
 
 /**
  * Componente Topbar - Barra superior moderna
@@ -46,13 +45,8 @@ export default function Topbar({
           </button>
         </div>
 
-        {/* Center - Global Search */}
-        <div className="flex-1 max-w-xl">
-          <GlobalSearch />
-        </div>
-
         {/* Right section - Notifications */}
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex-1 flex items-center justify-end gap-2 sm:gap-3">
           {/* Notifications button (placeholder) */}
           <button
             className="relative flex items-center justify-center w-10 h-10 rounded-xl text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-all duration-200"

@@ -36,7 +36,7 @@ export default function IncomeVsExpensesChart({
   quarterlyData = [],
   semesterData = []
 }) {
-  const [period, setPeriod] = useState('monthly');
+  const [period, setPeriod] = useState('semester');
 
   // Selecionar dados baseado no período escolhido
   const data = period === 'monthly' ? monthlyData :

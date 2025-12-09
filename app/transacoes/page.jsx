@@ -65,12 +65,10 @@ import {
   Trash2,
   Download,
   Copy,
-  Search,
   Upload,
   Repeat,
   CheckCircle2,
   Clock,
-  X,
 } from "lucide-react";
 
 /**
@@ -89,7 +87,6 @@ export default function Transacoes() {
   const [filterCategory, setFilterCategory] = useState("all");
   const [filterTransactionType, setFilterTransactionType] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
-  const [searchTerm, setSearchTerm] = useState("");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [transactionToDelete, setTransactionToDelete] = useState(null);
   const [filterMonth, setFilterMonth] = useState(getCurrentMonthRange());
@@ -167,21 +164,8 @@ export default function Transacoes() {
       filtered = filtered.filter((t) => isDateInRange(t.date, filterMonth));
     }
 
-    // Filtrar por busca (descrição, categoria, notas)
-    if (searchTerm) {
-      const search = searchTerm.toLowerCase();
-      filtered = filtered.filter((t) => {
-        return (
-          t.description?.toLowerCase().includes(search) ||
-          t.category_name?.toLowerCase().includes(search) ||
-          t.notes?.toLowerCase().includes(search) ||
-          formatCurrency(Math.abs(t.amount)).includes(search)
-        );
-      });
-    }
-
     setFilteredTransactions(filtered);
-  }, [filterCategory, filterTransactionType, filterStatus, filterMonth, searchTerm, transactions]);
+  }, [filterCategory, filterTransactionType, filterStatus, filterMonth, transactions]);
 
   const handleAddTransaction = () => {
     setEditingTransaction(null);
@@ -685,38 +669,16 @@ export default function Transacoes() {
         description="Gerencie todas as suas transações financeiras"
       />
 
-      {/* Busca e Ações em Lote */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-        {/* Campo de Busca */}
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-          <Input
-            type="text"
-            placeholder="Buscar por descrição, categoria, valor ou observações..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
-          {searchTerm && (
-            <button
-              onClick={() => setSearchTerm("")}
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          )}
-        </div>
-
-        {/* Ações em Lote */}
-        {selectedTransactions.length > 0 && (
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-600 whitespace-nowrap">
-              {selectedTransactions.length} selecionada(s)
-            </span>
-            <Button
-              variant="destructive"
-              size="sm"
-              onClick={handleBulkDelete}
+      {/* Ações em Lote */}
+      {selectedTransactions.length > 0 && (
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-gray-600 whitespace-nowrap">
+            {selectedTransactions.length} selecionada(s)
+          </span>
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={handleBulkDelete}
             >
               <Trash2 className="w-4 h-4 mr-1" />
               Deletar
@@ -730,7 +692,6 @@ export default function Transacoes() {
             </Button>
           </div>
         )}
-      </div>
 
       {/* Filtros */}
       <div className="flex items-center gap-3">
