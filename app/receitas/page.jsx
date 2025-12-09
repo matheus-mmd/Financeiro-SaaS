@@ -51,19 +51,8 @@ import { exportToCSV } from "../../src/utils/exportData";
 import { getIconComponent } from "../../src/components/IconPicker";
 import FilterButton from "../../src/components/FilterButton";
 import FABMenu from "../../src/components/FABMenu";
-import {
-  TRANSACTION_TYPE_IDS,
-  DEFAULT_CATEGORY_COLOR,
-} from "../../src/constants";
-import {
-  Receipt,
-  Plus,
-  Trash2,
-  TrendingUp,
-  PieChart,
-  Download,
-  Copy,
-} from "lucide-react";
+import { TRANSACTION_TYPE_IDS, DEFAULT_CATEGORY_COLOR } from "../../src/constants";
+import { Receipt, Plus, Trash2, TrendingUp, PieChart, Download, Copy } from "lucide-react";
 
 /**
  * Página Receitas - Gerenciamento detalhado de receitas por categoria
@@ -279,27 +268,27 @@ export default function Receitas() {
       key: "title",
       label: "Descrição",
       sortable: true,
+      render: (row) => (
+        <div className="flex flex-col gap-0.5">
+          <span className="font-medium text-gray-900">{row.title}</span>
+        </div>
+      ),
     },
     {
       key: "category",
       label: "Categoria",
       sortable: true,
       render: (row) => {
-        const category = categories.find(
-          (c) => c.name === row.category || c.id === row.category.toLowerCase()
-        );
-        const IconComponent = getIconComponent(
-          category?.icon || row.category_icon || "Tag"
-        );
+        const IconComponent = getIconComponent(row.category_icon || "Tag");
         return (
           <div className="flex items-center gap-2">
             <div
               className="p-1 rounded flex-shrink-0"
-              style={{ backgroundColor: (category?.color || "#64748b") + "20" }}
+              style={{ backgroundColor: row.category_color + '20' }}
             >
               <IconComponent
                 className="w-4 h-4"
-                style={{ color: category?.color || "#64748b" }}
+                style={{ color: row.category_color }}
               />
             </div>
             <span className="text-sm font-medium text-gray-900">
@@ -313,7 +302,11 @@ export default function Receitas() {
       key: "amount",
       label: "Valor",
       sortable: true,
-      render: (row) => <span>{formatCurrency(row.amount)}</span>,
+      render: (row) => (
+        <span className="font-semibold text-green-600">
+          {formatCurrency(row.amount)}
+        </span>
+      ),
     },
     {
       key: "date",
@@ -394,7 +387,7 @@ export default function Receitas() {
                         <div className="flex items-center gap-2">
                           <div
                             className="p-1 rounded"
-                            style={{ backgroundColor: cat.color + "20" }}
+                            style={{ backgroundColor: cat.color + '20' }}
                           >
                             <IconComponent
                               className="w-4 h-4"
@@ -516,7 +509,7 @@ export default function Receitas() {
                         <div className="flex items-center gap-2">
                           <div
                             className="p-1 rounded"
-                            style={{ backgroundColor: cat.color + "20" }}
+                            style={{ backgroundColor: cat.color + '20' }}
                           >
                             <IconComponent
                               className="w-4 h-4"

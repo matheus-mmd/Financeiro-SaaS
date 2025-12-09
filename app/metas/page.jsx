@@ -52,15 +52,7 @@ import {
 } from "../../src/utils";
 import { exportToCSV } from "../../src/utils/exportData";
 import { GOAL_STATUS } from "../../src/constants";
-import {
-  Target,
-  Plus,
-  Trash2,
-  CheckCircle,
-  Download,
-  TrendingUp,
-  Copy,
-} from "lucide-react";
+import { Target, Plus, Trash2, CheckCircle, Download, TrendingUp, Copy } from "lucide-react";
 
 /**
  * Página Metas - Gerenciamento de metas financeiras
@@ -318,6 +310,11 @@ export default function Metas() {
       key: "title",
       label: "Meta",
       sortable: true,
+      render: (row) => (
+        <div className="flex flex-col gap-0.5">
+          <span className="font-medium text-gray-900">{row.title}</span>
+        </div>
+      ),
     },
     {
       key: "status",
@@ -404,9 +401,7 @@ export default function Metas() {
       {/* Filtros */}
       <div className="flex items-center gap-3">
         <FilterButton
-          activeFiltersCount={
-            (filterStatus !== "all" ? 1 : 0) + (filterMonth ? 1 : 0)
-          }
+          activeFiltersCount={(filterStatus !== "all" ? 1 : 0) + (filterMonth ? 1 : 0)}
           onClearFilters={() => {
             setFilterStatus("all");
             setFilterMonth(null);

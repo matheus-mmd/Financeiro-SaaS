@@ -51,19 +51,8 @@ import { exportToCSV } from "../../src/utils/exportData";
 import { getIconComponent } from "../../src/components/IconPicker";
 import FilterButton from "../../src/components/FilterButton";
 import FABMenu from "../../src/components/FABMenu";
-import {
-  TRANSACTION_TYPE_IDS,
-  DEFAULT_CATEGORY_COLOR,
-} from "../../src/constants";
-import {
-  DollarSign,
-  Percent,
-  Plus,
-  Download,
-  Trash2,
-  Wallet,
-  Copy,
-} from "lucide-react";
+import { TRANSACTION_TYPE_IDS, DEFAULT_CATEGORY_COLOR } from "../../src/constants";
+import { DollarSign, Percent, Plus, Download, Trash2, Wallet, Copy } from "lucide-react";
 
 /**
  * Página Patrimônio e Ativos - Gerenciamento de patrimônio e ativos
@@ -217,7 +206,7 @@ export default function PatrimonioAtivos() {
       const dateString = formData.date.toISOString().split("T")[0];
 
       // Buscar o ID do tipo de ativo pelo nome
-      const category = categories.find((c) => c.name === formData.type);
+      const category = categories.find(c => c.name === formData.type);
 
       const assetData = {
         assetTypesid: category?.id,
@@ -326,26 +315,27 @@ export default function PatrimonioAtivos() {
       key: "name",
       label: "Nome",
       sortable: true,
+      render: (row) => (
+        <div className="flex flex-col gap-0.5">
+          <span className="font-medium text-gray-900">{row.name}</span>
+        </div>
+      ),
     },
     {
       key: "type",
       label: "Tipo",
       sortable: true,
       render: (row) => {
-        // Buscar cor do tipo de ativo do mock
-        const category = categories.find((c) => c.name === row.type);
-        const IconComponent = getIconComponent(
-          category?.icon || row.type_icon || "Tag"
-        );
+        const IconComponent = getIconComponent(row.type_icon || "Tag");
         return (
           <div className="flex items-center gap-2">
             <div
               className="p-1 rounded flex-shrink-0"
-              style={{ backgroundColor: (category?.color || "#64748b") + "20" }}
+              style={{ backgroundColor: row.type_color + '20' }}
             >
               <IconComponent
                 className="w-4 h-4"
-                style={{ color: category?.color || "#64748b" }}
+                style={{ color: row.type_color }}
               />
             </div>
             <span className="text-sm font-medium text-gray-900">
@@ -359,13 +349,21 @@ export default function PatrimonioAtivos() {
       key: "value",
       label: "Valor",
       sortable: true,
-      render: (row) => <span>{formatCurrency(row.value)}</span>,
+      render: (row) => (
+        <span className="font-semibold text-blue-600">
+          {formatCurrency(row.value)}
+        </span>
+      ),
     },
     {
       key: "yield",
       label: "Rendimento",
       sortable: true,
-      render: (row) => <span>{(row.yield * 100).toFixed(2)}% a.m.</span>,
+      render: (row) => (
+        <span>
+          {(row.yield * 100).toFixed(2)}% a.m.
+        </span>
+      ),
     },
     {
       key: "date",
@@ -443,7 +441,7 @@ export default function PatrimonioAtivos() {
                         <div className="flex items-center gap-2">
                           <div
                             className="p-1 rounded"
-                            style={{ backgroundColor: cat.color + "20" }}
+                            style={{ backgroundColor: cat.color + '20' }}
                           >
                             <IconComponent
                               className="w-4 h-4"
@@ -565,7 +563,7 @@ export default function PatrimonioAtivos() {
                         <div className="flex items-center gap-2">
                           <div
                             className="p-1 rounded"
-                            style={{ backgroundColor: cat.color + "20" }}
+                            style={{ backgroundColor: cat.color + '20' }}
                           >
                             <IconComponent
                               className="w-4 h-4"
@@ -641,8 +639,8 @@ export default function PatrimonioAtivos() {
           <AlertDialogHeader>
             <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
             <AlertDialogDescription>
-              Tem certeza que deseja excluir o ativo "{assetToDelete?.name}"?
-              Esta ação não pode ser desfeita.
+              Tem certeza que deseja excluir o ativo "
+              {assetToDelete?.name}"? Esta ação não pode ser desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
