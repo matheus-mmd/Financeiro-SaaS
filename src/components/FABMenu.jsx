@@ -45,7 +45,11 @@ export default function FABMenu({
             {actions.map((action, index) => (
               <div
                 key={index}
-                className="flex items-center justify-end gap-3 group"
+                className="flex items-center justify-end gap-3 group animate-in fade-in slide-in-from-bottom-1 duration-200"
+                style={{
+                  animationDelay: `${index * 30}ms`,
+                  animationFillMode: 'backwards'
+                }}
               >
                 {/* Label do botão secundário (tooltip à esquerda) */}
                 <span className="relative bg-gray-900 text-white text-sm px-3 py-2 rounded-xl whitespace-nowrap shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
@@ -59,19 +63,14 @@ export default function FABMenu({
                   onClick={() => handleActionClick(action)}
                   aria-label={action.label}
                   className="flex-shrink-0 w-12 h-12
-                    bg-white dark:bg-gray-800
-                    text-brand-600 dark:text-brand-400
+                    bg-white hover:bg-brand-50 active:bg-brand-100
+                    text-brand-600 hover:text-brand-700
                     rounded-xl
                     shadow-lg hover:shadow-xl
                     transition-all duration-200 ease-out
                     transform hover:scale-105 active:scale-95
                     flex items-center justify-center
-                    border border-gray-200 dark:border-gray-700
-                    animate-in fade-in slide-in-from-bottom-2"
-                  style={{
-                    animationDelay: `${index * 50}ms`,
-                    animationFillMode: 'backwards'
-                  }}
+                    border border-gray-200 hover:border-brand-200"
                 >
                   {action.icon}
                 </button>
@@ -80,7 +79,7 @@ export default function FABMenu({
           </div>
         )}
 
-        {/* Botão principal (FAB) - SEM animações no carregamento */}
+        {/* Botão principal (FAB) */}
         <button
           onClick={toggleMenu}
           aria-label={isOpen ? "Fechar menu" : primaryLabel}
@@ -88,6 +87,7 @@ export default function FABMenu({
           className="relative w-14 h-14
             bg-gradient-to-br from-brand-500 to-brand-600
             hover:from-brand-600 hover:to-brand-700
+            active:from-brand-700 active:to-brand-800
             text-white rounded-2xl
             shadow-lg shadow-brand-500/30 hover:shadow-xl hover:shadow-brand-500/40
             transition-all duration-200 ease-out
