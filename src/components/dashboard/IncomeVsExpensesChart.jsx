@@ -25,23 +25,26 @@ import { formatCurrency } from '../../utils';
 
 /**
  * IncomeVsExpensesChart - Gráfico comparando Receitas x Despesas x Aportes
- * Visualização por período (semestral, trimestral, mensal) com gráfico de barras estilo shadcn/ui
+ * Visualização por período (anual, semestral, trimestral, mensal) com gráfico de barras estilo shadcn/ui
  *
  * @param {Array} monthlyData - Dados mensais [{date, income, expense, investment}, ...]
  * @param {Array} quarterlyData - Dados trimestrais [{date, income, expense, investment}, ...]
  * @param {Array} semesterData - Dados semestrais [{date, income, expense, investment}, ...]
+ * @param {Array} yearlyData - Dados anuais [{date, income, expense, investment}, ...]
  */
 export default function IncomeVsExpensesChart({
   monthlyData = [],
   quarterlyData = [],
-  semesterData = []
+  semesterData = [],
+  yearlyData = []
 }) {
-  const [period, setPeriod] = useState('semester');
+  const [period, setPeriod] = useState('yearly');
 
   // Selecionar dados baseado no período escolhido
   const data = period === 'monthly' ? monthlyData :
                period === 'quarterly' ? quarterlyData :
-               semesterData;
+               period === 'semester' ? semesterData :
+               yearlyData;
 
   // Calcular totais
   const totalIncome = data.reduce((sum, item) => sum + (item.income || 0), 0);
@@ -85,9 +88,10 @@ export default function IncomeVsExpensesChart({
               <SelectValue placeholder="Selecione o período" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="monthly">Mensal</SelectItem>
-              <SelectItem value="quarterly">Trimestral</SelectItem>
+              <SelectItem value="yearly">Anual</SelectItem>
               <SelectItem value="semester">Semestral</SelectItem>
+              <SelectItem value="quarterly">Trimestral</SelectItem>
+              <SelectItem value="monthly">Mensal</SelectItem>
             </SelectContent>
           </Select>
         </div>

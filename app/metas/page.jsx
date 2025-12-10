@@ -51,6 +51,7 @@ import {
   isDateInRange,
 } from "../../src/utils";
 import { exportToCSV } from "../../src/utils/exportData";
+import { getIconComponent } from "../../src/components/IconPicker";
 import { GOAL_STATUS } from "../../src/constants";
 import { Target, Plus, Trash2, CheckCircle, Download, TrendingUp, Copy } from "lucide-react";
 
@@ -62,6 +63,7 @@ export default function Metas() {
   const { user } = useAuth();
   const [targets, setTargets] = useState([]);
   const [filteredTargets, setFilteredTargets] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingTarget, setEditingTarget] = useState(null);
@@ -72,23 +74,29 @@ export default function Metas() {
   const [columnSelectorElement, setColumnSelectorElement] = useState(null);
   const [formData, setFormData] = useState({
     title: "",
+    category: "",
     goal: "",
     progress: "",
     monthlyAmount: "",
     date: new Date(),
+    deadline: null,
   });
 
   useEffect(() => {
     const loadData = async () => {
       try {
-        const response = await fetchData("/api/targets");
+        const [targetsRes, categoriesRes] = await Promise.all([
+          fetchData("/api/targets"),
+          fetchData("/api/categories"),
+        ]);
         // Adicionar data às metas se não tiver
-        const targetsWithDate = response.data.map((target) => ({
+        const targetsWithDate = targetsRes.data.map((target) => ({
           ...target,
           date: target.date || new Date().toISOString().split("T")[0],
         }));
         setTargets(targetsWithDate);
         setFilteredTargets(targetsWithDate);
+        setCategories(categoriesRes.data);
       } catch (error) {
         console.error("Erro ao carregar metas:", error);
       } finally {
@@ -119,10 +127,12 @@ export default function Metas() {
     setEditingTarget(null);
     setFormData({
       title: "",
+      category: "",
       goal: "",
       progress: "",
       monthlyAmount: "",
       date: new Date(),
+      deadline: null,
     });
     setModalOpen(true);
   };
@@ -131,10 +141,12 @@ export default function Metas() {
     setEditingTarget(target);
     setFormData({
       title: target.title,
+      category: target.category || "",
       goal: target.goal.toString(),
       progress: target.progress.toString(),
       monthlyAmount: target.monthlyAmount?.toString() || "",
       date: parseDateString(target.date) || new Date(),
+      deadline: target.deadline ? parseDateString(target.deadline) : null,
     });
     setModalOpen(true);
   };
@@ -144,10 +156,12 @@ export default function Metas() {
     setEditingTarget(null);
     setFormData({
       title: target.title + " (Cópia)",
+      category: target.category || "",
       goal: target.goal.toString(),
       progress: "0",
       monthlyAmount: target.monthlyAmount?.toString() || "",
       date: new Date(),
+      deadline: target.deadline ? parseDateString(target.deadline) : null,
     });
     setModalOpen(true);
   };
@@ -187,16 +201,23 @@ export default function Metas() {
     try {
       // Converter Date object para string YYYY-MM-DD
       const dateString = formData.date.toISOString().split("T")[0];
+      const deadlineString = formData.deadline ? formData.deadline.toISOString().split("T")[0] : null;
+
+      // Buscar o ID da categoria pelo nome
+      const category = categories.find((c) => c.name === formData.category);
 
       const targetData = {
         title: formData.title,
+        categoriesId: category?.id || null,
         goal: parseFloat(formData.goal),
         progress: parseFloat(formData.progress || 0),
+        monthlyAmount: formData.monthlyAmount ? parseFloat(formData.monthlyAmount) : null,
         status:
           parseFloat(formData.progress || 0) >= parseFloat(formData.goal)
             ? GOAL_STATUS.COMPLETED
             : GOAL_STATUS.IN_PROGRESS,
         date: dateString,
+        deadline: deadlineString,
       };
 
       if (editingTarget) {
@@ -219,10 +240,12 @@ export default function Metas() {
       setModalOpen(false);
       setFormData({
         title: "",
+        category: "",
         goal: "",
         progress: "",
         monthlyAmount: "",
         date: new Date(),
+        deadline: null,
       });
     } catch (error) {
       console.error("Erro ao salvar meta:", error);
@@ -535,6 +558,39 @@ export default function Metas() {
             </div>
 
             <div className="space-y-2">
+              <Label htmlFor="category">Categoria <span className="text-gray-400 font-normal">(opcional)</span></Label>
+              <Select
+                value={formData.category}
+                onValueChange={(value) => handleInputChange("category", value)}
+              >
+                <SelectTrigger id="category">
+                  <SelectValue placeholder="Selecione uma categoria" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map((cat) => {
+                    const IconComponent = getIconComponent(cat.icon || "Tag");
+                    return (
+                      <SelectItem key={cat.id} value={cat.name}>
+                        <div className="flex items-center gap-2">
+                          <div
+                            className="p-1 rounded"
+                            style={{ backgroundColor: cat.color + '20' }}
+                          >
+                            <IconComponent
+                              className="w-4 h-4"
+                              style={{ color: cat.color }}
+                            />
+                          </div>
+                          <span>{cat.name}</span>
+                        </div>
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
               <Label htmlFor="goal">Valor Objetivo (R$)</Label>
               <Input
                 id="goal"
@@ -608,6 +664,15 @@ export default function Metas() {
               <DatePicker
                 value={formData.date}
                 onChange={(date) => handleInputChange("date", date)}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="deadline">Prazo <span className="text-gray-400 font-normal">(opcional)</span></Label>
+              <DatePicker
+                id="deadline"
+                value={formData.deadline}
+                onChange={(date) => handleInputChange("deadline", date)}
               />
             </div>
           </form>

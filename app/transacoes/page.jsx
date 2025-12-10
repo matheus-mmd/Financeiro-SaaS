@@ -84,6 +84,8 @@ export default function Transacoes() {
   const [transactions, setTransactions] = useState([]);
   const [categories, setCategories] = useState([]);
   const [transactionTypes, setTransactionTypes] = useState([]);
+  const [banks, setBanks] = useState([]);
+  const [cards, setCards] = useState([]);
   const [filteredTransactions, setFilteredTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
@@ -106,6 +108,9 @@ export default function Transacoes() {
     notes: "",
     status: PAYMENT_STATUS.PENDING,
     payment_method: "",
+    payment_date: null,
+    card_id: null,
+    bank_id: null,
     installments_current: "",
     installments_total: "",
     is_recurring: false,
@@ -115,16 +120,20 @@ export default function Transacoes() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [transactionsRes, categoriesRes, transactionTypesRes] =
+        const [transactionsRes, categoriesRes, transactionTypesRes, banksRes, cardsRes] =
           await Promise.all([
             fetchData("/api/transactions"),
             fetchData("/api/categories"),
             fetchData("/api/transactionTypes"),
+            fetchData("/api/banks"),
+            fetchData("/api/cards"),
           ]);
         setTransactions(transactionsRes.data);
         setFilteredTransactions(transactionsRes.data);
         setCategories(categoriesRes.data);
         setTransactionTypes(transactionTypesRes.data);
+        setBanks(banksRes.data);
+        setCards(cardsRes.data);
 
         // Definir categoria e tipo padrão após carregar os dados
         if (
@@ -198,6 +207,9 @@ export default function Transacoes() {
       notes: "",
       status: PAYMENT_STATUS.PENDING,
       payment_method: "",
+      payment_date: null,
+      card_id: null,
+      bank_id: null,
       installments_current: "",
       installments_total: "",
       is_recurring: false,
@@ -217,6 +229,9 @@ export default function Transacoes() {
       notes: transaction.notes || "",
       status: transaction.status || PAYMENT_STATUS.PENDING,
       payment_method: transaction.payment_method || "",
+      payment_date: transaction.payment_date ? parseDateString(transaction.payment_date) : null,
+      card_id: transaction.card_id || null,
+      bank_id: transaction.bank_id || null,
       installments_current: transaction.installments?.current || "",
       installments_total: transaction.installments?.total || "",
       is_recurring: transaction.is_recurring || false,
@@ -237,6 +252,9 @@ export default function Transacoes() {
       notes: transaction.notes || "",
       status: PAYMENT_STATUS.PENDING,
       payment_method: transaction.payment_method || "",
+      payment_date: null,
+      card_id: transaction.card_id || null,
+      bank_id: transaction.bank_id || null,
       installments_current: "",
       installments_total: "",
       is_recurring: false,
@@ -371,6 +389,8 @@ export default function Transacoes() {
         };
       }
 
+      const paymentDateString = formData.payment_date ? formData.payment_date.toISOString().split("T")[0] : null;
+
       const transactionData = {
         categoryId: formData.categoryId,
         transactionTypeId: formData.transactionTypeId,
@@ -380,6 +400,9 @@ export default function Transacoes() {
         notes: formData.notes || null,
         status: formData.status,
         payment_method: formData.payment_method || null,
+        payment_date: paymentDateString,
+        card_id: formData.card_id || null,
+        bank_id: formData.bank_id || null,
         installments: installments,
         is_recurring: formData.is_recurring || false,
         recurrence_frequency: formData.is_recurring
@@ -409,6 +432,9 @@ export default function Transacoes() {
         notes: "",
         status: PAYMENT_STATUS.PENDING,
         payment_method: "",
+        payment_date: null,
+        card_id: null,
+        bank_id: null,
         installments_current: "",
         installments_total: "",
         is_recurring: false,
@@ -1229,6 +1255,83 @@ export default function Transacoes() {
                   className="text-sm"
                 />
               </div>
+            </div>
+
+            {/* Data de Pagamento */}
+            <div className="space-y-2">
+              <Label htmlFor="payment-date" className="text-sm">
+                Data de Pagamento (Opcional)
+              </Label>
+              <DatePicker
+                id="payment-date"
+                value={formData.payment_date}
+                onChange={(date) => handleInputChange("payment_date", date)}
+              />
+            </div>
+
+            {/* Cartão */}
+            <div className="space-y-2">
+              <Label htmlFor="card" className="text-sm">
+                Cartão (Opcional)
+              </Label>
+              <Select
+                value={formData.card_id ? formData.card_id.toString() : "none"}
+                onValueChange={(value) =>
+                  handleInputChange("card_id", value === "none" ? null : parseInt(value))
+                }
+              >
+                <SelectTrigger id="card" className="text-sm">
+                  <SelectValue placeholder="Selecione..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Nenhum</SelectItem>
+                  {cards.map((card) => (
+                    <SelectItem key={card.id} value={card.id.toString()}>
+                      {card.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Banco */}
+            <div className="space-y-2">
+              <Label htmlFor="bank" className="text-sm">
+                Banco (Opcional)
+              </Label>
+              <Select
+                value={formData.bank_id ? formData.bank_id.toString() : "none"}
+                onValueChange={(value) =>
+                  handleInputChange("bank_id", value === "none" ? null : parseInt(value))
+                }
+              >
+                <SelectTrigger id="bank" className="text-sm">
+                  <SelectValue placeholder="Selecione..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Nenhum</SelectItem>
+                  {banks.map((bank) => (
+                    <SelectItem key={bank.id} value={bank.id.toString()}>
+                      {bank.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Observações */}
+            <div className="space-y-2">
+              <Label htmlFor="notes" className="text-sm">
+                Observações (Opcional)
+              </Label>
+              <Textarea
+                id="notes"
+                placeholder="Adicione observações sobre esta transação..."
+                value={formData.notes}
+                onChange={(e) => handleInputChange("notes", e.target.value)}
+                rows={3}
+                className="text-sm"
+              />
             </div>
 
             {/* Recorrência */}

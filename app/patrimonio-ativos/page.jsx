@@ -9,6 +9,7 @@ import { Card, CardContent } from "../../src/components/ui/card";
 import { Button } from "../../src/components/ui/button";
 import { Input } from "../../src/components/ui/input";
 import { Label } from "../../src/components/ui/label";
+import { Textarea } from "../../src/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -78,6 +79,9 @@ export default function PatrimonioAtivos() {
     value: "",
     yield: "",
     date: new Date(),
+    description: "",
+    purchase_date: null,
+    purchase_value: "",
   });
 
   useEffect(() => {
@@ -140,6 +144,9 @@ export default function PatrimonioAtivos() {
       value: "",
       yield: "",
       date: new Date(),
+      description: "",
+      purchase_date: null,
+      purchase_value: "",
     });
     setModalOpen(true);
   };
@@ -152,6 +159,9 @@ export default function PatrimonioAtivos() {
       value: asset.value.toString(),
       yield: asset.yield ? (asset.yield * 100).toString() : "",
       date: parseDateString(asset.date) || new Date(),
+      description: asset.description || "",
+      purchase_date: asset.purchase_date ? parseDateString(asset.purchase_date) : null,
+      purchase_value: asset.purchase_value ? asset.purchase_value.toString() : "",
     });
     setModalOpen(true);
   };
@@ -165,6 +175,9 @@ export default function PatrimonioAtivos() {
       value: asset.value.toString(),
       yield: asset.yield ? (asset.yield * 100).toString() : "",
       date: new Date(),
+      description: asset.description || "",
+      purchase_date: asset.purchase_date ? parseDateString(asset.purchase_date) : null,
+      purchase_value: asset.purchase_value ? asset.purchase_value.toString() : "",
     });
     setModalOpen(true);
   };
@@ -204,6 +217,7 @@ export default function PatrimonioAtivos() {
     try {
       // Converter Date object para string YYYY-MM-DD
       const dateString = formData.date.toISOString().split("T")[0];
+      const purchaseDateString = formData.purchase_date ? formData.purchase_date.toISOString().split("T")[0] : null;
 
       // Buscar o ID do tipo de ativo pelo nome
       const category = categories.find(c => c.name === formData.type);
@@ -216,6 +230,9 @@ export default function PatrimonioAtivos() {
         yield: formData.yield ? parseFloat(formData.yield) / 100 : 0,
         currency: "BRL",
         date: dateString,
+        description: formData.description || null,
+        purchase_date: purchaseDateString,
+        purchase_value: formData.purchase_value ? parseFloat(formData.purchase_value) : null,
       };
 
       if (editingAsset) {
@@ -242,6 +259,9 @@ export default function PatrimonioAtivos() {
         value: "",
         yield: "",
         date: new Date(),
+        description: "",
+        purchase_date: null,
+        purchase_value: "",
       });
     } catch (error) {
       console.error("Erro ao salvar ativo:", error);
@@ -615,6 +635,38 @@ export default function PatrimonioAtivos() {
               <DatePicker
                 value={formData.date}
                 onChange={(date) => handleInputChange("date", date)}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="description">Descrição <span className="text-gray-400 font-normal">(opcional)</span></Label>
+              <Textarea
+                id="description"
+                placeholder="Adicione informações sobre este ativo..."
+                value={formData.description}
+                onChange={(e) => handleInputChange("description", e.target.value)}
+                rows={3}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="purchase_date">Data de Compra <span className="text-gray-400 font-normal">(opcional)</span></Label>
+              <DatePicker
+                id="purchase_date"
+                value={formData.purchase_date}
+                onChange={(date) => handleInputChange("purchase_date", date)}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="purchase_value">Valor de Compra (R$) <span className="text-gray-400 font-normal">(opcional)</span></Label>
+              <Input
+                id="purchase_value"
+                type="number"
+                step="0.01"
+                placeholder="0,00"
+                value={formData.purchase_value}
+                onChange={(e) => handleInputChange("purchase_value", e.target.value)}
               />
             </div>
           </form>

@@ -10,6 +10,7 @@ import { Badge } from "../../src/components/ui/badge";
 import { Button } from "../../src/components/ui/button";
 import { Input } from "../../src/components/ui/input";
 import { Label } from "../../src/components/ui/label";
+import { Textarea } from "../../src/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -82,6 +83,7 @@ export default function Despesas() {
     payment_method: "",
     installments_current: "",
     installments_total: "",
+    notes: "",
   });
 
   useEffect(() => {
@@ -137,6 +139,7 @@ export default function Despesas() {
       payment_method: "",
       installments_current: "",
       installments_total: "",
+      notes: "",
     });
     setModalOpen(true);
   };
@@ -153,6 +156,7 @@ export default function Despesas() {
       payment_method: expense.payment_method || "",
       installments_current: expense.installments?.current?.toString() || "",
       installments_total: expense.installments?.total?.toString() || "",
+      notes: expense.notes || "",
     });
     setModalOpen(true);
   };
@@ -247,6 +251,7 @@ export default function Despesas() {
         status: formData.status,
         payment_method: formData.payment_method || null,
         installments: installments,
+        notes: formData.notes || null,
       };
 
       if (editingExpense) {
@@ -273,6 +278,7 @@ export default function Despesas() {
         payment_method: "",
         installments_current: "",
         installments_total: "",
+        notes: "",
       });
     } catch (error) {
       console.error("Erro ao salvar despesa:", error);
@@ -733,6 +739,17 @@ export default function Despesas() {
                 Parcela {formData.installments_current} de {formData.installments_total}
               </p>
             )}
+
+            <div className="space-y-2">
+              <Label htmlFor="notes">Observações</Label>
+              <Textarea
+                id="notes"
+                placeholder="Adicione observações sobre esta despesa..."
+                value={formData.notes}
+                onChange={(e) => handleInputChange("notes", e.target.value)}
+                rows={3}
+              />
+            </div>
           </form>
           <DialogFooter>
             <Button

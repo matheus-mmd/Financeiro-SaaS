@@ -9,6 +9,7 @@ import { Card, CardContent } from "../../src/components/ui/card";
 import { Button } from "../../src/components/ui/button";
 import { Input } from "../../src/components/ui/input";
 import { Label } from "../../src/components/ui/label";
+import { Textarea } from "../../src/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -76,6 +77,7 @@ export default function Receitas() {
     category: "",
     amount: "",
     date: new Date(),
+    notes: "",
   });
 
   useEffect(() => {
@@ -126,6 +128,7 @@ export default function Receitas() {
       category: "",
       amount: "",
       date: new Date(),
+      notes: "",
     });
     setModalOpen(true);
   };
@@ -137,6 +140,7 @@ export default function Receitas() {
       category: income.category,
       amount: income.amount.toString(),
       date: parseDateString(income.date) || new Date(),
+      notes: income.notes || "",
     });
     setModalOpen(true);
   };
@@ -149,6 +153,7 @@ export default function Receitas() {
       category: income.category,
       amount: income.amount.toString(),
       date: new Date(),
+      notes: income.notes || "",
     });
     setModalOpen(true);
   };
@@ -195,6 +200,7 @@ export default function Receitas() {
         title: formData.title,
         amount: parseFloat(formData.amount),
         date: dateString,
+        notes: formData.notes || null,
       };
 
       if (editingIncome) {
@@ -211,7 +217,7 @@ export default function Receitas() {
       setFilteredIncomes(response.data);
 
       setModalOpen(false);
-      setFormData({ title: "", category: "", amount: "", date: new Date() });
+      setFormData({ title: "", category: "", amount: "", date: new Date(), notes: "" });
     } catch (error) {
       console.error("Erro ao salvar receita:", error);
       alert("Erro ao salvar receita. Verifique o console para mais detalhes.");
@@ -543,6 +549,17 @@ export default function Receitas() {
               <DatePicker
                 value={formData.date}
                 onChange={(date) => handleInputChange("date", date)}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="notes">Observações</Label>
+              <Textarea
+                id="notes"
+                placeholder="Adicione observações sobre esta receita..."
+                value={formData.notes}
+                onChange={(e) => handleInputChange("notes", e.target.value)}
+                rows={3}
               />
             </div>
           </form>

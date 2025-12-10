@@ -7,8 +7,7 @@ const delay = (ms = 300) => new Promise((resolve) => setTimeout(resolve, ms));
 // Estado em memória para simular banco de dados
 let mockDatabase = {
   icons: [...mockData.icons],
-  expenses: [...mockData.expenses],
-  incomes: [...mockData.incomes],
+  // expenses e incomes foram consolidados em transactions
   assets: [...mockData.assets],
   targets: [...mockData.targets],
   transactions: [...mockData.transactions],
@@ -23,8 +22,7 @@ let mockDatabase = {
 export const resetMockDatabase = () => {
   mockDatabase = {
     icons: [...mockData.icons],
-    expenses: [...mockData.expenses],
-    incomes: [...mockData.incomes],
+    // expenses e incomes foram consolidados em transactions
     assets: [...mockData.assets],
     targets: [...mockData.targets],
     transactions: [...mockData.transactions],
@@ -51,43 +49,69 @@ const enrichCategoryWithIcon = (category) => {
 };
 
 /**
- * Enriquece expenses com dados de category
+ * Filtra transactions de DESPESAS e converte para formato esperado
+ * COMPATIBILIDADE RETROATIVA: mantém interface antiga
  */
-const enrichExpenses = (expenses) => {
-  return expenses.map((expense) => {
-    const category = mockDatabase.categories.find(
-      (c) => c.id === expense.categories_id
-    );
-    const enrichedCategory = enrichCategoryWithIcon(category);
+const getExpensesFromTransactions = () => {
+  return mockDatabase.transactions
+    .filter(t => t.transaction_type_id === 2) // EXPENSE
+    .map((transaction) => {
+      const category = mockDatabase.categories.find(
+        (c) => c.id === transaction.category_id
+      );
+      const enrichedCategory = enrichCategoryWithIcon(category);
 
-    return {
-      ...expense,
-      categoriesId: expense.categories_id, // Compatibilidade com código antigo
-      category: enrichedCategory?.name || "Desconhecido",
-      category_color: enrichedCategory?.color || "#64748b",
-      category_icon: enrichedCategory?.icon || "Tag",
-    };
-  });
+      return {
+        id: transaction.id,
+        user_id: transaction.user_id,
+        categories_id: transaction.category_id,
+        categoriesId: transaction.category_id,
+        title: transaction.description,
+        amount: Math.abs(transaction.amount), // positivo para exibição
+        date: transaction.date,
+        paid_date: transaction.payment_date || transaction.date,
+        status: transaction.status,
+        payment_method: transaction.payment_method,
+        installments: transaction.installments,
+        created_at: transaction.created_at,
+        updated_at: transaction.updated_at,
+        // Dados enriquecidos
+        category: enrichedCategory?.name || "Desconhecido",
+        category_color: enrichedCategory?.color || "#64748b",
+        category_icon: enrichedCategory?.icon || "Tag",
+      };
+    });
 };
 
 /**
- * Enriquece incomes com dados de category
+ * Filtra transactions de RECEITAS e converte para formato esperado
+ * COMPATIBILIDADE RETROATIVA: mantém interface antiga
  */
-const enrichIncomes = (incomes) => {
-  return incomes.map((income) => {
-    const category = mockDatabase.categories.find(
-      (c) => c.id === income.categories_id
-    );
-    const enrichedCategory = enrichCategoryWithIcon(category);
+const getIncomesFromTransactions = () => {
+  return mockDatabase.transactions
+    .filter(t => t.transaction_type_id === 1) // INCOME
+    .map((transaction) => {
+      const category = mockDatabase.categories.find(
+        (c) => c.id === transaction.category_id
+      );
+      const enrichedCategory = enrichCategoryWithIcon(category);
 
-    return {
-      ...income,
-      categoriesId: income.categories_id, // Compatibilidade com código antigo
-      category: enrichedCategory?.name || "Desconhecido",
-      category_color: enrichedCategory?.color || "#64748b",
-      category_icon: enrichedCategory?.icon || "Tag",
-    };
-  });
+      return {
+        id: transaction.id,
+        user_id: transaction.user_id,
+        categories_id: transaction.category_id,
+        categoriesId: transaction.category_id,
+        title: transaction.description,
+        amount: Math.abs(transaction.amount), // positivo
+        date: transaction.date,
+        created_at: transaction.created_at,
+        updated_at: transaction.updated_at,
+        // Dados enriquecidos
+        category: enrichedCategory?.name || "Desconhecido",
+        category_color: enrichedCategory?.color || "#64748b",
+        category_icon: enrichedCategory?.icon || "Tag",
+      };
+    });
 };
 
 /**
@@ -95,16 +119,16 @@ const enrichIncomes = (incomes) => {
  */
 const enrichAssets = (assets) => {
   return assets.map((asset) => {
-    // Buscar categoria em vez de assetType
+    // Buscar categoria (agora padronizado como category_id)
     const category = mockDatabase.categories.find(
-      (c) => c.id === asset.asset_types_id || c.id === asset.categories_id
+      (c) => c.id === asset.category_id
     );
     const enrichedCategory = enrichCategoryWithIcon(category);
 
     return {
       ...asset,
-      assetTypesid: asset.asset_types_id || asset.categories_id, // Compatibilidade com código antigo
-      categoriesId: asset.categories_id || asset.asset_types_id,
+      assetTypesid: asset.category_id, // Compatibilidade com código antigo
+      categoriesId: asset.category_id, // Compatibilidade com código antigo
       type: enrichedCategory?.name || "Desconhecido",
       type_color: enrichedCategory?.color || "#64748b",
       type_icon: enrichedCategory?.icon || "Tag",
@@ -185,8 +209,9 @@ export const fetchData = async (endpoint) => {
   const routes = {
     "/api/users": mockDatabase.users,
     "/api/icons": mockDatabase.icons,
-    "/api/expenses": enrichExpenses(mockDatabase.expenses),
-    "/api/incomes": enrichIncomes(mockDatabase.incomes),
+    // COMPATIBILIDADE: expenses e incomes agora filtram de transactions
+    "/api/expenses": getExpensesFromTransactions(),
+    "/api/incomes": getIncomesFromTransactions(),
     "/api/assets": enrichAssets(mockDatabase.assets),
     "/api/targets": mockDatabase.targets,
     "/api/transactions": enrichTransactions(mockDatabase.transactions),
@@ -208,130 +233,210 @@ export const fetchData = async (endpoint) => {
 };
 
 // =====================================================
-// FUNÇÕES CRUD PARA EXPENSES
+// FUNÇÕES CRUD PARA EXPENSES (agora opera em transactions)
 // =====================================================
 
 /**
- * Cria uma nova despesa
+ * Cria uma nova despesa (cria transaction com type_id = 2)
  * @param {Object} expense - Dados da despesa
- * @param {string} userId - ID do usuário (ignorado no mock)
+ * @param {string} userId - ID do usuário
  * @returns {Promise<Object>} Despesa criada
  */
 export const createExpense = async (expense, userId = null) => {
   await delay();
 
-  const newExpense = {
-    id: Math.max(...mockDatabase.expenses.map((e) => e.id), 0) + 1,
+  const newTransaction = {
+    id: Math.max(...mockDatabase.transactions.map((t) => t.id), 0) + 1,
     user_id: userId || mockDatabase.users[0]?.id,
-    categories_id: expense.categoriesId,
-    title: expense.title,
-    amount: expense.amount,
+    category_id: expense.categoriesId,
+    transaction_type_id: 2, // EXPENSE
     date: expense.date,
-    paid_date: expense.paid_date || null,
+    description: expense.title,
+    amount: -Math.abs(expense.amount), // negativo para despesa
+    notes: null,
     status: expense.status || "pending",
+    payment_date: expense.paid_date || null,
     payment_method: expense.payment_method || null,
+    card_id: null,
+    bank_id: null,
     installments: expense.installments || null,
+    installment_group_id: null,
+    is_recurring: false,
+    recurrence_frequency: null,
+    recurrence_end_date: null,
+    recurrence_parent_id: null,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
+    deleted_at: null,
   };
 
-  mockDatabase.expenses.push(newExpense);
-  return newExpense;
+  mockDatabase.transactions.push(newTransaction);
+
+  // Retornar no formato esperado de expense
+  return {
+    id: newTransaction.id,
+    user_id: newTransaction.user_id,
+    categories_id: newTransaction.category_id,
+    title: newTransaction.description,
+    amount: Math.abs(newTransaction.amount),
+    date: newTransaction.date,
+    paid_date: newTransaction.payment_date,
+    status: newTransaction.status,
+    payment_method: newTransaction.payment_method,
+    installments: newTransaction.installments,
+    created_at: newTransaction.created_at,
+    updated_at: newTransaction.updated_at,
+  };
 };
 
 export const updateExpense = async (id, updates) => {
   await delay();
 
-  const index = mockDatabase.expenses.findIndex((e) => e.id === id);
+  const index = mockDatabase.transactions.findIndex((t) => t.id === id);
   if (index === -1) {
     throw new Error("Despesa não encontrada");
   }
 
-  mockDatabase.expenses[index] = {
-    ...mockDatabase.expenses[index],
-    categories_id: updates.categoriesId !== undefined ? updates.categoriesId : mockDatabase.expenses[index].categories_id,
-    title: updates.title !== undefined ? updates.title : mockDatabase.expenses[index].title,
-    amount: updates.amount !== undefined ? updates.amount : mockDatabase.expenses[index].amount,
-    date: updates.date !== undefined ? updates.date : mockDatabase.expenses[index].date,
-    paid_date: updates.paid_date !== undefined ? updates.paid_date : mockDatabase.expenses[index].paid_date,
-    status: updates.status !== undefined ? updates.status : mockDatabase.expenses[index].status,
-    payment_method: updates.payment_method !== undefined ? updates.payment_method : mockDatabase.expenses[index].payment_method,
-    installments: updates.installments !== undefined ? updates.installments : mockDatabase.expenses[index].installments,
+  // Atualizar transaction
+  mockDatabase.transactions[index] = {
+    ...mockDatabase.transactions[index],
+    category_id: updates.categoriesId !== undefined ? updates.categoriesId : mockDatabase.transactions[index].category_id,
+    description: updates.title !== undefined ? updates.title : mockDatabase.transactions[index].description,
+    amount: updates.amount !== undefined ? -Math.abs(updates.amount) : mockDatabase.transactions[index].amount,
+    date: updates.date !== undefined ? updates.date : mockDatabase.transactions[index].date,
+    payment_date: updates.paid_date !== undefined ? updates.paid_date : mockDatabase.transactions[index].payment_date,
+    status: updates.status !== undefined ? updates.status : mockDatabase.transactions[index].status,
+    payment_method: updates.payment_method !== undefined ? updates.payment_method : mockDatabase.transactions[index].payment_method,
+    installments: updates.installments !== undefined ? updates.installments : mockDatabase.transactions[index].installments,
     updated_at: new Date().toISOString(),
   };
 
-  return mockDatabase.expenses[index];
+  const updated = mockDatabase.transactions[index];
+
+  // Retornar no formato esperado de expense
+  return {
+    id: updated.id,
+    user_id: updated.user_id,
+    categories_id: updated.category_id,
+    title: updated.description,
+    amount: Math.abs(updated.amount),
+    date: updated.date,
+    paid_date: updated.payment_date,
+    status: updated.status,
+    payment_method: updated.payment_method,
+    installments: updated.installments,
+    created_at: updated.created_at,
+    updated_at: updated.updated_at,
+  };
 };
 
 export const deleteExpense = async (id) => {
   await delay();
 
-  const index = mockDatabase.expenses.findIndex((e) => e.id === id);
+  const index = mockDatabase.transactions.findIndex((t) => t.id === id && t.transaction_type_id === 2);
   if (index === -1) {
     throw new Error("Despesa não encontrada");
   }
 
-  mockDatabase.expenses.splice(index, 1);
+  mockDatabase.transactions.splice(index, 1);
   return true;
 };
 
 // =====================================================
-// FUNÇÕES CRUD PARA INCOMES
+// FUNÇÕES CRUD PARA INCOMES (agora opera em transactions)
 // =====================================================
 
 /**
- * Cria uma nova receita
+ * Cria uma nova receita (cria transaction com type_id = 1)
  * @param {Object} income - Dados da receita
- * @param {string} userId - ID do usuário (ignorado no mock)
+ * @param {string} userId - ID do usuário
  * @returns {Promise<Object>} Receita criada
  */
 export const createIncome = async (income, userId = null) => {
   await delay();
 
-  const newIncome = {
-    id: Math.max(...mockDatabase.incomes.map((i) => i.id), 0) + 1,
+  const newTransaction = {
+    id: Math.max(...mockDatabase.transactions.map((t) => t.id), 0) + 1,
     user_id: userId || mockDatabase.users[0]?.id,
-    categories_id: income.categoriesId,
-    title: income.title,
-    amount: income.amount,
+    category_id: income.categoriesId,
+    transaction_type_id: 1, // INCOME
     date: income.date,
+    description: income.title,
+    amount: Math.abs(income.amount), // positivo para receita
+    notes: null,
+    status: "paid", // receitas geralmente já são pagas
+    payment_date: income.date,
+    payment_method: "Transferência",
+    card_id: null,
+    bank_id: null,
+    installments: null,
+    installment_group_id: null,
+    is_recurring: false,
+    recurrence_frequency: null,
+    recurrence_end_date: null,
+    recurrence_parent_id: null,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
+    deleted_at: null,
   };
 
-  mockDatabase.incomes.push(newIncome);
-  return newIncome;
+  mockDatabase.transactions.push(newTransaction);
+
+  // Retornar no formato esperado de income
+  return {
+    id: newTransaction.id,
+    user_id: newTransaction.user_id,
+    categories_id: newTransaction.category_id,
+    title: newTransaction.description,
+    amount: Math.abs(newTransaction.amount),
+    date: newTransaction.date,
+    created_at: newTransaction.created_at,
+    updated_at: newTransaction.updated_at,
+  };
 };
 
 export const updateIncome = async (id, updates) => {
   await delay();
 
-  const index = mockDatabase.incomes.findIndex((i) => i.id === id);
+  const index = mockDatabase.transactions.findIndex((t) => t.id === id);
   if (index === -1) {
     throw new Error("Receita não encontrada");
   }
 
-  mockDatabase.incomes[index] = {
-    ...mockDatabase.incomes[index],
-    categories_id: updates.categoriesId,
-    title: updates.title,
-    amount: updates.amount,
-    date: updates.date,
+  // Atualizar transaction
+  mockDatabase.transactions[index] = {
+    ...mockDatabase.transactions[index],
+    category_id: updates.categoriesId !== undefined ? updates.categoriesId : mockDatabase.transactions[index].category_id,
+    description: updates.title !== undefined ? updates.title : mockDatabase.transactions[index].description,
+    amount: updates.amount !== undefined ? Math.abs(updates.amount) : mockDatabase.transactions[index].amount,
+    date: updates.date !== undefined ? updates.date : mockDatabase.transactions[index].date,
     updated_at: new Date().toISOString(),
   };
 
-  return mockDatabase.incomes[index];
+  const updated = mockDatabase.transactions[index];
+
+  // Retornar no formato esperado de income
+  return {
+    id: updated.id,
+    user_id: updated.user_id,
+    categories_id: updated.category_id,
+    title: updated.description,
+    amount: Math.abs(updated.amount),
+    date: updated.date,
+    created_at: updated.created_at,
+    updated_at: updated.updated_at,
+  };
 };
 
 export const deleteIncome = async (id) => {
   await delay();
 
-  const index = mockDatabase.incomes.findIndex((i) => i.id === id);
+  const index = mockDatabase.transactions.findIndex((t) => t.id === id && t.transaction_type_id === 1);
   if (index === -1) {
     throw new Error("Receita não encontrada");
   }
 
-  mockDatabase.incomes.splice(index, 1);
+  mockDatabase.transactions.splice(index, 1);
   return true;
 };
 
@@ -345,14 +450,18 @@ export const createAsset = async (asset, userId = null) => {
   const newAsset = {
     id: Math.max(...mockDatabase.assets.map((a) => a.id), 0) + 1,
     user_id: userId || mockDatabase.users[0]?.id,
-    asset_types_id: asset.assetTypesid,
+    category_id: asset.assetTypesid || asset.categoriesId, // Padronizado
     name: asset.name,
     value: asset.value,
     yield: asset.yield || 0,
     currency: asset.currency || "BRL",
     date: asset.date,
+    description: null,
+    purchase_date: null,
+    purchase_value: null,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
+    deleted_at: null,
   };
 
   mockDatabase.assets.push(newAsset);
@@ -369,12 +478,12 @@ export const updateAsset = async (id, updates) => {
 
   mockDatabase.assets[index] = {
     ...mockDatabase.assets[index],
-    asset_types_id: updates.assetTypesid,
-    name: updates.name,
-    value: updates.value,
-    yield: updates.yield,
-    currency: updates.currency,
-    date: updates.date,
+    category_id: updates.assetTypesid || updates.categoriesId || mockDatabase.assets[index].category_id,
+    name: updates.name !== undefined ? updates.name : mockDatabase.assets[index].name,
+    value: updates.value !== undefined ? updates.value : mockDatabase.assets[index].value,
+    yield: updates.yield !== undefined ? updates.yield : mockDatabase.assets[index].yield,
+    currency: updates.currency !== undefined ? updates.currency : mockDatabase.assets[index].currency,
+    date: updates.date !== undefined ? updates.date : mockDatabase.assets[index].date,
     updated_at: new Date().toISOString(),
   };
 

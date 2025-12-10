@@ -447,6 +447,44 @@ export default function Dashboard() {
     });
   }, [transactions, currentMonth]);
 
+  const incomeVsExpensesYearlyData = useMemo(() => {
+    const now = new Date();
+    const currentYear = now.getFullYear();
+
+    // Todos os 12 meses do ano atual
+    const yearlyMonths = [];
+    for (let m = 1; m <= 12; m++) {
+      yearlyMonths.push(`${currentYear}-${String(m).padStart(2, '0')}`);
+    }
+
+    return yearlyMonths.map(month => {
+      const [year, monthNum] = month.split('-');
+      const monthName = new Date(year, monthNum - 1).toLocaleDateString('pt-BR', { month: 'short' });
+
+      // Receitas: APENAS transactions (tipo income)
+      const monthIncome = transactions
+        .filter(t => t.date.startsWith(month) && t.type_internal_name === 'income')
+        .reduce((sum, t) => sum + Math.abs(t.amount), 0);
+
+      // Despesas: APENAS transactions (tipo expense)
+      const monthExpense = transactions
+        .filter(t => t.date.startsWith(month) && t.type_internal_name === 'expense')
+        .reduce((sum, t) => sum + Math.abs(t.amount), 0);
+
+      // Aportes/Investimentos: APENAS transactions (tipo investment)
+      const monthInvestment = transactions
+        .filter(t => t.date.startsWith(month) && t.type_internal_name === 'investment')
+        .reduce((sum, t) => sum + Math.abs(t.amount), 0);
+
+      return {
+        date: monthName.charAt(0).toUpperCase() + monthName.slice(1),
+        income: monthIncome,
+        expense: monthExpense,
+        investment: monthInvestment,
+      };
+    });
+  }, [transactions, currentMonth]);
+
   const handleEditTransaction = (transaction) => {
     setEditingTransaction(transaction);
     const [year, month, day] = transaction.date.split("-");
@@ -674,6 +712,7 @@ export default function Dashboard() {
           monthlyData={incomeVsExpensesDailyData}
           quarterlyData={incomeVsExpensesQuarterlyData}
           semesterData={incomeVsExpensesSemesterData}
+          yearlyData={incomeVsExpensesYearlyData}
         />
 
         <CategoryBreakdownCard

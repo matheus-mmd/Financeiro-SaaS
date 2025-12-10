@@ -299,10 +299,10 @@ export default function ContasPage() {
                           Ag: {bank.agency} • Cc: {bank.account}
                         </p>
                       )}
-                      {bank.initial_balance !== null &&
-                        bank.initial_balance !== undefined && (
+                      {bank.current_balance !== null &&
+                        bank.current_balance !== undefined && (
                           <p className="text-sm font-medium text-gray-700 mt-2">
-                            {formatCurrency(bank.initial_balance)}
+                            Saldo: {formatCurrency(bank.current_balance)}
                           </p>
                         )}
                     </div>
@@ -381,9 +381,17 @@ export default function ContasPage() {
                         </p>
                       )}
                       {card.card_type === "credito" && card.limit && (
-                        <p className="text-sm font-medium text-gray-700 mt-2">
-                          Limite: {formatCurrency(card.limit)}
-                        </p>
+                        <div className="mt-2">
+                          <p className="text-sm font-medium text-gray-700">
+                            Limite: {formatCurrency(card.limit)}
+                          </p>
+                          {card.current_balance !== null &&
+                            card.current_balance !== undefined && (
+                              <p className="text-xs text-gray-500">
+                                Usado: {formatCurrency(card.current_balance)}
+                              </p>
+                            )}
+                        </div>
                       )}
                       {card.card_type === "credito" &&
                         card.closing_day &&
