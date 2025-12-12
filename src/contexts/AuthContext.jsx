@@ -1,10 +1,8 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import { localStorageAdapter } from '../lib/storage/storageAdapter';
-import mockData from '../data/mockData.json';
+import { supabase } from '../lib/supabase/client';
 
-const SESSION_KEY = 'financeiro-saas-session';
 const AuthContext = createContext({});
 
 export const useAuth = () => {
@@ -20,18 +18,95 @@ export const AuthProvider = ({ children }) => {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      const savedSession = localStorageAdapter.get(SESSION_KEY);
-      if (savedSession) {
-        setUser(savedSession.user);
-        setProfile(savedSession.profile);
-      }
-      setLoading(false);
-    }, 500);
+  /**
+   * Buscar perfil do usuário no banco de dados
+   */
+  const fetchProfile = useCallback(async (userId) => {
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', userId)
+        .single();
 
-    return () => clearTimeout(timer);
+      if (error) {
+        console.error('[AuthContext] Erro ao buscar perfil:', error);
+        return null;
+      }
+
+      return data;
+    } catch (error) {
+      console.error('[AuthContext] Erro ao buscar perfil:', error);
+      return null;
+    }
   }, []);
+
+  /**
+   * Criar perfil do usuário no banco de dados
+   */
+  const createProfile = useCallback(async (userId, email, name) => {
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .insert([
+          {
+            id: userId,
+            email,
+            name,
+          },
+        ])
+        .select()
+        .single();
+
+      if (error) {
+        console.error('[AuthContext] Erro ao criar perfil:', error);
+        return null;
+      }
+
+      return data;
+    } catch (error) {
+      console.error('[AuthContext] Erro ao criar perfil:', error);
+      return null;
+    }
+  }, []);
+
+  /**
+   * Sincronizar estado de autenticação com Supabase
+   */
+  useEffect(() => {
+    // Verificar sessão existente
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        setUser(session.user);
+        fetchProfile(session.user.id).then((profileData) => {
+          setProfile(profileData);
+          setLoading(false);
+        });
+      } else {
+        setLoading(false);
+      }
+    });
+
+    // Escutar mudanças na autenticação
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('[AuthContext] Auth state changed:', event);
+
+      if (session?.user) {
+        setUser(session.user);
+        const profileData = await fetchProfile(session.user.id);
+        setProfile(profileData);
+      } else {
+        setUser(null);
+        setProfile(null);
+      }
+
+      setLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
+  }, [fetchProfile]);
 
   /**
    * Fazer login com email e senha
@@ -41,41 +116,39 @@ export const AuthProvider = ({ children }) => {
       if (!email || !password) {
         return {
           data: null,
-          error: new Error('Email e senha são obrigatórios')
+          error: new Error('Email e senha são obrigatórios'),
         };
       }
 
       if (password.length < 6) {
         return {
           data: null,
-          error: new Error('A senha deve ter pelo menos 6 caracteres')
+          error: new Error('A senha deve ter pelo menos 6 caracteres'),
         };
       }
 
-      const mockSession = {
-        user: {
-          id: mockUser.id,
-          email,
-          created_at: mockUser.created_at,
-        },
-        profile: {
-          id: mockUser.id,
-          name: mockUser.name,
-          email,
-          currency: mockUser.currency,
-        }
-      };
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-      localStorageAdapter.set(SESSION_KEY, mockSession);
-      setUser(mockSession.user);
-      setProfile(mockSession.profile);
+      if (error) {
+        console.error('[AuthContext] Erro ao fazer login:', error);
+        return { data: null, error };
+      }
 
-      return { data: mockSession, error: null };
+      // Buscar perfil do usuário
+      if (data.user) {
+        const profileData = await fetchProfile(data.user.id);
+        setProfile(profileData);
+      }
+
+      return { data, error: null };
     } catch (error) {
       console.error('[AuthContext] Erro ao fazer login:', error);
       return { data: null, error };
     }
-  }, []);
+  }, [fetchProfile]);
 
   /**
    * Criar nova conta com email, senha e nome
@@ -85,49 +158,58 @@ export const AuthProvider = ({ children }) => {
       if (!email || !password || !name) {
         return {
           data: null,
-          error: new Error('Todos os campos são obrigatórios')
+          error: new Error('Todos os campos são obrigatórios'),
         };
       }
 
       if (password.length < 6) {
         return {
           data: null,
-          error: new Error('A senha deve ter pelo menos 6 caracteres')
+          error: new Error('A senha deve ter pelo menos 6 caracteres'),
         };
       }
 
-      const mockSession = {
-        user: {
-          id: mockUser.id,
-          email,
-          created_at: new Date().toISOString(),
+      // Criar usuário no Supabase Auth
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            name,
+          },
         },
-        profile: {
-          id: mockUser.id,
-          name,
-          email,
-          currency: 'BRL',
-        }
-      };
+      });
 
-      localStorageAdapter.set(SESSION_KEY, mockSession);
-      setUser(mockSession.user);
-      setProfile(mockSession.profile);
+      if (error) {
+        console.error('[AuthContext] Erro ao criar conta:', error);
+        return { data: null, error };
+      }
 
-      return { data: mockSession, error: null };
+      // Criar perfil do usuário na tabela users
+      if (data.user) {
+        const profileData = await createProfile(data.user.id, email, name);
+        setProfile(profileData);
+      }
+
+      return { data, error: null };
     } catch (error) {
       console.error('[AuthContext] Erro ao criar conta:', error);
       return { data: null, error };
     }
-  }, []);
+  }, [createProfile]);
 
   /**
    * Fazer logout
    */
   const signOut = useCallback(async () => {
     try {
-      await new Promise(resolve => setTimeout(resolve, 300));
-      localStorageAdapter.remove(SESSION_KEY);
+      const { error } = await supabase.auth.signOut();
+
+      if (error) {
+        console.error('[AuthContext] Erro ao fazer logout:', error);
+        return { error };
+      }
+
       setUser(null);
       setProfile(null);
       return { error: null };
@@ -144,16 +226,20 @@ export const AuthProvider = ({ children }) => {
     try {
       if (!user) throw new Error('Usuário não autenticado');
 
-      await new Promise(resolve => setTimeout(resolve, 500));
+      const { data, error } = await supabase
+        .from('users')
+        .update(updates)
+        .eq('id', user.id)
+        .select()
+        .single();
 
-      const updatedProfile = { ...profile, ...updates };
-      setProfile(updatedProfile);
+      if (error) {
+        console.error('[AuthContext] Erro ao atualizar perfil:', error);
+        return { data: null, error };
+      }
 
-      const savedSession = localStorageAdapter.get(SESSION_KEY) || {};
-      savedSession.profile = updatedProfile;
-      localStorageAdapter.set(SESSION_KEY, savedSession);
-
-      return { data: updatedProfile, error: null };
+      setProfile(data);
+      return { data, error: null };
     } catch (error) {
       console.error('[AuthContext] Erro ao atualizar perfil:', error);
       return { data: null, error };
