@@ -23,7 +23,7 @@ export async function getTargetById(id) {
     .from('targets_enriched')
     .select('*')
     .eq('id', id)
-    .single();
+    .maybeSingle();
 
   return { data, error };
 }
@@ -51,7 +51,7 @@ export async function createTarget(target) {
       deadline: target.deadline,
     })
     .select()
-    .single();
+    .maybeSingle();
 
   return { data, error };
 }
@@ -74,7 +74,7 @@ export async function updateTarget(id, updates) {
     .update(updateData)
     .eq('id', id)
     .select()
-    .single();
+    .maybeSingle();
 
   return { data, error };
 }
@@ -85,7 +85,7 @@ export async function deleteTarget(id) {
     .update({ deleted_at: new Date().toISOString() })
     .eq('id', id)
     .select()
-    .single();
+    .maybeSingle();
 
   return { data, error };
 }

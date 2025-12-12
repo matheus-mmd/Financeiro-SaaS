@@ -18,7 +18,7 @@ export async function getCardById(id) {
     .from('cards_enriched')
     .select('*')
     .eq('id', id)
-    .single();
+    .maybeSingle();
 
   return { data, error };
 }
@@ -47,7 +47,7 @@ export async function createCard(card) {
       current_balance: card.currentBalance || 0,
     })
     .select()
-    .single();
+    .maybeSingle();
 
   return { data, error };
 }
@@ -72,7 +72,7 @@ export async function updateCard(id, updates) {
     .update(updateData)
     .eq('id', id)
     .select()
-    .single();
+    .maybeSingle();
 
   return { data, error };
 }
@@ -83,7 +83,7 @@ export async function deleteCard(id) {
     .update({ deleted_at: new Date().toISOString() })
     .eq('id', id)
     .select()
-    .single();
+    .maybeSingle();
 
   return { data, error };
 }

@@ -23,7 +23,7 @@ export async function getCategoryById(id) {
     .from('categories_enriched')
     .select('*')
     .eq('id', id)
-    .single();
+    .maybeSingle();
 
   return { data, error };
 }
@@ -67,7 +67,7 @@ export async function createCategory(category) {
       transaction_type_id: category.transactionTypeId,
     })
     .select()
-    .single();
+    .maybeSingle();
 
   return { data, error };
 }
@@ -85,7 +85,7 @@ export async function updateCategory(id, updates) {
     .update(updateData)
     .eq('id', id)
     .select()
-    .single();
+    .maybeSingle();
 
   return { data, error };
 }
@@ -96,7 +96,7 @@ export async function deleteCategory(id) {
     .update({ deleted_at: new Date().toISOString() })
     .eq('id', id)
     .select()
-    .single();
+    .maybeSingle();
 
   return { data, error };
 }

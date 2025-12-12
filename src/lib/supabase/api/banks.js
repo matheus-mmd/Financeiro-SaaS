@@ -18,7 +18,7 @@ export async function getBankById(id) {
     .from('banks_enriched')
     .select('*')
     .eq('id', id)
-    .single();
+    .maybeSingle();
 
   return { data, error };
 }
@@ -45,7 +45,7 @@ export async function createBank(bank) {
       current_balance: bank.currentBalance || bank.initialBalance || 0,
     })
     .select()
-    .single();
+    .maybeSingle();
 
   return { data, error };
 }
@@ -68,7 +68,7 @@ export async function updateBank(id, updates) {
     .update(updateData)
     .eq('id', id)
     .select()
-    .single();
+    .maybeSingle();
 
   return { data, error };
 }
@@ -79,7 +79,7 @@ export async function deleteBank(id) {
     .update({ deleted_at: new Date().toISOString() })
     .eq('id', id)
     .select()
-    .single();
+    .maybeSingle();
 
   return { data, error };
 }

@@ -52,7 +52,7 @@ export async function getTransactionById(id) {
     .from('transactions_enriched')
     .select('*')
     .eq('id', id)
-    .single();
+    .maybeSingle();
 
   return { data, error };
 }
@@ -68,6 +68,27 @@ export async function createTransaction(transaction) {
 
   if (!user) {
     return { data: null, error: new Error('Usuário não autenticado') };
+  }
+
+  // Validar campos obrigatórios
+  if (!transaction.categoryId) {
+    return { data: null, error: new Error('Categoria é obrigatória') };
+  }
+
+  if (!transaction.transactionTypeId) {
+    return { data: null, error: new Error('Tipo de transação é obrigatório') };
+  }
+
+  if (!transaction.description) {
+    return { data: null, error: new Error('Descrição é obrigatória') };
+  }
+
+  if (!transaction.amount) {
+    return { data: null, error: new Error('Valor é obrigatório') };
+  }
+
+  if (!transaction.transactionDate) {
+    return { data: null, error: new Error('Data da transação é obrigatória') };
   }
 
   const { data, error } = await supabase
@@ -92,7 +113,28 @@ export async function createTransaction(transaction) {
       recurrence_end_date: transaction.recurrenceEndDate || null,
     })
     .select()
-    .single();
+    .maybeSingle();
+
+  if (error) {
+    // Melhorar mensagem de erro para violação de foreign key
+    if (error.code === '23503') {
+      const detailMatch = error.message.match(/Key \((\w+)\)/);
+      const fieldName = detailMatch ? detailMatch[1] : 'campo';
+
+      const fieldMessages = {
+        'category_id': 'Categoria selecionada é inválida ou não existe',
+        'transaction_type_id': 'Tipo de transação selecionado é inválido',
+        'payment_status_id': 'Status de pagamento selecionado é inválido',
+        'payment_method_id': 'Forma de pagamento selecionada é inválida',
+        'bank_id': 'Banco selecionado não existe',
+        'card_id': 'Cartão selecionado não existe',
+        'recurrence_frequency_id': 'Frequência de recorrência selecionada é inválida'
+      };
+
+      const friendlyMessage = fieldMessages[fieldName] || `Campo ${fieldName} contém um valor inválido`;
+      return { data: null, error: new Error(friendlyMessage) };
+    }
+  }
 
   return { data, error };
 }
@@ -128,7 +170,7 @@ export async function updateTransaction(id, updates) {
     .update(updateData)
     .eq('id', id)
     .select()
-    .single();
+    .maybeSingle();
 
   return { data, error };
 }
@@ -144,7 +186,7 @@ export async function deleteTransaction(id) {
     .update({ deleted_at: new Date().toISOString() })
     .eq('id', id)
     .select()
-    .single();
+    .maybeSingle();
 
   return { data, error };
 }

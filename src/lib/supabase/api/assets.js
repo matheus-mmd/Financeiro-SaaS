@@ -25,7 +25,7 @@ export async function getAssetById(id) {
     .from('assets_enriched')
     .select('*')
     .eq('id', id)
-    .single();
+    .maybeSingle();
 
   return { data, error };
 }
@@ -63,7 +63,7 @@ export async function createAsset(asset) {
       .from('transactions')
       .insert(transactionData)
       .select()
-      .single();
+      .maybeSingle();
 
     if (transactionError) {
       console.error('[Assets API] Erro ao criar transação:', transactionError);
@@ -87,7 +87,7 @@ export async function createAsset(asset) {
         related_transaction_id: transactionResult.id, // Vincular à transação
       })
       .select()
-      .single();
+      .maybeSingle();
 
     if (assetError) {
       console.error('[Assets API] Erro ao criar ativo:', assetError);
@@ -116,7 +116,7 @@ export async function updateAsset(id, updates) {
       .from('assets')
       .select('*')
       .eq('id', id)
-      .single();
+      .maybeSingle();
 
     if (fetchError) throw fetchError;
 
@@ -139,7 +139,7 @@ export async function updateAsset(id, updates) {
       .update(updateData)
       .eq('id', id)
       .select()
-      .single();
+      .maybeSingle();
 
     if (assetError) throw assetError;
 
@@ -179,7 +179,7 @@ export async function deleteAsset(id) {
       .from('assets')
       .select('*')
       .eq('id', id)
-      .single();
+      .maybeSingle();
 
     if (fetchError) throw fetchError;
 
@@ -189,7 +189,7 @@ export async function deleteAsset(id) {
       .update({ deleted_at: new Date().toISOString() })
       .eq('id', id)
       .select()
-      .single();
+      .maybeSingle();
 
     if (assetError) throw assetError;
 

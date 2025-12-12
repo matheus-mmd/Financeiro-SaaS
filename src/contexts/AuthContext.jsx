@@ -27,7 +27,7 @@ export const AuthProvider = ({ children }) => {
         .from('users')
         .select('*')
         .eq('id', userId)
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error('[AuthContext] Erro ao buscar perfil:', error);
@@ -56,7 +56,7 @@ export const AuthProvider = ({ children }) => {
           },
         ])
         .select()
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error('[AuthContext] Erro ao criar perfil:', error);
@@ -75,13 +75,23 @@ export const AuthProvider = ({ children }) => {
    */
   useEffect(() => {
     // Verificar sessão existente
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session?.user) {
         setUser(session.user);
-        fetchProfile(session.user.id).then((profileData) => {
-          setProfile(profileData);
-          setLoading(false);
-        });
+        let profileData = await fetchProfile(session.user.id);
+
+        // Se o perfil não existe, criar automaticamente
+        if (!profileData) {
+          console.log('[AuthContext] Perfil não encontrado, criando...');
+          profileData = await createProfile(
+            session.user.id,
+            session.user.email,
+            session.user.user_metadata?.name || session.user.email
+          );
+        }
+
+        setProfile(profileData);
+        setLoading(false);
       } else {
         setLoading(false);
       }
@@ -95,7 +105,18 @@ export const AuthProvider = ({ children }) => {
 
       if (session?.user) {
         setUser(session.user);
-        const profileData = await fetchProfile(session.user.id);
+        let profileData = await fetchProfile(session.user.id);
+
+        // Se o perfil não existe, criar automaticamente
+        if (!profileData) {
+          console.log('[AuthContext] Perfil não encontrado, criando...');
+          profileData = await createProfile(
+            session.user.id,
+            session.user.email,
+            session.user.user_metadata?.name || session.user.email
+          );
+        }
+
         setProfile(profileData);
       } else {
         setUser(null);
@@ -106,7 +127,7 @@ export const AuthProvider = ({ children }) => {
     });
 
     return () => subscription.unsubscribe();
-  }, [fetchProfile]);
+  }, [fetchProfile, createProfile]);
 
   /**
    * Fazer login com email e senha
@@ -137,9 +158,20 @@ export const AuthProvider = ({ children }) => {
         return { data: null, error };
       }
 
-      // Buscar perfil do usuário
+      // Buscar ou criar perfil do usuário
       if (data.user) {
-        const profileData = await fetchProfile(data.user.id);
+        let profileData = await fetchProfile(data.user.id);
+
+        // Se o perfil não existe, criar automaticamente
+        if (!profileData) {
+          console.log('[AuthContext] Perfil não encontrado no login, criando...');
+          profileData = await createProfile(
+            data.user.id,
+            data.user.email,
+            data.user.user_metadata?.name || data.user.email
+          );
+        }
+
         setProfile(profileData);
       }
 
@@ -231,7 +263,7 @@ export const AuthProvider = ({ children }) => {
         .update(updates)
         .eq('id', user.id)
         .select()
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error('[AuthContext] Erro ao atualizar perfil:', error);
