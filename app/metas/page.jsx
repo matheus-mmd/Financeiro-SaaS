@@ -41,15 +41,18 @@ import Table from "../../src/components/Table";
 import ProgressBar from "../../src/components/ProgressBar";
 import DatePicker from "../../src/components/DatePicker";
 import {
-  fetchData,
   formatCurrency,
   formatDate,
-  createTarget,
-  updateTarget,
-  deleteTarget,
   parseDateString,
   isDateInRange,
 } from "../../src/utils";
+import {
+  getTargets,
+  createTarget,
+  updateTarget,
+  deleteTarget,
+} from "../../src/lib/supabase/api/targets";
+import { getCategories } from "../../src/lib/supabase/api/categories";
 import { exportToCSV } from "../../src/utils/exportData";
 import { getIconComponent } from "../../src/components/IconPicker";
 import { GOAL_STATUS } from "../../src/constants";
@@ -86,17 +89,26 @@ export default function Metas() {
     const loadData = async () => {
       try {
         const [targetsRes, categoriesRes] = await Promise.all([
-          fetchData("/api/targets"),
-          fetchData("/api/categories"),
+          getTargets(),
+          getCategories(),
         ]);
-        // Adicionar data às metas se não tiver
-        const targetsWithDate = targetsRes.data.map((target) => ({
+
+        if (targetsRes.error) throw targetsRes.error;
+        if (categoriesRes.error) throw categoriesRes.error;
+
+        // Map Supabase fields to component fields
+        const mappedTargets = (targetsRes.data || []).map((target) => ({
           ...target,
-          date: target.date || new Date().toISOString().split("T")[0],
+          goal: target.goal_amount,
+          progress: target.current_amount,
+          monthlyAmount: target.monthly_target,
+          category: target.category_name || "",
+          date: target.start_date || new Date().toISOString().split("T")[0],
         }));
-        setTargets(targetsWithDate);
-        setFilteredTargets(targetsWithDate);
-        setCategories(categoriesRes.data);
+
+        setTargets(mappedTargets);
+        setFilteredTargets(mappedTargets);
+        setCategories(categoriesRes.data || []);
       } catch (error) {
         console.error("Erro ao carregar metas:", error);
       } finally {
@@ -174,17 +186,24 @@ export default function Metas() {
   const confirmDelete = async () => {
     if (targetToDelete) {
       try {
-        // Deletar usando mock API
-        await deleteTarget(targetToDelete.id);
+        const result = await deleteTarget(targetToDelete.id);
+        if (result.error) throw result.error;
 
-        // Recarregar dados da mock API
-        const response = await fetchData("/api/targets");
-        const targetsWithDate = response.data.map((target) => ({
+        // Reload data
+        const response = await getTargets();
+        if (response.error) throw response.error;
+
+        const mappedTargets = (response.data || []).map((target) => ({
           ...target,
-          date: target.date || new Date().toISOString().split("T")[0],
+          goal: target.goal_amount,
+          progress: target.current_amount,
+          monthlyAmount: target.monthly_target,
+          category: target.category_name || "",
+          date: target.start_date || new Date().toISOString().split("T")[0],
         }));
-        setTargets(targetsWithDate);
-        setFilteredTargets(targetsWithDate);
+
+        setTargets(mappedTargets);
+        setFilteredTargets(mappedTargets);
 
         setDeleteDialogOpen(false);
         setTargetToDelete(null);
@@ -208,34 +227,42 @@ export default function Metas() {
 
       const targetData = {
         title: formData.title,
-        categoriesId: category?.id || null,
-        goal: parseFloat(formData.goal),
-        progress: parseFloat(formData.progress || 0),
-        monthlyAmount: formData.monthlyAmount ? parseFloat(formData.monthlyAmount) : null,
+        categoryId: category?.id || null,
+        goalAmount: parseFloat(formData.goal),
+        currentAmount: parseFloat(formData.progress || 0),
+        monthlyTarget: formData.monthlyAmount ? parseFloat(formData.monthlyAmount) : null,
         status:
           parseFloat(formData.progress || 0) >= parseFloat(formData.goal)
             ? GOAL_STATUS.COMPLETED
             : GOAL_STATUS.IN_PROGRESS,
-        date: dateString,
+        startDate: dateString,
         deadline: deadlineString,
       };
 
+      let result;
       if (editingTarget) {
-        // Atualizar meta existente
-        await updateTarget(editingTarget.id, targetData);
+        result = await updateTarget(editingTarget.id, targetData);
       } else {
-        // Criar nova meta
-        await createTarget(targetData, user.id);
+        result = await createTarget(targetData);
       }
 
-      // Recarregar dados da mock API
-      const response = await fetchData("/api/targets");
-      const targetsWithDate = response.data.map((target) => ({
+      if (result.error) throw result.error;
+
+      // Reload data
+      const response = await getTargets();
+      if (response.error) throw response.error;
+
+      const mappedTargets = (response.data || []).map((target) => ({
         ...target,
-        date: target.date || new Date().toISOString().split("T")[0],
+        goal: target.goal_amount,
+        progress: target.current_amount,
+        monthlyAmount: target.monthly_target,
+        category: target.category_name || "",
+        date: target.start_date || new Date().toISOString().split("T")[0],
       }));
-      setTargets(targetsWithDate);
-      setFilteredTargets(targetsWithDate);
+
+      setTargets(mappedTargets);
+      setFilteredTargets(mappedTargets);
 
       setModalOpen(false);
       setFormData({

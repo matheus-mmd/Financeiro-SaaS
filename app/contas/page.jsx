@@ -21,14 +21,22 @@ import {
   SelectValue,
 } from "../../src/components/ui/select";
 import {
-  fetchData,
+  getBanks,
   createBank,
   updateBank,
   deleteBank,
+} from "../../src/lib/supabase/api/banks";
+import {
+  getCards,
   createCard,
   updateCard,
   deleteCard,
-} from "../../src/utils/mockApi";
+} from "../../src/lib/supabase/api/cards";
+import {
+  getAccountTypes,
+  getCardTypes,
+  getCardBrands,
+} from "../../src/lib/supabase/api/categories";
 import { Plus, Trash2, Landmark, CreditCard } from "lucide-react";
 import { getIconComponent } from "../../src/components/IconPicker";
 import ColorPicker from "../../src/components/ColorPicker";
@@ -43,6 +51,9 @@ export default function ContasPage() {
   const [banks, setBanks] = useState([]);
   const [cards, setCards] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [accountTypes, setAccountTypes] = useState([]);
+  const [cardTypes, setCardTypes] = useState([]);
+  const [cardBrands, setCardBrands] = useState([]);
 
   // Estados para modal de banco
   const [bankModalOpen, setBankModalOpen] = useState(false);
@@ -82,13 +93,25 @@ export default function ContasPage() {
 
   const loadData = async () => {
     try {
-      const [banksRes, cardsRes] = await Promise.all([
-        fetchData("/api/banks"),
-        fetchData("/api/cards"),
+      const [banksRes, cardsRes, accountTypesRes, cardTypesRes, cardBrandsRes] = await Promise.all([
+        getBanks(),
+        getCards(),
+        getAccountTypes(),
+        getCardTypes(),
+        getCardBrands(),
       ]);
 
-      setBanks(banksRes.data);
-      setCards(cardsRes.data);
+      if (banksRes.error) throw banksRes.error;
+      if (cardsRes.error) throw cardsRes.error;
+      if (accountTypesRes.error) throw accountTypesRes.error;
+      if (cardTypesRes.error) throw cardTypesRes.error;
+      if (cardBrandsRes.error) throw cardBrandsRes.error;
+
+      setBanks(banksRes.data || []);
+      setCards(cardsRes.data || []);
+      setAccountTypes(accountTypesRes.data || []);
+      setCardTypes(cardTypesRes.data || []);
+      setCardBrands(cardBrandsRes.data || []);
     } catch (error) {
       console.error("Erro ao carregar dados:", error);
     } finally {
@@ -128,11 +151,27 @@ export default function ContasPage() {
     e.preventDefault();
 
     try {
+      // Find account_type_id by internal_name
+      const accountType = accountTypes.find(t => t.internal_name === bankFormData.account_type);
+
+      const bankData = {
+        name: bankFormData.name,
+        iconId: bankFormData.icon,
+        color: bankFormData.color,
+        agency: bankFormData.agency,
+        account: bankFormData.account,
+        accountTypeId: accountType?.id,
+        initialBalance: parseFloat(bankFormData.initial_balance) || 0,
+      };
+
+      let result;
       if (editingBank) {
-        await updateBank(editingBank.id, bankFormData);
+        result = await updateBank(editingBank.id, bankData);
       } else {
-        await createBank(bankFormData);
+        result = await createBank(bankData);
       }
+
+      if (result.error) throw result.error;
 
       await loadData();
       setBankModalOpen(false);
@@ -146,7 +185,8 @@ export default function ContasPage() {
     if (!confirm("Tem certeza que deseja deletar este banco?")) return;
 
     try {
-      await deleteBank(id);
+      const result = await deleteBank(id);
+      if (result.error) throw result.error;
       await loadData();
     } catch (error) {
       console.error("Erro ao deletar banco:", error);
@@ -190,11 +230,30 @@ export default function ContasPage() {
     e.preventDefault();
 
     try {
+      // Find IDs by internal_name
+      const cardType = cardTypes.find(t => t.internal_name === cardFormData.card_type);
+      const cardBrand = cardBrands.find(b => b.name === cardFormData.card_brand);
+
+      const cardData = {
+        name: cardFormData.name,
+        iconId: cardFormData.icon,
+        color: cardFormData.color,
+        cardTypeId: cardType?.id,
+        cardBrandId: cardBrand?.id,
+        bankId: cardFormData.bank_id,
+        creditLimit: parseFloat(cardFormData.limit) || 0,
+        closingDay: parseInt(cardFormData.closing_day) || 1,
+        dueDay: parseInt(cardFormData.due_day) || 10,
+      };
+
+      let result;
       if (editingCard) {
-        await updateCard(editingCard.id, cardFormData);
+        result = await updateCard(editingCard.id, cardData);
       } else {
-        await createCard(cardFormData);
+        result = await createCard(cardData);
       }
+
+      if (result.error) throw result.error;
 
       await loadData();
       setCardModalOpen(false);
@@ -208,7 +267,8 @@ export default function ContasPage() {
     if (!confirm("Tem certeza que deseja deletar este cartão?")) return;
 
     try {
-      await deleteCard(id);
+      const result = await deleteCard(id);
+      if (result.error) throw result.error;
       await loadData();
     } catch (error) {
       console.error("Erro ao deletar cartão:", error);

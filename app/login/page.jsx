@@ -10,9 +10,49 @@ import { Card, CardContent } from '../../src/components/ui/card';
 import { Wallet, ArrowRight, Mail, Lock, User } from 'lucide-react';
 
 /**
- * Página de Login e Cadastro MOCK
- * Interface unificada para autenticação de usuários
- * MODO DESENVOLVIMENTO: Aceita qualquer email/senha (mínimo 6 caracteres)
+ * Traduz mensagens de erro do Supabase para português
+ */
+const translateError = (errorMessage) => {
+  const translations = {
+    // Erros de autenticação
+    'Invalid login credentials': 'E-mail ou senha incorretos',
+    'Email not confirmed': 'E-mail não confirmado. Verifique sua caixa de entrada',
+    'User already registered': 'Este e-mail já está cadastrado',
+    'Password should be at least 6 characters': 'A senha deve ter pelo menos 6 caracteres',
+    'Unable to validate email address: invalid format': 'Formato de e-mail inválido',
+    'User not found': 'Usuário não encontrado',
+    'Invalid email or password': 'E-mail ou senha inválidos',
+    'Email rate limit exceeded': 'Muitas tentativas. Aguarde alguns minutos',
+    'Invalid Refresh Token': 'Sessão expirada. Faça login novamente',
+    'Signup requires a valid password': 'Informe uma senha válida',
+
+    // Erros de rede
+    'Failed to fetch': 'Erro de conexão. Verifique sua internet',
+    'Network request failed': 'Falha na conexão. Tente novamente',
+
+    // Erros genéricos
+    'An error occurred': 'Ocorreu um erro. Tente novamente',
+  };
+
+  // Procurar tradução exata
+  if (translations[errorMessage]) {
+    return translations[errorMessage];
+  }
+
+  // Procurar tradução parcial
+  for (const [english, portuguese] of Object.entries(translations)) {
+    if (errorMessage?.includes(english)) {
+      return portuguese;
+    }
+  }
+
+  // Se não encontrar tradução, retornar mensagem genérica
+  return errorMessage || 'Ocorreu um erro. Tente novamente';
+};
+
+/**
+ * Página de Login e Cadastro
+ * Interface unificada para autenticação de usuários com Supabase
  */
 export default function LoginPage() {
   const router = useRouter();
@@ -85,7 +125,7 @@ export default function LoginPage() {
         const { error } = await signIn(formData.email, formData.password);
 
         if (error) {
-          setError(error.message);
+          setError(translateError(error.message));
           setLoading(false);
           return;
         }
@@ -93,7 +133,7 @@ export default function LoginPage() {
         const { error } = await signUp(formData.email, formData.password, formData.name);
 
         if (error) {
-          setError(error.message);
+          setError(translateError(error.message));
           setLoading(false);
           return;
         }

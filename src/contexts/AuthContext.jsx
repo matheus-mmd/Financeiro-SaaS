@@ -1,7 +1,8 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import { supabase } from '../lib/supabase';
+import { localStorageAdapter } from '../lib/storage/storageAdapter';
+import mockData from '../data/mockData.json';
 
 const AuthContext = createContext({});
 
@@ -18,81 +19,18 @@ export const AuthProvider = ({ children }) => {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  /**
-   * Busca o perfil do usuário do banco de dados
-   */
-  const fetchProfile = useCallback(async (userId) => {
-    try {
-      const { data, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('id', userId)
-        .single();
-
-      if (error) {
-        console.error('[AuthContext] Erro ao buscar perfil:', error);
-        return null;
-      }
-
-      return data;
-    } catch (error) {
-      console.error('[AuthContext] Erro ao buscar perfil:', error);
-      return null;
-    }
-  }, []);
-
-  /**
-   * Inicializa a sessão e monitora mudanças de autenticação
-   */
   useEffect(() => {
-    // Verificar sessão atual
-    const initializeAuth = async () => {
-      try {
-        const { data: { session }, error } = await supabase.auth.getSession();
-
-        if (error) {
-          console.error('[AuthContext] Erro ao obter sessão:', error);
-          setLoading(false);
-          return;
-        }
-
-        if (session?.user) {
-          setUser(session.user);
-          const userProfile = await fetchProfile(session.user.id);
-          setProfile(userProfile);
-        }
-
-        setLoading(false);
-      } catch (error) {
-        console.error('[AuthContext] Erro ao inicializar auth:', error);
-        setLoading(false);
+    const timer = setTimeout(() => {
+      const savedSession = localStorageAdapter.get(SESSION_KEY);
+      if (savedSession) {
+        setUser(savedSession.user);
+        setProfile(savedSession.profile);
       }
-    };
+      setLoading(false);
+    }, 500);
 
-    initializeAuth();
-
-    // Monitorar mudanças de autenticação
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log('[AuthContext] Auth state changed:', event);
-
-        if (session?.user) {
-          setUser(session.user);
-          const userProfile = await fetchProfile(session.user.id);
-          setProfile(userProfile);
-        } else {
-          setUser(null);
-          setProfile(null);
-        }
-
-        setLoading(false);
-      }
-    );
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [fetchProfile]);
+    return () => clearTimeout(timer);
+  }, []);
 
   /**
    * Fazer login com email e senha
@@ -106,18 +44,32 @@ export const AuthProvider = ({ children }) => {
         };
       }
 
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) {
-        console.error('[AuthContext] Erro ao fazer login:', error);
-        return { data: null, error };
+      if (password.length < 6) {
+        return {
+          data: null,
+          error: new Error('A senha deve ter pelo menos 6 caracteres')
+        };
       }
 
-      // O perfil será carregado automaticamente pelo onAuthStateChange
-      return { data, error: null };
+      const mockSession = {
+        user: {
+          id: mockUser.id,
+          email,
+          created_at: mockUser.created_at,
+        },
+        profile: {
+          id: mockUser.id,
+          name: mockUser.name,
+          email,
+          currency: mockUser.currency,
+        }
+      };
+
+      localStorageAdapter.set(SESSION_KEY, mockSession);
+      setUser(mockSession.user);
+      setProfile(mockSession.profile);
+
+      return { data: mockSession, error: null };
     } catch (error) {
       console.error('[AuthContext] Erro ao fazer login:', error);
       return { data: null, error };
@@ -143,45 +95,25 @@ export const AuthProvider = ({ children }) => {
         };
       }
 
-      // Criar usuário no Supabase Auth
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email,
-        password,
-      });
+      const mockSession = {
+        user: {
+          id: mockUser.id,
+          email,
+          created_at: new Date().toISOString(),
+        },
+        profile: {
+          id: mockUser.id,
+          name,
+          email,
+          currency: 'BRL',
+        }
+      };
 
-      if (authError) {
-        console.error('[AuthContext] Erro ao criar conta:', authError);
-        return { data: null, error: authError };
-      }
+      localStorageAdapter.set(SESSION_KEY, mockSession);
+      setUser(mockSession.user);
+      setProfile(mockSession.profile);
 
-      if (!authData.user) {
-        return {
-          data: null,
-          error: new Error('Erro ao criar usuário')
-        };
-      }
-
-      // Criar perfil do usuário na tabela users
-      const { data: profileData, error: profileError } = await supabase
-        .from('users')
-        .insert([
-          {
-            id: authData.user.id,
-            email,
-            name,
-          }
-        ])
-        .select()
-        .single();
-
-      if (profileError) {
-        console.error('[AuthContext] Erro ao criar perfil:', profileError);
-        // Mesmo com erro no perfil, o usuário foi criado no Auth
-        // Retornar sucesso mas logar o erro
-      }
-
-      // O perfil será carregado automaticamente pelo onAuthStateChange
-      return { data: authData, error: null };
+      return { data: mockSession, error: null };
     } catch (error) {
       console.error('[AuthContext] Erro ao criar conta:', error);
       return { data: null, error };
@@ -193,14 +125,10 @@ export const AuthProvider = ({ children }) => {
    */
   const signOut = useCallback(async () => {
     try {
-      const { error } = await supabase.auth.signOut();
-
-      if (error) {
-        console.error('[AuthContext] Erro ao fazer logout:', error);
-        return { error };
-      }
-
-      // O estado será limpo automaticamente pelo onAuthStateChange
+      await new Promise(resolve => setTimeout(resolve, 300));
+      localStorageAdapter.remove(SESSION_KEY);
+      setUser(null);
+      setProfile(null);
       return { error: null };
     } catch (error) {
       console.error('[AuthContext] Erro ao fazer logout:', error);
@@ -213,27 +141,18 @@ export const AuthProvider = ({ children }) => {
    */
   const updateProfile = useCallback(async (updates) => {
     try {
-      if (!user) {
-        throw new Error('Usuário não autenticado');
-      }
+      if (!user) throw new Error('Usuário não autenticado');
 
-      // Atualizar perfil no banco de dados
-      const { data, error } = await supabase
-        .from('users')
-        .update(updates)
-        .eq('id', user.id)
-        .select()
-        .single();
+      await new Promise(resolve => setTimeout(resolve, 500));
 
-      if (error) {
-        console.error('[AuthContext] Erro ao atualizar perfil:', error);
-        return { data: null, error };
-      }
+      const updatedProfile = { ...profile, ...updates };
+      setProfile(updatedProfile);
 
-      // Atualizar estado local
-      setProfile(data);
+      const savedSession = localStorageAdapter.get(SESSION_KEY) || {};
+      savedSession.profile = updatedProfile;
+      localStorageAdapter.set(SESSION_KEY, savedSession);
 
-      return { data, error: null };
+      return { data: updatedProfile, error: null };
     } catch (error) {
       console.error('[AuthContext] Erro ao atualizar perfil:', error);
       return { data: null, error };
