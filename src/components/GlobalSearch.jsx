@@ -8,7 +8,6 @@ import {
   TrendingUp,
   Target,
   DollarSign,
-  Receipt,
 } from "lucide-react";
 import { Input } from "./ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
@@ -17,7 +16,7 @@ import { useDebounce } from "../hooks/useDebounce";
 
 /**
  * GlobalSearch - Componente de busca global na aplicação
- * Busca em transações, metas, patrimônio e ativos, e despesas
+ * Busca em transações, metas e patrimônio e ativos
  * OTIMIZADO: Usa debounce para evitar chamadas excessivas de API
  */
 export default function GlobalSearch() {
@@ -28,7 +27,6 @@ export default function GlobalSearch() {
     transactions: [],
     targets: [],
     assets: [],
-    expenses: [],
   });
   const router = useRouter();
 
@@ -50,7 +48,7 @@ export default function GlobalSearch() {
   // Reduz chamadas de API de ~10/seg para ~3/seg
   useEffect(() => {
     if (!debouncedSearchTerm || debouncedSearchTerm.length < 2) {
-      setResults({ transactions: [], targets: [], assets: [], expenses: [] });
+      setResults({ transactions: [], targets: [], assets: [] });
       return;
     }
 
@@ -59,18 +57,16 @@ export default function GlobalSearch() {
     // Buscar nos dados mockados
     const searchInData = async () => {
       try {
-        const [transactionsRes, targetsRes, assetsRes, expensesRes] =
+        const [transactionsRes, targetsRes, assetsRes] =
           await Promise.all([
             fetchData("/api/transactions"),
             fetchData("/api/targets"),
             fetchData("/api/assets"),
-            fetchData("/api/expenses"),
           ]);
 
         const transactions = transactionsRes.data;
         const targets = targetsRes.data;
         const assets = assetsRes.data;
-        const expenses = expensesRes.data;
 
         const filteredTransactions = transactions
           .filter((t) => t.description?.toLowerCase().includes(term))
@@ -88,19 +84,10 @@ export default function GlobalSearch() {
           )
           .slice(0, 5);
 
-        const filteredExpenses = expenses
-          .filter(
-            (e) =>
-              e.title?.toLowerCase().includes(term) ||
-              e.category?.toLowerCase().includes(term)
-          )
-          .slice(0, 5);
-
         setResults({
           transactions: filteredTransactions,
           targets: filteredTargets,
           assets: filteredAssets,
-          expenses: filteredExpenses,
         });
       } catch (error) {
         console.error("Erro ao buscar dados:", error);
@@ -123,8 +110,7 @@ export default function GlobalSearch() {
   const totalResults =
     results.transactions.length +
     results.targets.length +
-    results.assets.length +
-    results.expenses.length;
+    results.assets.length;
 
   return (
     <>
@@ -257,40 +243,6 @@ export default function GlobalSearch() {
                             <div className="flex items-center gap-2">
                               <span className="font-semibold text-gray-900">
                                 {formatCurrency(a.value)}
-                              </span>
-                              <ArrowRight className="w-4 h-4 text-gray-400" />
-                            </div>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Despesas */}
-                  {results.expenses.length > 0 && (
-                    <div>
-                      <h3 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                        <Receipt className="w-4 h-4" />
-                        Despesas
-                      </h3>
-                      <div className="space-y-1">
-                        {results.expenses.map((e) => (
-                          <button
-                            key={e.id}
-                            onClick={() => handleNavigate("/despesas")}
-                            className="w-full flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg transition-colors text-left"
-                          >
-                            <div className="flex-1">
-                              <p className="font-medium text-gray-900">
-                                {e.title}
-                              </p>
-                              <p className="text-sm text-gray-500">
-                                {e.category}
-                              </p>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <span className="font-semibold text-gray-900">
-                                {formatCurrency(e.amount)}
                               </span>
                               <ArrowRight className="w-4 h-4 text-gray-400" />
                             </div>

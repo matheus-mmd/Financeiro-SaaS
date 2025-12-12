@@ -6,8 +6,6 @@ import { usePathname } from "next/navigation";
 import {
   LayoutGrid,
   ArrowLeftRight,
-  Wallet,
-  TrendingUp,
   Target,
   Layers,
   PiggyBank,
@@ -48,8 +46,6 @@ export default function Sidebar({
   const menuItems = [
     { path: "/", icon: LayoutGrid, label: "Dashboard" },
     { path: "/transacoes", icon: ArrowLeftRight, label: "Transações" },
-    { path: "/despesas", icon: Wallet, label: "Despesas" },
-    { path: "/receitas", icon: TrendingUp, label: "Receitas" },
     { path: "/patrimonio-ativos", icon: PiggyBank, label: "Patrimônio" },
     { path: "/metas", icon: Target, label: "Metas" },
     { path: "/contas", icon: Landmark, label: "Contas" },
