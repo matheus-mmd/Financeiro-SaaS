@@ -1,161 +1,94 @@
-# Configuração do Supabase - Financeiro SaaS
+# Configuração do Supabase
 
-Este documento contém as instruções para configurar o Supabase no projeto.
+Este projeto usa **dados reais do Supabase** para autenticação e gerenciamento de dados financeiros.
 
-## 1. Configurar Variáveis de Ambiente
+## 📋 Pré-requisitos
 
-1. Copie o arquivo `.env.local.example` para `.env.local`:
-   ```bash
-   cp .env.local.example .env.local
-   ```
+1. Conta no Supabase (gratuita): https://supabase.com
+2. Projeto criado no Supabase
 
-2. Abra `.env.local` e preencha com as credenciais do seu projeto Supabase:
-   - Acesse https://app.supabase.com
-   - Selecione seu projeto
-   - Vá em **Settings > API**
-   - Copie:
-     - `Project URL` → `NEXT_PUBLIC_SUPABASE_URL`
-     - `anon public` key → `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-     - `service_role` key → `SUPABASE_SERVICE_ROLE_KEY` (mantenha secreto!)
+## 🔧 Configuração Local
 
-## 2. Executar Migrations SQL
+### 1. Obter Credenciais do Supabase
 
-As migrations estão na pasta `supabase/migrations/`. Você deve executá-las na ordem:
-
-### Opção A: Via Dashboard do Supabase
-1. Acesse https://app.supabase.com
+1. Acesse: https://app.supabase.com
 2. Selecione seu projeto
-3. Vá em **SQL Editor**
-4. Copie e cole o conteúdo de cada arquivo de migration na ordem:
-   - `001_create_core_tables.sql`
-   - `002_create_enum_tables.sql`
-   - `003_create_main_tables.sql`
-   - `004_create_triggers.sql`
-   - `005_create_views.sql`
-   - `006_create_rls_policies.sql`
-   - `007_seed_data.sql`
-5. Execute cada script (**RUN** button)
+3. Vá em: **Settings → API**
+4. Copie as seguintes informações:
+   - **Project URL** → `NEXT_PUBLIC_SUPABASE_URL`
+   - **anon public** (em "Project API keys") → `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - **service_role** (em "Project API keys") → `SUPABASE_SERVICE_ROLE_KEY` ⚠️
 
-### Opção B: Via Supabase CLI (Recomendado)
+### 2. Configurar Variáveis de Ambiente
+
+Crie um arquivo `.env.local` na raiz do projeto:
+
 ```bash
-# Instalar Supabase CLI
-npm install -g supabase
-
-# Login no Supabase
-supabase login
-
-# Link com seu projeto
-supabase link --project-ref your-project-ref
-
-# Executar migrations
-supabase db push
+# Supabase Configuration
+NEXT_PUBLIC_SUPABASE_URL=https://seu-projeto.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=sua-chave-anon-aqui
+SUPABASE_SERVICE_ROLE_KEY=sua-service-role-key-aqui
 ```
 
-## 3. Migrar Dados do Mock
+⚠️ **IMPORTANTE**:
+- Nunca commite o arquivo `.env.local`
+- A chave `service_role` é **secreta** e só deve ser usada no servidor
+- Use apenas a chave `anon` no frontend
 
-Após executar todas as migrations, migre os dados do `mockData.json`:
+### 3. Executar o Projeto
 
 ```bash
-node scripts/migrateToSupabase.js
-```
-
-Este script irá:
-- Ler todos os dados do `mockData.json`
-- Mapear campos antigos → novos
-- Inserir no Supabase respeitando foreign keys
-- Validar integridade dos dados
-
-## 4. Verificar Instalação
-
-Após configurar tudo:
-
-1. ✅ Variáveis de ambiente configuradas
-2. ✅ Todas as 7 migrations executadas
-3. ✅ Dados migrados com sucesso
-4. ✅ RLS habilitado
-
-Para testar:
-```bash
+npm install
 npm run dev
 ```
 
-Acesse http://localhost:3000 e tente fazer login.
+## 🚀 Deploy no Vercel
 
-## 5. Estrutura do Banco
+### 1. Configurar Variáveis de Ambiente
 
-### Tabelas Criadas (15)
-- `users` - Usuários do sistema
-- `icons` - 94 ícones Lucide React
-- `transaction_types` - Receita, Despesa, Aporte
-- `payment_statuses` - Status de pagamento
-- `payment_methods` - Formas de pagamento
-- `recurrence_frequencies` - Frequências de recorrência
-- `account_types` - Tipos de conta bancária
-- `card_types` - Tipos de cartão
-- `card_brands` - Bandeiras de cartão
-- `categories` - Categorias (25 padrão + customizadas)
-- `banks` - Contas bancárias
-- `cards` - Cartões de crédito/débito
-- `transactions` - Transações financeiras
-- `assets` - Patrimônio e ativos
-- `targets` - Metas financeiras
+Acesse: https://vercel.com/seu-usuario/seu-projeto/settings/environment-variables
 
-### Views Criadas (3)
-- `transactions_enriched` - Transações com dados enriquecidos
-- `assets_enriched` - Ativos com ganho/perda calculados
-- `targets_enriched` - Metas com progresso calculado
+Adicione as 3 variáveis para todos os ambientes (Production, Preview, Development).
 
-### Triggers (8)
-- Auto-atualização de `updated_at`
-- Geração automática de `installment_group_id`
-- Completar metas automaticamente
+### 2. Re-deploy
 
-## 6. Autenticação
+Após adicionar as variáveis, o Vercel fará re-deploy automaticamente.
 
-O projeto agora usa **Supabase Auth** ao invés do mock.
+## 🔐 Autenticação
 
-Recursos disponíveis:
-- ✅ Signup/Login com email e senha
+### Funcionalidades Implementadas
+
+- ✅ Login com email e senha
+- ✅ Cadastro de novos usuários
 - ✅ Logout
-- ✅ Refresh automático de sessão
-- ✅ Proteção de rotas via middleware
-- ✅ Row Level Security (RLS) - cada usuário vê apenas seus dados
+- ✅ Persistência de sessão
+- ✅ Sincronização entre abas
+- ✅ Tradução de erros para português
 
-## 7. Próximos Passos
+### Uso no Código
 
-Após configurar:
+```javascript
+import { useAuth } from '@/contexts/AuthContext';
 
-1. Teste o login/signup
-2. Crie algumas transações de teste
-3. Verifique se o RLS está funcionando (crie outro usuário e confirme isolamento)
-4. Configure backup automático do banco no Supabase
-5. Monitore uso e performance
+function MyComponent() {
+  const { user, profile, loading, signIn, signUp, signOut } = useAuth();
 
-## 8. Troubleshooting
+  if (loading) return <div>Carregando...</div>;
+  if (!user) return <div>Não autenticado</div>;
 
-### Erro: "Invalid API key"
-- Verifique se as variáveis de ambiente estão corretas
-- Reinicie o servidor Next.js (`npm run dev`)
+  return <div>Olá, {profile.name}!</div>;
+}
+```
 
-### Erro: "relation does not exist"
-- Certifique-se de que executou todas as migrations na ordem
-- Verifique no SQL Editor se as tabelas foram criadas
+## 🧪 Testando
 
-### Erro: "RLS policy violation"
-- Verifique se está logado
-- Confirme que as políticas RLS foram criadas (migration 006)
+1. Configure as variáveis de ambiente
+2. Inicie: `npm run dev`
+3. Acesse: http://localhost:3000/login
+4. Crie uma conta ou faça login
 
-### Dados não aparecem
-- Verifique se executou o script de migração
-- Confirme que o `user_id` dos dados corresponde ao seu usuário
-- Use o SQL Editor para fazer SELECT direto nas tabelas
+## 📚 Documentação
 
-## Suporte
-
-Para mais informações:
-- Documentação Supabase: https://supabase.com/docs
-- Next.js + Supabase: https://supabase.com/docs/guides/getting-started/quickstarts/nextjs
-
----
-
-Sucesso! 🚀
+- [Supabase Docs](https://supabase.com/docs)
+- [Supabase Auth](https://supabase.com/docs/guides/auth)
+- [Next.js + Supabase](https://supabase.com/docs/guides/getting-started/quickstarts/nextjs)
