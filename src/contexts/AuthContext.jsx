@@ -41,19 +41,62 @@ export const AuthProvider = ({ children }) => {
 
   // Initialize auth state
   useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
-        setUser(session.user);
-        fetchProfile(session.user.id).then(setProfile);
+    let mounted = true;
+    let loadingTimeout;
+
+    const initializeAuth = async () => {
+      try {
+        console.log('[AuthContext] Inicializando autenticação...');
+
+        // Timeout de segurança (5 segundos)
+        loadingTimeout = setTimeout(() => {
+          if (mounted) {
+            console.warn('[AuthContext] Timeout - forçando loading=false');
+            setLoading(false);
+          }
+        }, 5000);
+
+        // Get initial session
+        const { data: { session }, error } = await supabase.auth.getSession();
+
+        if (error) {
+          console.error('[AuthContext] Erro ao obter sessão:', error);
+          if (mounted) setLoading(false);
+          return;
+        }
+
+        if (session?.user) {
+          console.log('[AuthContext] Sessão encontrada:', session.user.email);
+          if (mounted) {
+            setUser(session.user);
+            const userProfile = await fetchProfile(session.user.id);
+            setProfile(userProfile);
+          }
+        } else {
+          console.log('[AuthContext] Nenhuma sessão ativa');
+        }
+
+        if (mounted) {
+          clearTimeout(loadingTimeout);
+          setLoading(false);
+        }
+      } catch (error) {
+        console.error('[AuthContext] Erro na inicialização:', error);
+        if (mounted) {
+          clearTimeout(loadingTimeout);
+          setLoading(false);
+        }
       }
-      setLoading(false);
-    });
+    };
+
+    initializeAuth();
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log('[AuthContext] Auth event:', event);
+
+        if (!mounted) return;
 
         if (session?.user) {
           setUser(session.user);
@@ -67,8 +110,12 @@ export const AuthProvider = ({ children }) => {
       }
     );
 
-    return () => subscription.unsubscribe();
-  }, [fetchProfile]);
+    return () => {
+      mounted = false;
+      clearTimeout(loadingTimeout);
+      subscription.unsubscribe();
+    };
+  }, []); // Removido fetchProfile das dependências
 
   const signIn = useCallback(async (email, password) => {
     try {
