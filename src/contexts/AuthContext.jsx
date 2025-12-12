@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect, useState, useCallback } from 'rea
 import { localStorageAdapter } from '../lib/storage/storageAdapter';
 import mockData from '../data/mockData.json';
 
+const SESSION_KEY = 'financeiro-saas-session';
 const AuthContext = createContext({});
 
 export const useAuth = () => {
