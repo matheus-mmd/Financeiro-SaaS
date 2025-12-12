@@ -38,16 +38,19 @@ import PageSkeleton from "../../src/components/PageSkeleton";
 import Table from "../../src/components/Table";
 import DatePicker from "../../src/components/DatePicker";
 import {
-  fetchData,
   formatCurrency,
   formatDate,
-  createAsset,
-  updateAsset,
-  deleteAsset,
   getCurrentMonthRange,
   parseDateString,
   isDateInRange,
 } from "../../src/utils";
+import {
+  getAssets,
+  createAsset,
+  updateAsset,
+  deleteAsset,
+} from "../../src/lib/supabase/api/assets";
+import { getCategories } from "../../src/lib/supabase/api/categories";
 import { exportToCSV } from "../../src/utils/exportData";
 import { getIconComponent } from "../../src/components/IconPicker";
 import FilterButton from "../../src/components/FilterButton";
@@ -88,23 +91,24 @@ export default function PatrimonioAtivos() {
     const loadData = async () => {
       try {
         const [assetsRes, categoriesRes] = await Promise.all([
-          fetchData("/api/assets"),
-          fetchData("/api/categories"),
+          getAssets(),
+          getCategories({ transaction_type_id: TRANSACTION_TYPE_IDS.INVESTMENT }),
         ]);
 
-        // Adicionar data aos ativos se não tiver
-        const assetsWithDate = assetsRes.data.map((asset) => ({
+        if (assetsRes.error) throw assetsRes.error;
+        if (categoriesRes.error) throw categoriesRes.error;
+
+        // Map Supabase fields to component fields
+        const mappedAssets = (assetsRes.data || []).map((asset) => ({
           ...asset,
-          date: asset.date || new Date().toISOString().split("T")[0],
+          date: asset.valuation_date || new Date().toISOString().split("T")[0],
+          yield: asset.yield_rate || 0,
+          type: asset.category_name || "",
         }));
 
-        setAssets(assetsWithDate);
-        setFilteredAssets(assetsWithDate);
-        // Filtrar apenas categorias que permitem Aporte
-        const assetCategories = categoriesRes.data.filter(
-          (cat) => cat.transaction_type_id === TRANSACTION_TYPE_IDS.INVESTMENT
-        );
-        setCategories(assetCategories);
+        setAssets(mappedAssets);
+        setFilteredAssets(mappedAssets);
+        setCategories(categoriesRes.data || []);
       } catch (error) {
         console.error("Erro ao carregar patrimônio e ativos:", error);
       } finally {
@@ -190,17 +194,22 @@ export default function PatrimonioAtivos() {
   const confirmDelete = async () => {
     if (assetToDelete) {
       try {
-        // Deletar usando mock API
-        await deleteAsset(assetToDelete.id);
+        const result = await deleteAsset(assetToDelete.id);
+        if (result.error) throw result.error;
 
-        // Recarregar dados da mock API
-        const response = await fetchData("/api/assets");
-        const assetsWithDate = response.data.map((asset) => ({
+        // Reload data
+        const response = await getAssets();
+        if (response.error) throw response.error;
+
+        const mappedAssets = (response.data || []).map((asset) => ({
           ...asset,
-          date: asset.date || new Date().toISOString().split("T")[0],
+          date: asset.valuation_date || new Date().toISOString().split("T")[0],
+          yield: asset.yield_rate || 0,
+          type: asset.category_name || "",
         }));
-        setAssets(assetsWithDate);
-        setFilteredAssets(assetsWithDate);
+
+        setAssets(mappedAssets);
+        setFilteredAssets(mappedAssets);
 
         setDeleteDialogOpen(false);
         setAssetToDelete(null);
@@ -223,34 +232,39 @@ export default function PatrimonioAtivos() {
       const category = categories.find(c => c.name === formData.type);
 
       const assetData = {
-        assetTypesid: category?.id,
-        categoriesId: category?.id,
+        categoryId: category?.id,
         name: formData.name,
         value: parseFloat(formData.value),
-        yield: formData.yield ? parseFloat(formData.yield) / 100 : 0,
+        yieldRate: formData.yield ? parseFloat(formData.yield) / 100 : 0,
         currency: "BRL",
-        date: dateString,
+        valuationDate: dateString,
         description: formData.description || null,
-        purchase_date: purchaseDateString,
-        purchase_value: formData.purchase_value ? parseFloat(formData.purchase_value) : null,
+        purchaseDate: purchaseDateString,
+        purchaseValue: formData.purchase_value ? parseFloat(formData.purchase_value) : null,
       };
 
+      let result;
       if (editingAsset) {
-        // Atualizar ativo existente
-        await updateAsset(editingAsset.id, assetData);
+        result = await updateAsset(editingAsset.id, assetData);
       } else {
-        // Criar novo ativo
-        await createAsset(assetData, user.id);
+        result = await createAsset(assetData);
       }
 
-      // Recarregar dados da mock API
-      const response = await fetchData("/api/assets");
-      const assetsWithDate = response.data.map((asset) => ({
+      if (result.error) throw result.error;
+
+      // Reload data
+      const response = await getAssets();
+      if (response.error) throw response.error;
+
+      const mappedAssets = (response.data || []).map((asset) => ({
         ...asset,
-        date: asset.date || new Date().toISOString().split("T")[0],
+        date: asset.valuation_date || new Date().toISOString().split("T")[0],
+        yield: asset.yield_rate || 0,
+        type: asset.category_name || "",
       }));
-      setAssets(assetsWithDate);
-      setFilteredAssets(assetsWithDate);
+
+      setAssets(mappedAssets);
+      setFilteredAssets(mappedAssets);
 
       setModalOpen(false);
       setFormData({

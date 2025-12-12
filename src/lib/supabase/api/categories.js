@@ -1,0 +1,178 @@
+/**
+ * API de Categorias - Supabase
+ */
+
+import { supabase } from '../client';
+
+export async function getCategories(filters = {}) {
+  let query = supabase
+    .from('categories_enriched')
+    .select('*')
+    .order('name', { ascending: true });
+
+  if (filters.transaction_type_id) {
+    query = query.eq('transaction_type_id', filters.transaction_type_id);
+  }
+
+  const { data, error } = await query;
+  return { data, error };
+}
+
+export async function getCategoryById(id) {
+  const { data, error } = await supabase
+    .from('categories_enriched')
+    .select('*')
+    .eq('id', id)
+    .single();
+
+  return { data, error };
+}
+
+export async function createCategory(category) {
+  // Obter o usuário autenticado
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { data: null, error: new Error('Usuário não autenticado') };
+  }
+
+  // Validar campos obrigatórios
+  if (!category.name || !category.color || !category.iconId || !category.transactionTypeId) {
+    return {
+      data: null,
+      error: new Error('Campos obrigatórios faltando: name, color, iconId, transactionTypeId')
+    };
+  }
+
+  // Garantir que a cor está no formato correto (#RRGGBB)
+  let color = category.color;
+  if (!color.startsWith('#')) {
+    color = '#' + color;
+  }
+  // Garantir que tem exatamente 7 caracteres (#RRGGBB)
+  if (color.length !== 7) {
+    return {
+      data: null,
+      error: new Error(`Cor inválida: ${color}. Deve estar no formato #RRGGBB`)
+    };
+  }
+
+  const { data, error } = await supabase
+    .from('categories')
+    .insert({
+      user_id: user.id, // RLS requer user_id - categorias customizadas
+      name: category.name.trim(),
+      color: color.toUpperCase(), // Padronizar para maiúsculas
+      icon_id: category.iconId,
+      transaction_type_id: category.transactionTypeId,
+    })
+    .select()
+    .single();
+
+  return { data, error };
+}
+
+export async function updateCategory(id, updates) {
+  const updateData = {};
+
+  if (updates.name !== undefined) updateData.name = updates.name;
+  if (updates.color !== undefined) updateData.color = updates.color;
+  if (updates.iconId !== undefined) updateData.icon_id = updates.iconId;
+  if (updates.transactionTypeId !== undefined) updateData.transaction_type_id = updates.transactionTypeId;
+
+  const { data, error } = await supabase
+    .from('categories')
+    .update(updateData)
+    .eq('id', id)
+    .select()
+    .single();
+
+  return { data, error };
+}
+
+export async function deleteCategory(id) {
+  const { data, error } = await supabase
+    .from('categories')
+    .update({ deleted_at: new Date().toISOString() })
+    .eq('id', id)
+    .select()
+    .single();
+
+  return { data, error };
+}
+
+// ============================================
+// FUNÇÕES DE REFERÊNCIA (types, statuses, etc.)
+// ============================================
+
+export async function getTransactionTypes() {
+  const { data, error } = await supabase
+    .from('transaction_types')
+    .select('*')
+    .order('id', { ascending: true });
+
+  return { data, error };
+}
+
+export async function getPaymentStatuses() {
+  const { data, error } = await supabase
+    .from('payment_statuses')
+    .select('*')
+    .order('id', { ascending: true });
+
+  return { data, error };
+}
+
+export async function getPaymentMethods() {
+  const { data, error } = await supabase
+    .from('payment_methods')
+    .select('*')
+    .order('id', { ascending: true });
+
+  return { data, error };
+}
+
+export async function getRecurrenceFrequencies() {
+  const { data, error } = await supabase
+    .from('recurrence_frequencies')
+    .select('*')
+    .order('id', { ascending: true });
+
+  return { data, error };
+}
+
+export async function getAccountTypes() {
+  const { data, error } = await supabase
+    .from('account_types')
+    .select('*')
+    .order('id', { ascending: true });
+
+  return { data, error };
+}
+
+export async function getCardTypes() {
+  const { data, error } = await supabase
+    .from('card_types')
+    .select('*')
+    .order('id', { ascending: true });
+
+  return { data, error };
+}
+
+export async function getCardBrands() {
+  const { data, error } = await supabase
+    .from('card_brands')
+    .select('*')
+    .order('name', { ascending: true });
+
+  return { data, error };
+}
+
+export async function getIcons() {
+  const { data, error } = await supabase
+    .from('icons')
+    .select('*')
+    .order('name', { ascending: true });
+
+  return { data, error };
+}

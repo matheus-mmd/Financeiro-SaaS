@@ -41,16 +41,25 @@ import DatePicker from "../../src/components/DatePicker";
 import FilterButton from "../../src/components/FilterButton";
 import FABMenu from "../../src/components/FABMenu";
 import {
-  fetchData,
   formatCurrency,
   formatDate,
-  createExpense,
-  updateExpense,
-  deleteExpense,
   getCurrentMonthRange,
   parseDateString,
   isDateInRange,
 } from "../../src/utils";
+import {
+  getTransactions,
+  createTransaction,
+  updateTransaction,
+  deleteTransaction,
+} from "../../src/lib/supabase/api/transactions";
+import {
+  getCategories,
+  getPaymentStatuses,
+  getPaymentMethods,
+} from "../../src/lib/supabase/api/categories";
+import { getBanks } from "../../src/lib/supabase/api/banks";
+import { getCards } from "../../src/lib/supabase/api/cards";
 import { exportToCSV } from "../../src/utils/exportData";
 import { getIconComponent } from "../../src/components/IconPicker";
 import { TRANSACTION_TYPE_IDS, PAYMENT_STATUS, PAYMENT_METHODS, DEFAULT_CATEGORY_COLOR } from "../../src/constants";
@@ -66,6 +75,10 @@ export default function Despesas() {
   const [filteredExpenses, setFilteredExpenses] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [paymentStatuses, setPaymentStatuses] = useState([]);
+  const [paymentMethods, setPaymentMethods] = useState([]);
+  const [banks, setBanks] = useState([]);
+  const [cards, setCards] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -89,17 +102,44 @@ export default function Despesas() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [expensesRes, categoriesRes] = await Promise.all([
-          fetchData("/api/expenses"),
-          fetchData("/api/categories"),
+        const [expensesRes, categoriesRes, statusesRes, methodsRes, banksRes, cardsRes] = await Promise.all([
+          getTransactions({ transaction_type_id: TRANSACTION_TYPE_IDS.EXPENSE }),
+          getCategories({ transaction_type_id: TRANSACTION_TYPE_IDS.EXPENSE }),
+          getPaymentStatuses(),
+          getPaymentMethods(),
+          getBanks(),
+          getCards(),
         ]);
-        setExpenses(expensesRes.data);
-        setFilteredExpenses(expensesRes.data);
-        // Filtrar apenas categorias de despesa
-        const expenseCategories = categoriesRes.data.filter(
-          (cat) => cat.transaction_type_id === TRANSACTION_TYPE_IDS.EXPENSE
-        );
-        setCategories(expenseCategories);
+
+        if (expensesRes.error) throw expensesRes.error;
+        if (categoriesRes.error) throw categoriesRes.error;
+        if (statusesRes.error) throw statusesRes.error;
+        if (methodsRes.error) throw methodsRes.error;
+        if (banksRes.error) throw banksRes.error;
+        if (cardsRes.error) throw cardsRes.error;
+
+        // Map Supabase fields to component fields
+        const mappedExpenses = (expensesRes.data || []).map((e) => ({
+          ...e,
+          date: e.transaction_date,
+          title: e.description,
+          category: e.category_name,
+          status: e.payment_status_internal_name,
+          payment_method: e.payment_method_name,
+          paid_date: e.payment_date,
+          installments: e.installment_total > 1 ? {
+            current: e.installment_number,
+            total: e.installment_total,
+          } : null,
+        }));
+
+        setExpenses(mappedExpenses);
+        setFilteredExpenses(mappedExpenses);
+        setCategories(categoriesRes.data || []);
+        setPaymentStatuses(statusesRes.data || []);
+        setPaymentMethods(methodsRes.data || []);
+        setBanks(banksRes.data || []);
+        setCards(cardsRes.data || []);
       } catch (error) {
         console.error("Erro ao carregar dados:", error);
       } finally {
@@ -186,13 +226,29 @@ export default function Despesas() {
   const confirmDelete = async () => {
     if (expenseToDelete) {
       try {
-        // Deletar usando mock API
-        await deleteExpense(expenseToDelete.id);
+        const result = await deleteTransaction(expenseToDelete.id);
+        if (result.error) throw result.error;
 
-        // Recarregar dados da mock API
-        const response = await fetchData("/api/expenses");
-        setExpenses(response.data);
-        setFilteredExpenses(response.data);
+        // Reload data
+        const response = await getTransactions({ transaction_type_id: TRANSACTION_TYPE_IDS.EXPENSE });
+        if (response.error) throw response.error;
+
+        const mappedExpenses = (response.data || []).map((e) => ({
+          ...e,
+          date: e.transaction_date,
+          title: e.description,
+          category: e.category_name,
+          status: e.payment_status_internal_name,
+          payment_method: e.payment_method_name,
+          paid_date: e.payment_date,
+          installments: e.installment_total > 1 ? {
+            current: e.installment_number,
+            total: e.installment_total,
+          } : null,
+        }));
+
+        setExpenses(mappedExpenses);
+        setFilteredExpenses(mappedExpenses);
 
         setDeleteDialogOpen(false);
         setExpenseToDelete(null);
@@ -208,14 +264,35 @@ export default function Despesas() {
       const newStatus = expense.status === PAYMENT_STATUS.PAID ? PAYMENT_STATUS.PENDING : PAYMENT_STATUS.PAID;
       const paidDate = newStatus === PAYMENT_STATUS.PAID ? new Date().toISOString().split("T")[0] : null;
 
-      await updateExpense(expense.id, {
-        status: newStatus,
-        paid_date: paidDate,
+      // Find status ID
+      const paymentStatus = paymentStatuses.find(s => s.internal_name === newStatus);
+
+      const result = await updateTransaction(expense.id, {
+        statusId: paymentStatus?.id,
+        paymentDate: paidDate,
       });
 
-      // Recarregar dados
-      const response = await fetchData("/api/expenses");
-      setExpenses(response.data);
+      if (result.error) throw result.error;
+
+      // Reload data
+      const response = await getTransactions({ transaction_type_id: TRANSACTION_TYPE_IDS.EXPENSE });
+      if (response.error) throw response.error;
+
+      const mappedExpenses = (response.data || []).map((e) => ({
+        ...e,
+        date: e.transaction_date,
+        title: e.description,
+        category: e.category_name,
+        status: e.payment_status_internal_name,
+        payment_method: e.payment_method_name,
+        paid_date: e.payment_date,
+        installments: e.installment_total > 1 ? {
+          current: e.installment_number,
+          total: e.installment_total,
+        } : null,
+      }));
+
+      setExpenses(mappedExpenses);
     } catch (error) {
       console.error("Erro ao atualizar status:", error);
       alert("Erro ao atualizar status. Tente novamente.");
@@ -233,39 +310,57 @@ export default function Despesas() {
       // Buscar o ID da categoria pelo nome
       const category = categories.find(c => c.name === formData.category);
 
-      // Processar parcelamento
-      let installments = null;
-      if (formData.installments_current && formData.installments_total) {
-        installments = {
-          current: parseInt(formData.installments_current),
-          total: parseInt(formData.installments_total),
-        };
-      }
+      // Find IDs for enums
+      const paymentStatus = paymentStatuses.find(s => s.internal_name === formData.status);
+      const paymentMethod = paymentMethods.find(m => m.internal_name === formData.payment_method);
 
-      const expenseData = {
-        categoriesId: category?.id,
-        title: formData.title,
-        amount: parseFloat(formData.amount),
-        date: dateString,
-        paid_date: paidDateString,
-        status: formData.status,
-        payment_method: formData.payment_method || null,
-        installments: installments,
+      const transactionData = {
+        categoryId: category?.id,
+        transactionTypeId: TRANSACTION_TYPE_IDS.EXPENSE,
+        description: formData.title,
+        amount: -Math.abs(parseFloat(formData.amount)), // Negative for expenses
+        transactionDate: dateString,
+        paymentDate: paidDateString,
+        statusId: paymentStatus?.id || 1,
+        paymentMethodId: paymentMethod?.id || null,
+        installmentNumber: formData.installments_total && parseInt(formData.installments_total) > 1
+          ? parseInt(formData.installments_current) || 1
+          : null,
+        installmentTotal: formData.installments_total && parseInt(formData.installments_total) > 1
+          ? parseInt(formData.installments_total)
+          : null,
         notes: formData.notes || null,
       };
 
+      let result;
       if (editingExpense) {
-        // Atualizar despesa existente
-        await updateExpense(editingExpense.id, expenseData);
+        result = await updateTransaction(editingExpense.id, transactionData);
       } else {
-        // Criar nova despesa
-        await createExpense(expenseData, user.id);
+        result = await createTransaction(transactionData);
       }
 
-      // Recarregar dados da mock API
-      const response = await fetchData("/api/expenses");
-      setExpenses(response.data);
-      setFilteredExpenses(response.data);
+      if (result.error) throw result.error;
+
+      // Reload data
+      const response = await getTransactions({ transaction_type_id: TRANSACTION_TYPE_IDS.EXPENSE });
+      if (response.error) throw response.error;
+
+      const mappedExpenses = (response.data || []).map((e) => ({
+        ...e,
+        date: e.transaction_date,
+        title: e.description,
+        category: e.category_name,
+        status: e.payment_status_internal_name,
+        payment_method: e.payment_method_name,
+        paid_date: e.payment_date,
+        installments: e.installment_total > 1 ? {
+          current: e.installment_number,
+          total: e.installment_total,
+        } : null,
+      }));
+
+      setExpenses(mappedExpenses);
+      setFilteredExpenses(mappedExpenses);
 
       setModalOpen(false);
       setFormData({

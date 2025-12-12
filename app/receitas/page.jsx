@@ -38,16 +38,19 @@ import PageSkeleton from "../../src/components/PageSkeleton";
 import Table from "../../src/components/Table";
 import DatePicker from "../../src/components/DatePicker";
 import {
-  fetchData,
   formatCurrency,
   formatDate,
-  createIncome,
-  updateIncome,
-  deleteIncome,
   getCurrentMonthRange,
   parseDateString,
   isDateInRange,
 } from "../../src/utils";
+import {
+  getTransactions,
+  createTransaction,
+  updateTransaction,
+  deleteTransaction,
+} from "../../src/lib/supabase/api/transactions";
+import { getCategories } from "../../src/lib/supabase/api/categories";
 import { exportToCSV } from "../../src/utils/exportData";
 import { getIconComponent } from "../../src/components/IconPicker";
 import FilterButton from "../../src/components/FilterButton";
@@ -84,16 +87,24 @@ export default function Receitas() {
     const loadData = async () => {
       try {
         const [incomesRes, categoriesRes] = await Promise.all([
-          fetchData("/api/incomes"),
-          fetchData("/api/categories"),
+          getTransactions({ transaction_type_id: TRANSACTION_TYPE_IDS.INCOME }),
+          getCategories({ transaction_type_id: TRANSACTION_TYPE_IDS.INCOME }),
         ]);
-        setIncomes(incomesRes.data);
-        setFilteredIncomes(incomesRes.data);
-        // Filtrar apenas categorias de receita
-        const incomeCategories = categoriesRes.data.filter(
-          (cat) => cat.transaction_type_id === TRANSACTION_TYPE_IDS.INCOME
-        );
-        setCategories(incomeCategories);
+
+        if (incomesRes.error) throw incomesRes.error;
+        if (categoriesRes.error) throw categoriesRes.error;
+
+        // Map Supabase fields to component fields
+        const mappedIncomes = (incomesRes.data || []).map((i) => ({
+          ...i,
+          date: i.transaction_date,
+          title: i.description,
+          category: i.category_name,
+        }));
+
+        setIncomes(mappedIncomes);
+        setFilteredIncomes(mappedIncomes);
+        setCategories(categoriesRes.data || []);
       } catch (error) {
         console.error("Erro ao carregar dados:", error);
       } finally {
@@ -166,13 +177,22 @@ export default function Receitas() {
   const confirmDelete = async () => {
     if (incomeToDelete) {
       try {
-        // Deletar usando mock API
-        await deleteIncome(incomeToDelete.id);
+        const result = await deleteTransaction(incomeToDelete.id);
+        if (result.error) throw result.error;
 
-        // Recarregar dados da mock API
-        const response = await fetchData("/api/incomes");
-        setIncomes(response.data);
-        setFilteredIncomes(response.data);
+        // Reload data
+        const response = await getTransactions({ transaction_type_id: TRANSACTION_TYPE_IDS.INCOME });
+        if (response.error) throw response.error;
+
+        const mappedIncomes = (response.data || []).map((i) => ({
+          ...i,
+          date: i.transaction_date,
+          title: i.description,
+          category: i.category_name,
+        }));
+
+        setIncomes(mappedIncomes);
+        setFilteredIncomes(mappedIncomes);
 
         setDeleteDialogOpen(false);
         setIncomeToDelete(null);
@@ -195,26 +215,37 @@ export default function Receitas() {
       // Buscar o ID da categoria pelo nome
       const category = categories.find((c) => c.name === formData.category);
 
-      const incomeData = {
-        categoriesId: category?.id,
-        title: formData.title,
-        amount: parseFloat(formData.amount),
-        date: dateString,
+      const transactionData = {
+        categoryId: category?.id,
+        transactionTypeId: TRANSACTION_TYPE_IDS.INCOME,
+        description: formData.title,
+        amount: Math.abs(parseFloat(formData.amount)), // Positive for income
+        transactionDate: dateString,
         notes: formData.notes || null,
       };
 
+      let result;
       if (editingIncome) {
-        // Atualizar receita existente
-        await updateIncome(editingIncome.id, incomeData);
+        result = await updateTransaction(editingIncome.id, transactionData);
       } else {
-        // Criar nova receita
-        await createIncome(incomeData, user.id);
+        result = await createTransaction(transactionData);
       }
 
-      // Recarregar dados da mock API
-      const response = await fetchData("/api/incomes");
-      setIncomes(response.data);
-      setFilteredIncomes(response.data);
+      if (result.error) throw result.error;
+
+      // Reload data
+      const response = await getTransactions({ transaction_type_id: TRANSACTION_TYPE_IDS.INCOME });
+      if (response.error) throw response.error;
+
+      const mappedIncomes = (response.data || []).map((i) => ({
+        ...i,
+        date: i.transaction_date,
+        title: i.description,
+        category: i.category_name,
+      }));
+
+      setIncomes(mappedIncomes);
+      setFilteredIncomes(mappedIncomes);
 
       setModalOpen(false);
       setFormData({ title: "", category: "", amount: "", date: new Date(), notes: "" });

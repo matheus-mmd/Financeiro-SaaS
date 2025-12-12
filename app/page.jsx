@@ -18,7 +18,11 @@ import {
 import DashboardSkeleton from "../src/components/DashboardSkeleton";
 import DatePicker from "../src/components/DatePicker";
 import Table from "../src/components/Table";
-import { fetchData, formatCurrency, formatDate } from "../src/utils";
+import { formatCurrency, formatDate } from "../src/utils";
+import { getTransactions } from "../src/lib/supabase/api/transactions";
+import { getAssets } from "../src/lib/supabase/api/assets";
+import { getCategories } from "../src/lib/supabase/api/categories";
+import { TRANSACTION_TYPE_IDS } from "../src/constants";
 import { getIconComponent } from "../src/components/IconPicker";
 import { Wallet, TrendingDown, ArrowUpRight, PiggyBank, Coins, Heart, Percent, CalendarDays } from "lucide-react";
 
@@ -65,18 +69,51 @@ export default function Dashboard() {
           transactionsRes,
           assetsRes,
         ] = await Promise.all([
-          fetchData("/api/expenses"),
-          fetchData("/api/incomes"),
-          fetchData("/api/categories"),
-          fetchData("/api/transactions"),
-          fetchData("/api/assets"),
+          getTransactions({ transaction_type_id: TRANSACTION_TYPE_IDS.EXPENSE }),
+          getTransactions({ transaction_type_id: TRANSACTION_TYPE_IDS.INCOME }),
+          getCategories(),
+          getTransactions(),
+          getAssets(),
         ]);
 
-        setExpenses(expensesRes.data);
-        setIncomes(incomesRes.data);
-        setCategories(categoriesRes.data);
-        setTransactions(transactionsRes.data);
-        setAssets(assetsRes.data);
+        if (expensesRes.error) throw expensesRes.error;
+        if (incomesRes.error) throw incomesRes.error;
+        if (categoriesRes.error) throw categoriesRes.error;
+        if (transactionsRes.error) throw transactionsRes.error;
+        if (assetsRes.error) throw assetsRes.error;
+
+        // Map Supabase fields to component fields
+        const mappedExpenses = (expensesRes.data || []).map((e) => ({
+          ...e,
+          date: e.transaction_date,
+          title: e.description,
+          category: e.category_name,
+        }));
+
+        const mappedIncomes = (incomesRes.data || []).map((i) => ({
+          ...i,
+          date: i.transaction_date,
+          title: i.description,
+          category: i.category_name,
+        }));
+
+        const mappedTransactions = (transactionsRes.data || []).map((t) => ({
+          ...t,
+          date: t.transaction_date,
+          description: t.description,
+          type_internal_name: t.transaction_type_internal_name,
+        }));
+
+        const mappedAssets = (assetsRes.data || []).map((a) => ({
+          ...a,
+          date: a.valuation_date,
+        }));
+
+        setExpenses(mappedExpenses);
+        setIncomes(mappedIncomes);
+        setCategories(categoriesRes.data || []);
+        setTransactions(mappedTransactions);
+        setAssets(mappedAssets);
       } catch (error) {
         console.error("Erro ao carregar dashboard:", error);
       } finally {

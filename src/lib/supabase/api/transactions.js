@@ -1,0 +1,180 @@
+/**
+ * API de Transações - Supabase
+ * CRUD completo para transactions
+ */
+
+import { supabase } from '../client';
+
+/**
+ * Buscar todas as transações do usuário (usa VIEW enriched)
+ * @param {Object} filters - Filtros opcionais (transaction_type_id, category_id, date_from, date_to)
+ * @returns {Promise<{data, error}>}
+ */
+export async function getTransactions(filters = {}) {
+  let query = supabase
+    .from('transactions_enriched')
+    .select('*')
+    .order('transaction_date', { ascending: false });
+
+  // Aplicar filtros
+  if (filters.transaction_type_id) {
+    query = query.eq('transaction_type_id', filters.transaction_type_id);
+  }
+
+  if (filters.category_id) {
+    query = query.eq('category_id', filters.category_id);
+  }
+
+  if (filters.date_from) {
+    query = query.gte('transaction_date', filters.date_from);
+  }
+
+  if (filters.date_to) {
+    query = query.lte('transaction_date', filters.date_to);
+  }
+
+  if (filters.payment_status_id) {
+    query = query.eq('payment_status_id', filters.payment_status_id);
+  }
+
+  const { data, error } = await query;
+
+  return { data, error };
+}
+
+/**
+ * Buscar transação por ID
+ * @param {number} id
+ * @returns {Promise<{data, error}>}
+ */
+export async function getTransactionById(id) {
+  const { data, error } = await supabase
+    .from('transactions_enriched')
+    .select('*')
+    .eq('id', id)
+    .single();
+
+  return { data, error };
+}
+
+/**
+ * Criar nova transação
+ * @param {Object} transaction
+ * @returns {Promise<{data, error}>}
+ */
+export async function createTransaction(transaction) {
+  // Obter o usuário autenticado
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { data: null, error: new Error('Usuário não autenticado') };
+  }
+
+  const { data, error } = await supabase
+    .from('transactions')
+    .insert({
+      user_id: user.id, // RLS requer user_id
+      category_id: transaction.categoryId,
+      transaction_type_id: transaction.transactionTypeId,
+      payment_status_id: transaction.statusId || 1, // pending por padrão
+      payment_method_id: transaction.paymentMethodId || null,
+      bank_id: transaction.bankId || null,
+      card_id: transaction.cardId || null,
+      description: transaction.description,
+      amount: transaction.amount,
+      notes: transaction.notes || null,
+      transaction_date: transaction.transactionDate,
+      payment_date: transaction.paymentDate || null,
+      installment_number: transaction.installmentNumber || null,
+      installment_total: transaction.installmentTotal || null,
+      is_recurring: transaction.isRecurring || false,
+      recurrence_frequency_id: transaction.isRecurring ? transaction.recurrenceFrequencyId : null,
+      recurrence_end_date: transaction.recurrenceEndDate || null,
+    })
+    .select()
+    .single();
+
+  return { data, error };
+}
+
+/**
+ * Atualizar transação
+ * @param {number} id
+ * @param {Object} updates
+ * @returns {Promise<{data, error}>}
+ */
+export async function updateTransaction(id, updates) {
+  const updateData = {};
+
+  if (updates.categoryId !== undefined) updateData.category_id = updates.categoryId;
+  if (updates.transactionTypeId !== undefined) updateData.transaction_type_id = updates.transactionTypeId;
+  if (updates.statusId !== undefined) updateData.payment_status_id = updates.statusId;
+  if (updates.paymentMethodId !== undefined) updateData.payment_method_id = updates.paymentMethodId;
+  if (updates.bankId !== undefined) updateData.bank_id = updates.bankId;
+  if (updates.cardId !== undefined) updateData.card_id = updates.cardId;
+  if (updates.description !== undefined) updateData.description = updates.description;
+  if (updates.amount !== undefined) updateData.amount = updates.amount;
+  if (updates.notes !== undefined) updateData.notes = updates.notes;
+  if (updates.date !== undefined) updateData.transaction_date = updates.date;
+  if (updates.paymentDate !== undefined) updateData.payment_date = updates.paymentDate;
+  if (updates.installmentNumber !== undefined) updateData.installment_number = updates.installmentNumber;
+  if (updates.installmentTotal !== undefined) updateData.installment_total = updates.installmentTotal;
+  if (updates.isRecurring !== undefined) updateData.is_recurring = updates.isRecurring;
+  if (updates.recurrenceFrequencyId !== undefined) updateData.recurrence_frequency_id = updates.recurrenceFrequencyId;
+  if (updates.recurrenceEndDate !== undefined) updateData.recurrence_end_date = updates.recurrenceEndDate;
+
+  const { data, error } = await supabase
+    .from('transactions')
+    .update(updateData)
+    .eq('id', id)
+    .select()
+    .single();
+
+  return { data, error };
+}
+
+/**
+ * Deletar transação (soft delete)
+ * @param {number} id
+ * @returns {Promise<{data, error}>}
+ */
+export async function deleteTransaction(id) {
+  const { data, error } = await supabase
+    .from('transactions')
+    .update({ deleted_at: new Date().toISOString() })
+    .eq('id', id)
+    .select()
+    .single();
+
+  return { data, error };
+}
+
+/**
+ * Buscar transações por grupo de parcelamento
+ * @param {string} installmentGroupId
+ * @returns {Promise<{data, error}>}
+ */
+export async function getTransactionsByInstallmentGroup(installmentGroupId) {
+  const { data, error } = await supabase
+    .from('transactions_enriched')
+    .select('*')
+    .eq('installment_group_id', installmentGroupId)
+    .order('installment_number', { ascending: true });
+
+  return { data, error };
+}
+
+/**
+ * Buscar transações recorrentes
+ * @param {number} parentId - ID da transação pai
+ * @returns {Promise<{data, error}>}
+ */
+export async function getRecurringTransactions(parentId) {
+  const { data, error } = await supabase
+    .from('transactions_enriched')
+    .select('*')
+    .eq('recurrence_parent_id', parentId)
+    .order('transaction_date', { ascending: true });
+
+  return { data, error };
+}

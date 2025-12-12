@@ -14,11 +14,13 @@ import {
   DialogTitle,
 } from "../../src/components/ui/dialog";
 import {
-  fetchData,
+  getCategories,
   createCategory,
   updateCategory,
   deleteCategory,
-} from "../../src/utils/mockApi";
+  getTransactionTypes,
+  getIcons,
+} from "../../src/lib/supabase/api/categories";
 import {
   Plus,
   Trash2,
@@ -41,6 +43,7 @@ import FABMenu from "../../src/components/FABMenu";
 export default function CategoriasPage() {
   const [categories, setCategories] = useState([]);
   const [transactionTypes, setTransactionTypes] = useState([]);
+  const [icons, setIcons] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // Estados para modal de categoria
@@ -60,13 +63,19 @@ export default function CategoriasPage() {
 
   const loadData = async () => {
     try {
-      const [categoriesRes, transactionTypesRes] = await Promise.all([
-        fetchData("/api/categories"),
-        fetchData("/api/transactionTypes"),
+      const [categoriesRes, transactionTypesRes, iconsRes] = await Promise.all([
+        getCategories(),
+        getTransactionTypes(),
+        getIcons(),
       ]);
 
-      setCategories(categoriesRes.data);
-      setTransactionTypes(transactionTypesRes.data);
+      if (categoriesRes.error) throw categoriesRes.error;
+      if (transactionTypesRes.error) throw transactionTypesRes.error;
+      if (iconsRes.error) throw iconsRes.error;
+
+      setCategories(categoriesRes.data || []);
+      setTransactionTypes(transactionTypesRes.data || []);
+      setIcons(iconsRes.data || []);
     } catch (error) {
       console.error("Erro ao carregar dados:", error);
     } finally {
@@ -121,17 +130,43 @@ export default function CategoriasPage() {
     e.preventDefault();
 
     try {
-      if (editingCategory) {
-        await updateCategory(editingCategory.id, categoryFormData);
-      } else {
-        await createCategory(categoryFormData);
+      // Buscar o ID do ícone pelo nome
+      const icon = icons.find(i => i.name === categoryFormData.icon);
+      if (!icon) {
+        throw new Error(`Ícone "${categoryFormData.icon}" não encontrado`);
       }
 
+      const categoryData = {
+        name: categoryFormData.name,
+        color: categoryFormData.color,
+        iconId: icon.id, // CORRIGIDO: agora envia o ID numérico
+        transactionTypeId: categoryFormData.transaction_type_id, // API expects transactionTypeId
+      };
+
+      console.log('[DEBUG] Dados da categoria:', categoryData);
+      console.log('[DEBUG] Ícone encontrado:', icon);
+      console.log('[DEBUG] Editando?', editingCategory ? 'Sim' : 'Não');
+
+      let result;
+      if (editingCategory) {
+        result = await updateCategory(editingCategory.id, categoryData);
+      } else {
+        result = await createCategory(categoryData);
+      }
+
+      console.log('[DEBUG] Resultado da API:', result);
+
+      if (result.error) {
+        console.error('[DEBUG] Erro detectado:', result.error);
+        throw result.error;
+      }
+
+      console.log('[DEBUG] Categoria criada com sucesso!');
       await loadData();
       setCategoryModalOpen(false);
     } catch (error) {
       console.error("Erro ao salvar categoria:", error);
-      alert("Erro ao salvar categoria. Tente novamente.");
+      alert("Erro ao salvar categoria: " + (error.message || error));
     }
   };
 
@@ -139,7 +174,9 @@ export default function CategoriasPage() {
     if (!confirm("Tem certeza que deseja deletar esta categoria?")) return;
 
     try {
-      await deleteCategory(id);
+      const result = await deleteCategory(id);
+      if (result.error) throw result.error;
+
       await loadData();
     } catch (error) {
       console.error("Erro ao deletar categoria:", error);

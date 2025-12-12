@@ -42,16 +42,27 @@ import PageSkeleton from "../../src/components/PageSkeleton";
 import Table from "../../src/components/Table";
 import DatePicker from "../../src/components/DatePicker";
 import {
-  fetchData,
   formatCurrency,
   formatDate,
-  createTransaction,
-  updateTransaction,
-  deleteTransaction,
   getCurrentMonthRange,
   parseDateString,
   isDateInRange,
 } from "../../src/utils";
+import {
+  getTransactions,
+  createTransaction,
+  updateTransaction,
+  deleteTransaction,
+} from "../../src/lib/supabase/api/transactions";
+import {
+  getCategories,
+  getTransactionTypes,
+  getPaymentStatuses,
+  getPaymentMethods,
+  getRecurrenceFrequencies,
+} from "../../src/lib/supabase/api/categories";
+import { getBanks } from "../../src/lib/supabase/api/banks";
+import { getCards } from "../../src/lib/supabase/api/cards";
 import { exportToCSV } from "../../src/utils/exportData";
 import { getIconComponent } from "../../src/components/IconPicker";
 import FilterButton from "../../src/components/FilterButton";
@@ -86,6 +97,9 @@ export default function Transacoes() {
   const [transactionTypes, setTransactionTypes] = useState([]);
   const [banks, setBanks] = useState([]);
   const [cards, setCards] = useState([]);
+  const [paymentStatuses, setPaymentStatuses] = useState([]);
+  const [paymentMethods, setPaymentMethods] = useState([]);
+  const [recurrenceFrequencies, setRecurrenceFrequencies] = useState([]);
   const [filteredTransactions, setFilteredTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
@@ -120,25 +134,62 @@ export default function Transacoes() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [transactionsRes, categoriesRes, transactionTypesRes, banksRes, cardsRes] =
-          await Promise.all([
-            fetchData("/api/transactions"),
-            fetchData("/api/categories"),
-            fetchData("/api/transactionTypes"),
-            fetchData("/api/banks"),
-            fetchData("/api/cards"),
-          ]);
-        setTransactions(transactionsRes.data);
-        setFilteredTransactions(transactionsRes.data);
-        setCategories(categoriesRes.data);
-        setTransactionTypes(transactionTypesRes.data);
-        setBanks(banksRes.data);
-        setCards(cardsRes.data);
+        const [
+          transactionsRes,
+          categoriesRes,
+          transactionTypesRes,
+          banksRes,
+          cardsRes,
+          paymentStatusesRes,
+          paymentMethodsRes,
+          recurrenceFrequenciesRes,
+        ] = await Promise.all([
+          getTransactions(),
+          getCategories(),
+          getTransactionTypes(),
+          getBanks(),
+          getCards(),
+          getPaymentStatuses(),
+          getPaymentMethods(),
+          getRecurrenceFrequencies(),
+        ]);
+
+        if (transactionsRes.error) throw transactionsRes.error;
+        if (categoriesRes.error) throw categoriesRes.error;
+        if (transactionTypesRes.error) throw transactionTypesRes.error;
+        if (banksRes.error) throw banksRes.error;
+        if (cardsRes.error) throw cardsRes.error;
+        if (paymentStatusesRes.error) throw paymentStatusesRes.error;
+        if (paymentMethodsRes.error) throw paymentMethodsRes.error;
+        if (recurrenceFrequenciesRes.error) throw recurrenceFrequenciesRes.error;
+
+        // Map Supabase fields to component fields
+        const mappedTransactions = (transactionsRes.data || []).map((t) => ({
+          ...t,
+          date: t.transaction_date,
+          type_internal_name: t.transaction_type_internal_name,
+          status: t.payment_status_internal_name,
+          payment_method: t.payment_method_name,
+          installments: t.installment_total > 1 ? {
+            current: t.installment_number,
+            total: t.installment_total,
+          } : null,
+        }));
+
+        setTransactions(mappedTransactions);
+        setFilteredTransactions(mappedTransactions);
+        setCategories(categoriesRes.data || []);
+        setTransactionTypes(transactionTypesRes.data || []);
+        setBanks(banksRes.data || []);
+        setCards(cardsRes.data || []);
+        setPaymentStatuses(paymentStatusesRes.data || []);
+        setPaymentMethods(paymentMethodsRes.data || []);
+        setRecurrenceFrequencies(recurrenceFrequenciesRes.data || []);
 
         // Definir categoria e tipo padrão após carregar os dados
         if (
-          categoriesRes.data.length > 0 &&
-          transactionTypesRes.data.length > 0
+          categoriesRes.data && categoriesRes.data.length > 0 &&
+          transactionTypesRes.data && transactionTypesRes.data.length > 0
         ) {
           const defaultCategory = categoriesRes.data[0];
           const defaultType = transactionTypesRes.data[0];
@@ -345,10 +396,26 @@ export default function Transacoes() {
   const confirmDelete = async () => {
     if (transactionToDelete) {
       try {
-        await deleteTransaction(transactionToDelete.id);
-        const response = await fetchData("/api/transactions");
-        setTransactions(response.data);
-        setFilteredTransactions(response.data);
+        const result = await deleteTransaction(transactionToDelete.id);
+        if (result.error) throw result.error;
+
+        const response = await getTransactions();
+        if (response.error) throw response.error;
+
+        const mappedTransactions = (response.data || []).map((t) => ({
+          ...t,
+          date: t.transaction_date,
+          type_internal_name: t.transaction_type_internal_name,
+          status: t.payment_status_internal_name,
+          payment_method: t.payment_method_name,
+          installments: t.installment_total > 1 ? {
+            current: t.installment_number,
+            total: t.installment_total,
+          } : null,
+        }));
+
+        setTransactions(mappedTransactions);
+        setFilteredTransactions(mappedTransactions);
         setDeleteDialogOpen(false);
         setTransactionToDelete(null);
       } catch (error) {
@@ -376,49 +443,62 @@ export default function Transacoes() {
       }
 
       const dateString = formData.date.toISOString().split("T")[0];
-
-      // Preparar dados de parcelas
-      let installments = null;
-      if (
-        formData.installments_total &&
-        parseInt(formData.installments_total) > 1
-      ) {
-        installments = {
-          current: parseInt(formData.installments_current) || 1,
-          total: parseInt(formData.installments_total),
-        };
-      }
-
       const paymentDateString = formData.payment_date ? formData.payment_date.toISOString().split("T")[0] : null;
+
+      // Find IDs for enums
+      const paymentStatus = paymentStatuses.find(s => s.internal_name === formData.status);
+      const paymentMethod = paymentMethods.find(m => m.internal_name === formData.payment_method);
+      const recurrenceFreq = recurrenceFrequencies.find(f => f.internal_name === formData.recurrence_frequency);
 
       const transactionData = {
         categoryId: formData.categoryId,
         transactionTypeId: formData.transactionTypeId,
         description: formData.description,
         amount: amount,
-        date: dateString,
+        transactionDate: dateString,
         notes: formData.notes || null,
-        status: formData.status,
-        payment_method: formData.payment_method || null,
-        payment_date: paymentDateString,
-        card_id: formData.card_id || null,
-        bank_id: formData.bank_id || null,
-        installments: installments,
-        is_recurring: formData.is_recurring || false,
-        recurrence_frequency: formData.is_recurring
-          ? formData.recurrence_frequency
+        statusId: paymentStatus?.id || 1, // Default to 'pending'
+        paymentMethodId: paymentMethod?.id || null,
+        paymentDate: paymentDateString,
+        cardId: formData.card_id || null,
+        bankId: formData.bank_id || null,
+        installmentNumber: formData.installments_total && parseInt(formData.installments_total) > 1
+          ? parseInt(formData.installments_current) || 1
           : null,
+        installmentTotal: formData.installments_total && parseInt(formData.installments_total) > 1
+          ? parseInt(formData.installments_total)
+          : null,
+        isRecurring: formData.is_recurring || false,
+        recurrenceFrequencyId: formData.is_recurring && recurrenceFreq ? recurrenceFreq.id : null,
       };
 
+      let result;
       if (editingTransaction) {
-        await updateTransaction(editingTransaction.id, transactionData);
+        result = await updateTransaction(editingTransaction.id, transactionData);
       } else {
-        await createTransaction(transactionData, user.id);
+        result = await createTransaction(transactionData);
       }
 
-      const response = await fetchData("/api/transactions");
-      setTransactions(response.data);
-      setFilteredTransactions(response.data);
+      if (result.error) throw result.error;
+
+      // Reload data
+      const response = await getTransactions();
+      if (response.error) throw response.error;
+
+      const mappedTransactions = (response.data || []).map((t) => ({
+        ...t,
+        date: t.transaction_date,
+        type_internal_name: t.transaction_type_internal_name,
+        status: t.payment_status_internal_name,
+        payment_method: t.payment_method_name,
+        installments: t.installment_total > 1 ? {
+          current: t.installment_number,
+          total: t.installment_total,
+        } : null,
+      }));
+
+      setTransactions(mappedTransactions);
+      setFilteredTransactions(mappedTransactions);
 
       setModalOpen(false);
       const defaultCategory = categories[0];
