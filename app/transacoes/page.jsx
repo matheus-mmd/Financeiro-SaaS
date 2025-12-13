@@ -1093,7 +1093,28 @@ export default function Transacoes() {
 
             {/* Categoria */}
             <div className="space-y-2">
-              <Label htmlFor="category">Categoria</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="category">Categoria</Label>
+                {/* Badge indicador do tipo de transação */}
+                {formData.transactionTypeId && (() => {
+                  const selectedType = transactionTypes.find(t => t.id === formData.transactionTypeId);
+                  if (!selectedType) return null;
+
+                  const typeConfig = {
+                    income: { label: 'Receita', color: 'bg-green-100 text-green-700 border-green-200' },
+                    expense: { label: 'Despesa', color: 'bg-red-100 text-red-700 border-red-200' },
+                    investment: { label: 'Aporte', color: 'bg-blue-100 text-blue-700 border-blue-200' },
+                  };
+
+                  const config = typeConfig[selectedType.internal_name] || { label: selectedType.name, color: 'bg-gray-100 text-gray-700' };
+
+                  return (
+                    <Badge variant="outline" className={`${config.color} text-xs font-semibold`}>
+                      {config.label}
+                    </Badge>
+                  );
+                })()}
+              </div>
               <Select
                 value={formData.categoryId?.toString() || ""}
                 onValueChange={handleCategoryChange}
