@@ -217,18 +217,15 @@ export const AuthProvider = ({ children }) => {
         return { data: null, error };
       }
 
-      // Criar perfil do usuário na tabela users
-      if (data.user) {
-        const profileData = await createProfile(data.user.id, email, name);
-        setProfile(profileData);
-      }
+      // NOTA: O perfil é criado automaticamente pelo trigger do banco de dados (on_auth_user_created)
+      // O onAuthStateChange irá buscar o perfil quando a sessão for estabelecida
 
       return { data, error: null };
     } catch (error) {
       console.error('[AuthContext] Erro ao criar conta:', error);
       return { data: null, error };
     }
-  }, [createProfile]);
+  }, []);
 
   /**
    * Fazer logout
