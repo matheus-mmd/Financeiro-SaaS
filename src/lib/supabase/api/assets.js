@@ -1,10 +1,10 @@
 /**
  * API de Ativos - Supabase
- * Integrado com Transactions - criar ativo automaticamente cria uma transação de aporte
+ * Criar ativo diretamente SEM criar transação
+ * (Transações de tipo Aporte é que criam ativos automaticamente)
  */
 
 import { supabase } from '../client';
-import { TRANSACTION_TYPE_IDS } from '../../../constants';
 
 export async function getAssets(filters = {}) {
   let query = supabase
@@ -38,89 +38,61 @@ export async function createAsset(asset) {
     return { data: null, error: new Error('Usuário não autenticado') };
   }
 
+  // Validar campos obrigatórios
+  if (!asset.categoryId) {
+    return { data: null, error: new Error('Categoria é obrigatória') };
+  }
+
+  if (!asset.name) {
+    return { data: null, error: new Error('Nome é obrigatório') };
+  }
+
+  if (asset.value === undefined || asset.value === null) {
+    return { data: null, error: new Error('Valor é obrigatório') };
+  }
+
+  if (!asset.valuationDate && !asset.date) {
+    return { data: null, error: new Error('Data de avaliação é obrigatória') };
+  }
+
   try {
-    // 1. Primeiro, criar a transação de aporte
-    const transactionData = {
+    // Criar apenas o ativo (SEM criar transação)
+    const insertData = {
       user_id: user.id,
       category_id: asset.categoryId,
-      transaction_type_id: TRANSACTION_TYPE_IDS.INVESTMENT, // Tipo: Aporte
-      payment_status_id: 2, // Pago (já que o ativo foi adquirido)
-      description: `Aporte: ${asset.name}`,
-      amount: -Math.abs(asset.purchaseValue || asset.value), // Negativo = saída de dinheiro
-      transaction_date: asset.purchaseDate || asset.valuationDate || asset.date,
-      notes: asset.description || null,
-      payment_method_id: null,
-      bank_id: null,
-      card_id: null,
-      installment_number: null,
-      installment_total: null,
-      is_recurring: false,
-      recurrence_frequency_id: null,
-      recurrence_end_date: null,
+      name: asset.name,
+      description: asset.description || null,
+      value: asset.value,
+      yield_rate: asset.yieldRate || 0,
+      currency: asset.currency || 'BRL',
+      valuation_date: asset.valuationDate || asset.date,
+      purchase_date: asset.purchaseDate || null,
+      purchase_value: asset.purchaseValue || null,
     };
 
-    const { data: transactionResult, error: transactionError } = await supabase
-      .from('transactions')
-      .insert(transactionData)
-      .select()
-      .maybeSingle();
+    console.log('[Assets API] Criando ativo:', insertData);
 
-    if (transactionError) {
-      console.error('[Assets API] Erro ao criar transação:', transactionError);
-      throw transactionError;
-    }
-
-    // 2. Depois, criar o ativo vinculado à transação
     const { data: assetResult, error: assetError } = await supabase
       .from('assets')
-      .insert({
-        user_id: user.id,
-        category_id: asset.categoryId,
-        name: asset.name,
-        description: asset.description,
-        value: asset.value,
-        yield_rate: asset.yieldRate,
-        currency: asset.currency || 'BRL',
-        valuation_date: asset.valuationDate || asset.date,
-        purchase_date: asset.purchaseDate,
-        purchase_value: asset.purchaseValue,
-        related_transaction_id: transactionResult.id, // Vincular à transação
-      })
+      .insert(insertData)
       .select()
       .maybeSingle();
 
     if (assetError) {
       console.error('[Assets API] Erro ao criar ativo:', assetError);
-      // Se falhar ao criar ativo, deletar a transação
-      await supabase.from('transactions').delete().eq('id', transactionResult.id);
-      throw assetError;
+      return { data: null, error: assetError };
     }
-
-    // 3. Atualizar a transação com o ID do ativo (vínculo bidirecional)
-    await supabase
-      .from('transactions')
-      .update({ related_asset_id: assetResult.id })
-      .eq('id', transactionResult.id);
 
     return { data: assetResult, error: null };
   } catch (error) {
-    console.error('[Assets API] Erro ao criar ativo e transação:', error);
+    console.error('[Assets API] Erro ao criar ativo:', error);
     return { data: null, error };
   }
 }
 
 export async function updateAsset(id, updates) {
   try {
-    // 1. Buscar o ativo atual para pegar o related_transaction_id
-    const { data: currentAsset, error: fetchError } = await supabase
-      .from('assets')
-      .select('*')
-      .eq('id', id)
-      .maybeSingle();
-
-    if (fetchError) throw fetchError;
-
-    // 2. Atualizar o ativo
+    // Atualizar apenas o ativo (não mexe em transação)
     const updateData = {};
 
     if (updates.categoryId !== undefined) updateData.category_id = updates.categoryId;
@@ -143,28 +115,6 @@ export async function updateAsset(id, updates) {
 
     if (assetError) throw assetError;
 
-    // 3. Se existe transação vinculada, atualizar ela também
-    if (currentAsset.related_transaction_id) {
-      const transactionUpdates = {};
-
-      if (updates.categoryId !== undefined) transactionUpdates.category_id = updates.categoryId;
-      if (updates.name !== undefined) transactionUpdates.description = `Aporte: ${updates.name}`;
-      if (updates.description !== undefined) transactionUpdates.notes = updates.description;
-      if (updates.purchaseValue !== undefined || updates.value !== undefined) {
-        transactionUpdates.amount = -Math.abs(updates.purchaseValue || updates.value);
-      }
-      if (updates.purchaseDate !== undefined || updates.valuationDate !== undefined || updates.date !== undefined) {
-        transactionUpdates.transaction_date = updates.purchaseDate || updates.valuationDate || updates.date;
-      }
-
-      if (Object.keys(transactionUpdates).length > 0) {
-        await supabase
-          .from('transactions')
-          .update(transactionUpdates)
-          .eq('id', currentAsset.related_transaction_id);
-      }
-    }
-
     return { data: assetResult, error: null };
   } catch (error) {
     console.error('[Assets API] Erro ao atualizar ativo:', error);
@@ -174,16 +124,7 @@ export async function updateAsset(id, updates) {
 
 export async function deleteAsset(id) {
   try {
-    // 1. Buscar o ativo para pegar o related_transaction_id
-    const { data: currentAsset, error: fetchError } = await supabase
-      .from('assets')
-      .select('*')
-      .eq('id', id)
-      .maybeSingle();
-
-    if (fetchError) throw fetchError;
-
-    // 2. Soft delete do ativo
+    // Soft delete apenas do ativo (não mexe em transação)
     const { data: assetResult, error: assetError } = await supabase
       .from('assets')
       .update({ deleted_at: new Date().toISOString() })
@@ -192,14 +133,6 @@ export async function deleteAsset(id) {
       .maybeSingle();
 
     if (assetError) throw assetError;
-
-    // 3. Se existe transação vinculada, deletar ela também (soft delete)
-    if (currentAsset.related_transaction_id) {
-      await supabase
-        .from('transactions')
-        .update({ deleted_at: new Date().toISOString() })
-        .eq('id', currentAsset.related_transaction_id);
-    }
 
     return { data: assetResult, error: null };
   } catch (error) {

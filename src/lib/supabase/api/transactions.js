@@ -134,6 +134,39 @@ export async function createTransaction(transaction) {
       const friendlyMessage = fieldMessages[fieldName] || `Campo ${fieldName} contém um valor inválido`;
       return { data: null, error: new Error(friendlyMessage) };
     }
+    return { data: null, error };
+  }
+
+  // Se for transação de tipo INVESTMENT (Aporte), criar ativo vinculado
+  if (transaction.transactionTypeId === 3 && data) {
+    const { data: assetData, error: assetError } = await supabase
+      .from('assets')
+      .insert({
+        user_id: user.id,
+        category_id: transaction.categoryId,
+        name: transaction.description,
+        description: transaction.notes || null,
+        value: Math.abs(transaction.amount), // Valor positivo para o ativo
+        yield_rate: 0,
+        currency: 'BRL',
+        valuation_date: transaction.transactionDate,
+        purchase_date: transaction.transactionDate,
+        purchase_value: Math.abs(transaction.amount),
+        related_transaction_id: data.id, // Vincular à transação
+      })
+      .select()
+      .maybeSingle();
+
+    if (assetError) {
+      console.error('[Transactions API] Erro ao criar ativo vinculado:', assetError);
+      // Não falha a transação, apenas loga o erro
+    } else if (assetData) {
+      // Atualizar a transação com o ID do ativo (vínculo bidirecional)
+      await supabase
+        .from('transactions')
+        .update({ related_asset_id: assetData.id })
+        .eq('id', data.id);
+    }
   }
 
   return { data, error };
