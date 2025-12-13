@@ -78,18 +78,9 @@ export const AuthProvider = ({ children }) => {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session?.user) {
         setUser(session.user);
-        let profileData = await fetchProfile(session.user.id);
 
-        // Se o perfil não existe, criar automaticamente
-        if (!profileData) {
-          console.log('[AuthContext] Perfil não encontrado, criando...');
-          profileData = await createProfile(
-            session.user.id,
-            session.user.email,
-            session.user.user_metadata?.name || session.user.email
-          );
-        }
-
+        // Buscar perfil (criado automaticamente pelo trigger do banco)
+        const profileData = await fetchProfile(session.user.id);
         setProfile(profileData);
         setLoading(false);
       } else {
@@ -105,18 +96,9 @@ export const AuthProvider = ({ children }) => {
 
       if (session?.user) {
         setUser(session.user);
-        let profileData = await fetchProfile(session.user.id);
 
-        // Se o perfil não existe, criar automaticamente
-        if (!profileData) {
-          console.log('[AuthContext] Perfil não encontrado, criando...');
-          profileData = await createProfile(
-            session.user.id,
-            session.user.email,
-            session.user.user_metadata?.name || session.user.email
-          );
-        }
-
+        // Buscar perfil (criado automaticamente pelo trigger do banco)
+        const profileData = await fetchProfile(session.user.id);
         setProfile(profileData);
       } else {
         setUser(null);
@@ -127,7 +109,7 @@ export const AuthProvider = ({ children }) => {
     });
 
     return () => subscription.unsubscribe();
-  }, [fetchProfile, createProfile]);
+  }, [fetchProfile]);
 
   /**
    * Fazer login com email e senha
@@ -158,20 +140,9 @@ export const AuthProvider = ({ children }) => {
         return { data: null, error };
       }
 
-      // Buscar ou criar perfil do usuário
+      // Buscar perfil do usuário (criado pelo trigger do banco)
       if (data.user) {
-        let profileData = await fetchProfile(data.user.id);
-
-        // Se o perfil não existe, criar automaticamente
-        if (!profileData) {
-          console.log('[AuthContext] Perfil não encontrado no login, criando...');
-          profileData = await createProfile(
-            data.user.id,
-            data.user.email,
-            data.user.user_metadata?.name || data.user.email
-          );
-        }
-
+        const profileData = await fetchProfile(data.user.id);
         setProfile(profileData);
       }
 
