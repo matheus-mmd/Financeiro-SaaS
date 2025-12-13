@@ -8,7 +8,7 @@
  * import { fetchData, createTransaction, updateTransaction, deleteTransaction } from '@/utils/supabaseApi';
  */
 
-import { supabase } from '../lib/supabase';
+import { supabase } from '../lib/supabase/client';
 
 /**
  * Função helper para enriquecer categoria com ícone
