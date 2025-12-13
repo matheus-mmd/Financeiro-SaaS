@@ -18,8 +18,16 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "./ui/tooltip";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "./ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "./ui/avatar";
-import { LogOut } from "lucide-react";
+import { LogOut, User, Mail } from "lucide-react";
 
 /**
  * Gera iniciais a partir do nome
@@ -188,45 +196,74 @@ export default function Sidebar({
             flex-shrink-0 px-4 py-3 border-t border-gray-200
             transition-all duration-300 ease-in-out
           `}>
-            <div className="flex items-center gap-3">
-              {/* Avatar */}
-              <Avatar className="w-10 h-10 ring-2 ring-gray-100 flex-shrink-0">
-                <AvatarFallback className="bg-gradient-to-br from-brand-500 to-brand-600 text-white text-sm font-medium">
-                  {getInitials(user.name)}
-                </AvatarFallback>
-              </Avatar>
-
-              {/* Nome e Email - oculto quando colapsado */}
-              <div className={`
-                flex-1 min-w-0 overflow-hidden transition-all duration-300 ease-in-out
-                ${isCollapsed ? "lg:w-0 lg:opacity-0" : "lg:w-auto lg:opacity-100"}
-                w-auto opacity-100
-              `}>
-                <p className="text-sm font-medium text-gray-900 truncate">
-                  {user.name}
-                </p>
-                {user.email && (
-                  <p className="text-xs text-gray-500 truncate">
-                    {user.email}
-                  </p>
-                )}
+            {/* Quando colapsado: Avatar clicável com dropdown */}
+            {isCollapsed ? (
+              <div className="hidden lg:flex justify-center">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="focus:outline-none focus:ring-2 focus:ring-brand-500 rounded-full">
+                      <Avatar className="w-10 h-10 ring-2 ring-gray-100 cursor-pointer hover:ring-brand-300 transition-all">
+                        <AvatarFallback className="bg-gradient-to-br from-brand-500 to-brand-600 text-white text-sm font-medium">
+                          {getInitials(user.name)}
+                        </AvatarFallback>
+                      </Avatar>
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent side="right" align="end" className="w-56">
+                    <DropdownMenuLabel>
+                      <div className="flex flex-col space-y-1">
+                        <p className="text-sm font-medium leading-none">{user.name}</p>
+                        {user.email && (
+                          <p className="text-xs leading-none text-muted-foreground">
+                            {user.email}
+                          </p>
+                        )}
+                      </div>
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onClick={onLogout}
+                      className="text-red-600 focus:text-red-600 focus:bg-red-50 cursor-pointer"
+                    >
+                      <LogOut className="w-4 h-4 mr-2" />
+                      <span>Sair</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
+            ) : (
+              /* Quando expandido: Layout normal */
+              <div className="flex items-center gap-3">
+                {/* Avatar */}
+                <Avatar className="w-10 h-10 ring-2 ring-gray-100 flex-shrink-0">
+                  <AvatarFallback className="bg-gradient-to-br from-brand-500 to-brand-600 text-white text-sm font-medium">
+                    {getInitials(user.name)}
+                  </AvatarFallback>
+                </Avatar>
 
-              {/* Botão Logout - oculto quando colapsado */}
-              <button
-                onClick={onLogout}
-                className={`
-                  flex-shrink-0 p-2 rounded-lg text-gray-500 hover:text-red-600 hover:bg-red-50 transition-colors
-                  overflow-hidden duration-300 ease-in-out
-                  ${isCollapsed ? "lg:w-0 lg:p-0 lg:opacity-0" : "lg:w-auto lg:p-2 lg:opacity-100"}
-                  w-auto p-2 opacity-100
-                `}
-                aria-label="Sair"
-                title="Sair"
-              >
-                <LogOut className="w-4 h-4" />
-              </button>
-            </div>
+                {/* Nome e Email */}
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-900 truncate">
+                    {user.name}
+                  </p>
+                  {user.email && (
+                    <p className="text-xs text-gray-500 truncate">
+                      {user.email}
+                    </p>
+                  )}
+                </div>
+
+                {/* Botão Logout */}
+                <button
+                  onClick={onLogout}
+                  className="flex-shrink-0 p-2 rounded-lg text-gray-500 hover:text-red-600 hover:bg-red-50 transition-colors"
+                  aria-label="Sair"
+                  title="Sair"
+                >
+                  <LogOut className="w-4 h-4" />
+                </button>
+              </div>
+            )}
           </div>
         )}
       </aside>
