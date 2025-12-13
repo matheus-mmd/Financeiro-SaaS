@@ -197,10 +197,6 @@ export default function CategoriasPage() {
     iconColor,
     defaultType = null
   ) => {
-    if (sectionCategories.length === 0) {
-      return null;
-    }
-
     return (
       <Card>
         <CardContent className="p-4 sm:p-6">
@@ -214,44 +210,61 @@ export default function CategoriasPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {sectionCategories.map((category) => {
-              const IconComponent = getIconComponent(category.icon || "Tag");
+          {sectionCategories.length === 0 ? (
+            <div className="text-center py-8">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-3">
+                <Tag className="w-8 h-8 text-gray-400" />
+              </div>
+              <p className="text-gray-500 mb-3">Nenhuma categoria cadastrada</p>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleOpenCategoryModal(null, defaultType)}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Adicionar Categoria
+              </Button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {sectionCategories.map((category) => {
+                const IconComponent = getIconComponent(category.icon || "Tag");
 
-              return (
-                <div
-                  key={category.id}
-                  onClick={() => handleOpenCategoryModal(category)}
-                  className="group relative bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md hover:border-gray-300 transition-all cursor-pointer"
-                >
-                  <div className="flex items-center gap-3">
-                    <div
-                      className="flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center"
-                      style={{ backgroundColor: category.color + "20" }}
-                    >
-                      <IconComponent
-                        className="w-5 h-5"
-                        style={{ color: category.color }}
-                      />
+                return (
+                  <div
+                    key={category.id}
+                    onClick={() => handleOpenCategoryModal(category)}
+                    className="group relative bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md hover:border-gray-300 transition-all cursor-pointer"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div
+                        className="flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center"
+                        style={{ backgroundColor: category.color + "20" }}
+                      >
+                        <IconComponent
+                          className="w-5 h-5"
+                          style={{ color: category.color }}
+                        />
+                      </div>
+                      <span className="font-semibold text-gray-900 flex-1 truncate">
+                        {category.name}
+                      </span>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteCategory(category.id);
+                        }}
+                        className="flex-shrink-0 p-1.5 opacity-0 group-hover:opacity-100 hover:bg-red-100 rounded-lg transition-all"
+                        title="Deletar categoria"
+                      >
+                        <Trash2 className="w-4 h-4 text-red-600" />
+                      </button>
                     </div>
-                    <span className="font-semibold text-gray-900 flex-1 truncate">
-                      {category.name}
-                    </span>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDeleteCategory(category.id);
-                      }}
-                      className="flex-shrink-0 p-1.5 opacity-0 group-hover:opacity-100 hover:bg-red-100 rounded-lg transition-all"
-                      title="Deletar categoria"
-                    >
-                      <Trash2 className="w-4 h-4 text-red-600" />
-                    </button>
                   </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          )}
         </CardContent>
       </Card>
     );

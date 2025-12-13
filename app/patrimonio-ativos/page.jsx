@@ -537,15 +537,18 @@ export default function PatrimonioAtivos() {
 
           {sortedAssets.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-gray-500 mb-4">
-                Nenhum ativo encontrado.{" "}
-                <button
-                  onClick={handleAddAsset}
-                  className="text-brand-600 hover:text-brand-700 font-medium underline"
-                >
-                  Adicionar novo ativo
-                </button>
-              </p>
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-3">
+                <Wallet className="w-8 h-8 text-gray-400" />
+              </div>
+              <p className="text-gray-500 mb-3">Nenhum ativo encontrado</p>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleAddAsset}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Adicionar Ativo
+              </Button>
             </div>
           ) : (
             <Table

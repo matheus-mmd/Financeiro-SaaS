@@ -540,15 +540,18 @@ export default function Metas() {
 
           {sortedTargets.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-gray-500 mb-4">
-                Nenhuma meta encontrada.{" "}
-                <button
-                  onClick={handleAddTarget}
-                  className="text-brand-600 hover:text-brand-700 font-medium underline"
-                >
-                  Criar nova meta
-                </button>
-              </p>
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-3">
+                <Target className="w-8 h-8 text-gray-400" />
+              </div>
+              <p className="text-gray-500 mb-3">Nenhuma meta encontrada</p>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleAddTarget}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Criar Nova Meta
+              </Button>
             </div>
           ) : (
             <Table

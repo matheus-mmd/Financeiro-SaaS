@@ -306,10 +306,6 @@ export default function ContasPage() {
 
   // Função para renderizar seção de bancos
   const renderBanksSection = () => {
-    if (banks.length === 0) {
-      return null;
-    }
-
     return (
       <Card>
         <CardContent className="p-4 sm:p-6">
@@ -327,60 +323,77 @@ export default function ContasPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {banks.map((bank) => {
-              const IconComponent = getIconComponent(bank.icon || "Wallet");
+          {banks.length === 0 ? (
+            <div className="text-center py-8">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-3">
+                <Landmark className="w-8 h-8 text-gray-400" />
+              </div>
+              <p className="text-gray-500 mb-3">Nenhuma conta bancária cadastrada</p>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleOpenBankModal(null)}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Adicionar Banco
+              </Button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {banks.map((bank) => {
+                const IconComponent = getIconComponent(bank.icon || "Wallet");
 
-              return (
-                <div
-                  key={bank.id}
-                  onClick={() => handleOpenBankModal(bank)}
-                  className="group relative bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md hover:border-gray-300 transition-all cursor-pointer"
-                >
-                  <div className="flex items-start gap-3">
-                    <div
-                      className="flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center"
-                      style={{ backgroundColor: bank.color + "20" }}
-                    >
-                      <IconComponent
-                        className="w-6 h-6"
-                        style={{ color: bank.color }}
-                      />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-gray-900 truncate">
-                        {bank.name}
-                      </h3>
-                      <p className="text-sm text-gray-500">
-                        {getAccountTypeLabel(bank.account_type)}
-                      </p>
-                      {bank.agency && bank.account && (
-                        <p className="text-xs text-gray-400 mt-1">
-                          Ag: {bank.agency} • Cc: {bank.account}
+                return (
+                  <div
+                    key={bank.id}
+                    onClick={() => handleOpenBankModal(bank)}
+                    className="group relative bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md hover:border-gray-300 transition-all cursor-pointer"
+                  >
+                    <div className="flex items-start gap-3">
+                      <div
+                        className="flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center"
+                        style={{ backgroundColor: bank.color + "20" }}
+                      >
+                        <IconComponent
+                          className="w-6 h-6"
+                          style={{ color: bank.color }}
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-gray-900 truncate">
+                          {bank.name}
+                        </h3>
+                        <p className="text-sm text-gray-500">
+                          {getAccountTypeLabel(bank.account_type)}
                         </p>
-                      )}
-                      {bank.current_balance !== null &&
-                        bank.current_balance !== undefined && (
-                          <p className="text-sm font-medium text-gray-700 mt-2">
-                            Saldo: {formatCurrency(bank.current_balance)}
+                        {bank.agency && bank.account && (
+                          <p className="text-xs text-gray-400 mt-1">
+                            Ag: {bank.agency} • Cc: {bank.account}
                           </p>
                         )}
+                        {bank.current_balance !== null &&
+                          bank.current_balance !== undefined && (
+                            <p className="text-sm font-medium text-gray-700 mt-2">
+                              Saldo: {formatCurrency(bank.current_balance)}
+                            </p>
+                          )}
+                      </div>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteBank(bank.id);
+                        }}
+                        className="flex-shrink-0 p-1.5 opacity-0 group-hover:opacity-100 hover:bg-red-100 rounded-lg transition-all"
+                        title="Deletar banco"
+                      >
+                        <Trash2 className="w-4 h-4 text-red-600" />
+                      </button>
                     </div>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDeleteBank(bank.id);
-                      }}
-                      className="flex-shrink-0 p-1.5 opacity-0 group-hover:opacity-100 hover:bg-red-100 rounded-lg transition-all"
-                      title="Deletar banco"
-                    >
-                      <Trash2 className="w-4 h-4 text-red-600" />
-                    </button>
                   </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          )}
         </CardContent>
       </Card>
     );
@@ -388,10 +401,6 @@ export default function ContasPage() {
 
   // Função para renderizar seção de cartões
   const renderCardsSection = () => {
-    if (cards.length === 0) {
-      return null;
-    }
-
     return (
       <Card>
         <CardContent className="p-4 sm:p-6">
@@ -407,76 +416,93 @@ export default function ContasPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {cards.map((card) => {
-              const IconComponent = getIconComponent(card.icon || "CreditCard");
-              const bank = banks.find((b) => b.id === card.bank_id);
+          {cards.length === 0 ? (
+            <div className="text-center py-8">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-3">
+                <CreditCard className="w-8 h-8 text-gray-400" />
+              </div>
+              <p className="text-gray-500 mb-3">Nenhum cartão cadastrado</p>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleOpenCardModal(null)}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Adicionar Cartão
+              </Button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {cards.map((card) => {
+                const IconComponent = getIconComponent(card.icon || "CreditCard");
+                const bank = banks.find((b) => b.id === card.bank_id);
 
-              return (
-                <div
-                  key={card.id}
-                  onClick={() => handleOpenCardModal(card)}
-                  className="group relative bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md hover:border-gray-300 transition-all cursor-pointer"
-                >
-                  <div className="flex items-start gap-3">
-                    <div
-                      className="flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center"
-                      style={{ backgroundColor: card.color + "20" }}
-                    >
-                      <IconComponent
-                        className="w-6 h-6"
-                        style={{ color: card.color }}
-                      />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-gray-900 truncate">
-                        {card.name}
-                      </h3>
-                      <p className="text-sm text-gray-500">
-                        {getCardTypeLabel(card.card_type)} • {card.card_brand}
-                      </p>
-                      {bank && (
-                        <p className="text-xs text-gray-400 mt-1">
-                          {bank.name}
+                return (
+                  <div
+                    key={card.id}
+                    onClick={() => handleOpenCardModal(card)}
+                    className="group relative bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md hover:border-gray-300 transition-all cursor-pointer"
+                  >
+                    <div className="flex items-start gap-3">
+                      <div
+                        className="flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center"
+                        style={{ backgroundColor: card.color + "20" }}
+                      >
+                        <IconComponent
+                          className="w-6 h-6"
+                          style={{ color: card.color }}
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-gray-900 truncate">
+                          {card.name}
+                        </h3>
+                        <p className="text-sm text-gray-500">
+                          {getCardTypeLabel(card.card_type)} • {card.card_brand}
                         </p>
-                      )}
-                      {card.card_type === "credito" && card.limit && (
-                        <div className="mt-2">
-                          <p className="text-sm font-medium text-gray-700">
-                            Limite: {formatCurrency(card.limit)}
-                          </p>
-                          {card.current_balance !== null &&
-                            card.current_balance !== undefined && (
-                              <p className="text-xs text-gray-500">
-                                Usado: {formatCurrency(card.current_balance)}
-                              </p>
-                            )}
-                        </div>
-                      )}
-                      {card.card_type === "credito" &&
-                        card.closing_day &&
-                        card.due_day && (
+                        {bank && (
                           <p className="text-xs text-gray-400 mt-1">
-                            Fecha dia {card.closing_day} • Vence dia{" "}
-                            {card.due_day}
+                            {bank.name}
                           </p>
                         )}
+                        {card.card_type === "credito" && card.limit && (
+                          <div className="mt-2">
+                            <p className="text-sm font-medium text-gray-700">
+                              Limite: {formatCurrency(card.limit)}
+                            </p>
+                            {card.current_balance !== null &&
+                              card.current_balance !== undefined && (
+                                <p className="text-xs text-gray-500">
+                                  Usado: {formatCurrency(card.current_balance)}
+                                </p>
+                              )}
+                          </div>
+                        )}
+                        {card.card_type === "credito" &&
+                          card.closing_day &&
+                          card.due_day && (
+                            <p className="text-xs text-gray-400 mt-1">
+                              Fecha dia {card.closing_day} • Vence dia{" "}
+                              {card.due_day}
+                            </p>
+                          )}
+                      </div>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteCard(card.id);
+                        }}
+                        className="flex-shrink-0 p-1.5 opacity-0 group-hover:opacity-100 hover:bg-red-100 rounded-lg transition-all"
+                        title="Deletar cartão"
+                      >
+                        <Trash2 className="w-4 h-4 text-red-600" />
+                      </button>
                     </div>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDeleteCard(card.id);
-                      }}
-                      className="flex-shrink-0 p-1.5 opacity-0 group-hover:opacity-100 hover:bg-red-100 rounded-lg transition-all"
-                      title="Deletar cartão"
-                    >
-                      <Trash2 className="w-4 h-4 text-red-600" />
-                    </button>
                   </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          )}
         </CardContent>
       </Card>
     );
@@ -502,27 +528,6 @@ export default function ContasPage() {
 
       {/* Seção: Cartões */}
       {renderCardsSection()}
-
-      {/* Mensagem quando não há dados */}
-      {banks.length === 0 && cards.length === 0 && (
-        <Card>
-          <CardContent className="p-12 text-center">
-            <div className="flex flex-col items-center gap-4">
-              <div className="p-4 bg-gray-100 rounded-full">
-                <Landmark className="w-8 h-8 text-gray-400" />
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                  Nenhuma conta cadastrada
-                </h3>
-                <p className="text-sm text-gray-500">
-                  Comece adicionando suas contas bancárias e cartões
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
 
       {/* Modal de Banco */}
       <Dialog open={bankModalOpen} onOpenChange={setBankModalOpen}>
