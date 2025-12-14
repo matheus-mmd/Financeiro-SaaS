@@ -18,6 +18,7 @@ export function useTransactions(filters = {}) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Criar função de carregamento estável
   const loadTransactions = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -28,8 +29,10 @@ export function useTransactions(filters = {}) {
       setTransactions(data || []);
     }
     setLoading(false);
-  }, [filters]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [JSON.stringify(filters)]);
 
+  // Carregar quando filters mudar
   useEffect(() => {
     loadTransactions();
   }, [loadTransactions]);
@@ -89,7 +92,7 @@ export function useTransaction(id) {
       setTransaction(data);
     }
     setLoading(false);
-  }, [id]);
+  }, [id]); // id é primitivo, não causa loop
 
   useEffect(() => {
     loadTransaction();
@@ -123,7 +126,7 @@ export function useInstallmentGroup(groupId) {
       setInstallments(data || []);
     }
     setLoading(false);
-  }, [groupId]);
+  }, [groupId]); // groupId é primitivo, não causa loop
 
   useEffect(() => {
     loadInstallments();

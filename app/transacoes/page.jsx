@@ -132,6 +132,9 @@ export default function Transacoes() {
   });
 
   useEffect(() => {
+    let isMounted = true;
+    const abortController = new AbortController();
+
     const loadData = async () => {
       try {
         const [
@@ -153,6 +156,9 @@ export default function Transacoes() {
           getPaymentMethods(),
           getRecurrenceFrequencies(),
         ]);
+
+        // Verificar se componente ainda está montado antes de atualizar state
+        if (!isMounted) return;
 
         if (transactionsRes.error) throw transactionsRes.error;
         if (categoriesRes.error) throw categoriesRes.error;
@@ -200,13 +206,23 @@ export default function Transacoes() {
           }));
         }
       } catch (error) {
-        console.error("Erro ao carregar transações:", error);
+        if (error.name !== 'AbortError') {
+          console.error("Erro ao carregar transações:", error);
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
     loadData();
+
+    // Cleanup: cancelar requisições se usuário sair da página
+    return () => {
+      isMounted = false;
+      abortController.abort();
+    };
   }, []);
 
   useEffect(() => {

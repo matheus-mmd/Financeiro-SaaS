@@ -74,17 +74,25 @@ export const AuthProvider = ({ children }) => {
    * Sincronizar estado de autenticação com Supabase
    */
   useEffect(() => {
+    let isMounted = true;
+
     // Verificar sessão existente
     supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (!isMounted) return;
+
       if (session?.user) {
         setUser(session.user);
 
         // Buscar perfil (criado automaticamente pelo trigger do banco)
         const profileData = await fetchProfile(session.user.id);
-        setProfile(profileData);
-        setLoading(false);
+        if (isMounted) {
+          setProfile(profileData);
+          setLoading(false);
+        }
       } else {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     });
 
@@ -94,22 +102,34 @@ export const AuthProvider = ({ children }) => {
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log('[AuthContext] Auth state changed:', event);
 
+      if (!isMounted) return;
+
       if (session?.user) {
         setUser(session.user);
 
         // Buscar perfil (criado automaticamente pelo trigger do banco)
         const profileData = await fetchProfile(session.user.id);
-        setProfile(profileData);
+        if (isMounted) {
+          setProfile(profileData);
+        }
       } else {
         setUser(null);
         setProfile(null);
       }
 
-      setLoading(false);
+      if (isMounted) {
+        setLoading(false);
+      }
     });
 
-    return () => subscription.unsubscribe();
-  }, [fetchProfile]);
+    // Cleanup: desinscrever listener quando componente desmontar
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
+    // fetchProfile tem deps vazias, então é estável e não precisa estar nas deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   /**
    * Fazer login com email e senha

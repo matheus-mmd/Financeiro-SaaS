@@ -16,6 +16,7 @@ export function useTargets(filters = {}) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Criar função de carregamento estável
   const loadTargets = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -26,8 +27,10 @@ export function useTargets(filters = {}) {
       setTargets(data || []);
     }
     setLoading(false);
-  }, [filters]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [JSON.stringify(filters)]);
 
+  // Carregar quando filters mudar
   useEffect(() => {
     loadTargets();
   }, [loadTargets]);
@@ -87,7 +90,7 @@ export function useTarget(id) {
       setTarget(data);
     }
     setLoading(false);
-  }, [id]);
+  }, [id]); // id é primitivo, não causa loop
 
   useEffect(() => {
     loadTarget();

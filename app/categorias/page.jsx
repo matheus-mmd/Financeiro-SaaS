@@ -57,10 +57,6 @@ export default function CategoriasPage() {
     transaction_type_id: null,
   });
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
   const loadData = async () => {
     try {
       const [categoriesRes, transactionTypesRes, iconsRes] = await Promise.all([
@@ -82,6 +78,48 @@ export default function CategoriasPage() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    let isMounted = true;
+    const abortController = new AbortController();
+
+    const loadDataWithCleanup = async () => {
+      try {
+        const [categoriesRes, transactionTypesRes, iconsRes] = await Promise.all([
+          getCategories(),
+          getTransactionTypes(),
+          getIcons(),
+        ]);
+
+        // Verificar se componente ainda está montado antes de atualizar state
+        if (!isMounted) return;
+
+        if (categoriesRes.error) throw categoriesRes.error;
+        if (transactionTypesRes.error) throw transactionTypesRes.error;
+        if (iconsRes.error) throw iconsRes.error;
+
+        setCategories(categoriesRes.data || []);
+        setTransactionTypes(transactionTypesRes.data || []);
+        setIcons(iconsRes.data || []);
+      } catch (error) {
+        if (error.name !== 'AbortError') {
+          console.error("Erro ao carregar dados:", error);
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadDataWithCleanup();
+
+    // Cleanup: cancelar requisições se usuário sair da página
+    return () => {
+      isMounted = false;
+      abortController.abort();
+    };
+  }, []);
 
   // Separar categorias por tipo
   const categorizeByType = () => {

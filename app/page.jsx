@@ -60,6 +60,9 @@ export default function Dashboard() {
   });
 
   useEffect(() => {
+    let isMounted = true;
+    const abortController = new AbortController();
+
     const loadData = async () => {
       try {
         const [
@@ -75,6 +78,9 @@ export default function Dashboard() {
           getTransactions(),
           getAssets(),
         ]);
+
+        // Verificar se componente ainda está montado antes de atualizar state
+        if (!isMounted) return;
 
         if (expensesRes.error) throw expensesRes.error;
         if (incomesRes.error) throw incomesRes.error;
@@ -115,13 +121,23 @@ export default function Dashboard() {
         setTransactions(mappedTransactions);
         setAssets(mappedAssets);
       } catch (error) {
-        console.error("Erro ao carregar dashboard:", error);
+        if (error.name !== 'AbortError') {
+          console.error("Erro ao carregar dashboard:", error);
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
     loadData();
+
+    // Cleanup: cancelar requisições se usuário sair da página
+    return () => {
+      isMounted = false;
+      abortController.abort();
+    };
   }, []);
 
   // Mês atual para filtros

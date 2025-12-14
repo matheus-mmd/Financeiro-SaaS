@@ -17,6 +17,7 @@ export default function Layout({ children }) {
   const { user, profile, loading, signOut } = useAuth();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true); // Inicia fechado
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const [loadingTimeout, setLoadingTimeout] = useState(false);
 
   // Rotas públicas que não requerem autenticação
   const publicRoutes = ['/login'];
@@ -26,6 +27,19 @@ export default function Layout({ children }) {
   useEffect(() => {
     setIsMobileSidebarOpen(false);
   }, [pathname]);
+
+  // Timeout de segurança: se loading demorar mais de 10s, redireciona
+  useEffect(() => {
+    if (loading && !isPublicRoute) {
+      const timer = setTimeout(() => {
+        console.warn('[Layout] Loading timeout - redirecionando para login');
+        setLoadingTimeout(true);
+        router.replace('/login');
+      }, 10000); // 10 segundos
+
+      return () => clearTimeout(timer);
+    }
+  }, [loading, isPublicRoute, router]);
 
   // Redirecionar para login se não autenticado (exceto em rotas públicas)
   useEffect(() => {

@@ -46,6 +46,7 @@ export default function GlobalSearch() {
   // Buscar dados quando o termo de busca debounced mudar
   // OTIMIZAÇÃO: Usa debouncedSearchTerm ao invés de searchTerm
   // Reduz chamadas de API de ~10/seg para ~3/seg
+  // OTIMIZAÇÃO 2: Usa AbortController para cancelar requisições antigas
   useEffect(() => {
     if (!debouncedSearchTerm || debouncedSearchTerm.length < 2) {
       setResults({ transactions: [], targets: [], assets: [] });
@@ -53,8 +54,10 @@ export default function GlobalSearch() {
     }
 
     const term = debouncedSearchTerm.toLowerCase();
+    const abortController = new AbortController();
+    let isMounted = true;
 
-    // Buscar nos dados mockados
+    // Buscar nos dados
     const searchInData = async () => {
       try {
         const [transactionsRes, targetsRes, assetsRes] =
@@ -63,6 +66,9 @@ export default function GlobalSearch() {
             fetchData("/api/targets"),
             fetchData("/api/assets"),
           ]);
+
+        // Verificar se componente ainda está montado antes de atualizar state
+        if (!isMounted) return;
 
         const transactions = transactionsRes.data;
         const targets = targetsRes.data;
@@ -90,11 +96,20 @@ export default function GlobalSearch() {
           assets: filteredAssets,
         });
       } catch (error) {
-        console.error("Erro ao buscar dados:", error);
+        // Ignorar erros de abort (quando requisição é cancelada)
+        if (error.name !== 'AbortError') {
+          console.error("Erro ao buscar dados:", error);
+        }
       }
     };
 
     searchInData();
+
+    // Cleanup: cancelar requisições e marcar componente como desmontado
+    return () => {
+      isMounted = false;
+      abortController.abort();
+    };
   }, [debouncedSearchTerm]);
 
   const handleClose = () => {

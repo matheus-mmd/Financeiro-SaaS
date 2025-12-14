@@ -30,7 +30,8 @@ export function useBanks() {
 
   useEffect(() => {
     loadBanks();
-  }, [loadBanks]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Carregar apenas na montagem
 
   const create = async (bank) => {
     const { data, error: createError } = await createBank(bank);
@@ -87,7 +88,7 @@ export function useBank(id) {
       setBank(data);
     }
     setLoading(false);
-  }, [id]);
+  }, [id]); // id é primitivo, não causa loop
 
   useEffect(() => {
     loadBank();

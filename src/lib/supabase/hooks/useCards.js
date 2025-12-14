@@ -30,7 +30,8 @@ export function useCards() {
 
   useEffect(() => {
     loadCards();
-  }, [loadCards]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Carregar apenas na montagem
 
   const create = async (card) => {
     const { data, error: createError } = await createCard(card);
@@ -87,7 +88,7 @@ export function useCard(id) {
       setCard(data);
     }
     setLoading(false);
-  }, [id]);
+  }, [id]); // id é primitivo, não causa loop
 
   useEffect(() => {
     loadCard();

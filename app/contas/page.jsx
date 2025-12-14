@@ -87,10 +87,6 @@ export default function ContasPage() {
   const [iconPickerModalOpen, setIconPickerModalOpen] = useState(false);
   const [iconPickerFor, setIconPickerFor] = useState("bank"); // "bank" ou "card"
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
   const loadData = async () => {
     try {
       const [banksRes, cardsRes, accountTypesRes, cardTypesRes, cardBrandsRes] = await Promise.all([
@@ -118,6 +114,54 @@ export default function ContasPage() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    let isMounted = true;
+    const abortController = new AbortController();
+
+    const loadDataWithCleanup = async () => {
+      try {
+        const [banksRes, cardsRes, accountTypesRes, cardTypesRes, cardBrandsRes] = await Promise.all([
+          getBanks(),
+          getCards(),
+          getAccountTypes(),
+          getCardTypes(),
+          getCardBrands(),
+        ]);
+
+        // Verificar se componente ainda está montado antes de atualizar state
+        if (!isMounted) return;
+
+        if (banksRes.error) throw banksRes.error;
+        if (cardsRes.error) throw cardsRes.error;
+        if (accountTypesRes.error) throw accountTypesRes.error;
+        if (cardTypesRes.error) throw cardTypesRes.error;
+        if (cardBrandsRes.error) throw cardBrandsRes.error;
+
+        setBanks(banksRes.data || []);
+        setCards(cardsRes.data || []);
+        setAccountTypes(accountTypesRes.data || []);
+        setCardTypes(cardTypesRes.data || []);
+        setCardBrands(cardBrandsRes.data || []);
+      } catch (error) {
+        if (error.name !== 'AbortError') {
+          console.error("Erro ao carregar dados:", error);
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadDataWithCleanup();
+
+    // Cleanup: cancelar requisições se usuário sair da página
+    return () => {
+      isMounted = false;
+      abortController.abort();
+    };
+  }, []);
 
   // ===== FUNÇÕES PARA BANCOS =====
 

@@ -30,7 +30,8 @@ export function useAssets() {
 
   useEffect(() => {
     loadAssets();
-  }, [loadAssets]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Carregar apenas na montagem
 
   const create = async (asset) => {
     const { data, error: createError } = await createAsset(asset);
@@ -87,7 +88,7 @@ export function useAsset(id) {
       setAsset(data);
     }
     setLoading(false);
-  }, [id]);
+  }, [id]); // id é primitivo, não causa loop
 
   useEffect(() => {
     loadAsset();
