@@ -13,6 +13,17 @@ export async function middleware(request) {
 
     console.log('[Middleware] Processando:', pathname);
 
+    // CORREÇÃO: Proteção contra loops de redirecionamento
+    const redirectCount = request.cookies.get('redirect_count');
+    const currentCount = redirectCount ? parseInt(redirectCount.value) : 0;
+
+    if (currentCount >= 3) {
+      console.error('[Middleware] Loop de redirecionamento detectado, permitindo acesso');
+      const res = NextResponse.next();
+      res.cookies.delete('redirect_count');
+      return res;
+    }
+
     // Refresh da sessão (se expirada)
     const {
       data: { session },
@@ -37,7 +48,10 @@ export async function middleware(request) {
       const redirectUrl = request.nextUrl.clone();
       redirectUrl.pathname = '/login';
       redirectUrl.searchParams.set('redirectedFrom', pathname);
-      return NextResponse.redirect(redirectUrl);
+
+      const res = NextResponse.redirect(redirectUrl);
+      res.cookies.set('redirect_count', String(currentCount + 1), { maxAge: 10 });
+      return res;
     }
 
     if (hasSession && isLoginPage) {
@@ -45,11 +59,19 @@ export async function middleware(request) {
       console.log('[Middleware] Redirecionando para dashboard (já logado)');
       const redirectUrl = request.nextUrl.clone();
       redirectUrl.pathname = '/';
-      return NextResponse.redirect(redirectUrl);
+
+      const res = NextResponse.redirect(redirectUrl);
+      res.cookies.set('redirect_count', String(currentCount + 1), { maxAge: 10 });
+      return res;
     }
 
     console.log('[Middleware] Permitindo acesso');
-    return response;
+    // Limpar contador quando acesso é permitido
+    const res = response;
+    if (currentCount > 0) {
+      res.cookies.delete('redirect_count');
+    }
+    return res;
   } catch (error) {
     console.error('[Middleware] Erro inesperado:', error);
     // Em caso de erro, permitir acesso (evitar loop)

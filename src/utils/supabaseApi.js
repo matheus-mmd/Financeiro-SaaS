@@ -48,11 +48,11 @@ export const fetchData = async (endpoint) => {
     // Mapear endpoints para tabelas
     const endpointMap = {
       '/api/icons': 'icons',
-      '/api/expenses': 'transactions', // Filtrado por tipo
-      '/api/incomes': 'transactions', // Filtrado por tipo
+      '/api/expenses': 'transactions_enriched', // CORREÇÃO: Usar VIEW enriquecida
+      '/api/incomes': 'transactions_enriched', // CORREÇÃO: Usar VIEW enriquecida
       '/api/assets': 'assets',
       '/api/targets': 'targets',
-      '/api/transactions': 'transactions',
+      '/api/transactions': 'transactions_enriched', // CORREÇÃO: Usar VIEW enriquecida
       '/api/categories': 'categories',
       '/api/transactionTypes': 'transaction_types',
       '/api/banks': 'banks',
@@ -66,10 +66,40 @@ export const fetchData = async (endpoint) => {
     }
 
     // Buscar dados com filtro de usuário quando aplicável
-    let query = supabase.from(tableName).select('*');
+    // CORREÇÃO: Selecionar apenas campos necessários ao invés de '*'
+    let selectFields = '*';
+    if (tableName === 'transactions_enriched') {
+      selectFields = `
+        id,
+        user_id,
+        description,
+        amount,
+        transaction_date,
+        category_id,
+        category_name,
+        category_color,
+        category_icon,
+        transaction_type_id,
+        transaction_type_internal_name,
+        type_name,
+        payment_status_internal_name,
+        payment_method_name,
+        bank_id,
+        bank_name,
+        card_id,
+        card_name,
+        installment_number,
+        installment_total,
+        notes,
+        is_recurring,
+        created_at
+      `;
+    }
+
+    let query = supabase.from(tableName).select(selectFields);
 
     // Adicionar filtro de usuário para tabelas específicas
-    const userFilteredTables = ['assets', 'targets', 'transactions', 'banks', 'cards'];
+    const userFilteredTables = ['assets', 'targets', 'transactions', 'transactions_enriched', 'banks', 'cards'];
     if (userFilteredTables.includes(tableName) && userId) {
       query = query.eq('user_id', userId);
     }
@@ -86,6 +116,11 @@ export const fetchData = async (endpoint) => {
       query = query.eq('transaction_type_id', 1); // INCOME
     }
 
+    // CORREÇÃO: Adicionar limite para evitar carregar milhares de registros
+    if (tableName === 'transactions_enriched') {
+      query = query.limit(500); // Limite padrão de 500 transações
+    }
+
     const { data, error } = await query.order('created_at', { ascending: false });
 
     if (error) {
@@ -96,38 +131,22 @@ export const fetchData = async (endpoint) => {
     // Enriquecer dados quando necessário
     let enrichedData = data;
 
-    // Enriquecer transações com dados de categoria, tipo, banco, cartão
+    // CORREÇÃO: Usar transactions_enriched ao invés de fazer N+1 queries
+    // Para transações, a VIEW já tem todos os dados necessários via JOINs
     if (tableName === 'transactions') {
-      enrichedData = await Promise.all(
-        data.map(async (transaction) => {
-          const [category, transactionType, bank, card] = await Promise.all([
-            transaction.category_id
-              ? supabase.from('categories').select('*').eq('id', transaction.category_id).single()
-              : Promise.resolve({ data: null }),
-            transaction.transaction_type_id
-              ? supabase.from('transaction_types').select('*').eq('id', transaction.transaction_type_id).single()
-              : Promise.resolve({ data: null }),
-            transaction.bank_id
-              ? supabase.from('banks').select('*').eq('id', transaction.bank_id).single()
-              : Promise.resolve({ data: null }),
-            transaction.card_id
-              ? supabase.from('cards').select('*').eq('id', transaction.card_id).single()
-              : Promise.resolve({ data: null }),
-          ]);
-
-          const enrichedCategory = category.data ? await enrichCategoryWithIcon(category.data) : null;
-
-          return {
-            ...transaction,
-            category_name: enrichedCategory?.name || 'Desconhecido',
-            category_icon: enrichedCategory?.icon || 'Tag',
-            type_name: transactionType.data?.name || 'Desconhecido',
-            type_internal_name: transactionType.data?.internal_name || 'unknown',
-            bank_name: bank.data?.name || null,
-            card_name: card.data?.name || null,
-          };
-        })
-      );
+      // Dados já vêm enriquecidos da VIEW transactions_enriched
+      // Não é necessário fazer queries adicionais
+      enrichedData = data.map(transaction => ({
+        ...transaction,
+        // Os campos já vêm da VIEW, apenas garantimos valores default
+        category_name: transaction.category_name || 'Desconhecido',
+        category_icon: transaction.category_icon || 'Tag',
+        category_color: transaction.category_color || '#6366f1',
+        type_name: transaction.type_name || 'Desconhecido',
+        type_internal_name: transaction.transaction_type_internal_name || 'unknown',
+        bank_name: transaction.bank_name || null,
+        card_name: transaction.card_name || null,
+      }));
     }
 
     // Enriquecer categorias com ícones e filtrar escondidas

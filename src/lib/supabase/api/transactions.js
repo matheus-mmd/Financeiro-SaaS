@@ -7,14 +7,48 @@ import { supabase } from '../client';
 
 /**
  * Buscar todas as transações do usuário (usa VIEW enriched)
- * @param {Object} filters - Filtros opcionais (transaction_type_id, category_id, date_from, date_to)
- * @returns {Promise<{data, error}>}
+ * @param {Object} filters - Filtros opcionais (transaction_type_id, category_id, date_from, date_to, limit, offset)
+ * @returns {Promise<{data, error, hasMore}>}
  */
 export async function getTransactions(filters = {}) {
+  // CORREÇÃO: Adicionar limite padrão e paginação
+  const limit = filters.limit || 500; // Limite padrão de 500
+  const offset = filters.offset || 0;
+
   let query = supabase
     .from('transactions_enriched')
-    .select('*')
-    .order('transaction_date', { ascending: false });
+    .select(`
+      id,
+      user_id,
+      description,
+      amount,
+      transaction_date,
+      category_id,
+      category_name,
+      category_color,
+      category_icon,
+      transaction_type_id,
+      transaction_type_internal_name,
+      type_name,
+      payment_status_id,
+      payment_status_internal_name,
+      payment_method_id,
+      payment_method_name,
+      bank_id,
+      bank_name,
+      card_id,
+      card_name,
+      installment_number,
+      installment_total,
+      notes,
+      is_recurring,
+      recurrence_frequency_id,
+      payment_date,
+      created_at,
+      updated_at
+    `)
+    .order('transaction_date', { ascending: false })
+    .range(offset, offset + limit - 1); // CORREÇÃO: Paginação
 
   // Aplicar filtros
   if (filters.transaction_type_id) {
@@ -39,7 +73,12 @@ export async function getTransactions(filters = {}) {
 
   const { data, error } = await query;
 
-  return { data, error };
+  // CORREÇÃO: Retornar informação se há mais dados disponíveis
+  return {
+    data,
+    error,
+    hasMore: data ? data.length === limit : false
+  };
 }
 
 /**

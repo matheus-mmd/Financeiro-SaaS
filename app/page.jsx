@@ -65,6 +65,8 @@ export default function Dashboard() {
 
     const loadData = async () => {
       try {
+        // CORREÇÃO: Adicionar limite nas queries para melhorar performance
+        // Dashboard não precisa de TODAS as transações, apenas as mais recentes
         const [
           expensesRes,
           incomesRes,
@@ -72,10 +74,18 @@ export default function Dashboard() {
           transactionsRes,
           assetsRes,
         ] = await Promise.all([
-          getTransactions({ transaction_type_id: TRANSACTION_TYPE_IDS.EXPENSE }),
-          getTransactions({ transaction_type_id: TRANSACTION_TYPE_IDS.INCOME }),
+          getTransactions({
+            transaction_type_id: TRANSACTION_TYPE_IDS.EXPENSE,
+            limit: 300 // Limite de 300 despesas mais recentes
+          }),
+          getTransactions({
+            transaction_type_id: TRANSACTION_TYPE_IDS.INCOME,
+            limit: 300 // Limite de 300 receitas mais recentes
+          }),
           getCategories(),
-          getTransactions(),
+          getTransactions({
+            limit: 300 // Limite de 300 transações mais recentes
+          }),
           getAssets(),
         ]);
 

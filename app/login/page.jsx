@@ -68,12 +68,16 @@ export default function LoginPage() {
     confirmPassword: '',
   });
 
-  // Redirecionar se já estiver autenticado
-  useEffect(() => {
-    if (!authLoading && user) {
-      router.replace('/');
-    }
-  }, [user, authLoading, router]);
+  // CORREÇÃO: Removido redirecionamento client-side que causava loops
+  // O middleware.js já redireciona usuários autenticados de /login para /
+  // Manter este useEffect cria race condition e loops infinitos
+  //
+  // REMOVIDO:
+  // useEffect(() => {
+  //   if (!authLoading && user) {
+  //     router.replace('/');
+  //   }
+  // }, [user, authLoading, router]);
 
   const handleInputChange = (field, value) => {
     setFormData({ ...formData, [field]: value });
