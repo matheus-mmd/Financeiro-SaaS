@@ -25,6 +25,7 @@ import { getCategories } from "../src/lib/supabase/api/categories";
 import { TRANSACTION_TYPE_IDS } from "../src/constants";
 import { getIconComponent } from "../src/components/IconPicker";
 import { Wallet, TrendingDown, ArrowUpRight, PiggyBank, Coins, Heart, Percent, CalendarDays } from "lucide-react";
+import { useAuth } from "../src/contexts/AuthContext";
 
 // Componentes de análise do dashboard
 import CategoryBreakdownCard from "../src/components/dashboard/CategoryBreakdownCard";
@@ -44,6 +45,7 @@ import {
  * Exibe resumo mensal, análises comparativas e insights
  */
 export default function Dashboard() {
+  const { user, loading: authLoading } = useAuth();
   const [expenses, setExpenses] = useState([]);
   const [incomes, setIncomes] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -60,6 +62,18 @@ export default function Dashboard() {
   });
 
   useEffect(() => {
+    // CORREÇÃO CRÍTICA: Aguardar auth estar pronto antes de carregar dados
+    // Isso previne erros 400 causados por RLS quando queries são feitas sem autenticação
+    if (authLoading) {
+      return; // Aguardar auth terminar de carregar
+    }
+
+    if (!user) {
+      // Usuário não autenticado - não carregar dados
+      setLoading(false);
+      return;
+    }
+
     let isMounted = true;
     const abortController = new AbortController();
 
@@ -148,7 +162,7 @@ export default function Dashboard() {
       isMounted = false;
       abortController.abort();
     };
-  }, []);
+  }, [authLoading, user]); // CORREÇÃO: Adicionar authLoading e user como deps para re-carregar quando auth mudar
 
   // Mês atual para filtros
   const currentMonth = useMemo(() => {
@@ -607,7 +621,8 @@ export default function Dashboard() {
     });
   };
 
-  if (loading) {
+  // CORREÇÃO: Mostrar skeleton enquanto auth ou dados estiverem carregando
+  if (authLoading || loading) {
     return <DashboardSkeleton />;
   }
 

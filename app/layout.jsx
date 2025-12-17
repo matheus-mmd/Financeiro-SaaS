@@ -16,10 +16,16 @@ import { Providers } from './providers';
 export const metadata = {
   title: 'Financeiro SaaS',
   description: 'Controle financeiro pessoal completo',
-  viewport: 'width=device-width, initial-scale=1',
   icons: {
     icon: '/favicon.svg',
   },
+};
+
+// CORREÇÃO: Viewport deve ser exportado separadamente (Next.js 14+)
+// https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
 };
 
 export default function RootLayout({ children }) {

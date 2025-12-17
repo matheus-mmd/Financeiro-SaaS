@@ -75,10 +75,13 @@ export const AuthProvider = ({ children }) => {
    */
   useEffect(() => {
     let isMounted = true;
+    let initialCheckDone = false;
 
     // Verificar sessão existente
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (!isMounted) return;
+
+      initialCheckDone = true;
 
       if (session?.user) {
         setUser(session.user);
@@ -101,6 +104,12 @@ export const AuthProvider = ({ children }) => {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log('[AuthContext] Auth state changed:', event);
+
+      // CORREÇÃO: Ignorar evento INITIAL_SESSION para evitar re-processamento desnecessário
+      // O getSession() acima já trata da sessão inicial
+      if (event === 'INITIAL_SESSION') {
+        return;
+      }
 
       if (!isMounted) return;
 
