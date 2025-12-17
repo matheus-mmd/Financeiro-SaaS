@@ -65,6 +65,10 @@ export default function CategoriasPage() {
         getIcons(),
       ]);
 
+      console.log('[DEBUG] Resposta de categorias:', categoriesRes);
+      console.log('[DEBUG] Resposta de tipos:', transactionTypesRes);
+      console.log('[DEBUG] Resposta de ícones:', iconsRes);
+
       if (categoriesRes.error) throw categoriesRes.error;
       if (transactionTypesRes.error) throw transactionTypesRes.error;
       if (iconsRes.error) throw iconsRes.error;
@@ -72,6 +76,10 @@ export default function CategoriasPage() {
       setCategories(categoriesRes.data || []);
       setTransactionTypes(transactionTypesRes.data || []);
       setIcons(iconsRes.data || []);
+
+      console.log('[DEBUG] Total de categorias carregadas:', categoriesRes.data?.length || 0);
+      console.log('[DEBUG] Total de tipos carregados:', transactionTypesRes.data?.length || 0);
+      console.log('[DEBUG] Total de ícones carregados:', iconsRes.data?.length || 0);
     } catch (error) {
       console.error("Erro ao carregar dados:", error);
     } finally {
@@ -168,17 +176,31 @@ export default function CategoriasPage() {
     e.preventDefault();
 
     try {
+      console.log('[DEBUG] Iniciando salvamento de categoria...');
+      console.log('[DEBUG] categoryFormData:', categoryFormData);
+      console.log('[DEBUG] Total de ícones carregados:', icons.length);
+      console.log('[DEBUG] Primeiros 5 ícones:', icons.slice(0, 5));
+
+      // Verificar se ícones foram carregados
+      if (!icons || icons.length === 0) {
+        throw new Error('Ícones não foram carregados. Por favor, recarregue a página.');
+      }
+
       // Buscar o ID do ícone pelo nome
       const icon = icons.find(i => i.name === categoryFormData.icon);
+
       if (!icon) {
-        throw new Error(`Ícone "${categoryFormData.icon}" não encontrado`);
+        console.error('[DEBUG] Ícone não encontrado!');
+        console.error('[DEBUG] Nome procurado:', categoryFormData.icon);
+        console.error('[DEBUG] Ícones disponíveis:', icons.map(i => i.name));
+        throw new Error(`Ícone "${categoryFormData.icon}" não encontrado. Ícones disponíveis: ${icons.length}`);
       }
 
       const categoryData = {
         name: categoryFormData.name,
         color: categoryFormData.color,
-        iconId: icon.id, // CORRIGIDO: agora envia o ID numérico
-        transactionTypeId: categoryFormData.transaction_type_id, // API expects transactionTypeId
+        iconId: icon.id,
+        transactionTypeId: categoryFormData.transaction_type_id,
       };
 
       console.log('[DEBUG] Dados da categoria:', categoryData);
@@ -199,7 +221,7 @@ export default function CategoriasPage() {
         throw result.error;
       }
 
-      console.log('[DEBUG] Categoria criada com sucesso!');
+      console.log('[DEBUG] Categoria salva com sucesso!');
       await loadData();
       setCategoryModalOpen(false);
     } catch (error) {
@@ -424,9 +446,14 @@ export default function CategoriasPage() {
               >
                 Cancelar
               </Button>
-              <Button type="submit">
+              <Button type="submit" disabled={loading || icons.length === 0}>
                 {editingCategory ? "Salvar" : "Criar"}
               </Button>
+              {icons.length === 0 && (
+                <p className="text-xs text-red-500 mt-1">
+                  Carregando ícones...
+                </p>
+              )}
             </DialogFooter>
           </form>
         </DialogContent>
