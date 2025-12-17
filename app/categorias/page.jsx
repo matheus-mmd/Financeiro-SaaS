@@ -150,7 +150,7 @@ export default function CategoriasPage() {
       setCategoryFormData({
         name: category.name,
         color: category.color,
-        icon: category.icon || "Tag",
+        icon: category.icon_name || "Tag",
         transaction_type_id: category.transaction_type_id,
       });
     } else {
@@ -266,7 +266,7 @@ export default function CategoriasPage() {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {sectionCategories.map((category) => {
-                const IconComponent = getIconComponent(category.icon || "Tag");
+                const IconComponent = getIconComponent(category.icon_name || "Tag");
 
                 return (
                   <div
