@@ -86,12 +86,18 @@ export default function Metas() {
   });
 
   useEffect(() => {
+    let isMounted = true;
+    const abortController = new AbortController();
+
     const loadData = async () => {
       try {
         const [targetsRes, categoriesRes] = await Promise.all([
           getTargets(),
           getCategories(),
         ]);
+
+        // Verificar se componente ainda está montado antes de atualizar state
+        if (!isMounted) return;
 
         if (targetsRes.error) throw targetsRes.error;
         if (categoriesRes.error) throw categoriesRes.error;
@@ -110,13 +116,23 @@ export default function Metas() {
         setFilteredTargets(mappedTargets);
         setCategories(categoriesRes.data || []);
       } catch (error) {
-        console.error("Erro ao carregar metas:", error);
+        if (error.name !== 'AbortError') {
+          console.error("Erro ao carregar metas:", error);
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
     loadData();
+
+    // Cleanup: cancelar requisições se usuário sair da página
+    return () => {
+      isMounted = false;
+      abortController.abort();
+    };
   }, []);
 
   useEffect(() => {

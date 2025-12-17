@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from 'react';
+import React, { useState, useMemo, memo } from 'react';
 import { Bar, BarChart, XAxis, YAxis, CartesianGrid } from "recharts"
 import {
   Card,
@@ -26,13 +26,14 @@ import { formatCurrency } from '../../utils';
 /**
  * IncomeVsExpensesChart - Gráfico comparando Receitas x Despesas x Aportes
  * Visualização por período (anual, semestral, trimestral, mensal) com gráfico de barras estilo shadcn/ui
+ * Memoizado para evitar re-renders desnecessários
  *
  * @param {Array} monthlyData - Dados mensais [{date, income, expense, investment}, ...]
  * @param {Array} quarterlyData - Dados trimestrais [{date, income, expense, investment}, ...]
  * @param {Array} semesterData - Dados semestrais [{date, income, expense, investment}, ...]
  * @param {Array} yearlyData - Dados anuais [{date, income, expense, investment}, ...]
  */
-export default function IncomeVsExpensesChart({
+const IncomeVsExpensesChart = memo(function IncomeVsExpensesChart({
   monthlyData = [],
   quarterlyData = [],
   semesterData = [],
@@ -41,17 +42,39 @@ export default function IncomeVsExpensesChart({
   const [period, setPeriod] = useState('yearly');
 
   // Selecionar dados baseado no período escolhido
-  const data = period === 'monthly' ? monthlyData :
-               period === 'quarterly' ? quarterlyData :
-               period === 'semester' ? semesterData :
-               yearlyData;
+  const data = useMemo(() =>
+    period === 'monthly' ? monthlyData :
+    period === 'quarterly' ? quarterlyData :
+    period === 'semester' ? semesterData :
+    yearlyData,
+    [period, monthlyData, quarterlyData, semesterData, yearlyData]
+  );
 
   // Calcular totais
-  const totalIncome = data.reduce((sum, item) => sum + (item.income || 0), 0);
-  const totalExpense = data.reduce((sum, item) => sum + (item.expense || 0), 0);
-  const totalInvestment = data.reduce((sum, item) => sum + (item.investment || 0), 0);
-  const balance = totalIncome - totalExpense - totalInvestment;
-  const savingsRate = totalIncome > 0 ? (((totalInvestment + balance) / totalIncome) * 100).toFixed(1) : '0.0';
+  const totalIncome = useMemo(() =>
+    data.reduce((sum, item) => sum + (item.income || 0), 0),
+    [data]
+  );
+
+  const totalExpense = useMemo(() =>
+    data.reduce((sum, item) => sum + (item.expense || 0), 0),
+    [data]
+  );
+
+  const totalInvestment = useMemo(() =>
+    data.reduce((sum, item) => sum + (item.investment || 0), 0),
+    [data]
+  );
+
+  const balance = useMemo(() =>
+    totalIncome - totalExpense - totalInvestment,
+    [totalIncome, totalExpense, totalInvestment]
+  );
+
+  const savingsRate = useMemo(() =>
+    totalIncome > 0 ? (((totalInvestment + balance) / totalIncome) * 100).toFixed(1) : '0.0',
+    [totalIncome, totalInvestment, balance]
+  );
 
   // Configuração do chart seguindo padrão shadcn
   const chartConfig = {
@@ -195,4 +218,6 @@ export default function IncomeVsExpensesChart({
       </CardContent>
     </Card>
   );
-}
+});
+
+export default IncomeVsExpensesChart;

@@ -575,17 +575,26 @@ export default function Transacoes() {
   };
 
   // Calcular estatísticas baseadas nas transações filtradas
-  const totalIncome = filteredTransactions
-    .filter((t) => t.type_internal_name === TRANSACTION_TYPES.INCOME)
-    .reduce((sum, t) => sum + t.amount, 0);
+  const totalIncome = useMemo(() =>
+    filteredTransactions
+      .filter((t) => t.type_internal_name === TRANSACTION_TYPES.INCOME)
+      .reduce((sum, t) => sum + t.amount, 0),
+    [filteredTransactions]
+  );
 
-  const totalExpense = filteredTransactions
-    .filter((t) => t.type_internal_name === TRANSACTION_TYPES.EXPENSE)
-    .reduce((sum, t) => sum + Math.abs(t.amount), 0);
+  const totalExpense = useMemo(() =>
+    filteredTransactions
+      .filter((t) => t.type_internal_name === TRANSACTION_TYPES.EXPENSE)
+      .reduce((sum, t) => sum + Math.abs(t.amount), 0),
+    [filteredTransactions]
+  );
 
-  const totalInvestment = filteredTransactions
-    .filter((t) => t.type_internal_name === TRANSACTION_TYPES.INVESTMENT)
-    .reduce((sum, t) => sum + Math.abs(t.amount), 0);
+  const totalInvestment = useMemo(() =>
+    filteredTransactions
+      .filter((t) => t.type_internal_name === TRANSACTION_TYPES.INVESTMENT)
+      .reduce((sum, t) => sum + Math.abs(t.amount), 0),
+    [filteredTransactions]
+  );
 
   const balance = totalIncome - totalExpense - totalInvestment;
 

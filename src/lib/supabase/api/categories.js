@@ -7,7 +7,19 @@ import { supabase } from '../client';
 export async function getCategories(filters = {}) {
   let query = supabase
     .from('categories_enriched')
-    .select('*')
+    .select(`
+      id,
+      user_id,
+      name,
+      color,
+      icon_id,
+      icon_name,
+      transaction_type_id,
+      transaction_type_name,
+      transaction_type_internal_name,
+      is_default,
+      created_at
+    `)
     .order('name', { ascending: true });
 
   if (filters.transaction_type_id) {
@@ -21,7 +33,19 @@ export async function getCategories(filters = {}) {
 export async function getCategoryById(id) {
   const { data, error } = await supabase
     .from('categories_enriched')
-    .select('*')
+    .select(`
+      id,
+      user_id,
+      name,
+      color,
+      icon_id,
+      icon_name,
+      transaction_type_id,
+      transaction_type_name,
+      transaction_type_internal_name,
+      is_default,
+      created_at
+    `)
     .eq('id', id)
     .maybeSingle();
 
@@ -108,7 +132,7 @@ export async function deleteCategory(id) {
 export async function getTransactionTypes() {
   const { data, error } = await supabase
     .from('transaction_types')
-    .select('*')
+    .select('id, name, internal_name')
     .order('id', { ascending: true });
 
   return { data, error };
@@ -117,7 +141,7 @@ export async function getTransactionTypes() {
 export async function getPaymentStatuses() {
   const { data, error } = await supabase
     .from('payment_statuses')
-    .select('*')
+    .select('id, name, internal_name')
     .order('id', { ascending: true });
 
   return { data, error };
@@ -126,7 +150,7 @@ export async function getPaymentStatuses() {
 export async function getPaymentMethods() {
   const { data, error } = await supabase
     .from('payment_methods')
-    .select('*')
+    .select('id, name, internal_name')
     .order('id', { ascending: true });
 
   return { data, error };
@@ -135,7 +159,7 @@ export async function getPaymentMethods() {
 export async function getRecurrenceFrequencies() {
   const { data, error } = await supabase
     .from('recurrence_frequencies')
-    .select('*')
+    .select('id, name, internal_name')
     .order('id', { ascending: true });
 
   return { data, error };
@@ -144,7 +168,7 @@ export async function getRecurrenceFrequencies() {
 export async function getAccountTypes() {
   const { data, error } = await supabase
     .from('account_types')
-    .select('*')
+    .select('id, name, internal_name')
     .order('id', { ascending: true });
 
   return { data, error };
@@ -153,7 +177,7 @@ export async function getAccountTypes() {
 export async function getCardTypes() {
   const { data, error } = await supabase
     .from('card_types')
-    .select('*')
+    .select('id, name, internal_name')
     .order('id', { ascending: true });
 
   return { data, error };
@@ -162,7 +186,7 @@ export async function getCardTypes() {
 export async function getCardBrands() {
   const { data, error } = await supabase
     .from('card_brands')
-    .select('*')
+    .select('id, name')
     .order('name', { ascending: true });
 
   return { data, error };
@@ -171,7 +195,7 @@ export async function getCardBrands() {
 export async function getIcons() {
   const { data, error } = await supabase
     .from('icons')
-    .select('*')
+    .select('id, name')
     .order('name', { ascending: true });
 
   return { data, error };

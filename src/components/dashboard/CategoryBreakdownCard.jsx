@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo, memo } from "react";
 import { Card, CardContent } from "../ui/card";
 import SegmentedControl from "../ui/segmented-control";
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
@@ -10,13 +10,14 @@ import { getIconComponent } from "../IconPicker";
 /**
  * CategoryBreakdownCard - Card com gráfico de donut mostrando receitas, despesas ou investimentos por categoria
  * Design baseado em dashboards financeiros modernos com toggle entre receitas/despesas/investimentos
+ * Memoizado para evitar re-renders desnecessários
  *
  * @param {Array} incomeData - Dados de receitas por categoria [{name, value, color}]
  * @param {Array} expenseData - Dados de despesas por categoria [{name, value, color}]
  * @param {Array} investmentData - Dados de investimentos por categoria [{name, value, color}]
  * @param {string} title - Título opcional do card
  */
-export default function CategoryBreakdownCard({
+const CategoryBreakdownCard = memo(function CategoryBreakdownCard({
   incomeData = [],
   expenseData = [],
   investmentData = [],
@@ -25,13 +26,19 @@ export default function CategoryBreakdownCard({
   const [activeTab, setActiveTab] = useState("expenses");
   const [activeIndex, setActiveIndex] = useState(null);
 
-  const data =
+  const data = useMemo(() =>
     activeTab === "income"
       ? incomeData
       : activeTab === "investments"
       ? investmentData
-      : expenseData;
-  const total = data.reduce((sum, item) => sum + item.value, 0);
+      : expenseData,
+    [activeTab, incomeData, investmentData, expenseData]
+  );
+
+  const total = useMemo(() =>
+    data.reduce((sum, item) => sum + item.value, 0),
+    [data]
+  );
 
   // Cores padrão modernas para receitas, despesas e investimentos
   const DEFAULT_INCOME_COLORS = ["#10b981", "#059669", "#06b6d4"];
@@ -260,4 +267,6 @@ export default function CategoryBreakdownCard({
       </CardContent>
     </Card>
   );
-}
+});
+
+export default CategoryBreakdownCard;

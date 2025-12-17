@@ -177,7 +177,10 @@ export default function Dashboard() {
   );
 
   // Calcular patrimônio total
-  const totalAssets = assets.reduce((sum, asset) => sum + asset.value, 0);
+  const totalAssets = useMemo(() =>
+    assets.reduce((sum, asset) => sum + asset.value, 0),
+    [assets]
+  );
 
   // Calcular média de despesas mensais (últimos 3 meses) - APENAS de transactions
   const avgMonthlyExpenses = useMemo(() => {

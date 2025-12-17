@@ -1,11 +1,12 @@
-import React from "react";
+import React, { memo } from "react";
 import { Card, CardContent } from "./ui/card";
 
 /**
  * Componente StatsCard - Card de estatísticas moderno com ícone
  * Usa Card do shadcn/ui com design atualizado
+ * Memoizado para evitar re-renders desnecessários
  */
-export default function StatsCard({
+const StatsCard = memo(function StatsCard({
   icon: Icon,
   label,
   value,
@@ -100,4 +101,6 @@ export default function StatsCard({
       </CardContent>
     </Card>
   );
-}
+});
+
+export default StatsCard;

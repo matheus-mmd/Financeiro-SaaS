@@ -88,12 +88,18 @@ export default function PatrimonioAtivos() {
   });
 
   useEffect(() => {
+    let isMounted = true;
+    const abortController = new AbortController();
+
     const loadData = async () => {
       try {
         const [assetsRes, categoriesRes] = await Promise.all([
           getAssets(),
           getCategories({ transaction_type_id: TRANSACTION_TYPE_IDS.INVESTMENT }),
         ]);
+
+        // Verificar se componente ainda está montado antes de atualizar state
+        if (!isMounted) return;
 
         if (assetsRes.error) throw assetsRes.error;
         if (categoriesRes.error) throw categoriesRes.error;
@@ -110,13 +116,23 @@ export default function PatrimonioAtivos() {
         setFilteredAssets(mappedAssets);
         setCategories(categoriesRes.data || []);
       } catch (error) {
-        console.error("Erro ao carregar patrimônio e ativos:", error);
+        if (error.name !== 'AbortError') {
+          console.error("Erro ao carregar patrimônio e ativos:", error);
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
     loadData();
+
+    // Cleanup: cancelar requisições se usuário sair da página
+    return () => {
+      isMounted = false;
+      abortController.abort();
+    };
   }, []);
 
   useEffect(() => {
