@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useReducer, useCallback } from "react";
 import { useAuth } from "../../src/contexts/AuthContext";
 import PageHeader from "../../src/components/PageHeader";
 import StatsCard from "../../src/components/StatsCard";
@@ -87,6 +87,50 @@ import {
 } from "lucide-react";
 
 /**
+ * Estado inicial do formulário de transações
+ */
+const initialFormState = {
+  description: "",
+  amount: "",
+  categoryId: null,
+  transactionTypeId: null,
+  date: new Date(),
+  notes: "",
+  status: PAYMENT_STATUS.PENDING,
+  payment_method: "",
+  payment_date: null,
+  card_id: null,
+  bank_id: null,
+  installments_current: "",
+  installments_total: "",
+  is_recurring: false,
+  recurrence_frequency: "monthly",
+};
+
+/**
+ * Reducer para gerenciar o estado do formulário
+ * Previne re-renders desnecessários e facilita manutenção
+ */
+function formReducer(state, action) {
+  switch (action.type) {
+    case 'UPDATE_FIELD':
+      return { ...state, [action.field]: action.value };
+
+    case 'UPDATE_MULTIPLE':
+      return { ...state, ...action.updates };
+
+    case 'RESET':
+      return action.initialState || initialFormState;
+
+    case 'SET_EDITING':
+      return { ...state, ...action.transaction };
+
+    default:
+      return state;
+  }
+}
+
+/**
  * Página Transações - Gerenciamento de transações
  * Nova estrutura: Categoria (Salário, Moradia, etc.) + Tipo de Transação (Receita, Despesa, Aporte)
  */
@@ -113,23 +157,10 @@ export default function Transacoes() {
   const [importModalOpen, setImportModalOpen] = useState(false);
   const [recurringModalOpen, setRecurringModalOpen] = useState(false);
   const [columnSelectorElement, setColumnSelectorElement] = useState(null);
-  const [formData, setFormData] = useState({
-    description: "",
-    amount: "",
-    categoryId: null,
-    transactionTypeId: null,
-    date: new Date(),
-    notes: "",
-    status: PAYMENT_STATUS.PENDING,
-    payment_method: "",
-    payment_date: null,
-    card_id: null,
-    bank_id: null,
-    installments_current: "",
-    installments_total: "",
-    is_recurring: false,
-    recurrence_frequency: "monthly",
-  });
+
+  // Usar useReducer para formulário complexo (16 campos)
+  // Previne re-renders desnecessários quando apenas um campo muda
+  const [formData, dispatch] = useReducer(formReducer, initialFormState);
 
   useEffect(() => {
     let isMounted = true;
@@ -199,11 +230,13 @@ export default function Transacoes() {
         ) {
           const defaultCategory = categoriesRes.data[0];
           const defaultType = transactionTypesRes.data[0];
-          setFormData((prev) => ({
-            ...prev,
-            categoryId: defaultCategory.id,
-            transactionTypeId: defaultType.id,
-          }));
+          dispatch({
+            type: 'UPDATE_MULTIPLE',
+            updates: {
+              categoryId: defaultCategory.id,
+              transactionTypeId: defaultType.id,
+            }
+          });
         }
       } catch (error) {
         if (error.name !== 'AbortError') {
@@ -261,77 +294,74 @@ export default function Transacoes() {
     transactions,
   ]);
 
-  const handleAddTransaction = () => {
+  const handleAddTransaction = useCallback(() => {
     setEditingTransaction(null);
     const defaultCategory = categories[0];
     const defaultType = transactionTypes[0];
-    setFormData({
-      description: "",
-      amount: "",
-      categoryId: defaultCategory?.id || null,
-      transactionTypeId: defaultType?.id || null,
-      date: new Date(),
-      notes: "",
-      status: PAYMENT_STATUS.PENDING,
-      payment_method: "",
-      payment_date: null,
-      card_id: null,
-      bank_id: null,
-      installments_current: "",
-      installments_total: "",
-      is_recurring: false,
-      recurrence_frequency: "monthly",
+    dispatch({
+      type: 'RESET',
+      initialState: {
+        ...initialFormState,
+        categoryId: defaultCategory?.id || null,
+        transactionTypeId: defaultType?.id || null,
+      }
     });
     setModalOpen(true);
-  };
+  }, [categories, transactionTypes]);
 
-  const handleEditTransaction = (transaction) => {
+  const handleEditTransaction = useCallback((transaction) => {
     setEditingTransaction(transaction);
-    setFormData({
-      description: transaction.description,
-      amount: Math.abs(transaction.amount).toString(),
-      categoryId: transaction.category_id,
-      transactionTypeId: transaction.transaction_type_id,
-      date: parseDateString(transaction.date) || new Date(),
-      notes: transaction.notes || "",
-      status: transaction.status || PAYMENT_STATUS.PENDING,
-      payment_method: transaction.payment_method || "",
-      payment_date: transaction.payment_date ? parseDateString(transaction.payment_date) : null,
-      card_id: transaction.card_id || null,
-      bank_id: transaction.bank_id || null,
-      installments_current: transaction.installments?.current || "",
-      installments_total: transaction.installments?.total || "",
-      is_recurring: transaction.is_recurring || false,
-      recurrence_frequency: transaction.recurrence_frequency || "monthly",
+    dispatch({
+      type: 'SET_EDITING',
+      transaction: {
+        description: transaction.description,
+        amount: Math.abs(transaction.amount).toString(),
+        categoryId: transaction.category_id,
+        transactionTypeId: transaction.transaction_type_id,
+        date: parseDateString(transaction.date) || new Date(),
+        notes: transaction.notes || "",
+        status: transaction.status || PAYMENT_STATUS.PENDING,
+        payment_method: transaction.payment_method || "",
+        payment_date: transaction.payment_date ? parseDateString(transaction.payment_date) : null,
+        card_id: transaction.card_id || null,
+        bank_id: transaction.bank_id || null,
+        installments_current: transaction.installments?.current || "",
+        installments_total: transaction.installments?.total || "",
+        is_recurring: transaction.is_recurring || false,
+        recurrence_frequency: transaction.recurrence_frequency || "monthly",
+      }
     });
     setModalOpen(true);
-  };
+  }, []);
 
   // Duplicar transação
-  const handleDuplicateTransaction = (transaction) => {
+  const handleDuplicateTransaction = useCallback((transaction) => {
     setEditingTransaction(null);
-    setFormData({
-      description: transaction.description + " (Cópia)",
-      amount: Math.abs(transaction.amount).toString(),
-      categoryId: transaction.category_id,
-      transactionTypeId: transaction.transaction_type_id,
-      date: new Date(),
-      notes: transaction.notes || "",
-      status: PAYMENT_STATUS.PENDING,
-      payment_method: transaction.payment_method || "",
-      payment_date: null,
-      card_id: transaction.card_id || null,
-      bank_id: transaction.bank_id || null,
-      installments_current: "",
-      installments_total: "",
-      is_recurring: false,
-      recurrence_frequency: "monthly",
+    dispatch({
+      type: 'SET_EDITING',
+      transaction: {
+        description: transaction.description + " (Cópia)",
+        amount: Math.abs(transaction.amount).toString(),
+        categoryId: transaction.category_id,
+        transactionTypeId: transaction.transaction_type_id,
+        date: new Date(),
+        notes: transaction.notes || "",
+        status: PAYMENT_STATUS.PENDING,
+        payment_method: transaction.payment_method || "",
+        payment_date: null,
+        card_id: transaction.card_id || null,
+        bank_id: transaction.bank_id || null,
+        installments_current: "",
+        installments_total: "",
+        is_recurring: false,
+        recurrence_frequency: "monthly",
+      }
     });
     setModalOpen(true);
-  };
+  }, []);
 
   // Toggle status de pagamento (pago/pendente)
-  const handleToggleStatus = async (transaction) => {
+  const handleToggleStatus = useCallback(async (transaction) => {
     try {
       const newStatus =
         transaction.status === PAYMENT_STATUS.PAID
@@ -346,7 +376,7 @@ export default function Transacoes() {
     } catch (error) {
       console.error("Erro ao atualizar status:", error);
     }
-  };
+  }, []);
 
   // Categorização inteligente - sugere categoria baseado na descrição
   const suggestCategory = (description) => {
@@ -404,10 +434,10 @@ export default function Transacoes() {
     return null;
   };
 
-  const handleDeleteTransaction = (transaction) => {
+  const handleDeleteTransaction = useCallback((transaction) => {
     setTransactionToDelete(transaction);
     setDeleteDialogOpen(true);
-  };
+  }, []);
 
   const confirmDelete = async () => {
     if (transactionToDelete) {
@@ -441,7 +471,7 @@ export default function Transacoes() {
     }
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = useCallback(async (e) => {
     e.preventDefault();
 
     try {
@@ -519,31 +549,23 @@ export default function Transacoes() {
       setModalOpen(false);
       const defaultCategory = categories[0];
       const defaultType = transactionTypes[0];
-      setFormData({
-        description: "",
-        amount: "",
-        categoryId: defaultCategory?.id || null,
-        transactionTypeId: defaultType?.id || null,
-        date: new Date(),
-        notes: "",
-        status: PAYMENT_STATUS.PENDING,
-        payment_method: "",
-        payment_date: null,
-        card_id: null,
-        bank_id: null,
-        installments_current: "",
-        installments_total: "",
-        is_recurring: false,
-        recurrence_frequency: "monthly",
+      dispatch({
+        type: 'RESET',
+        initialState: {
+          ...initialFormState,
+          categoryId: defaultCategory?.id || null,
+          transactionTypeId: defaultType?.id || null,
+        }
       });
     } catch (error) {
       console.error("Erro ao salvar transação:", error);
       alert("Erro ao salvar transação.");
     }
-  };
+  }, [formData, transactionTypes, paymentStatuses, paymentMethods, recurrenceFrequencies, editingTransaction, categories]);
 
-  const handleInputChange = (field, value) => {
-    const newFormData = { ...formData, [field]: value };
+  const handleInputChange = useCallback((field, value) => {
+    // Atualizar campo principal
+    dispatch({ type: 'UPDATE_FIELD', field, value });
 
     // Categorização inteligente: sugerir categoria baseado na descrição
     if (field === "description" && !editingTransaction) {
@@ -551,28 +573,33 @@ export default function Transacoes() {
       if (suggestedCategoryId && !formData.categoryId) {
         const category = categories.find((c) => c.id === suggestedCategoryId);
         if (category) {
-          newFormData.categoryId = suggestedCategoryId;
-          newFormData.transactionTypeId = category.transaction_type_id;
+          dispatch({
+            type: 'UPDATE_MULTIPLE',
+            updates: {
+              categoryId: suggestedCategoryId,
+              transactionTypeId: category.transaction_type_id,
+            }
+          });
         }
       }
     }
-
-    setFormData(newFormData);
-  };
+  }, [editingTransaction, formData.categoryId, categories]);
 
   // Quando muda a categoria, o tipo de transação é automaticamente definido
-  const handleCategoryChange = (categoryId) => {
+  const handleCategoryChange = useCallback((categoryId) => {
     const category = categories.find((c) => c.id === parseInt(categoryId));
 
     // Definir o tipo de transação baseado no tipo da categoria
     const newTypeId = category?.transaction_type_id || transactionTypes[0]?.id;
 
-    setFormData({
-      ...formData,
-      categoryId: parseInt(categoryId),
-      transactionTypeId: newTypeId,
+    dispatch({
+      type: 'UPDATE_MULTIPLE',
+      updates: {
+        categoryId: parseInt(categoryId),
+        transactionTypeId: newTypeId,
+      }
     });
-  };
+  }, [categories, transactionTypes]);
 
   // Calcular estatísticas baseadas nas transações filtradas
   const totalIncome = useMemo(() =>
@@ -610,7 +637,7 @@ export default function Transacoes() {
     });
   }, [filteredTransactions]);
 
-  const handleExport = () => {
+  const handleExport = useCallback(() => {
     const columns = [
       { key: "date", label: "Data", format: (row) => formatDate(row.date) },
       { key: "description", label: "Descrição" },
@@ -624,7 +651,7 @@ export default function Transacoes() {
     ];
 
     exportToCSV(sortedTransactions, columns, "transacoes");
-  };
+  }, [sortedTransactions]);
 
   if (loading) {
     return <PageSkeleton />;
