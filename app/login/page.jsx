@@ -68,16 +68,15 @@ export default function LoginPage() {
     confirmPassword: '',
   });
 
-  // CORREÇÃO: Removido redirecionamento client-side que causava loops
-  // O middleware.js já redireciona usuários autenticados de /login para /
-  // Manter este useEffect cria race condition e loops infinitos
-  //
-  // REMOVIDO:
-  // useEffect(() => {
-  //   if (!authLoading && user) {
-  //     router.replace('/');
-  //   }
-  // }, [user, authLoading, router]);
+  // CORREÇÃO: Redirecionar usuários autenticados que acessam /login
+  // Usar replace() para evitar loop (não adiciona ao histórico)
+  // Aguardar authLoading para evitar redirecionamento prematuro
+  useEffect(() => {
+    if (!authLoading && user) {
+      console.log('[LoginPage] Usuário já autenticado, redirecionando...');
+      router.replace('/');
+    }
+  }, [user, authLoading, router]);
 
   const handleInputChange = (field, value) => {
     setFormData({ ...formData, [field]: value });
@@ -133,6 +132,12 @@ export default function LoginPage() {
           setLoading(false);
           return;
         }
+
+        // CORREÇÃO: Redirecionar após login bem-sucedido
+        // O onAuthStateChange do AuthContext já atualizou o estado
+        // Usar replace() para evitar volta ao login no histórico
+        console.log('[LoginPage] Login bem-sucedido, redirecionando...');
+        router.replace('/');
       } else {
         const { error } = await signUp(formData.email, formData.password, formData.name);
 
@@ -141,9 +146,21 @@ export default function LoginPage() {
           setLoading(false);
           return;
         }
-        setError('');
-        setIsLogin(true);
-        setFormData({ name: '', email: '', password: '', confirmPassword: '' });
+
+        // CORREÇÃO: Após cadastro bem-sucedido, fazer login automático
+        console.log('[LoginPage] Cadastro bem-sucedido, fazendo login automático...');
+        const { error: signInError } = await signIn(formData.email, formData.password);
+
+        if (signInError) {
+          // Se falhar o login automático, apenas troca para tela de login
+          setError('');
+          setIsLogin(true);
+          setFormData({ name: '', email: '', password: '', confirmPassword: '' });
+        } else {
+          // Login automático bem-sucedido, redirecionar
+          console.log('[LoginPage] Login automático bem-sucedido, redirecionando...');
+          router.replace('/');
+        }
       }
     } catch (err) {
       console.error('[LoginPage] Erro inesperado:', err);
