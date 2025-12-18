@@ -63,7 +63,7 @@ import { DollarSign, Percent, Plus, Download, Trash2, Wallet, Copy } from "lucid
  * Permite visualizar, filtrar, adicionar e gerenciar patrimônio e ativos
  */
 export default function PatrimonioAtivos() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [assets, setAssets] = useState([]);
   const [filteredAssets, setFilteredAssets] = useState([]);
   const [selectedAsset, setSelectedAsset] = useState(null);
@@ -89,22 +89,32 @@ export default function PatrimonioAtivos() {
 
   useEffect(() => {
     let isMounted = true;
-    const abortController = new AbortController();
+    let timeoutId;
+
+    if (authLoading) return;
+    if (!user) {
+      setLoading(false);
+      return;
+    }
 
     const loadData = async () => {
       try {
-        const [assetsRes, categoriesRes] = await Promise.all([
+        const timeoutPromise = new Promise((_, reject) => {
+          timeoutId = setTimeout(() => reject(new Error('Timeout ao carregar ativos')), 10000);
+        });
+
+        const dataPromise = Promise.all([
           getAssets(),
           getCategories({ transaction_type_id: TRANSACTION_TYPE_IDS.INVESTMENT }),
         ]);
 
-        // Verificar se componente ainda está montado antes de atualizar state
+        const [assetsRes, categoriesRes] = await Promise.race([dataPromise, timeoutPromise]);
+
         if (!isMounted) return;
 
         if (assetsRes.error) throw assetsRes.error;
         if (categoriesRes.error) throw categoriesRes.error;
 
-        // Map Supabase fields to component fields
         const mappedAssets = (assetsRes.data || []).map((asset) => ({
           ...asset,
           date: asset.valuation_date || new Date().toISOString().split("T")[0],
@@ -119,7 +129,13 @@ export default function PatrimonioAtivos() {
         if (error.name !== 'AbortError') {
           console.error("Erro ao carregar patrimônio e ativos:", error);
         }
+        if (isMounted) {
+          setAssets([]);
+          setFilteredAssets([]);
+          setCategories([]);
+        }
       } finally {
+        if (timeoutId) clearTimeout(timeoutId);
         if (isMounted) {
           setLoading(false);
         }
@@ -128,12 +144,11 @@ export default function PatrimonioAtivos() {
 
     loadData();
 
-    // Cleanup: cancelar requisições se usuário sair da página
     return () => {
       isMounted = false;
-      abortController.abort();
+      if (timeoutId) clearTimeout(timeoutId);
     };
-  }, []);
+  }, [authLoading, user]);
 
   useEffect(() => {
     let filtered = assets;
