@@ -4,6 +4,9 @@
 -- que possuem dados relacionados
 -- ============================================
 
+-- REMOVER trigger existente (se houver)
+DROP TRIGGER IF EXISTS prevent_user_deletion_with_data ON public.users;
+
 -- FUNÇÃO: check_user_has_no_data
 -- Verifica se o usuário tem dados relacionados antes de permitir deleção
 CREATE OR REPLACE FUNCTION public.check_user_has_no_data()
