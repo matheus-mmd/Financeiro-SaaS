@@ -29,7 +29,7 @@ export async function getTransactions(filters = {}) {
       category_icon,
       transaction_type_id,
       transaction_type_internal_name,
-      type_name,
+      transaction_type_name,
       payment_status_id,
       payment_status_internal_name,
       payment_method_id,
