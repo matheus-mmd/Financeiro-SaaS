@@ -18,6 +18,17 @@ export const AuthProvider = ({ children }) => {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const isRevalidatingRef = useRef(false);
+  const lastRevalidationRef = useRef(0);
+  const userRef = useRef(null);
+  const profileRef = useRef(null);
+
+  useEffect(() => {
+    userRef.current = user;
+  }, [user]);
+
+  useEffect(() => {
+    profileRef.current = profile;
+  }, [profile]);
 
   /**
    * Buscar perfil do usuário no banco de dados
@@ -210,11 +221,13 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const handleVisibilityOrFocus = async () => {
       if (document.visibilityState === 'hidden') return;
+
+      const now = Date.now();
       if (isRevalidatingRef.current) return;
+      if (now - lastRevalidationRef.current < 30000) return;
 
       isRevalidatingRef.current = true;
 
-      setLoading(true);
       let timeoutId;
       try {
         const timeoutPromise = new Promise((_, reject) => {
@@ -228,14 +241,22 @@ export const AuthProvider = ({ children }) => {
 
         if (error) {
           console.error('[AuthContext] Erro ao revalidar sessão:', error);
-          await signOut();
           return;
         }
 
         if (session?.user) {
-          setUser(session.user);
-          const profileData = await resolveProfile(session.user.id);
-          setProfile(profileData);
+          const currentUserId = userRef.current?.id;
+          if (currentUserId !== session.user.id) {
+            setUser(session.user);
+          }
+
+          const hasProfileForUser = profileRef.current?.id === session.user.id;
+          if (!hasProfileForUser) {
+            const profileData = await resolveProfile(session.user.id);
+            if (profileData) {
+              setProfile(profileData);
+            }
+          }
         } else {
           console.warn('[AuthContext] Sessão expirada ao retomar foco/visibilidade');
           await signOut();
@@ -246,11 +267,10 @@ export const AuthProvider = ({ children }) => {
         } else {
           console.error('[AuthContext] Erro ao revalidar sessão (focus/visibility):', error);
         }
-        await signOut();
       } finally {
         if (timeoutId) clearTimeout(timeoutId);
         isRevalidatingRef.current = false;
-        setLoading(false);
+        lastRevalidationRef.current = Date.now();
       }
     };
 
