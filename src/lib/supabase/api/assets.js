@@ -7,10 +7,20 @@
 import { supabase } from '../client';
 
 export async function getAssets(filters = {}) {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { data: [], error: new Error('Usuário não autenticado') };
+  }
+
   let query = supabase
     .from('assets_enriched')
     .select('*')
-    .order('valuation_date', { ascending: false });
+    .eq('user_id', user.id)
+    .order('valuation_date', { ascending: false })
+    .limit(filters.limit || 200);
 
   if (filters.category_id) {
     query = query.eq('category_id', filters.category_id);

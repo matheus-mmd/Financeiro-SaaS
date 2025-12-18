@@ -11,8 +11,16 @@ import { supabase } from '../client';
  * @returns {Promise<{data, error, hasMore}>}
  */
 export async function getTransactions(filters = {}) {
-  // CORREÇÃO: Adicionar limite padrão e paginação
-  const limit = filters.limit || 500; // Limite padrão de 500
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { data: [], error: new Error('Usuário não autenticado'), hasMore: false };
+  }
+
+  // Limite padrão e paginação com cap para evitar cargas excessivas
+  const limit = Math.min(filters.limit ?? 200, 500);
   const offset = filters.offset || 0;
 
   let query = supabase
@@ -47,8 +55,9 @@ export async function getTransactions(filters = {}) {
       created_at,
       updated_at
     `)
+    .eq('user_id', user.id)
     .order('transaction_date', { ascending: false })
-    .range(offset, offset + limit - 1); // CORREÇÃO: Paginação
+    .range(offset, offset + limit - 1);
 
   // Aplicar filtros
   if (filters.transaction_type_id) {

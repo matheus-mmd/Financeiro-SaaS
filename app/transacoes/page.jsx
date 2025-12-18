@@ -135,7 +135,7 @@ function formReducer(state, action) {
  * Nova estrutura: Categoria (Salário, Moradia, etc.) + Tipo de Transação (Receita, Despesa, Aporte)
  */
 export default function Transacoes() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [transactions, setTransactions] = useState([]);
   const [categories, setCategories] = useState([]);
   const [transactionTypes, setTransactionTypes] = useState([]);
@@ -162,14 +162,42 @@ export default function Transacoes() {
   // Previne re-renders desnecessários quando apenas um campo muda
   const [formData, dispatch] = useReducer(formReducer, initialFormState);
 
+  const mapTransactions = useCallback((data = []) =>
+    data.map((t) => ({
+      ...t,
+      date: t.transaction_date,
+      type_internal_name: t.transaction_type_internal_name,
+      status: t.payment_status_internal_name,
+      payment_method: t.payment_method_name,
+      installments: t.installment_total > 1 ? {
+        current: t.installment_number,
+        total: t.installment_total,
+      } : null,
+    })), []);
+
+  const refreshTransactions = useCallback(async () => {
+    const response = await getTransactions();
+    if (response.error) throw response.error;
+    return mapTransactions(response.data || []);
+  }, [mapTransactions]);
+
   useEffect(() => {
+    if (authLoading) return;
+
+    if (!user) {
+      setTransactions([]);
+      setFilteredTransactions([]);
+      setLoading(false);
+      return;
+    }
+
     let isMounted = true;
-    const abortController = new AbortController();
+    setLoading(true);
 
     const loadData = async () => {
       try {
         const [
-          transactionsRes,
+          mappedTransactions,
           categoriesRes,
           transactionTypesRes,
           banksRes,
@@ -178,7 +206,7 @@ export default function Transacoes() {
           paymentMethodsRes,
           recurrenceFrequenciesRes,
         ] = await Promise.all([
-          getTransactions(),
+          refreshTransactions(),
           getCategories(),
           getTransactionTypes(),
           getBanks(),
@@ -188,10 +216,8 @@ export default function Transacoes() {
           getRecurrenceFrequencies(),
         ]);
 
-        // Verificar se componente ainda está montado antes de atualizar state
         if (!isMounted) return;
 
-        if (transactionsRes.error) throw transactionsRes.error;
         if (categoriesRes.error) throw categoriesRes.error;
         if (transactionTypesRes.error) throw transactionTypesRes.error;
         if (banksRes.error) throw banksRes.error;
@@ -199,19 +225,6 @@ export default function Transacoes() {
         if (paymentStatusesRes.error) throw paymentStatusesRes.error;
         if (paymentMethodsRes.error) throw paymentMethodsRes.error;
         if (recurrenceFrequenciesRes.error) throw recurrenceFrequenciesRes.error;
-
-        // Map Supabase fields to component fields
-        const mappedTransactions = (transactionsRes.data || []).map((t) => ({
-          ...t,
-          date: t.transaction_date,
-          type_internal_name: t.transaction_type_internal_name,
-          status: t.payment_status_internal_name,
-          payment_method: t.payment_method_name,
-          installments: t.installment_total > 1 ? {
-            current: t.installment_number,
-            total: t.installment_total,
-          } : null,
-        }));
 
         setTransactions(mappedTransactions);
         setFilteredTransactions(mappedTransactions);
@@ -223,7 +236,6 @@ export default function Transacoes() {
         setPaymentMethods(paymentMethodsRes.data || []);
         setRecurrenceFrequencies(recurrenceFrequenciesRes.data || []);
 
-        // Definir categoria e tipo padrão após carregar os dados
         if (
           categoriesRes.data && categoriesRes.data.length > 0 &&
           transactionTypesRes.data && transactionTypesRes.data.length > 0
@@ -251,12 +263,10 @@ export default function Transacoes() {
 
     loadData();
 
-    // Cleanup: cancelar requisições se usuário sair da página
     return () => {
       isMounted = false;
-      abortController.abort();
     };
-  }, []);
+  }, [authLoading, user, refreshTransactions]);
 
   useEffect(() => {
     let filtered = transactions;
@@ -374,25 +384,12 @@ export default function Transacoes() {
 
       if (result.error) throw result.error;
 
-      // Recarregar dados
-      const response = await getTransactions();
-      if (response.error) throw response.error;
-
-      const mappedTransactions = (response.data || []).map((t) => ({
-        ...t,
-        date: t.transaction_date,
-        installments: t.installments_total
-          ? {
-              current: t.installments_current,
-              total: t.installments_total,
-            }
-          : null,
-      }));
+      const mappedTransactions = await refreshTransactions();
       setTransactions(mappedTransactions);
     } catch (error) {
       console.error("Erro ao atualizar status:", error);
     }
-  }, []);
+  }, [refreshTransactions]);
 
   // Categorização inteligente - sugere categoria baseado na descrição
   const suggestCategory = (description) => {
@@ -461,20 +458,7 @@ export default function Transacoes() {
         const result = await deleteTransaction(transactionToDelete.id);
         if (result.error) throw result.error;
 
-        const response = await getTransactions();
-        if (response.error) throw response.error;
-
-        const mappedTransactions = (response.data || []).map((t) => ({
-          ...t,
-          date: t.transaction_date,
-          type_internal_name: t.transaction_type_internal_name,
-          status: t.payment_status_internal_name,
-          payment_method: t.payment_method_name,
-          installments: t.installment_total > 1 ? {
-            current: t.installment_number,
-            total: t.installment_total,
-          } : null,
-        }));
+        const mappedTransactions = await refreshTransactions();
 
         setTransactions(mappedTransactions);
         setFilteredTransactions(mappedTransactions);
@@ -543,21 +527,7 @@ export default function Transacoes() {
 
       if (result.error) throw result.error;
 
-      // Reload data
-      const response = await getTransactions();
-      if (response.error) throw response.error;
-
-      const mappedTransactions = (response.data || []).map((t) => ({
-        ...t,
-        date: t.transaction_date,
-        type_internal_name: t.transaction_type_internal_name,
-        status: t.payment_status_internal_name,
-        payment_method: t.payment_method_name,
-        installments: t.installment_total > 1 ? {
-          current: t.installment_number,
-          total: t.installment_total,
-        } : null,
-      }));
+      const mappedTransactions = await refreshTransactions();
 
       setTransactions(mappedTransactions);
       setFilteredTransactions(mappedTransactions);
