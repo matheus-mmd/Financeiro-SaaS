@@ -370,7 +370,7 @@ export default function PatrimonioAtivos() {
     });
   }, [filteredAssets]);
 
-  if (loading) {
+  if (loading || authLoading) {
     return <PageSkeleton />;
   }
 
