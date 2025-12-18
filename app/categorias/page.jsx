@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
+import { useAuth } from "../../src/contexts/AuthContext";
 import PageHeader from "../../src/components/PageHeader";
 import { Card, CardContent } from "../../src/components/ui/card";
 import { Button } from "../../src/components/ui/button";
@@ -25,7 +26,6 @@ import {
   Plus,
   Trash2,
   Tag,
-  Download,
   TrendingUp,
   TrendingDown,
   Wallet,
@@ -41,6 +41,7 @@ import FABMenu from "../../src/components/FABMenu";
  * Visualização simples e objetiva com ações diretas
  */
 export default function CategoriasPage() {
+  const { user, loading: authLoading } = useAuth();
   const [categories, setCategories] = useState([]);
   const [transactionTypes, setTransactionTypes] = useState([]);
   const [icons, setIcons] = useState([]);
@@ -88,12 +89,20 @@ export default function CategoriasPage() {
 
   useEffect(() => {
     const isMountedRef = { current: true };
+
+    // Espera autenticação terminar antes de carregar dados
+    if (authLoading) return;
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+
     loadData(isMountedRef);
 
     return () => {
       isMountedRef.current = false;
     };
-  }, []);
+  }, [user, authLoading]);
 
   // Separar categorias por tipo
   const categorizeByType = () => {
@@ -280,7 +289,7 @@ export default function CategoriasPage() {
     );
   };
 
-  if (loading) {
+  if (authLoading || loading) {
     return (
       <div className="flex items-center justify-center h-64">
         <p className="text-gray-500">Carregando...</p>
