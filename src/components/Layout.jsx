@@ -35,13 +35,20 @@ export default function Layout({ children }) {
   // - Timeout de segurança (causava redirecionamento prematuro)
   // - Redirecionamento client-side (duplicava proteção do middleware)
 
+  // Redirecionar para login quando autenticação já foi verificada e não há usuário
+  useEffect(() => {
+    if (!isPublicRoute && !loading && !user) {
+      router.replace('/login');
+    }
+  }, [isPublicRoute, loading, user, router]);
+
   // Renderizar rotas públicas sem layout ANTES de verificar loading
   if (isPublicRoute) {
     return <>{children}</>;
   }
 
   // Mostrar loading enquanto verifica autenticação (APENAS para rotas protegidas)
-  if (loading || !user) {
+  if (loading || (!user && !isPublicRoute)) {
     return (
       <div className="flex flex-col items-center justify-center h-screen bg-bg gap-4">
         <div className="relative">
