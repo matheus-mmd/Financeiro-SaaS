@@ -80,7 +80,6 @@ export const AuthProvider = ({ children }) => {
     // TIMEOUT DE SEGURANÇA: Garantir que loading seja false após 10 segundos
     const safetyTimeout = setTimeout(() => {
       if (isMounted && loading) {
-        console.error('[AuthContext] TIMEOUT: Loading ainda true após 10s, forçando false');
         setLoading(false);
       }
     }, 10000);
@@ -97,10 +96,9 @@ export const AuthProvider = ({ children }) => {
         // Buscar perfil (criado automaticamente pelo trigger do banco)
         const profileData = await fetchProfile(session.user.id);
 
-        // CORREÇÃO CRÍTICA: Se perfil não existe, fazer logout automático
+        // Se perfil não existe, fazer logout automático
         // Previne estado inconsistente onde há sessão Auth mas não há registro em public.users
         if (!profileData && isMounted) {
-          console.warn('[AuthContext] Perfil não encontrado para usuário autenticado. Fazendo logout...');
           await supabase.auth.signOut();
           setUser(null);
           setProfile(null);
@@ -132,9 +130,7 @@ export const AuthProvider = ({ children }) => {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('[AuthContext] Auth state changed:', event);
-
-      // CORREÇÃO: Ignorar evento INITIAL_SESSION para evitar re-processamento desnecessário
+      // Ignorar evento INITIAL_SESSION para evitar re-processamento desnecessário
       // O getSession() acima já trata da sessão inicial
       if (event === 'INITIAL_SESSION') {
         return;
@@ -148,9 +144,8 @@ export const AuthProvider = ({ children }) => {
         // Buscar perfil (criado automaticamente pelo trigger do banco)
         const profileData = await fetchProfile(session.user.id);
 
-        // CORREÇÃO CRÍTICA: Se perfil não existe, fazer logout automático
+        // Se perfil não existe, fazer logout automático
         if (!profileData && isMounted) {
-          console.warn('[AuthContext] Perfil não encontrado após mudança de auth. Fazendo logout...');
           await supabase.auth.signOut();
           setUser(null);
           setProfile(null);

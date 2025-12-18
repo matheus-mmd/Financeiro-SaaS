@@ -57,7 +57,8 @@ export default function CategoriasPage() {
     transaction_type_id: null,
   });
 
-  const loadData = async () => {
+  // Função para carregar dados (usada tanto na montagem quanto após operações)
+  const loadData = async (isMountedRef = { current: true }) => {
     try {
       const [categoriesRes, transactionTypesRes, iconsRes] = await Promise.all([
         getCategories(),
@@ -65,9 +66,7 @@ export default function CategoriasPage() {
         getIcons(),
       ]);
 
-      console.log('[DEBUG] Resposta de categorias:', categoriesRes);
-      console.log('[DEBUG] Resposta de tipos:', transactionTypesRes);
-      console.log('[DEBUG] Resposta de ícones:', iconsRes);
+      if (!isMountedRef.current) return;
 
       if (categoriesRes.error) throw categoriesRes.error;
       if (transactionTypesRes.error) throw transactionTypesRes.error;
@@ -76,56 +75,23 @@ export default function CategoriasPage() {
       setCategories(categoriesRes.data || []);
       setTransactionTypes(transactionTypesRes.data || []);
       setIcons(iconsRes.data || []);
-
-      console.log('[DEBUG] Total de categorias carregadas:', categoriesRes.data?.length || 0);
-      console.log('[DEBUG] Total de tipos carregados:', transactionTypesRes.data?.length || 0);
-      console.log('[DEBUG] Total de ícones carregados:', iconsRes.data?.length || 0);
     } catch (error) {
-      console.error("Erro ao carregar dados:", error);
+      if (error.name !== 'AbortError') {
+        console.error("Erro ao carregar dados:", error);
+      }
     } finally {
-      setLoading(false);
+      if (isMountedRef.current) {
+        setLoading(false);
+      }
     }
   };
 
   useEffect(() => {
-    let isMounted = true;
-    const abortController = new AbortController();
+    const isMountedRef = { current: true };
+    loadData(isMountedRef);
 
-    const loadDataWithCleanup = async () => {
-      try {
-        const [categoriesRes, transactionTypesRes, iconsRes] = await Promise.all([
-          getCategories(),
-          getTransactionTypes(),
-          getIcons(),
-        ]);
-
-        // Verificar se componente ainda está montado antes de atualizar state
-        if (!isMounted) return;
-
-        if (categoriesRes.error) throw categoriesRes.error;
-        if (transactionTypesRes.error) throw transactionTypesRes.error;
-        if (iconsRes.error) throw iconsRes.error;
-
-        setCategories(categoriesRes.data || []);
-        setTransactionTypes(transactionTypesRes.data || []);
-        setIcons(iconsRes.data || []);
-      } catch (error) {
-        if (error.name !== 'AbortError') {
-          console.error("Erro ao carregar dados:", error);
-        }
-      } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
-      }
-    };
-
-    loadDataWithCleanup();
-
-    // Cleanup: cancelar requisições se usuário sair da página
     return () => {
-      isMounted = false;
-      abortController.abort();
+      isMountedRef.current = false;
     };
   }, []);
 
@@ -176,11 +142,6 @@ export default function CategoriasPage() {
     e.preventDefault();
 
     try {
-      console.log('[DEBUG] Iniciando salvamento de categoria...');
-      console.log('[DEBUG] categoryFormData:', categoryFormData);
-      console.log('[DEBUG] Total de ícones carregados:', icons.length);
-      console.log('[DEBUG] Primeiros 5 ícones:', icons.slice(0, 5));
-
       // Verificar se ícones foram carregados
       if (!icons || icons.length === 0) {
         throw new Error('Ícones não foram carregados. Por favor, recarregue a página.');
@@ -190,10 +151,7 @@ export default function CategoriasPage() {
       const icon = icons.find(i => i.name === categoryFormData.icon);
 
       if (!icon) {
-        console.error('[DEBUG] Ícone não encontrado!');
-        console.error('[DEBUG] Nome procurado:', categoryFormData.icon);
-        console.error('[DEBUG] Ícones disponíveis:', icons.map(i => i.name));
-        throw new Error(`Ícone "${categoryFormData.icon}" não encontrado. Ícones disponíveis: ${icons.length}`);
+        throw new Error(`Ícone "${categoryFormData.icon}" não encontrado.`);
       }
 
       const categoryData = {
@@ -203,10 +161,6 @@ export default function CategoriasPage() {
         transactionTypeId: categoryFormData.transaction_type_id,
       };
 
-      console.log('[DEBUG] Dados da categoria:', categoryData);
-      console.log('[DEBUG] Ícone encontrado:', icon);
-      console.log('[DEBUG] Editando?', editingCategory ? 'Sim' : 'Não');
-
       let result;
       if (editingCategory) {
         result = await updateCategory(editingCategory.id, categoryData);
@@ -214,14 +168,10 @@ export default function CategoriasPage() {
         result = await createCategory(categoryData);
       }
 
-      console.log('[DEBUG] Resultado da API:', result);
-
       if (result.error) {
-        console.error('[DEBUG] Erro detectado:', result.error);
         throw result.error;
       }
 
-      console.log('[DEBUG] Categoria salva com sucesso!');
       await loadData();
       setCategoryModalOpen(false);
     } catch (error) {
