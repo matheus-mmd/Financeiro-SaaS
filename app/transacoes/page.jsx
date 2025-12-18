@@ -367,12 +367,28 @@ export default function Transacoes() {
         transaction.status === PAYMENT_STATUS.PAID
           ? PAYMENT_STATUS.PENDING
           : PAYMENT_STATUS.PAID;
-      await updateTransaction(transaction.id, {
-        ...transaction,
+
+      const result = await updateTransaction(transaction.id, {
         status: newStatus,
       });
-      const response = await fetchData("/api/transactions");
-      setTransactions(response.data);
+
+      if (result.error) throw result.error;
+
+      // Recarregar dados
+      const response = await getTransactions();
+      if (response.error) throw response.error;
+
+      const mappedTransactions = (response.data || []).map((t) => ({
+        ...t,
+        date: t.transaction_date,
+        installments: t.installments_total
+          ? {
+              current: t.installments_current,
+              total: t.installments_total,
+            }
+          : null,
+      }));
+      setTransactions(mappedTransactions);
     } catch (error) {
       console.error("Erro ao atualizar status:", error);
     }
