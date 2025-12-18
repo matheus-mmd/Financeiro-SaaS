@@ -77,8 +77,6 @@ export const AuthProvider = ({ children }) => {
     let isMounted = true;
     let initialCheckDone = false;
 
-    console.log('[AuthContext] Iniciando verificação de autenticação...');
-
     // TIMEOUT DE SEGURANÇA: Garantir que loading seja false após 10 segundos
     const safetyTimeout = setTimeout(() => {
       if (isMounted && loading) {
@@ -89,23 +87,15 @@ export const AuthProvider = ({ children }) => {
 
     // Verificar sessão existente
     supabase.auth.getSession().then(async ({ data: { session } }) => {
-      console.log('[AuthContext] getSession resultado:', session ? 'Sessão ativa' : 'Sem sessão');
-
-      if (!isMounted) {
-        console.log('[AuthContext] Componente desmontado, cancelando');
-        return;
-      }
+      if (!isMounted) return;
 
       initialCheckDone = true;
 
       if (session?.user) {
-        console.log('[AuthContext] Usuário encontrado:', session.user.email);
         setUser(session.user);
 
         // Buscar perfil (criado automaticamente pelo trigger do banco)
-        console.log('[AuthContext] Buscando perfil...');
         const profileData = await fetchProfile(session.user.id);
-        console.log('[AuthContext] Perfil:', profileData ? 'Encontrado' : 'Não encontrado');
 
         // CORREÇÃO CRÍTICA: Se perfil não existe, fazer logout automático
         // Previne estado inconsistente onde há sessão Auth mas não há registro em public.users
@@ -123,10 +113,8 @@ export const AuthProvider = ({ children }) => {
           setProfile(profileData);
           setLoading(false);
           clearTimeout(safetyTimeout);
-          console.log('[AuthContext] Autenticação completa!');
         }
       } else {
-        console.log('[AuthContext] Sem sessão ativa');
         if (isMounted) {
           setLoading(false);
           clearTimeout(safetyTimeout);
@@ -185,7 +173,6 @@ export const AuthProvider = ({ children }) => {
 
     // Cleanup: desinscrever listener quando componente desmontar
     return () => {
-      console.log('[AuthContext] Limpando recursos...');
       isMounted = false;
       clearTimeout(safetyTimeout);
       subscription.unsubscribe();
