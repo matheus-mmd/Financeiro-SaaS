@@ -2,7 +2,7 @@
  * Hook para gerenciar metas
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   getTargets,
   getTargetById,
@@ -17,6 +17,14 @@ export function useTargets(filters = {}) {
   const [error, setError] = useState(null);
 
   // Criar função de carregamento estável
+  // OTIMIZAÇÃO: Usar useMemo para criar uma key estável dos filtros ao invés de JSON.stringify
+  const filtersKey = useMemo(() => {
+    return Object.entries(filters)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([key, value]) => `${key}:${value}`)
+      .join('|');
+  }, [filters]);
+
   const loadTargets = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -27,8 +35,7 @@ export function useTargets(filters = {}) {
       setTargets(data || []);
     }
     setLoading(false);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [JSON.stringify(filters)]);
+  }, [filtersKey]); // Usar filtersKey ao invés de JSON.stringify
 
   // Carregar quando filters mudar
   useEffect(() => {

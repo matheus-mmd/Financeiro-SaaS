@@ -1,421 +1,63 @@
 "use client";
 
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useCallback, useEffect, lazy, Suspense } from "react";
 import { useRouter } from "next/navigation";
 import PageHeader from "../src/components/PageHeader";
 import StatsCard from "../src/components/StatsCard";
 import DashboardSkeleton from "../src/components/DashboardSkeleton";
 import { formatCurrency } from "../src/utils";
-import { getTransactions } from "../src/lib/supabase/api/transactions";
-import { getAssets } from "../src/lib/supabase/api/assets";
-import { getCategories } from "../src/lib/supabase/api/categories";
-import { getIconComponent } from "../src/components/IconPicker";
 import { Wallet, TrendingDown, ArrowUpRight, PiggyBank, Coins, Heart, Percent, CalendarDays } from "lucide-react";
 import { useAuth } from "../src/contexts/AuthContext";
+import { useDashboard } from "../src/lib/supabase/hooks/useDashboard";
+import { Card, CardContent } from "../src/components/ui/card";
 
-// Componentes de análise do dashboard
-import CategoryBreakdownCard from "../src/components/dashboard/CategoryBreakdownCard";
-import IncomeVsExpensesChart from "../src/components/dashboard/IncomeVsExpensesChart";
+// OTIMIZAÇÃO: Lazy load dos componentes pesados de gráficos
+const CategoryBreakdownCard = lazy(() => import("../src/components/dashboard/CategoryBreakdownCard"));
+const IncomeVsExpensesChart = lazy(() => import("../src/components/dashboard/IncomeVsExpensesChart"));
 
-// Funções de análise
-import {
-  getPreviousMonth,
-  calculateHealthScore,
-  calculateSavingsRate,
-  calculateDailyBudget,
-} from "../src/utils/dashboardAnalytics";
+// Skeleton para os gráficos enquanto carregam
+const ChartSkeleton = () => (
+  <Card className="overflow-hidden border-0 shadow-sm">
+    <CardContent className="p-6">
+      <div className="animate-pulse space-y-4">
+        <div className="h-6 bg-gray-200 rounded w-1/3"></div>
+        <div className="h-[400px] bg-gray-100 rounded"></div>
+      </div>
+    </CardContent>
+  </Card>
+);
 
 /**
  * Página Dashboard - Visão geral do controle financeiro
- * Exibe resumo mensal, análises comparativas e insights
+ * OTIMIZADA: Usa hook useDashboard para centralizar lógica e reduzir cálculos no client
  */
 export default function Dashboard() {
   const router = useRouter();
   const { user, loading: authLoading, signOut } = useAuth();
-  const [categories, setCategories] = useState([]);
-  const [transactions, setTransactions] = useState([]);
-  const [assets, setAssets] = useState([]);
-  const [loading, setLoading] = useState(true);
+
+  // Hook customizado que centraliza toda a lógica do dashboard
+  const { loading, error, metrics, categoryData, chartData } = useDashboard();
 
   const handleAuthFailure = useCallback(async () => {
     await signOut();
     router.replace('/login');
   }, [router, signOut]);
 
+  // Redirecionar se não autenticado
   useEffect(() => {
-    // CORREÇÃO CRÍTICA: Aguardar auth estar pronto antes de carregar dados
-    // Isso previne erros 400 causados por RLS quando queries são feitas sem autenticação
-    if (authLoading) {
-      return; // Aguardar auth terminar de carregar
-    }
-
-    if (!user) {
-      // Usuário não autenticado - não carregar dados
-      setLoading(false);
+    if (!authLoading && !user) {
       router.replace('/login');
-      return;
     }
+  }, [authLoading, user, router]);
 
-    let isMounted = true;
-    let timeoutId;
-
-    const loadData = async () => {
-      try {
-        // Timeout de 10 segundos para prevenir loading infinito
-        const timeoutPromise = new Promise((_, reject) => {
-          timeoutId = setTimeout(() => {
-            reject(new Error('Timeout ao carregar dados do dashboard'));
-          }, 10000);
-        });
-
-        // OTIMIZAÇÃO: Apenas 3 chamadas ao invés de 5
-        // - getTransactions() traz todas as transações (filtrar localmente por tipo)
-        // - getCategories() para informações de categorias
-        // - getAssets() para patrimônio
-        const dataPromise = Promise.all([
-          getTransactions({ limit: 500 }),
-          getCategories(),
-          getAssets(),
-        ]);
-
-        const [transactionsRes, categoriesRes, assetsRes] = await Promise.race([
-          dataPromise,
-          timeoutPromise,
-        ]);
-
-        if (timeoutId) clearTimeout(timeoutId);
-        if (!isMounted) return;
-
-        // Log de erros sem interromper o fluxo
-        if (transactionsRes?.error?.code === 'AUTH_REQUIRED' ||
-          categoriesRes?.error?.code === 'AUTH_REQUIRED' ||
-          assetsRes?.error?.code === 'AUTH_REQUIRED') {
-          await handleAuthFailure();
-          return;
-        }
-
-        if (transactionsRes?.error) {
-          console.error("[Dashboard] Erro ao carregar transações:", transactionsRes.error);
-        }
-        if (categoriesRes?.error) {
-          console.error("[Dashboard] Erro ao carregar categorias:", categoriesRes.error);
-        }
-        if (assetsRes?.error) {
-          console.error("[Dashboard] Erro ao carregar ativos:", assetsRes.error);
-        }
-
-        // Mapear transações
-        const mappedTransactions = (transactionsRes?.data || []).map((t) => ({
-          ...t,
-          date: t.transaction_date,
-          description: t.description,
-          type_internal_name: t.transaction_type_internal_name,
-        }));
-
-        const mappedAssets = (assetsRes?.data || []).map((a) => ({
-          ...a,
-          date: a.valuation_date,
-        }));
-
-        setCategories(categoriesRes?.data || []);
-        setTransactions(mappedTransactions);
-        setAssets(mappedAssets);
-      } catch (error) {
-        if (error?.code === 'AUTH_REQUIRED') {
-          await handleAuthFailure();
-          return;
-        }
-        if (error.name !== 'AbortError') {
-          console.error("[Dashboard] Erro ao carregar dashboard:", error);
-          // Mesmo com erro, setar dados vazios para não quebrar UI
-          setCategories([]);
-          setTransactions([]);
-          setAssets([]);
-        }
-      } finally {
-        // CORREÇÃO CRÍTICA: SEMPRE liberar loading, mesmo com erro
-        if (timeoutId) clearTimeout(timeoutId);
-        if (isMounted) {
-          setLoading(false);
-        }
-      }
-    };
-
-    loadData();
-
-    // Cleanup: cancelar requisições se usuário sair da página
-    return () => {
-      isMounted = false;
-      if (timeoutId) clearTimeout(timeoutId);
-    };
-  }, [authLoading, user, handleAuthFailure, router]); // CORREÇÃO: Adicionar authLoading e user como deps para re-carregar quando auth mudar
-
-  // Mês atual para filtros
-  const currentMonth = useMemo(() => {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    return `${year}-${month}`;
-  }, []);
-
-  const previousMonth = useMemo(() => getPreviousMonth(currentMonth), [currentMonth]);
-
-  const categoryLookup = useMemo(() => {
-    const map = new Map();
-    categories.forEach((category) => {
-      map.set(category.id, category);
-    });
-    return map;
-  }, [categories]);
-
-  const transactionsAggregates = useMemo(() => {
-    const totalsByMonth = new Map();
-    const categoryBreakdowns = {
-      income: new Map(),
-      expense: new Map(),
-      investment: new Map(),
-    };
-    const currentMonthTransactions = [];
-
-    const defaults = {
-      income: { color: "#10b981", icon: "Tag" },
-      expense: { color: "#6366f1", icon: "Tag" },
-      investment: { color: "#06b6d4", icon: "TrendingUp" },
-    };
-
-    transactions.forEach((transaction) => {
-      if (!transaction?.date) return;
-
-      const month = transaction.date.slice(0, 7);
-      const amount = Math.abs(transaction.amount || 0);
-      const type = transaction.type_internal_name;
-
-      if (!totalsByMonth.has(month)) {
-        totalsByMonth.set(month, { income: 0, expense: 0, investment: 0 });
-      }
-
-      if (type === "income" || type === "expense" || type === "investment") {
-        const monthEntry = totalsByMonth.get(month);
-        monthEntry[type] += amount;
-
-        if (month === currentMonth) {
-          currentMonthTransactions.push(transaction);
-
-          const categoryMeta = categoryLookup.get(transaction.category_id);
-          const breakdownMap = categoryBreakdowns[type];
-          const name = transaction.category_name || categoryMeta?.name || "Outros";
-
-          const existing = breakdownMap.get(name) || {
-            name,
-            value: 0,
-            color: categoryMeta?.color || transaction.category_color || defaults[type].color,
-            icon: categoryMeta?.icon || transaction.category_icon || defaults[type].icon,
-          };
-          existing.value += amount;
-          breakdownMap.set(name, existing);
-        }
-      }
-    });
-
-    return { totalsByMonth, categoryBreakdowns, currentMonthTransactions };
-  }, [transactions, currentMonth, categoryLookup]);
-
-  const currentMonthData = useMemo(() => {
-    const totals = transactionsAggregates.totalsByMonth.get(currentMonth) || { income: 0, expense: 0, investment: 0 };
-    const credits = totals.income;
-    const debits = totals.expense;
-    const investments = totals.investment;
-    const balance = credits - debits - investments;
-
-    return {
-      credits,
-      debits,
-      expenses: debits,
-      plannedExpenses: debits,
-      investments,
-      balance,
-    };
-  }, [transactionsAggregates, currentMonth]);
-
-  const currentMonthIncomeCount = useMemo(() => (
-    transactionsAggregates.currentMonthTransactions.filter((t) => t.type_internal_name === "income").length
-  ), [transactionsAggregates]);
-
-  // Calcular patrimônio total
-  const totalAssets = useMemo(() =>
-    assets.reduce((sum, asset) => sum + asset.value, 0),
-    [assets]
-  );
-
-  // Calcular média de despesas mensais (últimos 3 meses) - APENAS de transactions
-  const avgMonthlyExpenses = useMemo(() => {
-    const months = [currentMonth, previousMonth, getPreviousMonth(previousMonth)];
-    const expenses = months
-      .map((month) => transactionsAggregates.totalsByMonth.get(month)?.expense || 0)
-      .filter((value) => value > 0);
-
-    if (expenses.length === 0) {
-      return currentMonthData.expenses;
+  // Tratar erro de autenticação
+  useEffect(() => {
+    if (error?.message === 'AUTH_REQUIRED') {
+      handleAuthFailure();
     }
+  }, [error, handleAuthFailure]);
 
-    const total = expenses.reduce((sum, value) => sum + value, 0);
-    return total / expenses.length;
-  }, [transactionsAggregates, currentMonth, previousMonth, currentMonthData.expenses]);
-
-  // Calcular Health Score
-  const healthScoreData = useMemo(() =>
-    calculateHealthScore(currentMonthData, assets, avgMonthlyExpenses),
-    [currentMonthData, assets, avgMonthlyExpenses]
-  );
-
-  // Calcular Taxa de Poupança
-  const savingsRateData = useMemo(() =>
-    calculateSavingsRate(currentMonthData, 20),
-    [currentMonthData]
-  );
-
-  // Dias restantes no mês
-  const daysRemaining = useMemo(() => {
-    const now = new Date();
-    const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-    return lastDay.getDate() - now.getDate();
-  }, []);
-
-  // Calcular Orçamento Diário
-  const dailyBudgetData = useMemo(() =>
-    calculateDailyBudget(currentMonthData, daysRemaining, 20),
-    [currentMonthData, daysRemaining]
-  );
-
-  // Calcular comparações mês a mês para os cards - APENAS de transactions
-  const incomeComparison = useMemo(() => {
-    const currentIncome = transactionsAggregates.totalsByMonth.get(currentMonth)?.income || 0;
-    const previousIncome = transactionsAggregates.totalsByMonth.get(previousMonth)?.income || 0;
-    const change = previousIncome > 0 ? ((currentIncome - previousIncome) / previousIncome) * 100 : 0;
-    return { current: currentIncome, previous: previousIncome, change };
-  }, [transactionsAggregates, currentMonth, previousMonth]);
-
-  // Preparar dados para CategoryBreakdownCard
-  const incomeByCategory = useMemo(() =>
-    Array.from(transactionsAggregates.categoryBreakdowns.income.values()),
-    [transactionsAggregates]
-  );
-
-  const investmentsByCategory = useMemo(() =>
-    Array.from(transactionsAggregates.categoryBreakdowns.investment.values()),
-    [transactionsAggregates]
-  );
-
-  const currentMonthExpensesByCategory = useMemo(() =>
-    Array.from(transactionsAggregates.categoryBreakdowns.expense.values()),
-    [transactionsAggregates]
-  );
-
-  // Preparar dados para IncomeVsExpensesChart
-  const incomeVsExpensesMonthlyData = useMemo(() => {
-    const defaultTotals = { income: 0, expense: 0, investment: 0 };
-    const months = [];
-    let pointer = currentMonth;
-    months.unshift(pointer);
-    for (let i = 1; i < 6; i++) {
-      pointer = getPreviousMonth(pointer);
-      months.unshift(pointer);
-    }
-
-    return months.map((month) => {
-      const totals = transactionsAggregates.totalsByMonth.get(month) || defaultTotals;
-      const [year, monthNum] = month.split('-');
-      const monthName = new Date(year, monthNum - 1).toLocaleDateString('pt-BR', { month: 'short' });
-
-      return {
-        date: monthName.charAt(0).toUpperCase() + monthName.slice(1),
-        income: totals.income,
-        expense: totals.expense,
-        investment: totals.investment,
-      };
-    });
-  }, [transactionsAggregates, currentMonth]);
-
-  const incomeVsExpensesQuarterlyData = useMemo(() => {
-    const now = new Date();
-    const currentYear = now.getFullYear();
-    const currentMonthNum = now.getMonth() + 1;
-    const currentQuarter = Math.ceil(currentMonthNum / 3);
-    const startMonth = (currentQuarter - 1) * 3 + 1;
-    const defaultTotals = { income: 0, expense: 0, investment: 0 };
-
-    const quarterMonths = [
-      `${currentYear}-${String(startMonth).padStart(2, '0')}`,
-      `${currentYear}-${String(startMonth + 1).padStart(2, '0')}`,
-      `${currentYear}-${String(startMonth + 2).padStart(2, '0')}`,
-    ];
-
-    return quarterMonths.map((month) => {
-      const totals = transactionsAggregates.totalsByMonth.get(month) || defaultTotals;
-      const [year, monthNum] = month.split('-');
-      const monthName = new Date(year, monthNum - 1).toLocaleDateString('pt-BR', { month: 'short' });
-
-      return {
-        date: monthName.charAt(0).toUpperCase() + monthName.slice(1),
-        income: totals.income,
-        expense: totals.expense,
-        investment: totals.investment,
-      };
-    });
-  }, [transactionsAggregates]);
-
-  const incomeVsExpensesSemesterData = useMemo(() => {
-    const now = new Date();
-    const currentYear = now.getFullYear();
-    const currentMonthNum = now.getMonth() + 1;
-    const currentSemester = currentMonthNum <= 6 ? 1 : 2;
-    const startMonth = currentSemester === 1 ? 1 : 7;
-    const defaultTotals = { income: 0, expense: 0, investment: 0 };
-
-    const semesterMonths = [];
-    for (let m = 0; m < 6; m++) {
-      semesterMonths.push(`${currentYear}-${String(startMonth + m).padStart(2, '0')}`);
-    }
-
-    return semesterMonths.map((month) => {
-      const totals = transactionsAggregates.totalsByMonth.get(month) || defaultTotals;
-      const [year, monthNum] = month.split('-');
-      const monthName = new Date(year, monthNum - 1).toLocaleDateString('pt-BR', { month: 'short' });
-
-      return {
-        date: monthName.charAt(0).toUpperCase() + monthName.slice(1),
-        income: totals.income,
-        expense: totals.expense,
-        investment: totals.investment,
-      };
-    });
-  }, [transactionsAggregates]);
-
-  const incomeVsExpensesYearlyData = useMemo(() => {
-    const now = new Date();
-    const currentYear = now.getFullYear();
-    const defaultTotals = { income: 0, expense: 0, investment: 0 };
-
-    const yearlyMonths = [];
-    for (let m = 1; m <= 12; m++) {
-      yearlyMonths.push(`${currentYear}-${String(m).padStart(2, '0')}`);
-    }
-
-    return yearlyMonths.map((month) => {
-      const totals = transactionsAggregates.totalsByMonth.get(month) || defaultTotals;
-      const [year, monthNum] = month.split('-');
-      const monthName = new Date(year, monthNum - 1).toLocaleDateString('pt-BR', { month: 'short' });
-
-      return {
-        date: monthName.charAt(0).toUpperCase() + monthName.slice(1),
-        income: totals.income,
-        expense: totals.expense,
-        investment: totals.investment,
-      };
-    });
-  }, [transactionsAggregates]);
-
-  // Mostrar skeleton enquanto auth ou dados estiverem carregando
+  // Mostrar skeleton enquanto carregando
   if (!authLoading && !user) {
     return null;
   }
@@ -424,53 +66,17 @@ export default function Dashboard() {
     return <DashboardSkeleton />;
   }
 
-  const transactionColumns = [
-    {
-      key: "description",
-      label: "Descrição",
-      sortable: true,
-    },
-    {
-      key: "category",
-      label: "Categoria",
-      sortable: true,
-      render: (row) => {
-        const IconComponent = getIconComponent(row.category_icon || "Tag");
-        return (
-          <div className="flex items-center gap-2">
-            <div
-              className="p-1 rounded flex-shrink-0"
-              style={{ backgroundColor: row.category_color + '20' }}
-            >
-              <IconComponent
-                className="w-4 h-4"
-                style={{ color: row.category_color }}
-              />
-            </div>
-            <span className="text-sm font-medium text-gray-900">
-              {row.category_name}
-            </span>
-          </div>
-        );
-      },
-    },
-    {
-      key: "amount",
-      label: "Valor",
-      sortable: true,
-      render: (row) => (
-        <span className={row.amount >= 0 ? "text-success-600 font-medium" : "text-danger-600 font-medium"}>
-          {row.amount >= 0 ? "+" : "-"} {formatCurrency(Math.abs(row.amount))}
-        </span>
-      ),
-    },
-    {
-      key: "date",
-      label: "Data",
-      sortable: true,
-      render: (row) => formatDate(row.date),
-    },
-  ];
+  // Destructure metrics para facilitar o uso
+  const {
+    currentMonthData,
+    currentMonthIncomeCount,
+    totalAssets,
+    healthScoreData,
+    savingsRateData,
+    dailyBudgetData,
+    daysRemaining,
+    incomeComparison,
+  } = metrics;
 
   return (
     <div className="space-y-4 animate-fade-in">
@@ -578,7 +184,7 @@ export default function Dashboard() {
             icon={PiggyBank}
             label="Patrimônio Total"
             value={formatCurrency(totalAssets)}
-            subtitle={`${assets.length} ativo(s)`}
+            subtitle={`Somando todos os ativos`}
             iconColor="purple"
             valueColor="text-accent-600"
           />
@@ -587,18 +193,22 @@ export default function Dashboard() {
 
       {/* 📈 GRÁFICOS E ANÁLISES */}
       <div className="space-y-4">
-        <IncomeVsExpensesChart
-          monthlyData={incomeVsExpensesMonthlyData}
-          quarterlyData={incomeVsExpensesQuarterlyData}
-          semesterData={incomeVsExpensesSemesterData}
-          yearlyData={incomeVsExpensesYearlyData}
-        />
+        <Suspense fallback={<ChartSkeleton />}>
+          <IncomeVsExpensesChart
+            monthlyData={chartData.monthly}
+            quarterlyData={chartData.quarterly}
+            semesterData={chartData.semester}
+            yearlyData={chartData.yearly}
+          />
+        </Suspense>
 
-        <CategoryBreakdownCard
-          incomeData={incomeByCategory}
-          expenseData={currentMonthExpensesByCategory}
-          investmentData={investmentsByCategory}
-        />
+        <Suspense fallback={<ChartSkeleton />}>
+          <CategoryBreakdownCard
+            incomeData={categoryData.income}
+            expenseData={categoryData.expenses}
+            investmentData={categoryData.investments}
+          />
+        </Suspense>
       </div>
     </div>
   );
