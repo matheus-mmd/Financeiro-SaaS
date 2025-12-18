@@ -48,7 +48,7 @@ export default function Layout({ children }) {
   }
 
   // Mostrar loading enquanto verifica autenticação (APENAS para rotas protegidas)
-  if (loading || (!user && !isPublicRoute)) {
+  if (loading && !isPublicRoute) {
     return (
       <div className="flex flex-col items-center justify-center h-screen bg-bg gap-4">
         <div className="relative">
@@ -60,6 +60,11 @@ export default function Layout({ children }) {
         <p className="text-sm text-gray-500 animate-pulse">Carregando...</p>
       </div>
     );
+  }
+
+  if (!loading && !user) {
+    router.replace('/login');
+    return <div className="h-screen w-full bg-bg" />;
   }
 
   const handleLogout = async () => {

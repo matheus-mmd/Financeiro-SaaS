@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { useAuth } from "../../src/contexts/AuthContext";
 import PageHeader from "../../src/components/PageHeader";
 import PageSkeleton from "../../src/components/PageSkeleton";
@@ -51,7 +52,8 @@ import FABMenu from "../../src/components/FABMenu";
  * Visualização organizada por tipo: Bancos e Cartões
  */
 export default function ContasPage() {
-  const { user, loading: authLoading } = useAuth();
+  const router = useRouter();
+  const { user, loading: authLoading, signOut } = useAuth();
   const [banks, setBanks] = useState([]);
   const [cards, setCards] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -92,9 +94,23 @@ export default function ContasPage() {
   const [iconPickerFor, setIconPickerFor] = useState("bank"); // "bank" ou "card"
 
   // Função para carregar dados (usada tanto na montagem quanto após operações)
+  const handleAuthFailure = useCallback(async () => {
+    await signOut();
+    router.replace('/login');
+  }, [router, signOut]);
+
+  const isAuthError = useCallback((error) => {
+    return error?.code === 'AUTH_REQUIRED' || error?.message?.includes('Usuário não autenticado');
+  }, []);
+
   const loadData = async (isMountedRef = { current: true }) => {
+    let timeoutId;
     try {
-      const [banksRes, cardsRes, accountTypesRes, cardTypesRes, cardBrandsRes] = await Promise.all([
+      const timeoutPromise = new Promise((_, reject) => {
+        timeoutId = setTimeout(() => reject(new Error('Timeout ao carregar contas')), 10000);
+      });
+
+      const dataPromise = Promise.all([
         getBanks(),
         getCards(),
         getAccountTypes(),
@@ -102,7 +118,23 @@ export default function ContasPage() {
         getCardBrands(),
       ]);
 
+      const [banksRes, cardsRes, accountTypesRes, cardTypesRes, cardBrandsRes] = await Promise.race([
+        dataPromise,
+        timeoutPromise,
+      ]);
+
       if (!isMountedRef.current) return;
+
+      if (
+        banksRes.error?.code === 'AUTH_REQUIRED' ||
+        cardsRes.error?.code === 'AUTH_REQUIRED' ||
+        accountTypesRes.error?.code === 'AUTH_REQUIRED' ||
+        cardTypesRes.error?.code === 'AUTH_REQUIRED' ||
+        cardBrandsRes.error?.code === 'AUTH_REQUIRED'
+      ) {
+        await handleAuthFailure();
+        return;
+      }
 
       if (banksRes.error) throw banksRes.error;
       if (cardsRes.error) throw cardsRes.error;
@@ -116,10 +148,18 @@ export default function ContasPage() {
       setCardTypes(cardTypesRes.data || []);
       setCardBrands(cardBrandsRes.data || []);
     } catch (error) {
-      if (error.name !== 'AbortError') {
+      if (error?.code === 'AUTH_REQUIRED') {
+        await handleAuthFailure();
+      } else if (error.name !== 'AbortError') {
         console.error("Erro ao carregar dados:", error);
       }
+      setBanks([]);
+      setCards([]);
+      setAccountTypes([]);
+      setCardTypes([]);
+      setCardBrands([]);
     } finally {
+      if (timeoutId) clearTimeout(timeoutId);
       if (isMountedRef.current) {
         setLoading(false);
       }
@@ -132,7 +172,13 @@ export default function ContasPage() {
     // Espera autenticação terminar antes de carregar dados
     if (authLoading) return;
     if (!user) {
+      setBanks([]);
+      setCards([]);
+      setAccountTypes([]);
+      setCardTypes([]);
+      setCardBrands([]);
       setLoading(false);
+      router.replace('/login');
       return;
     }
 
@@ -141,7 +187,7 @@ export default function ContasPage() {
     return () => {
       isMountedRef.current = false;
     };
-  }, [user, authLoading]);
+  }, [user, authLoading, router, loadData]);
 
   // ===== FUNÇÕES PARA BANCOS =====
 
@@ -200,8 +246,12 @@ export default function ContasPage() {
       await loadData();
       setBankModalOpen(false);
     } catch (error) {
-      console.error("Erro ao salvar banco:", error);
-      alert("Erro ao salvar banco. Tente novamente.");
+      if (isAuthError(error)) {
+        await handleAuthFailure();
+      } else {
+        console.error("Erro ao salvar banco:", error);
+        alert("Erro ao salvar banco. Tente novamente.");
+      }
     }
   };
 
@@ -213,8 +263,12 @@ export default function ContasPage() {
       if (result.error) throw result.error;
       await loadData();
     } catch (error) {
-      console.error("Erro ao deletar banco:", error);
-      alert("Erro ao deletar banco. Tente novamente.");
+      if (isAuthError(error)) {
+        await handleAuthFailure();
+      } else {
+        console.error("Erro ao deletar banco:", error);
+        alert("Erro ao deletar banco. Tente novamente.");
+      }
     }
   };
 
@@ -282,8 +336,12 @@ export default function ContasPage() {
       await loadData();
       setCardModalOpen(false);
     } catch (error) {
-      console.error("Erro ao salvar cartão:", error);
-      alert("Erro ao salvar cartão. Tente novamente.");
+      if (isAuthError(error)) {
+        await handleAuthFailure();
+      } else {
+        console.error("Erro ao salvar cartão:", error);
+        alert("Erro ao salvar cartão. Tente novamente.");
+      }
     }
   };
 
@@ -295,8 +353,12 @@ export default function ContasPage() {
       if (result.error) throw result.error;
       await loadData();
     } catch (error) {
-      console.error("Erro ao deletar cartão:", error);
-      alert("Erro ao deletar cartão. Tente novamente.");
+      if (isAuthError(error)) {
+        await handleAuthFailure();
+      } else {
+        console.error("Erro ao deletar cartão:", error);
+        alert("Erro ao deletar cartão. Tente novamente.");
+      }
     }
   };
 
@@ -524,6 +586,10 @@ export default function ContasPage() {
       </Card>
     );
   };
+
+  if (!authLoading && !user) {
+    return null;
+  }
 
   if (authLoading || loading) {
     return <PageSkeleton />;

@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { useAuth } from "../../src/contexts/AuthContext";
 import PageHeader from "../../src/components/PageHeader";
 import StatsCard from "../../src/components/StatsCard";
@@ -63,7 +64,8 @@ import { Target, Plus, Trash2, CheckCircle, Download, TrendingUp, Copy } from "l
  * Permite visualizar, filtrar, adicionar e acompanhar progresso de metas
  */
 export default function Metas() {
-  const { user, loading: authLoading } = useAuth();
+  const router = useRouter();
+  const { user, loading: authLoading, signOut } = useAuth();
   const [targets, setTargets] = useState([]);
   const [filteredTargets, setFilteredTargets] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -85,13 +87,26 @@ export default function Metas() {
     deadline: null,
   });
 
+  const handleAuthFailure = useCallback(async () => {
+    await signOut();
+    router.replace('/login');
+  }, [router, signOut]);
+
+  const isAuthError = useCallback((error) => {
+    return error?.code === 'AUTH_REQUIRED' || error?.message?.includes('Usuário não autenticado');
+  }, []);
+
   useEffect(() => {
     let isMounted = true;
     let timeoutId;
 
     if (authLoading) return;
     if (!user) {
+      setTargets([]);
+      setFilteredTargets([]);
+      setCategories([]);
       setLoading(false);
+      router.replace('/login');
       return;
     }
 
@@ -110,6 +125,11 @@ export default function Metas() {
 
         if (!isMounted) return;
 
+        if (targetsRes.error?.code === 'AUTH_REQUIRED' || categoriesRes.error?.code === 'AUTH_REQUIRED') {
+          await handleAuthFailure();
+          return;
+        }
+
         if (targetsRes.error) throw targetsRes.error;
         if (categoriesRes.error) throw categoriesRes.error;
 
@@ -126,7 +146,10 @@ export default function Metas() {
         setFilteredTargets(mappedTargets);
         setCategories(categoriesRes.data || []);
       } catch (error) {
-        if (error.name !== 'AbortError') {
+        if (error?.code === 'AUTH_REQUIRED') {
+          await handleAuthFailure();
+          return;
+        } else if (error.name !== 'AbortError') {
           console.error("Erro ao carregar metas:", error);
         }
         if (isMounted) {
@@ -148,7 +171,7 @@ export default function Metas() {
       isMounted = false;
       if (timeoutId) clearTimeout(timeoutId);
     };
-  }, [authLoading, user]);
+  }, [authLoading, user, handleAuthFailure, router]);
 
   useEffect(() => {
     let filtered = targets;
@@ -239,8 +262,12 @@ export default function Metas() {
         setDeleteDialogOpen(false);
         setTargetToDelete(null);
       } catch (error) {
-        console.error("Erro ao deletar meta:", error);
-        alert("Erro ao deletar meta. Verifique o console para mais detalhes.");
+        if (isAuthError(error)) {
+          await handleAuthFailure();
+        } else {
+          console.error("Erro ao deletar meta:", error);
+          alert("Erro ao deletar meta. Verifique o console para mais detalhes.");
+        }
       }
     }
   };
@@ -306,8 +333,12 @@ export default function Metas() {
         deadline: null,
       });
     } catch (error) {
-      console.error("Erro ao salvar meta:", error);
-      alert("Erro ao salvar meta. Verifique o console para mais detalhes.");
+      if (isAuthError(error)) {
+        await handleAuthFailure();
+      } else {
+        console.error("Erro ao salvar meta:", error);
+        alert("Erro ao salvar meta. Verifique o console para mais detalhes.");
+      }
     }
   };
 
@@ -380,6 +411,10 @@ export default function Metas() {
       return percentB - percentA;
     });
   }, [filteredTargets]);
+
+  if (!authLoading && !user) {
+    return null;
+  }
 
   if (loading || authLoading) {
     return <PageSkeleton />;

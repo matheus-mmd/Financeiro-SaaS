@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { useAuth } from "../../src/contexts/AuthContext";
 import PageHeader from "../../src/components/PageHeader";
 import StatsCard from "../../src/components/StatsCard";
@@ -63,7 +64,8 @@ import { DollarSign, Percent, Plus, Download, Trash2, Wallet, Copy } from "lucid
  * Permite visualizar, filtrar, adicionar e gerenciar patrimônio e ativos
  */
 export default function PatrimonioAtivos() {
-  const { user, loading: authLoading } = useAuth();
+  const router = useRouter();
+  const { user, loading: authLoading, signOut } = useAuth();
   const [assets, setAssets] = useState([]);
   const [filteredAssets, setFilteredAssets] = useState([]);
   const [selectedAsset, setSelectedAsset] = useState(null);
@@ -87,13 +89,26 @@ export default function PatrimonioAtivos() {
     purchase_value: "",
   });
 
+  const handleAuthFailure = useCallback(async () => {
+    await signOut();
+    router.replace('/login');
+  }, [router, signOut]);
+
+  const isAuthError = useCallback((error) => {
+    return error?.code === 'AUTH_REQUIRED' || error?.message?.includes('Usuário não autenticado');
+  }, []);
+
   useEffect(() => {
     let isMounted = true;
     let timeoutId;
 
     if (authLoading) return;
     if (!user) {
+      setAssets([]);
+      setFilteredAssets([]);
+      setCategories([]);
       setLoading(false);
+      router.replace('/login');
       return;
     }
 
@@ -112,6 +127,11 @@ export default function PatrimonioAtivos() {
 
         if (!isMounted) return;
 
+        if (assetsRes.error?.code === 'AUTH_REQUIRED' || categoriesRes.error?.code === 'AUTH_REQUIRED') {
+          await handleAuthFailure();
+          return;
+        }
+
         if (assetsRes.error) throw assetsRes.error;
         if (categoriesRes.error) throw categoriesRes.error;
 
@@ -126,7 +146,10 @@ export default function PatrimonioAtivos() {
         setFilteredAssets(mappedAssets);
         setCategories(categoriesRes.data || []);
       } catch (error) {
-        if (error.name !== 'AbortError') {
+        if (error?.code === 'AUTH_REQUIRED') {
+          await handleAuthFailure();
+          return;
+        } else if (error.name !== 'AbortError') {
           console.error("Erro ao carregar patrimônio e ativos:", error);
         }
         if (isMounted) {
@@ -148,7 +171,7 @@ export default function PatrimonioAtivos() {
       isMounted = false;
       if (timeoutId) clearTimeout(timeoutId);
     };
-  }, [authLoading, user]);
+  }, [authLoading, user, handleAuthFailure, router]);
 
   useEffect(() => {
     let filtered = assets;
@@ -240,16 +263,20 @@ export default function PatrimonioAtivos() {
         }));
 
         setAssets(mappedAssets);
-        setFilteredAssets(mappedAssets);
+      setFilteredAssets(mappedAssets);
 
-        setDeleteDialogOpen(false);
-        setAssetToDelete(null);
-      } catch (error) {
+      setDeleteDialogOpen(false);
+      setAssetToDelete(null);
+    } catch (error) {
+      if (isAuthError(error)) {
+        await handleAuthFailure();
+      } else {
         console.error("Erro ao deletar ativo:", error);
         alert("Erro ao deletar ativo. Verifique o console para mais detalhes.");
       }
     }
-  };
+  }
+};
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -309,8 +336,12 @@ export default function PatrimonioAtivos() {
         purchase_value: "",
       });
     } catch (error) {
-      console.error("Erro ao salvar ativo:", error);
-      alert("Erro ao salvar ativo. Verifique o console para mais detalhes.");
+      if (isAuthError(error)) {
+        await handleAuthFailure();
+      } else {
+        console.error("Erro ao salvar ativo:", error);
+        alert("Erro ao salvar ativo. Verifique o console para mais detalhes.");
+      }
     }
   };
 
@@ -369,6 +400,10 @@ export default function PatrimonioAtivos() {
       return b.value - a.value;
     });
   }, [filteredAssets]);
+
+  if (!authLoading && !user) {
+    return null;
+  }
 
   if (loading || authLoading) {
     return <PageSkeleton />;
