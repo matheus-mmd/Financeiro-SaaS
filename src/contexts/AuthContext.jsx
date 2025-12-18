@@ -21,6 +21,7 @@ export const AuthProvider = ({ children }) => {
   const lastRevalidationRef = useRef(0);
   const userRef = useRef(null);
   const profileRef = useRef(null);
+  const wasHiddenRef = useRef(document.visibilityState === 'hidden');
 
   useEffect(() => {
     userRef.current = user;
@@ -223,8 +224,12 @@ export const AuthProvider = ({ children }) => {
       if (document.visibilityState === 'hidden') return;
 
       const now = Date.now();
+      const wasRecentlyHidden = wasHiddenRef.current;
+      wasHiddenRef.current = false;
+
       if (isRevalidatingRef.current) return;
-      if (now - lastRevalidationRef.current < 30000) return;
+      if (!wasRecentlyHidden && now - lastRevalidationRef.current < 30000) return;
+      if (navigator?.onLine === false) return;
 
       isRevalidatingRef.current = true;
 
@@ -274,12 +279,21 @@ export const AuthProvider = ({ children }) => {
       }
     };
 
+    const handleVisibilityChange = (event) => {
+      if (event.target.visibilityState === 'hidden') {
+        wasHiddenRef.current = true;
+        return;
+      }
+
+      handleVisibilityOrFocus();
+    };
+
     window.addEventListener('focus', handleVisibilityOrFocus);
-    document.addEventListener('visibilitychange', handleVisibilityOrFocus);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
       window.removeEventListener('focus', handleVisibilityOrFocus);
-      document.removeEventListener('visibilitychange', handleVisibilityOrFocus);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [resolveProfile, signOut]);
 
