@@ -7,7 +7,8 @@
 -- VIEW: transactions_enriched
 -- Transações com todos os dados enriquecidos (categorias, tipos, bancos, cartões)
 -- ============================================
-CREATE OR REPLACE VIEW public.transactions_enriched AS
+CREATE OR REPLACE VIEW public.transactions_enriched
+WITH (security_invoker = true) AS
 SELECT
   t.id,
   t.user_id,
@@ -76,13 +77,14 @@ LEFT JOIN public.card_brands cb ON cr.card_brand_id = cb.id
 LEFT JOIN public.recurrence_frequencies rf ON t.recurrence_frequency_id = rf.id
 WHERE t.deleted_at IS NULL;
 
-COMMENT ON VIEW public.transactions_enriched IS 'Transações com todos os dados relacionados (categorias, ícones, tipos, etc) para performance';
+COMMENT ON VIEW public.transactions_enriched IS 'Transações com todos os dados relacionados (categorias, ícones, tipos, etc) para performance - SECURITY INVOKER para respeitar RLS';
 
 -- ============================================
 -- VIEW: assets_enriched
 -- Ativos com dados enriquecidos e ganho/perda calculados
 -- ============================================
-CREATE OR REPLACE VIEW public.assets_enriched AS
+CREATE OR REPLACE VIEW public.assets_enriched
+WITH (security_invoker = true) AS
 SELECT
   a.id,
   a.user_id,
@@ -125,13 +127,14 @@ LEFT JOIN public.icons ci ON c.icon_id = ci.id
 LEFT JOIN public.transaction_types tt ON c.transaction_type_id = tt.id
 WHERE a.deleted_at IS NULL;
 
-COMMENT ON VIEW public.assets_enriched IS 'Ativos com dados de categoria e ganho/perda calculados automaticamente';
+COMMENT ON VIEW public.assets_enriched IS 'Ativos com dados de categoria e ganho/perda calculados automaticamente - SECURITY INVOKER para respeitar RLS';
 
 -- ============================================
 -- VIEW: targets_enriched
 -- Metas com progresso e dias restantes calculados
 -- ============================================
-CREATE OR REPLACE VIEW public.targets_enriched AS
+CREATE OR REPLACE VIEW public.targets_enriched
+WITH (security_invoker = true) AS
 SELECT
   t.id,
   t.user_id,
@@ -168,13 +171,14 @@ LEFT JOIN public.categories c ON t.category_id = c.id
 LEFT JOIN public.icons ci ON c.icon_id = ci.id
 WHERE t.deleted_at IS NULL;
 
-COMMENT ON VIEW public.targets_enriched IS 'Metas com progresso, dias restantes e dados de categoria calculados';
+COMMENT ON VIEW public.targets_enriched IS 'Metas com progresso, dias restantes e dados de categoria calculados - SECURITY INVOKER para respeitar RLS';
 
 -- ============================================
 -- VIEW: banks_enriched
 -- Bancos com ícones e tipo de conta
 -- ============================================
-CREATE OR REPLACE VIEW public.banks_enriched AS
+CREATE OR REPLACE VIEW public.banks_enriched
+WITH (security_invoker = true) AS
 SELECT
   b.id,
   b.user_id,
@@ -202,13 +206,14 @@ LEFT JOIN public.icons i ON b.icon_id = i.id
 LEFT JOIN public.account_types at ON b.account_type_id = at.id
 WHERE b.deleted_at IS NULL;
 
-COMMENT ON VIEW public.banks_enriched IS 'Bancos com ícones e tipo de conta enriquecidos';
+COMMENT ON VIEW public.banks_enriched IS 'Bancos com ícones e tipo de conta enriquecidos - SECURITY INVOKER para respeitar RLS';
 
 -- ============================================
 -- VIEW: cards_enriched
 -- Cartões com ícones, tipo, bandeira e banco
 -- ============================================
-CREATE OR REPLACE VIEW public.cards_enriched AS
+CREATE OR REPLACE VIEW public.cards_enriched
+WITH (security_invoker = true) AS
 SELECT
   c.id,
   c.user_id,
@@ -247,13 +252,14 @@ LEFT JOIN public.card_brands cb ON c.card_brand_id = cb.id
 LEFT JOIN public.banks b ON c.bank_id = b.id
 WHERE c.deleted_at IS NULL;
 
-COMMENT ON VIEW public.cards_enriched IS 'Cartões com ícones, tipo, bandeira e banco enriquecidos';
+COMMENT ON VIEW public.cards_enriched IS 'Cartões com ícones, tipo, bandeira e banco enriquecidos - SECURITY INVOKER para respeitar RLS';
 
 -- ============================================
 -- VIEW: categories_enriched
 -- Categorias com ícones e tipo de transação
 -- ============================================
-CREATE OR REPLACE VIEW public.categories_enriched AS
+CREATE OR REPLACE VIEW public.categories_enriched
+WITH (security_invoker = true) AS
 SELECT
   c.id,
   c.name,
@@ -277,4 +283,4 @@ LEFT JOIN public.icons i ON c.icon_id = i.id
 LEFT JOIN public.transaction_types tt ON c.transaction_type_id = tt.id
 WHERE c.deleted_at IS NULL;
 
-COMMENT ON VIEW public.categories_enriched IS 'Categorias com ícones e tipo de transação enriquecidos';
+COMMENT ON VIEW public.categories_enriched IS 'Categorias com ícones e tipo de transação enriquecidos - SECURITY INVOKER para respeitar RLS';
