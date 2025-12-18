@@ -249,15 +249,27 @@ export const AuthProvider = ({ children }) => {
           return;
         }
 
-        if (session?.user) {
+        let activeSession = session;
+
+        if (!session?.user) {
+          const { data: refreshed, error: refreshError } = await supabase.auth.refreshSession();
+
+          if (refreshError) {
+            console.warn('[AuthContext] Refresh falhou ao retomar foco/visibilidade:', refreshError);
+          } else {
+            activeSession = refreshed?.session || null;
+          }
+        }
+
+        if (activeSession?.user) {
           const currentUserId = userRef.current?.id;
-          if (currentUserId !== session.user.id) {
-            setUser(session.user);
+          if (currentUserId !== activeSession.user.id) {
+            setUser(activeSession.user);
           }
 
-          const hasProfileForUser = profileRef.current?.id === session.user.id;
+          const hasProfileForUser = profileRef.current?.id === activeSession.user.id;
           if (!hasProfileForUser) {
-            const profileData = await resolveProfile(session.user.id);
+            const profileData = await resolveProfile(activeSession.user.id);
             if (profileData) {
               setProfile(profileData);
             }
