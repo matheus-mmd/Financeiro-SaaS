@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import { supabase } from '../lib/supabase/client';
 
 const AuthContext = createContext({});
@@ -17,6 +17,7 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  const isRevalidatingRef = useRef(false);
 
   /**
    * Buscar perfil do usuário no banco de dados
@@ -209,10 +210,21 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const handleVisibilityOrFocus = async () => {
       if (document.visibilityState === 'hidden') return;
+      if (isRevalidatingRef.current) return;
+
+      isRevalidatingRef.current = true;
 
       setLoading(true);
+      let timeoutId;
       try {
-        const { data: { session }, error } = await supabase.auth.getSession();
+        const timeoutPromise = new Promise((_, reject) => {
+          timeoutId = setTimeout(() => reject(new Error('SESSION_REVALIDATION_TIMEOUT')), 10000);
+        });
+
+        const { data: { session }, error } = await Promise.race([
+          supabase.auth.getSession(),
+          timeoutPromise,
+        ]);
 
         if (error) {
           console.error('[AuthContext] Erro ao revalidar sessão:', error);
@@ -229,9 +241,15 @@ export const AuthProvider = ({ children }) => {
           await signOut();
         }
       } catch (error) {
-        console.error('[AuthContext] Erro ao revalidar sessão (focus/visibility):', error);
+        if (error?.message === 'SESSION_REVALIDATION_TIMEOUT') {
+          console.warn('[AuthContext] Timeout ao revalidar sessão após retorno do app');
+        } else {
+          console.error('[AuthContext] Erro ao revalidar sessão (focus/visibility):', error);
+        }
         await signOut();
       } finally {
+        if (timeoutId) clearTimeout(timeoutId);
+        isRevalidatingRef.current = false;
         setLoading(false);
       }
     };
