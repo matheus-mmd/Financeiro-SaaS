@@ -63,7 +63,7 @@ import { Target, Plus, Trash2, CheckCircle, Download, TrendingUp, Copy } from "l
  * Permite visualizar, filtrar, adicionar e acompanhar progresso de metas
  */
 export default function Metas() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [targets, setTargets] = useState([]);
   const [filteredTargets, setFilteredTargets] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -87,22 +87,32 @@ export default function Metas() {
 
   useEffect(() => {
     let isMounted = true;
-    const abortController = new AbortController();
+    let timeoutId;
+
+    if (authLoading) return;
+    if (!user) {
+      setLoading(false);
+      return;
+    }
 
     const loadData = async () => {
       try {
-        const [targetsRes, categoriesRes] = await Promise.all([
+        const timeoutPromise = new Promise((_, reject) => {
+          timeoutId = setTimeout(() => reject(new Error('Timeout ao carregar metas')), 10000);
+        });
+
+        const dataPromise = Promise.all([
           getTargets(),
           getCategories(),
         ]);
 
-        // Verificar se componente ainda está montado antes de atualizar state
+        const [targetsRes, categoriesRes] = await Promise.race([dataPromise, timeoutPromise]);
+
         if (!isMounted) return;
 
         if (targetsRes.error) throw targetsRes.error;
         if (categoriesRes.error) throw categoriesRes.error;
 
-        // Map Supabase fields to component fields
         const mappedTargets = (targetsRes.data || []).map((target) => ({
           ...target,
           goal: target.goal_amount,
@@ -119,7 +129,13 @@ export default function Metas() {
         if (error.name !== 'AbortError') {
           console.error("Erro ao carregar metas:", error);
         }
+        if (isMounted) {
+          setTargets([]);
+          setFilteredTargets([]);
+          setCategories([]);
+        }
       } finally {
+        if (timeoutId) clearTimeout(timeoutId);
         if (isMounted) {
           setLoading(false);
         }
@@ -128,12 +144,11 @@ export default function Metas() {
 
     loadData();
 
-    // Cleanup: cancelar requisições se usuário sair da página
     return () => {
       isMounted = false;
-      abortController.abort();
+      if (timeoutId) clearTimeout(timeoutId);
     };
-  }, []);
+  }, [authLoading, user]);
 
   useEffect(() => {
     let filtered = targets;
