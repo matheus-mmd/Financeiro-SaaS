@@ -13,7 +13,7 @@ BEGIN
   NEW.updated_at = NOW();
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SET search_path = '';
 
 -- Aplicar trigger em todas as tabelas com updated_at
 CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON public.users
@@ -49,7 +49,7 @@ BEGIN
   END IF;
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SET search_path = '';
 
 CREATE TRIGGER generate_transaction_installment_group BEFORE INSERT ON public.transactions
   FOR EACH ROW EXECUTE FUNCTION public.generate_installment_group_id();
@@ -67,7 +67,7 @@ BEGIN
   END IF;
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SET search_path = '';
 
 CREATE TRIGGER check_target_completion_trigger BEFORE UPDATE ON public.targets
   FOR EACH ROW EXECUTE FUNCTION public.check_target_completion();
@@ -88,7 +88,7 @@ BEGIN
   );
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
