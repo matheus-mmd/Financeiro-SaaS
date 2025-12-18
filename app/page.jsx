@@ -1,28 +1,13 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
-import Link from "next/link";
 import PageHeader from "../src/components/PageHeader";
 import StatsCard from "../src/components/StatsCard";
-import { Card, CardContent } from "../src/components/ui/card";
-import { Button } from "../src/components/ui/button";
-import { Input } from "../src/components/ui/input";
-import { Label } from "../src/components/ui/label";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "../src/components/ui/dialog";
 import DashboardSkeleton from "../src/components/DashboardSkeleton";
-import DatePicker from "../src/components/DatePicker";
-import Table from "../src/components/Table";
-import { formatCurrency, formatDate } from "../src/utils";
+import { formatCurrency } from "../src/utils";
 import { getTransactions } from "../src/lib/supabase/api/transactions";
 import { getAssets } from "../src/lib/supabase/api/assets";
 import { getCategories } from "../src/lib/supabase/api/categories";
-import { TRANSACTION_TYPE_IDS } from "../src/constants";
 import { getIconComponent } from "../src/components/IconPicker";
 import { Wallet, TrendingDown, ArrowUpRight, PiggyBank, Coins, Heart, Percent, CalendarDays } from "lucide-react";
 import { useAuth } from "../src/contexts/AuthContext";
@@ -46,20 +31,10 @@ import {
  */
 export default function Dashboard() {
   const { user, loading: authLoading } = useAuth();
-  const [expenses, setExpenses] = useState([]);
-  const [incomes, setIncomes] = useState([]);
   const [categories, setCategories] = useState([]);
   const [transactions, setTransactions] = useState([]);
   const [assets, setAssets] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [editingTransaction, setEditingTransaction] = useState(null);
-  const [formData, setFormData] = useState({
-    description: "",
-    amount: "",
-    type: "debit",
-    date: new Date(),
-  });
 
   useEffect(() => {
     // CORREÇÃO CRÍTICA: Aguardar auth estar pronto antes de carregar dados
@@ -80,78 +55,43 @@ export default function Dashboard() {
 
     const loadData = async () => {
       try {
-        // CORREÇÃO CRÍTICA: Adicionar timeout de 10 segundos para prevenir loading infinito
+        // Timeout de 10 segundos para prevenir loading infinito
         const timeoutPromise = new Promise((_, reject) => {
           timeoutId = setTimeout(() => {
             reject(new Error('Timeout ao carregar dados do dashboard'));
-          }, 10000); // 10 segundos
+          }, 10000);
         });
 
-        // CORREÇÃO: Adicionar limite nas queries para melhorar performance
-        // Dashboard não precisa de TODAS as transações, apenas as mais recentes
+        // OTIMIZAÇÃO: Apenas 3 chamadas ao invés de 5
+        // - getTransactions() traz todas as transações (filtrar localmente por tipo)
+        // - getCategories() para informações de categorias
+        // - getAssets() para patrimônio
         const dataPromise = Promise.all([
-          getTransactions({
-            transaction_type_id: TRANSACTION_TYPE_IDS.EXPENSE,
-            limit: 300 // Limite de 300 despesas mais recentes
-          }),
-          getTransactions({
-            transaction_type_id: TRANSACTION_TYPE_IDS.INCOME,
-            limit: 300 // Limite de 300 receitas mais recentes
-          }),
+          getTransactions({ limit: 500 }),
           getCategories(),
-          getTransactions({
-            limit: 300 // Limite de 300 transações mais recentes
-          }),
           getAssets(),
         ]);
 
-        // Race entre dados e timeout
-        const [
-          expensesRes,
-          incomesRes,
-          categoriesRes,
-          transactionsRes,
-          assetsRes,
-        ] = await Promise.race([dataPromise, timeoutPromise]);
+        const [transactionsRes, categoriesRes, assetsRes] = await Promise.race([
+          dataPromise,
+          timeoutPromise,
+        ]);
 
-        // Limpar timeout se dados chegaram a tempo
         if (timeoutId) clearTimeout(timeoutId);
-
-        // Verificar se componente ainda está montado antes de atualizar state
         if (!isMounted) return;
 
-        // CORREÇÃO: Tratamento mais robusto de erros - não throw, apenas loga
-        if (expensesRes?.error) {
-          console.error("[Dashboard] Erro ao carregar despesas:", expensesRes.error);
-        }
-        if (incomesRes?.error) {
-          console.error("[Dashboard] Erro ao carregar receitas:", incomesRes.error);
+        // Log de erros sem interromper o fluxo
+        if (transactionsRes?.error) {
+          console.error("[Dashboard] Erro ao carregar transações:", transactionsRes.error);
         }
         if (categoriesRes?.error) {
           console.error("[Dashboard] Erro ao carregar categorias:", categoriesRes.error);
-        }
-        if (transactionsRes?.error) {
-          console.error("[Dashboard] Erro ao carregar transações:", transactionsRes.error);
         }
         if (assetsRes?.error) {
           console.error("[Dashboard] Erro ao carregar ativos:", assetsRes.error);
         }
 
-        // Map Supabase fields to component fields (mesmo com erros, usar dados disponíveis)
-        const mappedExpenses = (expensesRes?.data || []).map((e) => ({
-          ...e,
-          date: e.transaction_date,
-          title: e.description,
-          category: e.category_name,
-        }));
-
-        const mappedIncomes = (incomesRes?.data || []).map((i) => ({
-          ...i,
-          date: i.transaction_date,
-          title: i.description,
-          category: i.category_name,
-        }));
-
+        // Mapear transações
         const mappedTransactions = (transactionsRes?.data || []).map((t) => ({
           ...t,
           date: t.transaction_date,
@@ -164,17 +104,13 @@ export default function Dashboard() {
           date: a.valuation_date,
         }));
 
-        setExpenses(mappedExpenses);
-        setIncomes(mappedIncomes);
         setCategories(categoriesRes?.data || []);
         setTransactions(mappedTransactions);
         setAssets(mappedAssets);
       } catch (error) {
         if (error.name !== 'AbortError') {
           console.error("[Dashboard] Erro ao carregar dashboard:", error);
-          // CORREÇÃO CRÍTICA: Mesmo com erro, setar dados vazios para não quebrar UI
-          setExpenses([]);
-          setIncomes([]);
+          // Mesmo com erro, setar dados vazios para não quebrar UI
           setCategories([]);
           setTransactions([]);
           setAssets([]);
@@ -208,15 +144,15 @@ export default function Dashboard() {
 
   const previousMonth = useMemo(() => getPreviousMonth(currentMonth), [currentMonth]);
 
-  // Calcular dados dos meses atual e anterior
+  // Filtrar transações por tipo (derivado de transactions)
   const currentMonthExpenses = useMemo(() =>
-    expenses.filter((e) => e.date.startsWith(currentMonth)),
-    [expenses, currentMonth]
+    transactions.filter((t) => t.date.startsWith(currentMonth) && t.type_internal_name === 'expense'),
+    [transactions, currentMonth]
   );
 
   const currentMonthIncomes = useMemo(() =>
-    incomes.filter((i) => i.date.startsWith(currentMonth)),
-    [incomes, currentMonth]
+    transactions.filter((t) => t.date.startsWith(currentMonth) && t.type_internal_name === 'income'),
+    [transactions, currentMonth]
   );
 
   const currentMonthData = useMemo(() =>
@@ -599,63 +535,7 @@ export default function Dashboard() {
     });
   }, [transactions, currentMonth]);
 
-  const handleEditTransaction = (transaction) => {
-    setEditingTransaction(transaction);
-    const [year, month, day] = transaction.date.split("-");
-    const dateObj = new Date(year, month - 1, day);
-    setFormData({
-      description: transaction.description,
-      amount: Math.abs(transaction.amount).toString(),
-      type: transaction.type,
-      date: dateObj,
-    });
-    setModalOpen(true);
-  };
-
-  const handleInputChange = (field, value) => {
-    setFormData({ ...formData, [field]: value });
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-
-    let amount = parseFloat(formData.amount);
-    if (formData.type === "debit" || formData.type === "investment") {
-      amount = -Math.abs(amount);
-    } else {
-      amount = Math.abs(amount);
-    }
-
-    const dateString = formData.date.toISOString().split("T")[0];
-
-    const transactionData = {
-      id: editingTransaction?.id || Date.now(),
-      description: formData.description,
-      amount: amount,
-      type: formData.type,
-      date: dateString,
-    };
-
-    if (editingTransaction) {
-      setTransactions(
-        transactions.map((t) =>
-          t.id === editingTransaction.id ? transactionData : t
-        )
-      );
-    } else {
-      setTransactions([transactionData, ...transactions]);
-    }
-
-    setModalOpen(false);
-    setFormData({
-      description: "",
-      amount: "",
-      type: "debit",
-      date: new Date(),
-    });
-  };
-
-  // CORREÇÃO: Mostrar skeleton enquanto auth ou dados estiverem carregando
+  // Mostrar skeleton enquanto auth ou dados estiverem carregando
   if (authLoading || loading) {
     return <DashboardSkeleton />;
   }
@@ -836,63 +716,6 @@ export default function Dashboard() {
           investmentData={investmentsByCategory}
         />
       </div>
-
-
-      {/* Dialog de editar transação */}
-      <Dialog open={modalOpen} onOpenChange={setModalOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Editar Transação</DialogTitle>
-          </DialogHeader>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="description">Descrição</Label>
-              <Input
-                id="description"
-                placeholder="Ex: Salário, Compra de mercado..."
-                value={formData.description}
-                onChange={(e) =>
-                  handleInputChange("description", e.target.value)
-                }
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="amount">Valor (R$)</Label>
-              <Input
-                id="amount"
-                type="number"
-                step="0.01"
-                placeholder="0,00"
-                value={formData.amount}
-                onChange={(e) => handleInputChange("amount", e.target.value)}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="date">Data</Label>
-              <DatePicker
-                value={formData.date}
-                onChange={(date) => handleInputChange("date", date)}
-              />
-            </div>
-          </form>
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setModalOpen(false)}
-            >
-              Cancelar
-            </Button>
-            <Button type="submit" onClick={handleSubmit}>
-              Salvar
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
