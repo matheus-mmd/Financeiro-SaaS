@@ -3,6 +3,7 @@
  */
 
 import { supabase } from '../client';
+import { getAuthenticatedUser } from '../utils/auth';
 
 export async function getCategories(filters = {}) {
   let query = supabase
@@ -52,12 +53,12 @@ export async function getCategoryById(id) {
 
 export async function createCategory(category) {
   // Obter o usuário autenticado
-  const { data: { user } } = await supabase.auth.getUser();
+  const { user, error: authError } = await getAuthenticatedUser();
 
   if (!user) {
-    const authError = new Error('Usuário não autenticado');
-    authError.code = 'AUTH_REQUIRED';
-    return { data: null, error: authError };
+    const error = authError || new Error('Usuário não autenticado');
+    error.code = 'AUTH_REQUIRED';
+    return { data: null, error };
   }
 
   // Validar campos obrigatórios
