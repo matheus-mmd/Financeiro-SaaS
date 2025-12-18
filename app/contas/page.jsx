@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useAuth } from "../../src/contexts/AuthContext";
 import PageHeader from "../../src/components/PageHeader";
+import PageSkeleton from "../../src/components/PageSkeleton";
 import { Card, CardContent } from "../../src/components/ui/card";
 import { Button } from "../../src/components/ui/button";
 import { Input } from "../../src/components/ui/input";
@@ -525,11 +526,7 @@ export default function ContasPage() {
   };
 
   if (authLoading || loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <p className="text-gray-500">Carregando...</p>
-      </div>
-    );
+    return <PageSkeleton />;
   }
 
   return (

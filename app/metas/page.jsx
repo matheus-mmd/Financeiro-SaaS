@@ -381,7 +381,7 @@ export default function Metas() {
     });
   }, [filteredTargets]);
 
-  if (loading) {
+  if (loading || authLoading) {
     return <PageSkeleton />;
   }
 
