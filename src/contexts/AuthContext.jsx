@@ -88,6 +88,18 @@ export const AuthProvider = ({ children }) => {
 
         // Buscar perfil (criado automaticamente pelo trigger do banco)
         const profileData = await fetchProfile(session.user.id);
+
+        // CORREÇÃO CRÍTICA: Se perfil não existe, fazer logout automático
+        // Previne estado inconsistente onde há sessão Auth mas não há registro em public.users
+        if (!profileData && isMounted) {
+          console.warn('[AuthContext] Perfil não encontrado para usuário autenticado. Fazendo logout...');
+          await supabase.auth.signOut();
+          setUser(null);
+          setProfile(null);
+          setLoading(false);
+          return;
+        }
+
         if (isMounted) {
           setProfile(profileData);
           setLoading(false);
@@ -118,6 +130,17 @@ export const AuthProvider = ({ children }) => {
 
         // Buscar perfil (criado automaticamente pelo trigger do banco)
         const profileData = await fetchProfile(session.user.id);
+
+        // CORREÇÃO CRÍTICA: Se perfil não existe, fazer logout automático
+        if (!profileData && isMounted) {
+          console.warn('[AuthContext] Perfil não encontrado após mudança de auth. Fazendo logout...');
+          await supabase.auth.signOut();
+          setUser(null);
+          setProfile(null);
+          setLoading(false);
+          return;
+        }
+
         if (isMounted) {
           setProfile(profileData);
         }

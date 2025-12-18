@@ -76,18 +76,20 @@ export default function Dashboard() {
 
     let isMounted = true;
     const abortController = new AbortController();
+    let timeoutId;
 
     const loadData = async () => {
       try {
+        // CORREÇÃO CRÍTICA: Adicionar timeout de 10 segundos para prevenir loading infinito
+        const timeoutPromise = new Promise((_, reject) => {
+          timeoutId = setTimeout(() => {
+            reject(new Error('Timeout ao carregar dados do dashboard'));
+          }, 10000); // 10 segundos
+        });
+
         // CORREÇÃO: Adicionar limite nas queries para melhorar performance
         // Dashboard não precisa de TODAS as transações, apenas as mais recentes
-        const [
-          expensesRes,
-          incomesRes,
-          categoriesRes,
-          transactionsRes,
-          assetsRes,
-        ] = await Promise.all([
+        const dataPromise = Promise.all([
           getTransactions({
             transaction_type_id: TRANSACTION_TYPE_IDS.EXPENSE,
             limit: 300 // Limite de 300 despesas mais recentes
@@ -103,52 +105,83 @@ export default function Dashboard() {
           getAssets(),
         ]);
 
+        // Race entre dados e timeout
+        const [
+          expensesRes,
+          incomesRes,
+          categoriesRes,
+          transactionsRes,
+          assetsRes,
+        ] = await Promise.race([dataPromise, timeoutPromise]);
+
+        // Limpar timeout se dados chegaram a tempo
+        if (timeoutId) clearTimeout(timeoutId);
+
         // Verificar se componente ainda está montado antes de atualizar state
         if (!isMounted) return;
 
-        if (expensesRes.error) throw expensesRes.error;
-        if (incomesRes.error) throw incomesRes.error;
-        if (categoriesRes.error) throw categoriesRes.error;
-        if (transactionsRes.error) throw transactionsRes.error;
-        if (assetsRes.error) throw assetsRes.error;
+        // CORREÇÃO: Tratamento mais robusto de erros - não throw, apenas loga
+        if (expensesRes?.error) {
+          console.error("[Dashboard] Erro ao carregar despesas:", expensesRes.error);
+        }
+        if (incomesRes?.error) {
+          console.error("[Dashboard] Erro ao carregar receitas:", incomesRes.error);
+        }
+        if (categoriesRes?.error) {
+          console.error("[Dashboard] Erro ao carregar categorias:", categoriesRes.error);
+        }
+        if (transactionsRes?.error) {
+          console.error("[Dashboard] Erro ao carregar transações:", transactionsRes.error);
+        }
+        if (assetsRes?.error) {
+          console.error("[Dashboard] Erro ao carregar ativos:", assetsRes.error);
+        }
 
-        // Map Supabase fields to component fields
-        const mappedExpenses = (expensesRes.data || []).map((e) => ({
+        // Map Supabase fields to component fields (mesmo com erros, usar dados disponíveis)
+        const mappedExpenses = (expensesRes?.data || []).map((e) => ({
           ...e,
           date: e.transaction_date,
           title: e.description,
           category: e.category_name,
         }));
 
-        const mappedIncomes = (incomesRes.data || []).map((i) => ({
+        const mappedIncomes = (incomesRes?.data || []).map((i) => ({
           ...i,
           date: i.transaction_date,
           title: i.description,
           category: i.category_name,
         }));
 
-        const mappedTransactions = (transactionsRes.data || []).map((t) => ({
+        const mappedTransactions = (transactionsRes?.data || []).map((t) => ({
           ...t,
           date: t.transaction_date,
           description: t.description,
           type_internal_name: t.transaction_type_internal_name,
         }));
 
-        const mappedAssets = (assetsRes.data || []).map((a) => ({
+        const mappedAssets = (assetsRes?.data || []).map((a) => ({
           ...a,
           date: a.valuation_date,
         }));
 
         setExpenses(mappedExpenses);
         setIncomes(mappedIncomes);
-        setCategories(categoriesRes.data || []);
+        setCategories(categoriesRes?.data || []);
         setTransactions(mappedTransactions);
         setAssets(mappedAssets);
       } catch (error) {
         if (error.name !== 'AbortError') {
-          console.error("Erro ao carregar dashboard:", error);
+          console.error("[Dashboard] Erro ao carregar dashboard:", error);
+          // CORREÇÃO CRÍTICA: Mesmo com erro, setar dados vazios para não quebrar UI
+          setExpenses([]);
+          setIncomes([]);
+          setCategories([]);
+          setTransactions([]);
+          setAssets([]);
         }
       } finally {
+        // CORREÇÃO CRÍTICA: SEMPRE liberar loading, mesmo com erro
+        if (timeoutId) clearTimeout(timeoutId);
         if (isMounted) {
           setLoading(false);
         }
@@ -160,6 +193,7 @@ export default function Dashboard() {
     // Cleanup: cancelar requisições se usuário sair da página
     return () => {
       isMounted = false;
+      if (timeoutId) clearTimeout(timeoutId);
       abortController.abort();
     };
   }, [authLoading, user]); // CORREÇÃO: Adicionar authLoading e user como deps para re-carregar quando auth mudar
