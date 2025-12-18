@@ -31,13 +31,13 @@ export const AuthProvider = ({ children }) => {
 
       if (error) {
         console.error('[AuthContext] Erro ao buscar perfil:', error);
-        return null;
+        return { data: null, error, notFound: false };
       }
 
-      return data;
+      return { data: data || null, error: null, notFound: !data };
     } catch (error) {
       console.error('[AuthContext] Erro ao buscar perfil:', error);
-      return null;
+      return { data: null, error, notFound: false };
     }
   }, []);
 
@@ -70,12 +70,56 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
+  const resolveProfile = useCallback(async (userId) => {
+    let attempts = 0;
+    while (attempts < 2) {
+      const { data, error, notFound } = await fetchProfile(userId);
+      if (data) return data;
+
+      if (error) {
+        console.warn(`[AuthContext] Tentativa ${attempts + 1} falhou ao carregar perfil`, error);
+      }
+
+      if (!data && !error && notFound) {
+        console.warn('[AuthContext] Perfil não encontrado, tentando novamente...');
+      }
+
+      attempts += 1;
+    }
+
+    return null;
+  }, [fetchProfile]);
+
+  const signOut = useCallback(async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+
+      if (error) {
+        console.error('[AuthContext] Erro ao fazer logout:', error);
+        setUser(null);
+        setProfile(null);
+        setLoading(false);
+        return { error };
+      }
+
+      setUser(null);
+      setProfile(null);
+      setLoading(false);
+      return { error: null };
+    } catch (error) {
+      console.error('[AuthContext] Erro ao fazer logout:', error);
+      setUser(null);
+      setProfile(null);
+      setLoading(false);
+      return { error };
+    }
+  }, []);
+
   /**
    * Sincronizar estado de autenticação com Supabase
    */
   useEffect(() => {
     let isMounted = true;
-    let initialCheckDone = false;
 
     // TIMEOUT DE SEGURANÇA: Garantir que loading seja false após 10 segundos
     const safetyTimeout = setTimeout(() => {
@@ -84,47 +128,44 @@ export const AuthProvider = ({ children }) => {
       }
     }, 10000);
 
-    // Verificar sessão existente
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (!isMounted) return;
+    const syncSession = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
 
-      initialCheckDone = true;
+        if (!isMounted) return;
 
-      if (session?.user) {
-        setUser(session.user);
-
-        // Buscar perfil (criado automaticamente pelo trigger do banco)
-        const profileData = await fetchProfile(session.user.id);
-
-        // Se perfil não existe, fazer logout automático
-        // Previne estado inconsistente onde há sessão Auth mas não há registro em public.users
-        if (!profileData && isMounted) {
-          await supabase.auth.signOut();
-          setUser(null);
-          setProfile(null);
+        if (error) {
+          console.error('[AuthContext] Erro ao obter sessão:', error);
           setLoading(false);
           clearTimeout(safetyTimeout);
           return;
         }
 
-        if (isMounted) {
-          setProfile(profileData);
+        if (session?.user) {
+          setUser(session.user);
+          const profileData = await resolveProfile(session.user.id);
+
+          if (isMounted) {
+            setProfile(profileData);
+            setLoading(false);
+            clearTimeout(safetyTimeout);
+          }
+        } else {
+          setUser(null);
+          setProfile(null);
           setLoading(false);
           clearTimeout(safetyTimeout);
         }
-      } else {
+      } catch (error) {
+        console.error('[AuthContext] Erro ao obter sessão:', error);
         if (isMounted) {
           setLoading(false);
           clearTimeout(safetyTimeout);
         }
       }
-    }).catch((error) => {
-      console.error('[AuthContext] Erro ao obter sessão:', error);
-      if (isMounted) {
-        setLoading(false);
-        clearTimeout(safetyTimeout);
-      }
-    });
+    };
+
+    syncSession();
 
     // Escutar mudanças na autenticação
     const {
@@ -142,16 +183,7 @@ export const AuthProvider = ({ children }) => {
         setUser(session.user);
 
         // Buscar perfil (criado automaticamente pelo trigger do banco)
-        const profileData = await fetchProfile(session.user.id);
-
-        // Se perfil não existe, fazer logout automático
-        if (!profileData && isMounted) {
-          await supabase.auth.signOut();
-          setUser(null);
-          setProfile(null);
-          setLoading(false);
-          return;
-        }
+        const profileData = await resolveProfile(session.user.id);
 
         if (isMounted) {
           setProfile(profileData);
@@ -172,9 +204,46 @@ export const AuthProvider = ({ children }) => {
       clearTimeout(safetyTimeout);
       subscription.unsubscribe();
     };
-    // fetchProfile tem deps vazias, então é estável e não precisa estar nas deps
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [resolveProfile, signOut]);
+
+  useEffect(() => {
+    const handleVisibilityOrFocus = async () => {
+      if (document.visibilityState === 'hidden') return;
+
+      setLoading(true);
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+
+        if (error) {
+          console.error('[AuthContext] Erro ao revalidar sessão:', error);
+          await signOut();
+          return;
+        }
+
+        if (session?.user) {
+          setUser(session.user);
+          const profileData = await resolveProfile(session.user.id);
+          setProfile(profileData);
+        } else {
+          console.warn('[AuthContext] Sessão expirada ao retomar foco/visibilidade');
+          await signOut();
+        }
+      } catch (error) {
+        console.error('[AuthContext] Erro ao revalidar sessão (focus/visibility):', error);
+        await signOut();
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    window.addEventListener('focus', handleVisibilityOrFocus);
+    document.addEventListener('visibilitychange', handleVisibilityOrFocus);
+
+    return () => {
+      window.removeEventListener('focus', handleVisibilityOrFocus);
+      document.removeEventListener('visibilitychange', handleVisibilityOrFocus);
+    };
+  }, [resolveProfile, signOut]);
 
   /**
    * Fazer login com email e senha
@@ -260,27 +329,6 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       console.error('[AuthContext] Erro ao criar conta:', error);
       return { data: null, error };
-    }
-  }, []);
-
-  /**
-   * Fazer logout
-   */
-  const signOut = useCallback(async () => {
-    try {
-      const { error } = await supabase.auth.signOut();
-
-      if (error) {
-        console.error('[AuthContext] Erro ao fazer logout:', error);
-        return { error };
-      }
-
-      setUser(null);
-      setProfile(null);
-      return { error: null };
-    } catch (error) {
-      console.error('[AuthContext] Erro ao fazer logout:', error);
-      return { error };
     }
   }, []);
 

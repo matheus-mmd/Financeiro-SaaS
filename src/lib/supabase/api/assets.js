@@ -12,7 +12,9 @@ export async function getAssets(filters = {}) {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return { data: [], error: new Error('Usuário não autenticado') };
+    const authError = new Error('Usuário não autenticado');
+    authError.code = 'AUTH_REQUIRED';
+    return { data: [], error: authError };
   }
 
   let query = supabase
@@ -45,7 +47,9 @@ export async function createAsset(asset) {
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
-    return { data: null, error: new Error('Usuário não autenticado') };
+    const authError = new Error('Usuário não autenticado');
+    authError.code = 'AUTH_REQUIRED';
+    return { data: null, error: authError };
   }
 
   // Validar campos obrigatórios

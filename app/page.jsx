@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import PageHeader from "../src/components/PageHeader";
 import StatsCard from "../src/components/StatsCard";
 import DashboardSkeleton from "../src/components/DashboardSkeleton";
@@ -29,11 +30,17 @@ import {
  * Exibe resumo mensal, análises comparativas e insights
  */
 export default function Dashboard() {
-  const { user, loading: authLoading } = useAuth();
+  const router = useRouter();
+  const { user, loading: authLoading, signOut } = useAuth();
   const [categories, setCategories] = useState([]);
   const [transactions, setTransactions] = useState([]);
   const [assets, setAssets] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const handleAuthFailure = useCallback(async () => {
+    await signOut();
+    router.replace('/login');
+  }, [router, signOut]);
 
   useEffect(() => {
     // CORREÇÃO CRÍTICA: Aguardar auth estar pronto antes de carregar dados
@@ -45,6 +52,7 @@ export default function Dashboard() {
     if (!user) {
       // Usuário não autenticado - não carregar dados
       setLoading(false);
+      router.replace('/login');
       return;
     }
 
@@ -79,6 +87,13 @@ export default function Dashboard() {
         if (!isMounted) return;
 
         // Log de erros sem interromper o fluxo
+        if (transactionsRes?.error?.code === 'AUTH_REQUIRED' ||
+          categoriesRes?.error?.code === 'AUTH_REQUIRED' ||
+          assetsRes?.error?.code === 'AUTH_REQUIRED') {
+          await handleAuthFailure();
+          return;
+        }
+
         if (transactionsRes?.error) {
           console.error("[Dashboard] Erro ao carregar transações:", transactionsRes.error);
         }
@@ -106,6 +121,10 @@ export default function Dashboard() {
         setTransactions(mappedTransactions);
         setAssets(mappedAssets);
       } catch (error) {
+        if (error?.code === 'AUTH_REQUIRED') {
+          await handleAuthFailure();
+          return;
+        }
         if (error.name !== 'AbortError') {
           console.error("[Dashboard] Erro ao carregar dashboard:", error);
           // Mesmo com erro, setar dados vazios para não quebrar UI
@@ -129,7 +148,7 @@ export default function Dashboard() {
       isMounted = false;
       if (timeoutId) clearTimeout(timeoutId);
     };
-  }, [authLoading, user]); // CORREÇÃO: Adicionar authLoading e user como deps para re-carregar quando auth mudar
+  }, [authLoading, user, handleAuthFailure, router]); // CORREÇÃO: Adicionar authLoading e user como deps para re-carregar quando auth mudar
 
   // Mês atual para filtros
   const currentMonth = useMemo(() => {
@@ -397,6 +416,10 @@ export default function Dashboard() {
   }, [transactionsAggregates]);
 
   // Mostrar skeleton enquanto auth ou dados estiverem carregando
+  if (!authLoading && !user) {
+    return null;
+  }
+
   if (authLoading || loading) {
     return <DashboardSkeleton />;
   }

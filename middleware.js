@@ -7,65 +7,68 @@ import { createClient } from '@/lib/supabase/middleware';
 import { NextResponse } from 'next/server';
 
 export async function middleware(request) {
+  const pathname = request.nextUrl.pathname;
+  const isLoginPage = pathname === '/login';
+  const redirectCount = request.cookies.get('redirect_count');
+  const currentCount = redirectCount ? parseInt(redirectCount.value) : 0;
+
   try {
     const { supabase, response } = createClient(request);
-    const pathname = request.nextUrl.pathname;
+    response.headers.set('Cache-Control', 'no-store');
 
-    // Proteção contra loops de redirecionamento
-    const redirectCount = request.cookies.get('redirect_count');
-    const currentCount = redirectCount ? parseInt(redirectCount.value) : 0;
-
-    if (currentCount >= 3) {
-      const res = NextResponse.next();
-      res.cookies.delete('redirect_count');
-      return res;
-    }
-
-    // Refresh da sessão (se expirada)
-    const {
-      data: { session },
-      error
-    } = await supabase.auth.getSession();
-
-    if (error) {
-      // Permitir acesso em caso de erro (evitar loop)
-      return response;
-    }
-
-    // Proteger rotas (exceto login)
-    const isLoginPage = pathname === '/login';
+    const { data: { session }, error } = await supabase.auth.getSession();
     const hasSession = !!session;
 
-    if (!hasSession && !isLoginPage) {
-      // Redirecionar para login se não autenticado
+    if (error || !hasSession) {
+      if (isLoginPage) {
+        if (currentCount > 0) {
+          response.cookies.delete('redirect_count');
+        }
+        return response;
+      }
+
       const redirectUrl = request.nextUrl.clone();
       redirectUrl.pathname = '/login';
       redirectUrl.searchParams.set('redirectedFrom', pathname);
 
       const res = NextResponse.redirect(redirectUrl);
-      res.cookies.set('redirect_count', String(currentCount + 1), { maxAge: 10 });
+      res.cookies.delete('redirect_count');
+      res.headers.set('Cache-Control', 'no-store');
       return res;
     }
 
     if (hasSession && isLoginPage) {
-      // Redirecionar para dashboard se já autenticado
       const redirectUrl = request.nextUrl.clone();
       redirectUrl.pathname = '/';
 
       const res = NextResponse.redirect(redirectUrl);
-      res.cookies.set('redirect_count', String(currentCount + 1), { maxAge: 10 });
+      res.cookies.delete('redirect_count');
+      res.headers.set('Cache-Control', 'no-store');
       return res;
     }
 
-    // Limpar contador quando acesso é permitido
     const res = response;
     if (currentCount > 0) {
       res.cookies.delete('redirect_count');
     }
+    res.headers.set('Cache-Control', 'no-store');
     return res;
   } catch (error) {
-    // Em caso de erro, permitir acesso (evitar loop)
-    return NextResponse.next();
+    if (isLoginPage) {
+      const res = NextResponse.next();
+      res.cookies.delete('redirect_count');
+      res.headers.set('Cache-Control', 'no-store');
+      return res;
+    }
+
+    const redirectUrl = request.nextUrl.clone();
+    redirectUrl.pathname = '/login';
+    redirectUrl.searchParams.set('redirectedFrom', pathname);
+
+    const res = NextResponse.redirect(redirectUrl);
+    res.cookies.delete('redirect_count');
+    res.headers.set('Cache-Control', 'no-store');
+    return res;
   }
 }
 

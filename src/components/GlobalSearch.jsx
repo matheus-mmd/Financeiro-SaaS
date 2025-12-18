@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import {
   Search,
@@ -24,7 +24,7 @@ export default function GlobalSearch() {
   const [open, setOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, signOut } = useAuth();
   const [results, setResults] = useState({
     transactions: [],
     targets: [],
@@ -33,6 +33,11 @@ export default function GlobalSearch() {
   const [dataset, setDataset] = useState(null);
   const [loadingData, setLoadingData] = useState(false);
   const router = useRouter();
+
+  const handleAuthFailure = useCallback(async () => {
+    await signOut();
+    router.replace('/login');
+  }, [router, signOut]);
 
   // Atalho de teclado Ctrl+K ou Cmd+K para abrir busca
   useEffect(() => {
@@ -46,6 +51,18 @@ export default function GlobalSearch() {
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, []);
+
+  useEffect(() => {
+    if (!open) return;
+    if (authLoading) return;
+
+    if (!user) {
+      setOpen(false);
+      setDataset(null);
+      setResults({ transactions: [], targets: [], assets: [] });
+      router.replace('/login');
+    }
+  }, [open, authLoading, user, router]);
 
   // Carregar dataset uma única vez quando a busca é aberta e usuário autenticado
   useEffect(() => {
@@ -62,6 +79,16 @@ export default function GlobalSearch() {
           fetchData("/api/assets"),
         ]);
 
+        const hasAuthError =
+          transactionsRes.error?.code === 'AUTH_REQUIRED' ||
+          targetsRes.error?.code === 'AUTH_REQUIRED' ||
+          assetsRes.error?.code === 'AUTH_REQUIRED';
+
+        if (hasAuthError) {
+          await handleAuthFailure();
+          return;
+        }
+
         if (!isMounted) return;
 
         setDataset({
@@ -70,7 +97,11 @@ export default function GlobalSearch() {
           assets: assetsRes.data || [],
         });
       } catch (error) {
-        console.error("Erro ao carregar dados de busca:", error);
+        if (error?.code === 'AUTH_REQUIRED') {
+          await handleAuthFailure();
+        } else {
+          console.error("Erro ao carregar dados de busca:", error);
+        }
       } finally {
         if (isMounted) {
           setLoadingData(false);

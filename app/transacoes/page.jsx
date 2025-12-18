@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo, useReducer, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { useAuth } from "../../src/contexts/AuthContext";
 import PageHeader from "../../src/components/PageHeader";
 import StatsCard from "../../src/components/StatsCard";
@@ -135,7 +136,8 @@ function formReducer(state, action) {
  * Nova estrutura: Categoria (Salário, Moradia, etc.) + Tipo de Transação (Receita, Despesa, Aporte)
  */
 export default function Transacoes() {
-  const { user, loading: authLoading } = useAuth();
+  const router = useRouter();
+  const { user, loading: authLoading, signOut } = useAuth();
   const [transactions, setTransactions] = useState([]);
   const [categories, setCategories] = useState([]);
   const [transactionTypes, setTransactionTypes] = useState([]);
@@ -175,11 +177,31 @@ export default function Transacoes() {
       } : null,
     })), []);
 
+  const handleAuthFailure = useCallback(async () => {
+    await signOut();
+    router.replace('/login');
+  }, [router, signOut]);
+
+  const isAuthError = useCallback((error) => {
+    return error?.code === 'AUTH_REQUIRED' || error?.message?.includes('Usuário não autenticado');
+  }, []);
+
+  const handleApiError = useCallback(async (error) => {
+    if (isAuthError(error)) {
+      await handleAuthFailure();
+      return true;
+    }
+    return false;
+  }, [handleAuthFailure, isAuthError]);
+
   const refreshTransactions = useCallback(async () => {
     const response = await getTransactions();
-    if (response.error) throw response.error;
+    if (response.error) {
+      if (await handleApiError(response.error)) return [];
+      throw response.error;
+    }
     return mapTransactions(response.data || []);
-  }, [mapTransactions]);
+  }, [handleApiError, mapTransactions]);
 
   useEffect(() => {
     if (authLoading) return;
@@ -188,24 +210,21 @@ export default function Transacoes() {
       setTransactions([]);
       setFilteredTransactions([]);
       setLoading(false);
+      router.replace('/login');
       return;
     }
 
     let isMounted = true;
+    let timeoutId;
     setLoading(true);
 
     const loadData = async () => {
       try {
-        const [
-          mappedTransactions,
-          categoriesRes,
-          transactionTypesRes,
-          banksRes,
-          cardsRes,
-          paymentStatusesRes,
-          paymentMethodsRes,
-          recurrenceFrequenciesRes,
-        ] = await Promise.all([
+        const timeoutPromise = new Promise((_, reject) => {
+          timeoutId = setTimeout(() => reject(new Error('Timeout ao carregar transações')), 10000);
+        });
+
+        const dataPromise = Promise.all([
           refreshTransactions(),
           getCategories(),
           getTransactionTypes(),
@@ -216,7 +235,32 @@ export default function Transacoes() {
           getRecurrenceFrequencies(),
         ]);
 
+        const [
+          mappedTransactions,
+          categoriesRes,
+          transactionTypesRes,
+          banksRes,
+          cardsRes,
+          paymentStatusesRes,
+          paymentMethodsRes,
+          recurrenceFrequenciesRes,
+        ] = await Promise.race([dataPromise, timeoutPromise]);
+
         if (!isMounted) return;
+
+        const authError =
+          categoriesRes.error?.code === 'AUTH_REQUIRED' ||
+          transactionTypesRes.error?.code === 'AUTH_REQUIRED' ||
+          banksRes.error?.code === 'AUTH_REQUIRED' ||
+          cardsRes.error?.code === 'AUTH_REQUIRED' ||
+          paymentStatusesRes.error?.code === 'AUTH_REQUIRED' ||
+          paymentMethodsRes.error?.code === 'AUTH_REQUIRED' ||
+          recurrenceFrequenciesRes.error?.code === 'AUTH_REQUIRED';
+
+        if (authError) {
+          await handleAuthFailure();
+          return;
+        }
 
         if (categoriesRes.error) throw categoriesRes.error;
         if (transactionTypesRes.error) throw transactionTypesRes.error;
@@ -251,10 +295,14 @@ export default function Transacoes() {
           });
         }
       } catch (error) {
+        if (await handleApiError(error)) {
+          return;
+        }
         if (error.name !== 'AbortError') {
           console.error("Erro ao carregar transações:", error);
         }
       } finally {
+        if (timeoutId) clearTimeout(timeoutId);
         if (isMounted) {
           setLoading(false);
         }
@@ -265,8 +313,9 @@ export default function Transacoes() {
 
     return () => {
       isMounted = false;
+      if (timeoutId) clearTimeout(timeoutId);
     };
-  }, [authLoading, user, refreshTransactions]);
+  }, [authLoading, user, refreshTransactions, handleAuthFailure, router]);
 
   useEffect(() => {
     let filtered = transactions;
@@ -387,9 +436,11 @@ export default function Transacoes() {
       const mappedTransactions = await refreshTransactions();
       setTransactions(mappedTransactions);
     } catch (error) {
-      console.error("Erro ao atualizar status:", error);
+      if (!(await handleApiError(error))) {
+        console.error("Erro ao atualizar status:", error);
+      }
     }
-  }, [refreshTransactions]);
+  }, [refreshTransactions, handleApiError]);
 
   // Categorização inteligente - sugere categoria baseado na descrição
   const suggestCategory = (description) => {
@@ -465,8 +516,10 @@ export default function Transacoes() {
         setDeleteDialogOpen(false);
         setTransactionToDelete(null);
       } catch (error) {
-        console.error("Erro ao deletar transação:", error);
-        alert("Erro ao deletar transação.");
+        if (!(await handleApiError(error))) {
+          console.error("Erro ao deletar transação:", error);
+          alert("Erro ao deletar transação.");
+        }
       }
     }
   };
@@ -544,10 +597,12 @@ export default function Transacoes() {
         }
       });
     } catch (error) {
-      console.error("Erro ao salvar transação:", error);
-      alert("Erro ao salvar transação.");
+      if (!(await handleApiError(error))) {
+        console.error("Erro ao salvar transação:", error);
+        alert("Erro ao salvar transação.");
+      }
     }
-  }, [formData, transactionTypes, paymentStatuses, paymentMethods, recurrenceFrequencies, editingTransaction, categories]);
+  }, [formData, transactionTypes, paymentStatuses, paymentMethods, recurrenceFrequencies, editingTransaction, categories, handleApiError]);
 
   const handleInputChange = useCallback((field, value) => {
     // Atualizar campo principal
@@ -638,6 +693,10 @@ export default function Transacoes() {
 
     exportToCSV(sortedTransactions, columns, "transacoes");
   }, [sortedTransactions]);
+
+  if (!authLoading && !user) {
+    return null;
+  }
 
   if (loading) {
     return <PageSkeleton />;

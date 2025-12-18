@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { useAuth } from "../../src/contexts/AuthContext";
 import PageHeader from "../../src/components/PageHeader";
 import { Card, CardContent } from "../../src/components/ui/card";
@@ -42,7 +43,8 @@ import PageSkeleton from "../../src/components/PageSkeleton";
  * Visualização simples e objetiva com ações diretas
  */
 export default function CategoriasPage() {
-  const { user, loading: authLoading } = useAuth();
+  const router = useRouter();
+  const { user, loading: authLoading, signOut } = useAuth();
   const [categories, setCategories] = useState([]);
   const [transactionTypes, setTransactionTypes] = useState([]);
   const [icons, setIcons] = useState([]);
@@ -60,10 +62,20 @@ export default function CategoriasPage() {
   });
 
   // Função para carregar dados (usada tanto na montagem quanto após operações)
+  const handleAuthFailure = useCallback(async () => {
+    await signOut();
+    router.replace('/login');
+  }, [router, signOut]);
+
+  const isAuthError = useCallback((error) => {
+    return error?.code === 'AUTH_REQUIRED' || error?.message?.includes('Usuário não autenticado');
+  }, []);
+
   const loadData = useCallback(async () => {
     if (authLoading) return;
     if (!user) {
       setLoading(false);
+      router.replace('/login');
       return;
     }
 
@@ -83,6 +95,13 @@ export default function CategoriasPage() {
 
       const [categoriesRes, transactionTypesRes, iconsRes] = await Promise.race([dataPromise, timeoutPromise]);
 
+      if (categoriesRes.error?.code === 'AUTH_REQUIRED' ||
+        transactionTypesRes.error?.code === 'AUTH_REQUIRED' ||
+        iconsRes.error?.code === 'AUTH_REQUIRED') {
+        await handleAuthFailure();
+        return;
+      }
+
       if (categoriesRes.error) throw categoriesRes.error;
       if (transactionTypesRes.error) throw transactionTypesRes.error;
       if (iconsRes.error) throw iconsRes.error;
@@ -91,7 +110,9 @@ export default function CategoriasPage() {
       setTransactionTypes(transactionTypesRes.data || []);
       setIcons(iconsRes.data || []);
     } catch (error) {
-      if (error.name !== 'AbortError') {
+      if (error?.code === 'AUTH_REQUIRED') {
+        await handleAuthFailure();
+      } else if (error.name !== 'AbortError') {
         console.error("Erro ao carregar dados:", error);
       }
       setCategories([]);
@@ -101,17 +122,21 @@ export default function CategoriasPage() {
       if (timeoutId) clearTimeout(timeoutId);
       setLoading(false);
     }
-  }, [authLoading, user]);
+  }, [authLoading, user, handleAuthFailure, router, signOut]);
 
   useEffect(() => {
     if (authLoading) return;
     if (!user) {
+      setCategories([]);
+      setTransactionTypes([]);
+      setIcons([]);
       setLoading(false);
+      router.replace('/login');
       return;
     }
 
     loadData();
-  }, [user, authLoading, loadData]);
+  }, [user, authLoading, loadData, router]);
 
   // Separar categorias por tipo
   const categorizeByType = () => {
@@ -193,8 +218,12 @@ export default function CategoriasPage() {
       await loadData();
       setCategoryModalOpen(false);
     } catch (error) {
-      console.error("Erro ao salvar categoria:", error);
-      alert("Erro ao salvar categoria: " + (error.message || error));
+      if (isAuthError(error)) {
+        await handleAuthFailure();
+      } else {
+        console.error("Erro ao salvar categoria:", error);
+        alert("Erro ao salvar categoria: " + (error.message || error));
+      }
     }
   };
 
@@ -207,8 +236,12 @@ export default function CategoriasPage() {
 
       await loadData();
     } catch (error) {
-      console.error("Erro ao deletar categoria:", error);
-      alert("Erro ao deletar categoria. Tente novamente.");
+      if (isAuthError(error)) {
+        await handleAuthFailure();
+      } else {
+        console.error("Erro ao deletar categoria:", error);
+        alert("Erro ao deletar categoria. Tente novamente.");
+      }
     }
   };
 
@@ -297,6 +330,10 @@ export default function CategoriasPage() {
       </Card>
     );
   };
+
+  if (!authLoading && !user) {
+    return null;
+  }
 
   if (authLoading || loading) {
     return <PageSkeleton />;

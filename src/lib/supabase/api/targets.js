@@ -33,7 +33,9 @@ export async function createTarget(target) {
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
-    return { data: null, error: new Error('Usuário não autenticado') };
+    const authError = new Error('Usuário não autenticado');
+    authError.code = 'AUTH_REQUIRED';
+    return { data: null, error: authError };
   }
 
   const { data, error } = await supabase
