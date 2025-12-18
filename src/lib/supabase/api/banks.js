@@ -3,6 +3,7 @@
  */
 
 import { supabase } from '../client';
+import { getAuthenticatedUser } from '../utils/auth';
 
 export async function getBanks() {
   const { data, error } = await supabase
@@ -25,12 +26,12 @@ export async function getBankById(id) {
 
 export async function createBank(bank) {
   // Obter o usuário autenticado
-  const { data: { user } } = await supabase.auth.getUser();
+  const { user, error: authError } = await getAuthenticatedUser();
 
   if (!user) {
-    const authError = new Error('Usuário não autenticado');
-    authError.code = 'AUTH_REQUIRED';
-    return { data: null, error: authError };
+    const error = authError || new Error('Usuário não autenticado');
+    error.code = 'AUTH_REQUIRED';
+    return { data: null, error };
   }
 
   const { data, error } = await supabase

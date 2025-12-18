@@ -4,6 +4,7 @@
  */
 
 import { supabase } from '../client';
+import { getAuthenticatedUser } from '../utils/auth';
 
 /**
  * Buscar todas as transações do usuário (usa VIEW enriched)
@@ -11,14 +12,12 @@ import { supabase } from '../client';
  * @returns {Promise<{data, error, hasMore}>}
  */
 export async function getTransactions(filters = {}) {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { user, error: authError } = await getAuthenticatedUser();
 
   if (!user) {
-    const authError = new Error('Usuário não autenticado');
-    authError.code = 'AUTH_REQUIRED';
-    return { data: [], error: authError, hasMore: false };
+    const error = authError || new Error('Usuário não autenticado');
+    error.code = 'AUTH_REQUIRED';
+    return { data: [], error, hasMore: false };
   }
 
   // Limite padrão e paginação com cap para evitar cargas excessivas
@@ -114,12 +113,12 @@ export async function getTransactionById(id) {
  */
 export async function createTransaction(transaction) {
   // Obter o usuário autenticado
-  const { data: { user } } = await supabase.auth.getUser();
+  const { user, error: authError } = await getAuthenticatedUser();
 
   if (!user) {
-    const authError = new Error('Usuário não autenticado');
-    authError.code = 'AUTH_REQUIRED';
-    return { data: null, error: authError };
+    const error = authError || new Error('Usuário não autenticado');
+    error.code = 'AUTH_REQUIRED';
+    return { data: null, error };
   }
 
   // Validar campos obrigatórios
