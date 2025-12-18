@@ -34,6 +34,7 @@ import { getIconComponent } from "../../src/components/IconPicker";
 import ColorPicker from "../../src/components/ColorPicker";
 import IconPickerModal from "../../src/components/IconPickerModal";
 import FABMenu from "../../src/components/FABMenu";
+import PageSkeleton from "../../src/components/PageSkeleton";
 
 /**
  * Página de Categorias - Gerenciamento de categorias
@@ -59,15 +60,28 @@ export default function CategoriasPage() {
   });
 
   // Função para carregar dados (usada tanto na montagem quanto após operações)
-  const loadData = async (isMountedRef = { current: true }) => {
+  const loadData = useCallback(async () => {
+    if (authLoading) return;
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+
+    let timeoutId;
     try {
-      const [categoriesRes, transactionTypesRes, iconsRes] = await Promise.all([
+      const timeoutPromise = new Promise((_, reject) => {
+        timeoutId = setTimeout(() => reject(new Error('Timeout ao carregar categorias')), 10000);
+      });
+
+      const dataPromise = Promise.all([
         getCategories(),
         getTransactionTypes(),
         getIcons(),
       ]);
 
-      if (!isMountedRef.current) return;
+      const [categoriesRes, transactionTypesRes, iconsRes] = await Promise.race([dataPromise, timeoutPromise]);
 
       if (categoriesRes.error) throw categoriesRes.error;
       if (transactionTypesRes.error) throw transactionTypesRes.error;
@@ -80,29 +94,24 @@ export default function CategoriasPage() {
       if (error.name !== 'AbortError') {
         console.error("Erro ao carregar dados:", error);
       }
+      setCategories([]);
+      setTransactionTypes([]);
+      setIcons([]);
     } finally {
-      if (isMountedRef.current) {
-        setLoading(false);
-      }
+      if (timeoutId) clearTimeout(timeoutId);
+      setLoading(false);
     }
-  };
+  }, [authLoading, user]);
 
   useEffect(() => {
-    const isMountedRef = { current: true };
-
-    // Espera autenticação terminar antes de carregar dados
     if (authLoading) return;
     if (!user) {
       setLoading(false);
       return;
     }
 
-    loadData(isMountedRef);
-
-    return () => {
-      isMountedRef.current = false;
-    };
-  }, [user, authLoading]);
+    loadData();
+  }, [user, authLoading, loadData]);
 
   // Separar categorias por tipo
   const categorizeByType = () => {
@@ -290,11 +299,7 @@ export default function CategoriasPage() {
   };
 
   if (authLoading || loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <p className="text-gray-500">Carregando...</p>
-      </div>
-    );
+    return <PageSkeleton />;
   }
 
   return (
