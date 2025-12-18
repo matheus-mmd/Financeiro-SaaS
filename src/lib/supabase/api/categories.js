@@ -17,7 +17,6 @@ export async function getCategories(filters = {}) {
       transaction_type_id,
       transaction_type_name,
       transaction_type_internal_name,
-      is_default,
       created_at
     `)
     .order('name', { ascending: true });
@@ -43,7 +42,6 @@ export async function getCategoryById(id) {
       transaction_type_id,
       transaction_type_name,
       transaction_type_internal_name,
-      is_default,
       created_at
     `)
     .eq('id', id)
