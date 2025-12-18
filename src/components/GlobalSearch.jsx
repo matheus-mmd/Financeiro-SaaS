@@ -13,6 +13,7 @@ import { Input } from "./ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
 import { formatCurrency, formatDate, fetchData } from "../utils";
 import { useDebounce } from "../hooks/useDebounce";
+import { useAuth } from "../contexts/AuthContext";
 
 /**
  * GlobalSearch - Componente de busca global na aplicação
@@ -23,11 +24,14 @@ export default function GlobalSearch() {
   const [open, setOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
+  const { user, loading: authLoading } = useAuth();
   const [results, setResults] = useState({
     transactions: [],
     targets: [],
     assets: [],
   });
+  const [dataset, setDataset] = useState(null);
+  const [loadingData, setLoadingData] = useState(false);
   const router = useRouter();
 
   // Atalho de teclado Ctrl+K ou Cmd+K para abrir busca
@@ -43,74 +47,85 @@ export default function GlobalSearch() {
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  // Buscar dados quando o termo de busca debounced mudar
-  // OTIMIZAÇÃO: Usa debouncedSearchTerm ao invés de searchTerm
-  // Reduz chamadas de API de ~10/seg para ~3/seg
-  // OTIMIZAÇÃO 2: Usa AbortController para cancelar requisições antigas
+  // Carregar dataset uma única vez quando a busca é aberta e usuário autenticado
+  useEffect(() => {
+    if (!open || authLoading || !user || dataset) return;
+
+    let isMounted = true;
+    setLoadingData(true);
+
+    const loadDataset = async () => {
+      try {
+        const [transactionsRes, targetsRes, assetsRes] = await Promise.all([
+          fetchData("/api/transactions"),
+          fetchData("/api/targets"),
+          fetchData("/api/assets"),
+        ]);
+
+        if (!isMounted) return;
+
+        setDataset({
+          transactions: transactionsRes.data || [],
+          targets: targetsRes.data || [],
+          assets: assetsRes.data || [],
+        });
+      } catch (error) {
+        console.error("Erro ao carregar dados de busca:", error);
+      } finally {
+        if (isMounted) {
+          setLoadingData(false);
+        }
+      }
+    };
+
+    loadDataset();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [open, authLoading, user, dataset]);
+
+  // Resetar dataset quando usuário desloga
+  useEffect(() => {
+    if (!user) {
+      setDataset(null);
+      setResults({ transactions: [], targets: [], assets: [] });
+    }
+  }, [user]);
+
+  // Buscar nos dados já carregados quando o termo de busca debounced mudar
   useEffect(() => {
     if (!debouncedSearchTerm || debouncedSearchTerm.length < 2) {
       setResults({ transactions: [], targets: [], assets: [] });
       return;
     }
 
+    if (!dataset) return;
+
     const term = debouncedSearchTerm.toLowerCase();
-    const abortController = new AbortController();
-    let isMounted = true;
 
-    // Buscar nos dados
-    const searchInData = async () => {
-      try {
-        const [transactionsRes, targetsRes, assetsRes] =
-          await Promise.all([
-            fetchData("/api/transactions"),
-            fetchData("/api/targets"),
-            fetchData("/api/assets"),
-          ]);
+    const filteredTransactions = dataset.transactions
+      .filter((t) => t.description?.toLowerCase().includes(term))
+      .slice(0, 5);
 
-        // Verificar se componente ainda está montado antes de atualizar state
-        if (!isMounted) return;
+    const filteredTargets = dataset.targets
+      .filter((t) => t.title?.toLowerCase().includes(term))
+      .slice(0, 5);
 
-        const transactions = transactionsRes.data;
-        const targets = targetsRes.data;
-        const assets = assetsRes.data;
+    const filteredAssets = dataset.assets
+      .filter(
+        (a) =>
+          a.name?.toLowerCase().includes(term) ||
+          a.type?.toLowerCase().includes(term)
+      )
+      .slice(0, 5);
 
-        const filteredTransactions = transactions
-          .filter((t) => t.description?.toLowerCase().includes(term))
-          .slice(0, 5);
-
-        const filteredTargets = targets
-          .filter((t) => t.title?.toLowerCase().includes(term))
-          .slice(0, 5);
-
-        const filteredAssets = assets
-          .filter(
-            (a) =>
-              a.name?.toLowerCase().includes(term) ||
-              a.type?.toLowerCase().includes(term)
-          )
-          .slice(0, 5);
-
-        setResults({
-          transactions: filteredTransactions,
-          targets: filteredTargets,
-          assets: filteredAssets,
-        });
-      } catch (error) {
-        // Ignorar erros de abort (quando requisição é cancelada)
-        if (error.name !== 'AbortError') {
-          console.error("Erro ao buscar dados:", error);
-        }
-      }
-    };
-
-    searchInData();
-
-    // Cleanup: cancelar requisições e marcar componente como desmontado
-    return () => {
-      isMounted = false;
-      abortController.abort();
-    };
-  }, [debouncedSearchTerm]);
+    setResults({
+      transactions: filteredTransactions,
+      targets: filteredTargets,
+      assets: filteredAssets,
+    });
+  }, [debouncedSearchTerm, dataset]);
 
   const handleClose = () => {
     setOpen(false);
@@ -169,7 +184,9 @@ export default function GlobalSearch() {
 
             {/* Resultados */}
             {searchTerm.length >= 2 ? (
-              totalResults > 0 ? (
+              loadingData && !dataset ? (
+                <p className="text-sm text-gray-500">Carregando dados para busca...</p>
+              ) : totalResults > 0 ? (
                 <div className="space-y-4">
                   {/* Transações */}
                   {results.transactions.length > 0 && (

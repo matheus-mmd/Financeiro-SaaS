@@ -19,7 +19,6 @@ import IncomeVsExpensesChart from "../src/components/dashboard/IncomeVsExpensesC
 // Funções de análise
 import {
   getPreviousMonth,
-  calculateMonthData,
   calculateHealthScore,
   calculateSavingsRate,
   calculateDailyBudget,
@@ -50,7 +49,6 @@ export default function Dashboard() {
     }
 
     let isMounted = true;
-    const abortController = new AbortController();
     let timeoutId;
 
     const loadData = async () => {
@@ -130,7 +128,6 @@ export default function Dashboard() {
     return () => {
       isMounted = false;
       if (timeoutId) clearTimeout(timeoutId);
-      abortController.abort();
     };
   }, [authLoading, user]); // CORREÇÃO: Adicionar authLoading e user como deps para re-carregar quando auth mudar
 
@@ -144,21 +141,86 @@ export default function Dashboard() {
 
   const previousMonth = useMemo(() => getPreviousMonth(currentMonth), [currentMonth]);
 
-  // Filtrar transações por tipo (derivado de transactions)
-  const currentMonthExpenses = useMemo(() =>
-    transactions.filter((t) => t.date.startsWith(currentMonth) && t.type_internal_name === 'expense'),
-    [transactions, currentMonth]
-  );
+  const categoryLookup = useMemo(() => {
+    const map = new Map();
+    categories.forEach((category) => {
+      map.set(category.id, category);
+    });
+    return map;
+  }, [categories]);
 
-  const currentMonthIncomes = useMemo(() =>
-    transactions.filter((t) => t.date.startsWith(currentMonth) && t.type_internal_name === 'income'),
-    [transactions, currentMonth]
-  );
+  const transactionsAggregates = useMemo(() => {
+    const totalsByMonth = new Map();
+    const categoryBreakdowns = {
+      income: new Map(),
+      expense: new Map(),
+      investment: new Map(),
+    };
+    const currentMonthTransactions = [];
 
-  const currentMonthData = useMemo(() =>
-    calculateMonthData(transactions, currentMonth),
-    [transactions, currentMonth]
-  );
+    const defaults = {
+      income: { color: "#10b981", icon: "Tag" },
+      expense: { color: "#6366f1", icon: "Tag" },
+      investment: { color: "#06b6d4", icon: "TrendingUp" },
+    };
+
+    transactions.forEach((transaction) => {
+      if (!transaction?.date) return;
+
+      const month = transaction.date.slice(0, 7);
+      const amount = Math.abs(transaction.amount || 0);
+      const type = transaction.type_internal_name;
+
+      if (!totalsByMonth.has(month)) {
+        totalsByMonth.set(month, { income: 0, expense: 0, investment: 0 });
+      }
+
+      if (type === "income" || type === "expense" || type === "investment") {
+        const monthEntry = totalsByMonth.get(month);
+        monthEntry[type] += amount;
+
+        if (month === currentMonth) {
+          currentMonthTransactions.push(transaction);
+
+          const categoryMeta = categoryLookup.get(transaction.category_id);
+          const breakdownMap = categoryBreakdowns[type];
+          const name = transaction.category_name || categoryMeta?.name || "Outros";
+
+          const existing = breakdownMap.get(name) || {
+            name,
+            value: 0,
+            color: categoryMeta?.color || transaction.category_color || defaults[type].color,
+            icon: categoryMeta?.icon || transaction.category_icon || defaults[type].icon,
+          };
+          existing.value += amount;
+          breakdownMap.set(name, existing);
+        }
+      }
+    });
+
+    return { totalsByMonth, categoryBreakdowns, currentMonthTransactions };
+  }, [transactions, currentMonth, categoryLookup]);
+
+  const currentMonthData = useMemo(() => {
+    const totals = transactionsAggregates.totalsByMonth.get(currentMonth) || { income: 0, expense: 0, investment: 0 };
+    const credits = totals.income;
+    const debits = totals.expense;
+    const investments = totals.investment;
+    const balance = credits - debits - investments;
+
+    return {
+      credits,
+      debits,
+      expenses: debits,
+      plannedExpenses: debits,
+      investments,
+      balance,
+    };
+  }, [transactionsAggregates, currentMonth]);
+
+  const currentMonthIncomeCount = useMemo(() => (
+    transactionsAggregates.currentMonthTransactions.filter((t) => t.type_internal_name === "income").length
+  ), [transactionsAggregates]);
 
   // Calcular patrimônio total
   const totalAssets = useMemo(() =>
@@ -169,22 +231,17 @@ export default function Dashboard() {
   // Calcular média de despesas mensais (últimos 3 meses) - APENAS de transactions
   const avgMonthlyExpenses = useMemo(() => {
     const months = [currentMonth, previousMonth, getPreviousMonth(previousMonth)];
-    let totalExpenses = 0;
-    let count = 0;
+    const expenses = months
+      .map((month) => transactionsAggregates.totalsByMonth.get(month)?.expense || 0)
+      .filter((value) => value > 0);
 
-    months.forEach(month => {
-      const monthExpenses = transactions
-        .filter(t => t.date.startsWith(month) && t.type_internal_name === 'expense')
-        .reduce((sum, t) => sum + Math.abs(t.amount), 0);
+    if (expenses.length === 0) {
+      return currentMonthData.expenses;
+    }
 
-      if (monthExpenses > 0) {
-        totalExpenses += monthExpenses;
-        count++;
-      }
-    });
-
-    return count > 0 ? totalExpenses / count : currentMonthData.expenses;
-  }, [transactions, currentMonth, previousMonth, currentMonthData.expenses]);
+    const total = expenses.reduce((sum, value) => sum + value, 0);
+    return total / expenses.length;
+  }, [transactionsAggregates, currentMonth, previousMonth, currentMonthData.expenses]);
 
   // Calcular Health Score
   const healthScoreData = useMemo(() =>
@@ -213,327 +270,131 @@ export default function Dashboard() {
 
   // Calcular comparações mês a mês para os cards - APENAS de transactions
   const incomeComparison = useMemo(() => {
-    const currentIncome = transactions
-      .filter(t => t.date.startsWith(currentMonth) && t.type_internal_name === 'income')
-      .reduce((sum, t) => sum + Math.abs(t.amount), 0);
-    const previousIncome = transactions
-      .filter(t => t.date.startsWith(previousMonth) && t.type_internal_name === 'income')
-      .reduce((sum, t) => sum + Math.abs(t.amount), 0);
+    const currentIncome = transactionsAggregates.totalsByMonth.get(currentMonth)?.income || 0;
+    const previousIncome = transactionsAggregates.totalsByMonth.get(previousMonth)?.income || 0;
     const change = previousIncome > 0 ? ((currentIncome - previousIncome) / previousIncome) * 100 : 0;
     return { current: currentIncome, previous: previousIncome, change };
-  }, [transactions, currentMonth, previousMonth]);
+  }, [transactionsAggregates, currentMonth, previousMonth]);
 
-  // Filtrar e ordenar transações do mês atual para a tabela
-  const recentTransactions = useMemo(() => {
-    const currentMonthTransactions = transactions.filter((t) =>
-      t.date.startsWith(currentMonth)
-    );
+  // Preparar dados para CategoryBreakdownCard
+  const incomeByCategory = useMemo(() =>
+    Array.from(transactionsAggregates.categoryBreakdowns.income.values()),
+    [transactionsAggregates]
+  );
 
-    const sorted = [...currentMonthTransactions].sort((a, b) => {
-      const dateA = new Date(a.date);
-      const dateB = new Date(b.date);
-      if (dateB - dateA !== 0) {
-        return dateB - dateA;
-      }
-      return Math.abs(b.amount) - Math.abs(a.amount);
-    });
+  const investmentsByCategory = useMemo(() =>
+    Array.from(transactionsAggregates.categoryBreakdowns.investment.values()),
+    [transactionsAggregates]
+  );
 
-    return sorted;
-  }, [transactions, currentMonth]);
+  const currentMonthExpensesByCategory = useMemo(() =>
+    Array.from(transactionsAggregates.categoryBreakdowns.expense.values()),
+    [transactionsAggregates]
+  );
 
-  // Preparar dados para CategoryBreakdownCard - Receitas por Categoria
-  // Usa APENAS transactions (fonte única de verdade)
-  const incomeByCategory = useMemo(() => {
-    const currentMonthTransactions = transactions.filter(t =>
-      t.date.startsWith(currentMonth) &&
-      t.type_internal_name === 'income'
-    );
-
-    const grouped = currentMonthTransactions.reduce((acc, transaction) => {
-      const categoryName = transaction.category_name || 'Outros';
-      const existing = acc.find(item => item.name === categoryName);
-
-      if (existing) {
-        existing.value += Math.abs(transaction.amount);
-      } else {
-        const category = categories.find(c => c.name === categoryName || c.id === transaction.category_id);
-        acc.push({
-          name: categoryName,
-          value: Math.abs(transaction.amount),
-          color: category?.color || transaction.category_color || "#10b981",
-          icon: category?.icon || transaction.category_icon || "Tag",
-        });
-      }
-      return acc;
-    }, []);
-
-    return grouped;
-  }, [transactions, currentMonth, categories]);
-
-  // Preparar dados para CategoryBreakdownCard - Investimentos/Aportes por Categoria
-  const investmentsByCategory = useMemo(() => {
-    const currentMonthTransactions = transactions.filter(t =>
-      t.date.startsWith(currentMonth) &&
-      t.type_internal_name === 'investment'
-    );
-
-    const grouped = currentMonthTransactions.reduce((acc, transaction) => {
-      const categoryName = transaction.category_name || 'Outros';
-      const existing = acc.find(item => item.name === categoryName);
-
-      if (existing) {
-        existing.value += Math.abs(transaction.amount);
-      } else {
-        const category = categories.find(c => c.name === categoryName || c.id === transaction.category_id);
-        acc.push({
-          name: categoryName,
-          value: Math.abs(transaction.amount),
-          color: category?.color || transaction.category_color || "#06b6d4",
-          icon: category?.icon || transaction.category_icon || "TrendingUp",
-        });
-      }
-      return acc;
-    }, []);
-
-    return grouped;
-  }, [transactions, currentMonth, categories]);
-
-  // Preparar dados para CategoryBreakdownCard - Despesas por Categoria do mês atual
-  // Usa APENAS transactions (fonte única de verdade)
-  const currentMonthExpensesByCategory = useMemo(() => {
-    const monthTransactions = transactions.filter(t =>
-      t.date.startsWith(currentMonth) &&
-      t.type_internal_name === 'expense'
-    );
-
-    const grouped = monthTransactions.reduce((acc, transaction) => {
-      const categoryName = transaction.category_name || 'Outros';
-      const existing = acc.find(item => item.name === categoryName);
-      if (existing) {
-        existing.value += Math.abs(transaction.amount);
-      } else {
-        const category = categories.find(c => c.name === categoryName || c.id === transaction.category_id);
-        acc.push({
-          name: categoryName,
-          value: Math.abs(transaction.amount),
-          color: category?.color || transaction.category_color || "#6366f1",
-          icon: category?.icon || transaction.category_icon || "Tag",
-        });
-      }
-      return acc;
-    }, []);
-
-    return grouped;
-  }, [transactions, currentMonth, categories]);
-
-  // Preparar dados DIÁRIOS para IncomeVsExpensesChart
-  // Usa APENAS transactions (fonte única de verdade)
-  const incomeVsExpensesDailyData = useMemo(() => {
-    const dailyData = {};
-
-    // Receitas: APENAS transactions com type_internal_name === 'income'
-    transactions
-      .filter(t => t.date.startsWith(currentMonth) && t.type_internal_name === 'income')
-      .forEach(t => {
-        const day = t.date.split('-')[2];
-        if (!dailyData[day]) {
-          dailyData[day] = { date: day, income: 0, expense: 0, investment: 0 };
-        }
-        dailyData[day].income += Math.abs(t.amount);
-      });
-
-    // Despesas: APENAS transactions com type_internal_name === 'expense'
-    transactions
-      .filter(t => t.date.startsWith(currentMonth) && t.type_internal_name === 'expense')
-      .forEach(t => {
-        const day = t.date.split('-')[2];
-        if (!dailyData[day]) {
-          dailyData[day] = { date: day, income: 0, expense: 0, investment: 0 };
-        }
-        dailyData[day].expense += Math.abs(t.amount);
-      });
-
-    // Aportes/Investimentos: APENAS transactions com type_internal_name === 'investment'
-    transactions
-      .filter(t => t.date.startsWith(currentMonth) && t.type_internal_name === 'investment')
-      .forEach(t => {
-        const day = t.date.split('-')[2];
-        if (!dailyData[day]) {
-          dailyData[day] = { date: day, income: 0, expense: 0, investment: 0 };
-        }
-        dailyData[day].investment += Math.abs(t.amount);
-      });
-
-    return Object.values(dailyData)
-      .sort((a, b) => parseInt(a.date) - parseInt(b.date))
-      .map(d => ({
-        ...d,
-        date: `${d.date}`,
-      }));
-  }, [transactions, currentMonth]);
-
-  // Preparar dados MENSAIS para IncomeVsExpensesChart
-  // Usa APENAS transactions (fonte única de verdade)
+  // Preparar dados para IncomeVsExpensesChart
   const incomeVsExpensesMonthlyData = useMemo(() => {
+    const defaultTotals = { income: 0, expense: 0, investment: 0 };
     const months = [];
-    for (let i = 5; i >= 0; i--) {
-      let tempMonth = currentMonth;
-      for (let j = 0; j < i; j++) {
-        tempMonth = getPreviousMonth(tempMonth);
-      }
-      months.push(tempMonth);
+    let pointer = currentMonth;
+    months.unshift(pointer);
+    for (let i = 1; i < 6; i++) {
+      pointer = getPreviousMonth(pointer);
+      months.unshift(pointer);
     }
 
-    return months.map(month => {
+    return months.map((month) => {
+      const totals = transactionsAggregates.totalsByMonth.get(month) || defaultTotals;
       const [year, monthNum] = month.split('-');
       const monthName = new Date(year, monthNum - 1).toLocaleDateString('pt-BR', { month: 'short' });
 
-      // Receitas: APENAS transactions (tipo income)
-      const monthIncome = transactions
-        .filter(t => t.date.startsWith(month) && t.type_internal_name === 'income')
-        .reduce((sum, t) => sum + Math.abs(t.amount), 0);
-
-      // Despesas: APENAS transactions (tipo expense)
-      const monthExpense = transactions
-        .filter(t => t.date.startsWith(month) && t.type_internal_name === 'expense')
-        .reduce((sum, t) => sum + Math.abs(t.amount), 0);
-
       return {
         date: monthName.charAt(0).toUpperCase() + monthName.slice(1),
-        income: monthIncome,
-        expense: monthExpense,
+        income: totals.income,
+        expense: totals.expense,
+        investment: totals.investment,
       };
     });
-  }, [transactions, currentMonth]);
+  }, [transactionsAggregates, currentMonth]);
 
-  // Preparar dados TRIMESTRAIS para IncomeVsExpensesChart (3 meses do trimestre atual)
-  // Usa APENAS transactions (fonte única de verdade)
   const incomeVsExpensesQuarterlyData = useMemo(() => {
     const now = new Date();
     const currentYear = now.getFullYear();
-    const currentMonthNum = now.getMonth() + 1; // 1-12
-
-    // Determinar trimestre atual (Q1, Q2, Q3, Q4)
+    const currentMonthNum = now.getMonth() + 1;
     const currentQuarter = Math.ceil(currentMonthNum / 3);
-
-    // Meses do trimestre atual
     const startMonth = (currentQuarter - 1) * 3 + 1;
+    const defaultTotals = { income: 0, expense: 0, investment: 0 };
+
     const quarterMonths = [
       `${currentYear}-${String(startMonth).padStart(2, '0')}`,
       `${currentYear}-${String(startMonth + 1).padStart(2, '0')}`,
       `${currentYear}-${String(startMonth + 2).padStart(2, '0')}`,
     ];
 
-    return quarterMonths.map(month => {
+    return quarterMonths.map((month) => {
+      const totals = transactionsAggregates.totalsByMonth.get(month) || defaultTotals;
       const [year, monthNum] = month.split('-');
       const monthName = new Date(year, monthNum - 1).toLocaleDateString('pt-BR', { month: 'short' });
 
-      // Receitas: APENAS transactions (tipo income)
-      const monthIncome = transactions
-        .filter(t => t.date.startsWith(month) && t.type_internal_name === 'income')
-        .reduce((sum, t) => sum + Math.abs(t.amount), 0);
-
-      // Despesas: APENAS transactions (tipo expense)
-      const monthExpense = transactions
-        .filter(t => t.date.startsWith(month) && t.type_internal_name === 'expense')
-        .reduce((sum, t) => sum + Math.abs(t.amount), 0);
-
-      // Aportes/Investimentos: APENAS transactions (tipo investment)
-      const monthInvestment = transactions
-        .filter(t => t.date.startsWith(month) && t.type_internal_name === 'investment')
-        .reduce((sum, t) => sum + Math.abs(t.amount), 0);
-
       return {
         date: monthName.charAt(0).toUpperCase() + monthName.slice(1),
-        income: monthIncome,
-        expense: monthExpense,
-        investment: monthInvestment,
+        income: totals.income,
+        expense: totals.expense,
+        investment: totals.investment,
       };
     });
-  }, [transactions, currentMonth]);
+  }, [transactionsAggregates]);
 
-  // Preparar dados SEMESTRAIS para IncomeVsExpensesChart (6 meses do semestre atual)
-  // Usa APENAS transactions (fonte única de verdade)
   const incomeVsExpensesSemesterData = useMemo(() => {
     const now = new Date();
     const currentYear = now.getFullYear();
-    const currentMonthNum = now.getMonth() + 1; // 1-12
-
-    // Determinar semestre atual (1 ou 2)
+    const currentMonthNum = now.getMonth() + 1;
     const currentSemester = currentMonthNum <= 6 ? 1 : 2;
-
-    // Meses do semestre atual
     const startMonth = currentSemester === 1 ? 1 : 7;
+    const defaultTotals = { income: 0, expense: 0, investment: 0 };
+
     const semesterMonths = [];
     for (let m = 0; m < 6; m++) {
       semesterMonths.push(`${currentYear}-${String(startMonth + m).padStart(2, '0')}`);
     }
 
-    return semesterMonths.map(month => {
+    return semesterMonths.map((month) => {
+      const totals = transactionsAggregates.totalsByMonth.get(month) || defaultTotals;
       const [year, monthNum] = month.split('-');
       const monthName = new Date(year, monthNum - 1).toLocaleDateString('pt-BR', { month: 'short' });
 
-      // Receitas: APENAS transactions (tipo income)
-      const monthIncome = transactions
-        .filter(t => t.date.startsWith(month) && t.type_internal_name === 'income')
-        .reduce((sum, t) => sum + Math.abs(t.amount), 0);
-
-      // Despesas: APENAS transactions (tipo expense)
-      const monthExpense = transactions
-        .filter(t => t.date.startsWith(month) && t.type_internal_name === 'expense')
-        .reduce((sum, t) => sum + Math.abs(t.amount), 0);
-
-      // Aportes/Investimentos: APENAS transactions (tipo investment)
-      const monthInvestment = transactions
-        .filter(t => t.date.startsWith(month) && t.type_internal_name === 'investment')
-        .reduce((sum, t) => sum + Math.abs(t.amount), 0);
-
       return {
         date: monthName.charAt(0).toUpperCase() + monthName.slice(1),
-        income: monthIncome,
-        expense: monthExpense,
-        investment: monthInvestment,
+        income: totals.income,
+        expense: totals.expense,
+        investment: totals.investment,
       };
     });
-  }, [transactions, currentMonth]);
+  }, [transactionsAggregates]);
 
   const incomeVsExpensesYearlyData = useMemo(() => {
     const now = new Date();
     const currentYear = now.getFullYear();
+    const defaultTotals = { income: 0, expense: 0, investment: 0 };
 
-    // Todos os 12 meses do ano atual
     const yearlyMonths = [];
     for (let m = 1; m <= 12; m++) {
       yearlyMonths.push(`${currentYear}-${String(m).padStart(2, '0')}`);
     }
 
-    return yearlyMonths.map(month => {
+    return yearlyMonths.map((month) => {
+      const totals = transactionsAggregates.totalsByMonth.get(month) || defaultTotals;
       const [year, monthNum] = month.split('-');
       const monthName = new Date(year, monthNum - 1).toLocaleDateString('pt-BR', { month: 'short' });
 
-      // Receitas: APENAS transactions (tipo income)
-      const monthIncome = transactions
-        .filter(t => t.date.startsWith(month) && t.type_internal_name === 'income')
-        .reduce((sum, t) => sum + Math.abs(t.amount), 0);
-
-      // Despesas: APENAS transactions (tipo expense)
-      const monthExpense = transactions
-        .filter(t => t.date.startsWith(month) && t.type_internal_name === 'expense')
-        .reduce((sum, t) => sum + Math.abs(t.amount), 0);
-
-      // Aportes/Investimentos: APENAS transactions (tipo investment)
-      const monthInvestment = transactions
-        .filter(t => t.date.startsWith(month) && t.type_internal_name === 'investment')
-        .reduce((sum, t) => sum + Math.abs(t.amount), 0);
-
       return {
         date: monthName.charAt(0).toUpperCase() + monthName.slice(1),
-        income: monthIncome,
-        expense: monthExpense,
-        investment: monthInvestment,
+        income: totals.income,
+        expense: totals.expense,
+        investment: totals.investment,
       };
     });
-  }, [transactions, currentMonth]);
+  }, [transactionsAggregates]);
 
   // Mostrar skeleton enquanto auth ou dados estiverem carregando
   if (authLoading || loading) {
@@ -661,7 +522,7 @@ export default function Dashboard() {
             subtitle={
               incomeComparison.change !== 0
                 ? `vs mês anterior: ${incomeComparison.change > 0 ? '+' : ''}${incomeComparison.change.toFixed(1)}% ${incomeComparison.change > 0 ? '↗️' : '↘️'}`
-                : `${currentMonthIncomes.length} receita(s)`
+                : `${currentMonthIncomeCount} receita(s)`
             }
             iconColor="green"
             valueColor="text-success-600"
@@ -704,7 +565,7 @@ export default function Dashboard() {
       {/* 📈 GRÁFICOS E ANÁLISES */}
       <div className="space-y-4">
         <IncomeVsExpensesChart
-          monthlyData={incomeVsExpensesDailyData}
+          monthlyData={incomeVsExpensesMonthlyData}
           quarterlyData={incomeVsExpensesQuarterlyData}
           semesterData={incomeVsExpensesSemesterData}
           yearlyData={incomeVsExpensesYearlyData}
