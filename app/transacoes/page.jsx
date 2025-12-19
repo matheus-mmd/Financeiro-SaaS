@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo, useReducer, useCallback } from "react";
+import React, { useState, useEffect, useMemo, useReducer, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../../src/contexts/AuthContext";
 import PageHeader from "../../src/components/PageHeader";
@@ -131,6 +131,36 @@ function formReducer(state, action) {
   }
 }
 
+// Cache local para acelerar reabertura da tela e imitar o carregamento imediato do dashboard
+const CACHE_KEY = "transactions_page_cache_v1";
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutos
+
+const transactionsCache = {
+  get: () => {
+    if (typeof window === "undefined") return null;
+    try {
+      const raw = sessionStorage.getItem(CACHE_KEY);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      const isStale = Date.now() - parsed.timestamp > CACHE_TTL;
+      return { ...parsed, isStale };
+    } catch {
+      return null;
+    }
+  },
+  set: (payload) => {
+    if (typeof window === "undefined") return;
+    try {
+      sessionStorage.setItem(
+        CACHE_KEY,
+        JSON.stringify({ ...payload, timestamp: Date.now() })
+      );
+    } catch {
+      // ignorar falhas de cache
+    }
+  },
+};
+
 /**
  * Página Transações - Gerenciamento de transações
  * Nova estrutura: Categoria (Salário, Moradia, etc.) + Tipo de Transação (Receita, Despesa, Aporte)
@@ -138,6 +168,7 @@ function formReducer(state, action) {
 export default function Transacoes() {
   const router = useRouter();
   const { user, loading: authLoading, signOut } = useAuth();
+  const isUnmounted = useRef(false);
   const [transactions, setTransactions] = useState([]);
   const [categories, setCategories] = useState([]);
   const [transactionTypes, setTransactionTypes] = useState([]);
@@ -177,6 +208,10 @@ export default function Transacoes() {
       } : null,
     })), []);
 
+  useEffect(() => () => {
+    isUnmounted.current = true;
+  }, []);
+
   const handleAuthFailure = useCallback(async () => {
     await signOut();
     router.replace('/login');
@@ -203,6 +238,32 @@ export default function Transacoes() {
     return mapTransactions(response.data || []);
   }, [handleApiError, mapTransactions]);
 
+  const applyCachedData = useCallback((cached) => {
+    if (!cached || isUnmounted.current) return false;
+
+    setTransactions(cached.transactions || []);
+    setFilteredTransactions(cached.transactions || []);
+    setCategories(cached.categories || []);
+    setTransactionTypes(cached.transactionTypes || []);
+    setBanks(cached.banks || []);
+    setCards(cached.cards || []);
+    setPaymentStatuses(cached.paymentStatuses || []);
+    setPaymentMethods(cached.paymentMethods || []);
+    setRecurrenceFrequencies(cached.recurrenceFrequencies || []);
+
+    if ((cached.categories || []).length > 0 && (cached.transactionTypes || []).length > 0) {
+      dispatch({
+        type: 'UPDATE_MULTIPLE',
+        updates: {
+          categoryId: cached.categories[0].id,
+          transactionTypeId: cached.transactionTypes[0].id,
+        }
+      });
+    }
+
+    return true;
+  }, []);
+
   useEffect(() => {
     if (authLoading) return;
 
@@ -214,11 +275,21 @@ export default function Transacoes() {
       return;
     }
 
-    let isMounted = true;
     let timeoutId;
-    setLoading(true);
+    const cached = transactionsCache.get();
 
-    const loadData = async () => {
+    if (cached && applyCachedData(cached.data)) {
+      setLoading(false);
+      if (!cached.isStale) {
+        return () => {
+          if (timeoutId) clearTimeout(timeoutId);
+        };
+      }
+    } else {
+      setLoading(true);
+    }
+
+    const loadData = async (skipLoadingState = false) => {
       try {
         const timeoutPromise = new Promise((_, reject) => {
           timeoutId = setTimeout(() => reject(new Error('Timeout ao carregar transações')), 10000);
@@ -246,7 +317,7 @@ export default function Transacoes() {
           recurrenceFrequenciesRes,
         ] = await Promise.race([dataPromise, timeoutPromise]);
 
-        if (!isMounted) return;
+        if (isUnmounted.current) return;
 
         const authError =
           categoriesRes.error?.code === 'AUTH_REQUIRED' ||
@@ -280,6 +351,19 @@ export default function Transacoes() {
         setPaymentMethods(paymentMethodsRes.data || []);
         setRecurrenceFrequencies(recurrenceFrequenciesRes.data || []);
 
+        transactionsCache.set({
+          data: {
+            transactions: mappedTransactions,
+            categories: categoriesRes.data || [],
+            transactionTypes: transactionTypesRes.data || [],
+            banks: banksRes.data || [],
+            cards: cardsRes.data || [],
+            paymentStatuses: paymentStatusesRes.data || [],
+            paymentMethods: paymentMethodsRes.data || [],
+            recurrenceFrequencies: recurrenceFrequenciesRes.data || [],
+          },
+        });
+
         if (
           categoriesRes.data && categoriesRes.data.length > 0 &&
           transactionTypesRes.data && transactionTypesRes.data.length > 0
@@ -303,19 +387,18 @@ export default function Transacoes() {
         }
       } finally {
         if (timeoutId) clearTimeout(timeoutId);
-        if (isMounted) {
+        if (!skipLoadingState && !isUnmounted.current) {
           setLoading(false);
         }
       }
     };
 
-    loadData();
+    loadData(Boolean(cached));
 
     return () => {
-      isMounted = false;
       if (timeoutId) clearTimeout(timeoutId);
     };
-  }, [authLoading, user, refreshTransactions, handleAuthFailure, router]);
+  }, [authLoading, user, refreshTransactions, handleAuthFailure, router, applyCachedData, handleApiError]);
 
   useEffect(() => {
     let filtered = transactions;
