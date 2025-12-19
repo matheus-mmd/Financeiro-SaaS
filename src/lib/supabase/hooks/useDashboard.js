@@ -1,9 +1,14 @@
 /**
  * Hook customizado para gerenciar dados do Dashboard
  * Otimizado para reduzir cálculos no client e usar queries otimizadas do backend
+ *
+ * CACHE: Usa sessionStorage para persistir dados entre navegações
+ * - Carrega dados em cache instantaneamente ao montar
+ * - Busca dados frescos em background
+ * - Atualiza cache quando dados frescos chegam
  */
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { getTransactions } from '../api/transactions';
 import { getAssets } from '../api/assets';
 import { getCategories } from '../api/categories';
@@ -14,11 +19,57 @@ import {
   calculateDailyBudget,
 } from '../../../utils/dashboardAnalytics';
 
+// Chave do cache no sessionStorage
+const CACHE_KEY = 'dashboard_cache';
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutos
+
+/**
+ * Utilitário para gerenciar cache no sessionStorage
+ */
+const dashboardCache = {
+  get: () => {
+    if (typeof window === 'undefined') return null;
+    try {
+      const cached = sessionStorage.getItem(CACHE_KEY);
+      if (!cached) return null;
+
+      const { data, timestamp } = JSON.parse(cached);
+      const isExpired = Date.now() - timestamp > CACHE_TTL;
+
+      // Retorna dados mesmo expirados (stale-while-revalidate)
+      return { data, isStale: isExpired };
+    } catch {
+      return null;
+    }
+  },
+
+  set: (data) => {
+    if (typeof window === 'undefined') return;
+    try {
+      sessionStorage.setItem(CACHE_KEY, JSON.stringify({
+        data,
+        timestamp: Date.now(),
+      }));
+    } catch {
+      // Ignore storage errors (quota exceeded, etc)
+    }
+  },
+
+  clear: () => {
+    if (typeof window === 'undefined') return;
+    try {
+      sessionStorage.removeItem(CACHE_KEY);
+    } catch {
+      // Ignore errors
+    }
+  },
+};
+
 /**
  * Hook useDashboard
  * Centraliza toda a lógica de carregamento e cálculo do dashboard
  *
- * @returns {Object} { data, loading, error, refresh }
+ * @returns {Object} { data, loading, error, refresh, isFromCache }
  */
 export function useDashboard() {
   const [categories, setCategories] = useState([]);
@@ -26,10 +77,35 @@ export function useDashboard() {
   const [assets, setAssets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isFromCache, setIsFromCache] = useState(false);
+  const hasMounted = useRef(false);
 
-  // Carregar dados do dashboard
-  const loadDashboardData = useCallback(async () => {
-    setLoading(true);
+  // Função para aplicar dados (do cache ou da API)
+  const applyData = useCallback((categoriesData, transactionsData, assetsData) => {
+    // Mapear transações
+    const mappedTransactions = (transactionsData || []).map((t) => ({
+      ...t,
+      date: t.transaction_date || t.date,
+      description: t.description,
+      type_internal_name: t.transaction_type_internal_name || t.type_internal_name,
+    }));
+
+    // Mapear ativos
+    const mappedAssets = (assetsData || []).map((a) => ({
+      ...a,
+      date: a.valuation_date || a.date,
+    }));
+
+    setCategories(categoriesData || []);
+    setTransactions(mappedTransactions);
+    setAssets(mappedAssets);
+  }, []);
+
+  // Carregar dados do dashboard (da API)
+  const loadDashboardData = useCallback(async (skipLoadingState = false) => {
+    if (!skipLoadingState) {
+      setLoading(true);
+    }
     setError(null);
 
     try {
@@ -68,39 +144,64 @@ export function useDashboard() {
         console.error('[useDashboard] Erro ao carregar ativos:', assetsRes.error);
       }
 
-      // Mapear dados
-      const mappedTransactions = (transactionsRes?.data || []).map((t) => ({
-        ...t,
-        date: t.transaction_date,
-        description: t.description,
-        type_internal_name: t.transaction_type_internal_name,
-      }));
+      const categoriesData = categoriesRes?.data || [];
+      const transactionsData = transactionsRes?.data || [];
+      const assetsData = assetsRes?.data || [];
 
-      const mappedAssets = (assetsRes?.data || []).map((a) => ({
-        ...a,
-        date: a.valuation_date,
-      }));
+      // Aplicar dados
+      applyData(categoriesData, transactionsData, assetsData);
 
-      setCategories(categoriesRes?.data || []);
-      setTransactions(mappedTransactions);
-      setAssets(mappedAssets);
+      // Salvar no cache
+      dashboardCache.set({
+        categories: categoriesData,
+        transactions: transactionsData,
+        assets: assetsData,
+      });
+
+      setIsFromCache(false);
     } catch (err) {
       setError(err);
       console.error('[useDashboard] Erro ao carregar dashboard:', err);
 
-      // Setar dados vazios para não quebrar UI
-      setCategories([]);
-      setTransactions([]);
-      setAssets([]);
+      // Se não temos dados em cache, setar dados vazios
+      if (categories.length === 0 && transactions.length === 0) {
+        setCategories([]);
+        setTransactions([]);
+        setAssets([]);
+      }
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [applyData, categories.length, transactions.length]);
 
-  // Carregar dados ao montar
+  // Carregar dados ao montar: primeiro do cache, depois da API
   useEffect(() => {
-    loadDashboardData();
-  }, [loadDashboardData]);
+    if (hasMounted.current) return;
+    hasMounted.current = true;
+
+    // 1. Tentar carregar do cache primeiro (instantâneo)
+    const cached = dashboardCache.get();
+
+    if (cached?.data) {
+      const { categories: cachedCategories, transactions: cachedTransactions, assets: cachedAssets } = cached.data;
+
+      // Aplicar dados do cache imediatamente
+      applyData(cachedCategories, cachedTransactions, cachedAssets);
+      setIsFromCache(true);
+      setLoading(false);
+
+      // 2. Se cache não está stale, não precisa recarregar
+      if (!cached.isStale) {
+        return;
+      }
+
+      // 3. Se cache está stale, buscar dados frescos em background
+      loadDashboardData(true); // skipLoadingState = true
+    } else {
+      // Sem cache, carregar normalmente
+      loadDashboardData(false);
+    }
+  }, [applyData, loadDashboardData]);
 
   // Mês atual
   const currentMonth = useMemo(() => {
@@ -354,10 +455,19 @@ export function useDashboard() {
     return { monthly, quarterly, semester, yearly };
   }, [transactionsAggregates, currentMonth]);
 
+  // Função para forçar refresh (limpa cache e recarrega)
+  const forceRefresh = useCallback(() => {
+    dashboardCache.clear();
+    return loadDashboardData(false);
+  }, [loadDashboardData]);
+
   return {
     loading,
     error,
+    isFromCache, // Indica se os dados atuais são do cache
     refresh: loadDashboardData,
+    forceRefresh, // Limpa cache e força recarregamento
+    clearCache: dashboardCache.clear, // Apenas limpa o cache
 
     // Dados brutos
     rawData: {
