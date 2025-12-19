@@ -78,6 +78,8 @@ export function useTransactions(filters = {}) {
     isUnmounted.current = true;
   }, []);
 
+  const stableFilters = useMemo(() => ({ ...filters }), [filtersKey]);
+
   const loadTransactions = useCallback(async (skipLoadingState = false) => {
     if (isUnmounted.current) return;
 
@@ -87,7 +89,7 @@ export function useTransactions(filters = {}) {
     setError(null);
 
     try {
-      const { data, error: fetchError } = await getTransactions(filters);
+      const { data, error: fetchError } = await getTransactions(stableFilters);
 
       if (isUnmounted.current) return;
 
@@ -108,7 +110,7 @@ export function useTransactions(filters = {}) {
         setLoading(false);
       }
     }
-  }, [filters, filtersKey]); // Usar filtersKey ao invés de JSON.stringify
+  }, [filtersKey, stableFilters]);
 
   useEffect(() => {
     const cacheKey = filtersKey || 'all';
