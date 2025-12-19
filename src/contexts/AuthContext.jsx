@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
+import { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { supabase } from '../lib/supabase/client';
 
 const AuthContext = createContext({});
@@ -17,19 +17,6 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
-  const isRevalidatingRef = useRef(false);
-  const lastRevalidationRef = useRef(0);
-  const userRef = useRef(null);
-  const profileRef = useRef(null);
-  const wasHiddenRef = useRef(document.visibilityState === 'hidden');
-
-  useEffect(() => {
-    userRef.current = user;
-  }, [user]);
-
-  useEffect(() => {
-    profileRef.current = profile;
-  }, [profile]);
 
   /**
    * Buscar perfil do usuário no banco de dados
@@ -51,35 +38,6 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       console.error('[AuthContext] Erro ao buscar perfil:', error);
       return { data: null, error, notFound: false };
-    }
-  }, []);
-
-  /**
-   * Criar perfil do usuário no banco de dados
-   */
-  const createProfile = useCallback(async (userId, email, name) => {
-    try {
-      const { data, error } = await supabase
-        .from('users')
-        .insert([
-          {
-            id: userId,
-            email,
-            name,
-          },
-        ])
-        .select()
-        .maybeSingle();
-
-      if (error) {
-        console.error('[AuthContext] Erro ao criar perfil:', error);
-        return null;
-      }
-
-      return data;
-    } catch (error) {
-      console.error('[AuthContext] Erro ao criar perfil:', error);
-      return null;
     }
   }, []);
 
@@ -217,97 +175,8 @@ export const AuthProvider = ({ children }) => {
       clearTimeout(safetyTimeout);
       subscription.unsubscribe();
     };
-  }, [resolveProfile, signOut]);
+  }, [resolveProfile]);
 
-  useEffect(() => {
-    const handleVisibilityOrFocus = async () => {
-      if (document.visibilityState === 'hidden') return;
-
-      const now = Date.now();
-      const wasRecentlyHidden = wasHiddenRef.current;
-      wasHiddenRef.current = false;
-
-      if (isRevalidatingRef.current) return;
-      if (!wasRecentlyHidden && now - lastRevalidationRef.current < 30000) return;
-      if (navigator?.onLine === false) return;
-
-      isRevalidatingRef.current = true;
-
-      let timeoutId;
-      try {
-        const timeoutPromise = new Promise((_, reject) => {
-          timeoutId = setTimeout(() => reject(new Error('SESSION_REVALIDATION_TIMEOUT')), 10000);
-        });
-
-        const { data: { session }, error } = await Promise.race([
-          supabase.auth.getSession(),
-          timeoutPromise,
-        ]);
-
-        if (error) {
-          console.error('[AuthContext] Erro ao revalidar sessão:', error);
-          return;
-        }
-
-        let activeSession = session;
-
-        if (!session?.user) {
-          const { data: refreshed, error: refreshError } = await supabase.auth.refreshSession();
-
-          if (refreshError) {
-            console.warn('[AuthContext] Refresh falhou ao retomar foco/visibilidade:', refreshError);
-          } else {
-            activeSession = refreshed?.session || null;
-          }
-        }
-
-        if (activeSession?.user) {
-          const currentUserId = userRef.current?.id;
-          if (currentUserId !== activeSession.user.id) {
-            setUser(activeSession.user);
-          }
-
-          const hasProfileForUser = profileRef.current?.id === activeSession.user.id;
-          if (!hasProfileForUser) {
-            const profileData = await resolveProfile(activeSession.user.id);
-            if (profileData) {
-              setProfile(profileData);
-            }
-          }
-        } else {
-          console.warn('[AuthContext] Sessão expirada ao retomar foco/visibilidade');
-          await signOut();
-        }
-      } catch (error) {
-        if (error?.message === 'SESSION_REVALIDATION_TIMEOUT') {
-          console.warn('[AuthContext] Timeout ao revalidar sessão após retorno do app');
-        } else {
-          console.error('[AuthContext] Erro ao revalidar sessão (focus/visibility):', error);
-        }
-      } finally {
-        if (timeoutId) clearTimeout(timeoutId);
-        isRevalidatingRef.current = false;
-        lastRevalidationRef.current = Date.now();
-      }
-    };
-
-    const handleVisibilityChange = (event) => {
-      if (event.target.visibilityState === 'hidden') {
-        wasHiddenRef.current = true;
-        return;
-      }
-
-      handleVisibilityOrFocus();
-    };
-
-    window.addEventListener('focus', handleVisibilityOrFocus);
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-
-    return () => {
-      window.removeEventListener('focus', handleVisibilityOrFocus);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-  }, [resolveProfile, signOut]);
 
   /**
    * Fazer login com email e senha

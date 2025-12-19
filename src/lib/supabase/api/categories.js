@@ -6,6 +6,14 @@ import { supabase } from '../client';
 import { getAuthenticatedUser } from '../utils/auth';
 
 export async function getCategories(filters = {}) {
+  const { user, error: authError } = await getAuthenticatedUser();
+
+  if (!user) {
+    const error = authError || new Error('Usuário não autenticado');
+    error.code = 'AUTH_REQUIRED';
+    return { data: [], error };
+  }
+
   let query = supabase
     .from('categories_enriched')
     .select(`
@@ -131,6 +139,14 @@ export async function deleteCategory(id) {
 // ============================================
 
 export async function getTransactionTypes() {
+  const { user, error: authError } = await getAuthenticatedUser();
+
+  if (!user) {
+    const error = authError || new Error('Usuário não autenticado');
+    error.code = 'AUTH_REQUIRED';
+    return { data: [], error };
+  }
+
   const { data, error } = await supabase
     .from('transaction_types')
     .select('id, name, internal_name')
@@ -140,6 +156,14 @@ export async function getTransactionTypes() {
 }
 
 export async function getPaymentStatuses() {
+  const { user, error: authError } = await getAuthenticatedUser();
+
+  if (!user) {
+    const error = authError || new Error('Usuário não autenticado');
+    error.code = 'AUTH_REQUIRED';
+    return { data: [], error };
+  }
+
   const { data, error } = await supabase
     .from('payment_statuses')
     .select('id, name, internal_name')
@@ -149,6 +173,14 @@ export async function getPaymentStatuses() {
 }
 
 export async function getPaymentMethods() {
+  const { user, error: authError } = await getAuthenticatedUser();
+
+  if (!user) {
+    const error = authError || new Error('Usuário não autenticado');
+    error.code = 'AUTH_REQUIRED';
+    return { data: [], error };
+  }
+
   const { data, error } = await supabase
     .from('payment_methods')
     .select('id, name, internal_name')
@@ -158,6 +190,14 @@ export async function getPaymentMethods() {
 }
 
 export async function getRecurrenceFrequencies() {
+  const { user, error: authError } = await getAuthenticatedUser();
+
+  if (!user) {
+    const error = authError || new Error('Usuário não autenticado');
+    error.code = 'AUTH_REQUIRED';
+    return { data: [], error };
+  }
+
   const { data, error } = await supabase
     .from('recurrence_frequencies')
     .select('id, name, internal_name')
@@ -167,6 +207,14 @@ export async function getRecurrenceFrequencies() {
 }
 
 export async function getAccountTypes() {
+  const { user, error: authError } = await getAuthenticatedUser();
+
+  if (!user) {
+    const error = authError || new Error('Usuário não autenticado');
+    error.code = 'AUTH_REQUIRED';
+    return { data: [], error };
+  }
+
   const { data, error } = await supabase
     .from('account_types')
     .select('id, name, internal_name')
@@ -176,6 +224,14 @@ export async function getAccountTypes() {
 }
 
 export async function getCardTypes() {
+  const { user, error: authError } = await getAuthenticatedUser();
+
+  if (!user) {
+    const error = authError || new Error('Usuário não autenticado');
+    error.code = 'AUTH_REQUIRED';
+    return { data: [], error };
+  }
+
   const { data, error } = await supabase
     .from('card_types')
     .select('id, name, internal_name')
@@ -185,6 +241,14 @@ export async function getCardTypes() {
 }
 
 export async function getCardBrands() {
+  const { user, error: authError } = await getAuthenticatedUser();
+
+  if (!user) {
+    const error = authError || new Error('Usuário não autenticado');
+    error.code = 'AUTH_REQUIRED';
+    return { data: [], error };
+  }
+
   const { data, error } = await supabase
     .from('card_brands')
     .select('id, name')
@@ -194,6 +258,14 @@ export async function getCardBrands() {
 }
 
 export async function getIcons() {
+  const { user, error: authError } = await getAuthenticatedUser();
+
+  if (!user) {
+    const error = authError || new Error('Usuário não autenticado');
+    error.code = 'AUTH_REQUIRED';
+    return { data: [], error };
+  }
+
   const { data, error } = await supabase
     .from('icons')
     .select('id, name')

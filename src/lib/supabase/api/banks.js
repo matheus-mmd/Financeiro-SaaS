@@ -6,6 +6,14 @@ import { supabase } from '../client';
 import { getAuthenticatedUser } from '../utils/auth';
 
 export async function getBanks() {
+  const { user, error: authError } = await getAuthenticatedUser();
+
+  if (!user) {
+    const error = authError || new Error('Usuário não autenticado');
+    error.code = 'AUTH_REQUIRED';
+    return { data: [], error };
+  }
+
   const { data, error } = await supabase
     .from('banks_enriched')
     .select('*')
