@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo, useReducer, useCallback, useRef } from "react";
+import React, { useState, useEffect, useMemo, useReducer, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../../src/contexts/AuthContext";
 import PageHeader from "../../src/components/PageHeader";
@@ -49,21 +49,10 @@ import {
   parseDateString,
   isDateInRange,
 } from "../../src/utils";
-import {
-  getTransactions,
-  createTransaction,
-  updateTransaction,
-  deleteTransaction,
-} from "../../src/lib/supabase/api/transactions";
-import {
-  getCategories,
-  getTransactionTypes,
-  getPaymentStatuses,
-  getPaymentMethods,
-  getRecurrenceFrequencies,
-} from "../../src/lib/supabase/api/categories";
-import { getBanks } from "../../src/lib/supabase/api/banks";
-import { getCards } from "../../src/lib/supabase/api/cards";
+import { useTransactions } from "../../src/lib/supabase/hooks/useTransactions";
+import { useReferenceData } from "../../src/lib/supabase/hooks/useReferenceData";
+import { useBanks } from "../../src/lib/supabase/hooks/useBanks";
+import { useCards } from "../../src/lib/supabase/hooks/useCards";
 import { exportToCSV } from "../../src/utils/exportData";
 import { getIconComponent } from "../../src/components/IconPicker";
 import FilterButton from "../../src/components/FilterButton";
@@ -131,36 +120,6 @@ function formReducer(state, action) {
   }
 }
 
-// Cache local para acelerar reabertura da tela e imitar o carregamento imediato do dashboard
-const CACHE_KEY = "transactions_page_cache_v1";
-const CACHE_TTL = 5 * 60 * 1000; // 5 minutos
-
-const transactionsCache = {
-  get: () => {
-    if (typeof window === "undefined") return null;
-    try {
-      const raw = sessionStorage.getItem(CACHE_KEY);
-      if (!raw) return null;
-      const parsed = JSON.parse(raw);
-      const isStale = Date.now() - parsed.timestamp > CACHE_TTL;
-      return { ...parsed, isStale };
-    } catch {
-      return null;
-    }
-  },
-  set: (payload) => {
-    if (typeof window === "undefined") return;
-    try {
-      sessionStorage.setItem(
-        CACHE_KEY,
-        JSON.stringify({ ...payload, timestamp: Date.now() })
-      );
-    } catch {
-      // ignorar falhas de cache
-    }
-  },
-};
-
 /**
  * Página Transações - Gerenciamento de transações
  * Nova estrutura: Categoria (Salário, Moradia, etc.) + Tipo de Transação (Receita, Despesa, Aporte)
@@ -168,17 +127,10 @@ const transactionsCache = {
 export default function Transacoes() {
   const router = useRouter();
   const { user, loading: authLoading, signOut } = useAuth();
-  const isUnmounted = useRef(false);
-  const [transactions, setTransactions] = useState([]);
-  const [categories, setCategories] = useState([]);
-  const [transactionTypes, setTransactionTypes] = useState([]);
-  const [banks, setBanks] = useState([]);
-  const [cards, setCards] = useState([]);
-  const [paymentStatuses, setPaymentStatuses] = useState([]);
-  const [paymentMethods, setPaymentMethods] = useState([]);
-  const [recurrenceFrequencies, setRecurrenceFrequencies] = useState([]);
-  const [filteredTransactions, setFilteredTransactions] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { transactions, loading: transactionsLoading, refresh, create, update, remove } = useTransactions();
+  const { data: referenceData, loading: referenceLoading } = useReferenceData();
+  const { banks, loading: banksLoading } = useBanks();
+  const { cards, loading: cardsLoading } = useCards();
   const [modalOpen, setModalOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState(null);
   const [filterCategory, setFilterCategory] = useState("all");
@@ -208,9 +160,6 @@ export default function Transacoes() {
       } : null,
     })), []);
 
-  useEffect(() => () => {
-    isUnmounted.current = true;
-  }, []);
 
   const handleAuthFailure = useCallback(async () => {
     await signOut();
@@ -229,212 +178,60 @@ export default function Transacoes() {
     return false;
   }, [handleAuthFailure, isAuthError]);
 
-  const refreshTransactions = useCallback(async () => {
-    const response = await getTransactions();
-    if (response.error) {
-      if (await handleApiError(response.error)) return [];
-      throw response.error;
-    }
-    return mapTransactions(response.data || []);
-  }, [handleApiError, mapTransactions]);
-
-  const applyCachedData = useCallback((cached) => {
-    if (!cached || isUnmounted.current) return false;
-
-    setTransactions(cached.transactions || []);
-    setFilteredTransactions(cached.transactions || []);
-    setCategories(cached.categories || []);
-    setTransactionTypes(cached.transactionTypes || []);
-    setBanks(cached.banks || []);
-    setCards(cached.cards || []);
-    setPaymentStatuses(cached.paymentStatuses || []);
-    setPaymentMethods(cached.paymentMethods || []);
-    setRecurrenceFrequencies(cached.recurrenceFrequencies || []);
-
-    if ((cached.categories || []).length > 0 && (cached.transactionTypes || []).length > 0) {
-      dispatch({
-        type: 'UPDATE_MULTIPLE',
-        updates: {
-          categoryId: cached.categories[0].id,
-          transactionTypeId: cached.transactionTypes[0].id,
-        }
-      });
-    }
-
-    return true;
-  }, []);
-
   useEffect(() => {
     if (authLoading) return;
-
     if (!user) {
-      setTransactions([]);
-      setFilteredTransactions([]);
-      setLoading(false);
       router.replace('/login');
-      return;
     }
+  }, [authLoading, user, router]);
 
-    let timeoutId;
-    const cached = transactionsCache.get();
-
-    if (cached && applyCachedData(cached.data)) {
-      setLoading(false);
-      if (!cached.isStale) {
-        return () => {
-          if (timeoutId) clearTimeout(timeoutId);
-        };
-      }
-    } else {
-      setLoading(true);
-    }
-
-    const loadData = async (skipLoadingState = false) => {
-      try {
-        const timeoutPromise = new Promise((_, reject) => {
-          timeoutId = setTimeout(() => reject(new Error('Timeout ao carregar transações')), 10000);
-        });
-
-        const dataPromise = Promise.all([
-          refreshTransactions(),
-          getCategories(),
-          getTransactionTypes(),
-          getBanks(),
-          getCards(),
-          getPaymentStatuses(),
-          getPaymentMethods(),
-          getRecurrenceFrequencies(),
-        ]);
-
-        const [
-          mappedTransactions,
-          categoriesRes,
-          transactionTypesRes,
-          banksRes,
-          cardsRes,
-          paymentStatusesRes,
-          paymentMethodsRes,
-          recurrenceFrequenciesRes,
-        ] = await Promise.race([dataPromise, timeoutPromise]);
-
-        if (isUnmounted.current) return;
-
-        const authError =
-          categoriesRes.error?.code === 'AUTH_REQUIRED' ||
-          transactionTypesRes.error?.code === 'AUTH_REQUIRED' ||
-          banksRes.error?.code === 'AUTH_REQUIRED' ||
-          cardsRes.error?.code === 'AUTH_REQUIRED' ||
-          paymentStatusesRes.error?.code === 'AUTH_REQUIRED' ||
-          paymentMethodsRes.error?.code === 'AUTH_REQUIRED' ||
-          recurrenceFrequenciesRes.error?.code === 'AUTH_REQUIRED';
-
-        if (authError) {
-          await handleAuthFailure();
-          return;
-        }
-
-        if (categoriesRes.error) throw categoriesRes.error;
-        if (transactionTypesRes.error) throw transactionTypesRes.error;
-        if (banksRes.error) throw banksRes.error;
-        if (cardsRes.error) throw cardsRes.error;
-        if (paymentStatusesRes.error) throw paymentStatusesRes.error;
-        if (paymentMethodsRes.error) throw paymentMethodsRes.error;
-        if (recurrenceFrequenciesRes.error) throw recurrenceFrequenciesRes.error;
-
-        setTransactions(mappedTransactions);
-        setFilteredTransactions(mappedTransactions);
-        setCategories(categoriesRes.data || []);
-        setTransactionTypes(transactionTypesRes.data || []);
-        setBanks(banksRes.data || []);
-        setCards(cardsRes.data || []);
-        setPaymentStatuses(paymentStatusesRes.data || []);
-        setPaymentMethods(paymentMethodsRes.data || []);
-        setRecurrenceFrequencies(recurrenceFrequenciesRes.data || []);
-
-        transactionsCache.set({
-          data: {
-            transactions: mappedTransactions,
-            categories: categoriesRes.data || [],
-            transactionTypes: transactionTypesRes.data || [],
-            banks: banksRes.data || [],
-            cards: cardsRes.data || [],
-            paymentStatuses: paymentStatusesRes.data || [],
-            paymentMethods: paymentMethodsRes.data || [],
-            recurrenceFrequencies: recurrenceFrequenciesRes.data || [],
-          },
-        });
-
-        if (
-          categoriesRes.data && categoriesRes.data.length > 0 &&
-          transactionTypesRes.data && transactionTypesRes.data.length > 0
-        ) {
-          const defaultCategory = categoriesRes.data[0];
-          const defaultType = transactionTypesRes.data[0];
-          dispatch({
-            type: 'UPDATE_MULTIPLE',
-            updates: {
-              categoryId: defaultCategory.id,
-              transactionTypeId: defaultType.id,
-            }
-          });
-        }
-      } catch (error) {
-        if (await handleApiError(error)) {
-          return;
-        }
-        if (error.name !== 'AbortError') {
-          console.error("Erro ao carregar transações:", error);
-        }
-      } finally {
-        if (timeoutId) clearTimeout(timeoutId);
-        if (!skipLoadingState && !isUnmounted.current) {
-          setLoading(false);
-        }
-      }
-    };
-
-    loadData(Boolean(cached));
-
-    return () => {
-      if (timeoutId) clearTimeout(timeoutId);
-    };
-  }, [authLoading, user, refreshTransactions, handleAuthFailure, router, applyCachedData, handleApiError]);
+  const categories = referenceData.categories || [];
+  const transactionTypes = referenceData.transactionTypes || [];
+  const paymentStatuses = referenceData.paymentStatuses || [];
+  const paymentMethods = referenceData.paymentMethods || [];
+  const recurrenceFrequencies = referenceData.recurrenceFrequencies || [];
 
   useEffect(() => {
-    let filtered = transactions;
+    if (editingTransaction) return;
+    if (!categories.length || !transactionTypes.length) return;
 
-    // Filtrar por categoria
+    dispatch({
+      type: 'UPDATE_MULTIPLE',
+      updates: {
+        categoryId: categories[0].id,
+        transactionTypeId: transactionTypes[0].id,
+      }
+    });
+  }, [categories, transactionTypes, editingTransaction]);
+
+  const mappedTransactions = useMemo(() => mapTransactions(transactions || []), [transactions, mapTransactions]);
+
+  const filteredTransactions = useMemo(() => {
+    let filtered = mappedTransactions;
+
     if (filterCategory !== "all") {
-      filtered = filtered.filter(
-        (t) => t.category_id === parseInt(filterCategory)
-      );
+      filtered = filtered.filter((t) => t.category_id === parseInt(filterCategory));
     }
 
-    // Filtrar por tipo de transação
     if (filterTransactionType !== "all") {
-      filtered = filtered.filter(
-        (t) => t.type_internal_name === filterTransactionType
-      );
+      filtered = filtered.filter((t) => t.type_internal_name === filterTransactionType);
     }
 
-    // Filtrar por status de pagamento
     if (filterStatus !== "all") {
       filtered = filtered.filter((t) => t.status === filterStatus);
     }
 
-    // Filtrar por intervalo de datas
     if (filterMonth?.from && filterMonth?.to) {
       filtered = filtered.filter((t) => isDateInRange(t.date, filterMonth));
     }
 
-    setFilteredTransactions(filtered);
-  }, [
-    filterCategory,
-    filterTransactionType,
-    filterStatus,
-    filterMonth,
-    transactions,
-  ]);
+    return filtered;
+  }, [mappedTransactions, filterCategory, filterTransactionType, filterStatus, filterMonth]);
+
+  const loading = useMemo(
+    () => authLoading || transactionsLoading || referenceLoading || banksLoading || cardsLoading,
+    [authLoading, transactionsLoading, referenceLoading, banksLoading, cardsLoading]
+  );
 
   const handleAddTransaction = useCallback(() => {
     setEditingTransaction(null);
@@ -510,20 +307,19 @@ export default function Transacoes() {
           ? PAYMENT_STATUS.PENDING
           : PAYMENT_STATUS.PAID;
 
-      const result = await updateTransaction(transaction.id, {
+      const result = await update(transaction.id, {
         status: newStatus,
       });
 
       if (result.error) throw result.error;
 
-      const mappedTransactions = await refreshTransactions();
-      setTransactions(mappedTransactions);
+      await refresh();
     } catch (error) {
       if (!(await handleApiError(error))) {
         console.error("Erro ao atualizar status:", error);
       }
     }
-  }, [refreshTransactions, handleApiError]);
+  }, [refresh, update, handleApiError]);
 
   // Categorização inteligente - sugere categoria baseado na descrição
   const suggestCategory = (description) => {
@@ -589,13 +385,10 @@ export default function Transacoes() {
   const confirmDelete = async () => {
     if (transactionToDelete) {
       try {
-        const result = await deleteTransaction(transactionToDelete.id);
+        const result = await remove(transactionToDelete.id);
         if (result.error) throw result.error;
 
-        const mappedTransactions = await refreshTransactions();
-
-        setTransactions(mappedTransactions);
-        setFilteredTransactions(mappedTransactions);
+        await refresh();
         setDeleteDialogOpen(false);
         setTransactionToDelete(null);
       } catch (error) {
@@ -656,17 +449,14 @@ export default function Transacoes() {
 
       let result;
       if (editingTransaction) {
-        result = await updateTransaction(editingTransaction.id, transactionData);
+        result = await update(editingTransaction.id, transactionData);
       } else {
-        result = await createTransaction(transactionData);
+        result = await create(transactionData);
       }
 
       if (result.error) throw result.error;
 
-      const mappedTransactions = await refreshTransactions();
-
-      setTransactions(mappedTransactions);
-      setFilteredTransactions(mappedTransactions);
+      await refresh();
 
       setModalOpen(false);
       const defaultCategory = categories[0];
@@ -685,7 +475,7 @@ export default function Transacoes() {
         alert("Erro ao salvar transação.");
       }
     }
-  }, [formData, transactionTypes, paymentStatuses, paymentMethods, recurrenceFrequencies, editingTransaction, categories, handleApiError]);
+  }, [formData, transactionTypes, paymentStatuses, paymentMethods, recurrenceFrequencies, editingTransaction, categories, handleApiError, update, create, refresh]);
 
   const handleInputChange = useCallback((field, value) => {
     // Atualizar campo principal
