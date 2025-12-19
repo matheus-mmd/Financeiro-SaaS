@@ -2,7 +2,7 @@
  * Hook para gerenciar transações
  */
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import {
   getTransactions,
   getTransactionById,
@@ -17,6 +17,7 @@ export function useTransactions(filters = {}) {
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const isUnmounted = useRef(false);
 
   // Criar função de carregamento estável
   // OTIMIZAÇÃO: Usar useMemo para criar uma key estável dos filtros ao invés de JSON.stringify
@@ -27,16 +28,35 @@ export function useTransactions(filters = {}) {
       .join('|');
   }, [filters]);
 
+  useEffect(() => () => {
+    isUnmounted.current = true;
+  }, []);
+
   const loadTransactions = useCallback(async () => {
+    if (isUnmounted.current) return;
+
     setLoading(true);
     setError(null);
-    const { data, error: fetchError } = await getTransactions(filters);
-    if (fetchError) {
-      setError(fetchError);
-    } else {
-      setTransactions(data || []);
+
+    try {
+      const { data, error: fetchError } = await getTransactions(filters);
+
+      if (isUnmounted.current) return;
+
+      if (fetchError) {
+        setError(fetchError);
+      } else {
+        setTransactions(data || []);
+      }
+    } catch (err) {
+      if (!isUnmounted.current) {
+        setError(err);
+      }
+    } finally {
+      if (!isUnmounted.current) {
+        setLoading(false);
+      }
     }
-    setLoading(false);
   }, [filtersKey]); // Usar filtersKey ao invés de JSON.stringify
 
   // Carregar quando filters mudar
@@ -83,6 +103,11 @@ export function useTransaction(id) {
   const [transaction, setTransaction] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const isUnmounted = useRef(false);
+
+  useEffect(() => () => {
+    isUnmounted.current = true;
+  }, []);
 
   const loadTransaction = useCallback(async () => {
     if (!id) {
@@ -92,13 +117,26 @@ export function useTransaction(id) {
 
     setLoading(true);
     setError(null);
-    const { data, error: fetchError } = await getTransactionById(id);
-    if (fetchError) {
-      setError(fetchError);
-    } else {
-      setTransaction(data);
+
+    try {
+      const { data, error: fetchError } = await getTransactionById(id);
+
+      if (isUnmounted.current) return;
+
+      if (fetchError) {
+        setError(fetchError);
+      } else {
+        setTransaction(data);
+      }
+    } catch (err) {
+      if (!isUnmounted.current) {
+        setError(err);
+      }
+    } finally {
+      if (!isUnmounted.current) {
+        setLoading(false);
+      }
     }
-    setLoading(false);
   }, [id]); // id é primitivo, não causa loop
 
   useEffect(() => {
@@ -117,6 +155,11 @@ export function useInstallmentGroup(groupId) {
   const [installments, setInstallments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const isUnmounted = useRef(false);
+
+  useEffect(() => () => {
+    isUnmounted.current = true;
+  }, []);
 
   const loadInstallments = useCallback(async () => {
     if (!groupId) {
@@ -126,13 +169,26 @@ export function useInstallmentGroup(groupId) {
 
     setLoading(true);
     setError(null);
-    const { data, error: fetchError } = await getTransactionsByInstallmentGroup(groupId);
-    if (fetchError) {
-      setError(fetchError);
-    } else {
-      setInstallments(data || []);
+
+    try {
+      const { data, error: fetchError } = await getTransactionsByInstallmentGroup(groupId);
+
+      if (isUnmounted.current) return;
+
+      if (fetchError) {
+        setError(fetchError);
+      } else {
+        setInstallments(data || []);
+      }
+    } catch (err) {
+      if (!isUnmounted.current) {
+        setError(err);
+      }
+    } finally {
+      if (!isUnmounted.current) {
+        setLoading(false);
+      }
     }
-    setLoading(false);
   }, [groupId]); // groupId é primitivo, não causa loop
 
   useEffect(() => {
@@ -151,17 +207,37 @@ export function useRecurringTransactions() {
   const [recurring, setRecurring] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const isUnmounted = useRef(false);
+
+  useEffect(() => () => {
+    isUnmounted.current = true;
+  }, []);
 
   const loadRecurring = useCallback(async () => {
+    if (isUnmounted.current) return;
+
     setLoading(true);
     setError(null);
-    const { data, error: fetchError } = await getRecurringTransactions();
-    if (fetchError) {
-      setError(fetchError);
-    } else {
-      setRecurring(data || []);
+
+    try {
+      const { data, error: fetchError } = await getRecurringTransactions();
+
+      if (isUnmounted.current) return;
+
+      if (fetchError) {
+        setError(fetchError);
+      } else {
+        setRecurring(data || []);
+      }
+    } catch (err) {
+      if (!isUnmounted.current) {
+        setError(err);
+      }
+    } finally {
+      if (!isUnmounted.current) {
+        setLoading(false);
+      }
     }
-    setLoading(false);
   }, []);
 
   useEffect(() => {

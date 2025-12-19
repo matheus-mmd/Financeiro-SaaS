@@ -2,7 +2,7 @@
  * Hook para gerenciar bancos/contas
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   getBanks,
   getBankById,
@@ -15,17 +15,37 @@ export function useBanks() {
   const [banks, setBanks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const isUnmounted = useRef(false);
+
+  useEffect(() => () => {
+    isUnmounted.current = true;
+  }, []);
 
   const loadBanks = useCallback(async () => {
+    if (isUnmounted.current) return;
+
     setLoading(true);
     setError(null);
-    const { data, error: fetchError } = await getBanks();
-    if (fetchError) {
-      setError(fetchError);
-    } else {
-      setBanks(data || []);
+
+    try {
+      const { data, error: fetchError } = await getBanks();
+
+      if (isUnmounted.current) return;
+
+      if (fetchError) {
+        setError(fetchError);
+      } else {
+        setBanks(data || []);
+      }
+    } catch (err) {
+      if (!isUnmounted.current) {
+        setError(err);
+      }
+    } finally {
+      if (!isUnmounted.current) {
+        setLoading(false);
+      }
     }
-    setLoading(false);
   }, []);
 
   useEffect(() => {
@@ -72,6 +92,11 @@ export function useBank(id) {
   const [bank, setBank] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const isUnmounted = useRef(false);
+
+  useEffect(() => () => {
+    isUnmounted.current = true;
+  }, []);
 
   const loadBank = useCallback(async () => {
     if (!id) {
@@ -81,13 +106,26 @@ export function useBank(id) {
 
     setLoading(true);
     setError(null);
-    const { data, error: fetchError } = await getBankById(id);
-    if (fetchError) {
-      setError(fetchError);
-    } else {
-      setBank(data);
+
+    try {
+      const { data, error: fetchError } = await getBankById(id);
+
+      if (isUnmounted.current) return;
+
+      if (fetchError) {
+        setError(fetchError);
+      } else {
+        setBank(data);
+      }
+    } catch (err) {
+      if (!isUnmounted.current) {
+        setError(err);
+      }
+    } finally {
+      if (!isUnmounted.current) {
+        setLoading(false);
+      }
     }
-    setLoading(false);
   }, [id]); // id é primitivo, não causa loop
 
   useEffect(() => {

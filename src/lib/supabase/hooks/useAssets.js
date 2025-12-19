@@ -2,7 +2,7 @@
  * Hook para gerenciar ativos
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   getAssets,
   getAssetById,
@@ -15,17 +15,37 @@ export function useAssets() {
   const [assets, setAssets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const isUnmounted = useRef(false);
+
+  useEffect(() => () => {
+    isUnmounted.current = true;
+  }, []);
 
   const loadAssets = useCallback(async () => {
+    if (isUnmounted.current) return;
+
     setLoading(true);
     setError(null);
-    const { data, error: fetchError } = await getAssets();
-    if (fetchError) {
-      setError(fetchError);
-    } else {
-      setAssets(data || []);
+
+    try {
+      const { data, error: fetchError } = await getAssets();
+
+      if (isUnmounted.current) return;
+
+      if (fetchError) {
+        setError(fetchError);
+      } else {
+        setAssets(data || []);
+      }
+    } catch (err) {
+      if (!isUnmounted.current) {
+        setError(err);
+      }
+    } finally {
+      if (!isUnmounted.current) {
+        setLoading(false);
+      }
     }
-    setLoading(false);
   }, []);
 
   useEffect(() => {
@@ -72,6 +92,11 @@ export function useAsset(id) {
   const [asset, setAsset] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const isUnmounted = useRef(false);
+
+  useEffect(() => () => {
+    isUnmounted.current = true;
+  }, []);
 
   const loadAsset = useCallback(async () => {
     if (!id) {
@@ -81,13 +106,26 @@ export function useAsset(id) {
 
     setLoading(true);
     setError(null);
-    const { data, error: fetchError } = await getAssetById(id);
-    if (fetchError) {
-      setError(fetchError);
-    } else {
-      setAsset(data);
+
+    try {
+      const { data, error: fetchError } = await getAssetById(id);
+
+      if (isUnmounted.current) return;
+
+      if (fetchError) {
+        setError(fetchError);
+      } else {
+        setAsset(data);
+      }
+    } catch (err) {
+      if (!isUnmounted.current) {
+        setError(err);
+      }
+    } finally {
+      if (!isUnmounted.current) {
+        setLoading(false);
+      }
     }
-    setLoading(false);
   }, [id]); // id é primitivo, não causa loop
 
   useEffect(() => {

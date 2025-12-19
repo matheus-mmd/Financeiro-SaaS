@@ -2,7 +2,7 @@
  * Hook para gerenciar metas
  */
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import {
   getTargets,
   getTargetById,
@@ -15,6 +15,7 @@ export function useTargets(filters = {}) {
   const [targets, setTargets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const isUnmounted = useRef(false);
 
   // Criar função de carregamento estável
   // OTIMIZAÇÃO: Usar useMemo para criar uma key estável dos filtros ao invés de JSON.stringify
@@ -25,16 +26,35 @@ export function useTargets(filters = {}) {
       .join('|');
   }, [filters]);
 
+  useEffect(() => () => {
+    isUnmounted.current = true;
+  }, []);
+
   const loadTargets = useCallback(async () => {
+    if (isUnmounted.current) return;
+
     setLoading(true);
     setError(null);
-    const { data, error: fetchError } = await getTargets(filters);
-    if (fetchError) {
-      setError(fetchError);
-    } else {
-      setTargets(data || []);
+
+    try {
+      const { data, error: fetchError } = await getTargets(filters);
+
+      if (isUnmounted.current) return;
+
+      if (fetchError) {
+        setError(fetchError);
+      } else {
+        setTargets(data || []);
+      }
+    } catch (err) {
+      if (!isUnmounted.current) {
+        setError(err);
+      }
+    } finally {
+      if (!isUnmounted.current) {
+        setLoading(false);
+      }
     }
-    setLoading(false);
   }, [filtersKey]); // Usar filtersKey ao invés de JSON.stringify
 
   // Carregar quando filters mudar
@@ -81,6 +101,11 @@ export function useTarget(id) {
   const [target, setTarget] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const isUnmounted = useRef(false);
+
+  useEffect(() => () => {
+    isUnmounted.current = true;
+  }, []);
 
   const loadTarget = useCallback(async () => {
     if (!id) {
@@ -90,13 +115,26 @@ export function useTarget(id) {
 
     setLoading(true);
     setError(null);
-    const { data, error: fetchError } = await getTargetById(id);
-    if (fetchError) {
-      setError(fetchError);
-    } else {
-      setTarget(data);
+
+    try {
+      const { data, error: fetchError } = await getTargetById(id);
+
+      if (isUnmounted.current) return;
+
+      if (fetchError) {
+        setError(fetchError);
+      } else {
+        setTarget(data);
+      }
+    } catch (err) {
+      if (!isUnmounted.current) {
+        setError(err);
+      }
+    } finally {
+      if (!isUnmounted.current) {
+        setLoading(false);
+      }
     }
-    setLoading(false);
   }, [id]); // id é primitivo, não causa loop
 
   useEffect(() => {

@@ -2,7 +2,7 @@
  * Hook para gerenciar cartões
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   getCards,
   getCardById,
@@ -15,17 +15,37 @@ export function useCards() {
   const [cards, setCards] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const isUnmounted = useRef(false);
+
+  useEffect(() => () => {
+    isUnmounted.current = true;
+  }, []);
 
   const loadCards = useCallback(async () => {
+    if (isUnmounted.current) return;
+
     setLoading(true);
     setError(null);
-    const { data, error: fetchError } = await getCards();
-    if (fetchError) {
-      setError(fetchError);
-    } else {
-      setCards(data || []);
+
+    try {
+      const { data, error: fetchError } = await getCards();
+
+      if (isUnmounted.current) return;
+
+      if (fetchError) {
+        setError(fetchError);
+      } else {
+        setCards(data || []);
+      }
+    } catch (err) {
+      if (!isUnmounted.current) {
+        setError(err);
+      }
+    } finally {
+      if (!isUnmounted.current) {
+        setLoading(false);
+      }
     }
-    setLoading(false);
   }, []);
 
   useEffect(() => {
@@ -72,6 +92,11 @@ export function useCard(id) {
   const [card, setCard] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const isUnmounted = useRef(false);
+
+  useEffect(() => () => {
+    isUnmounted.current = true;
+  }, []);
 
   const loadCard = useCallback(async () => {
     if (!id) {
@@ -81,13 +106,26 @@ export function useCard(id) {
 
     setLoading(true);
     setError(null);
-    const { data, error: fetchError } = await getCardById(id);
-    if (fetchError) {
-      setError(fetchError);
-    } else {
-      setCard(data);
+
+    try {
+      const { data, error: fetchError } = await getCardById(id);
+
+      if (isUnmounted.current) return;
+
+      if (fetchError) {
+        setError(fetchError);
+      } else {
+        setCard(data);
+      }
+    } catch (err) {
+      if (!isUnmounted.current) {
+        setError(err);
+      }
+    } finally {
+      if (!isUnmounted.current) {
+        setLoading(false);
+      }
     }
-    setLoading(false);
   }, [id]); // id é primitivo, não causa loop
 
   useEffect(() => {
