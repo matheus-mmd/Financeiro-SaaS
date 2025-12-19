@@ -76,6 +76,8 @@ export function useTargets(filters = {}) {
     isUnmounted.current = true;
   }, []);
 
+  const stableFilters = useMemo(() => ({ ...filters }), [filtersKey]);
+
   const loadTargets = useCallback(async (skipLoadingState = false) => {
     if (isUnmounted.current) return;
 
@@ -85,7 +87,7 @@ export function useTargets(filters = {}) {
     setError(null);
 
     try {
-      const { data, error: fetchError } = await getTargets(filters);
+      const { data, error: fetchError } = await getTargets(stableFilters);
 
       if (isUnmounted.current) return;
 
@@ -106,7 +108,7 @@ export function useTargets(filters = {}) {
         setLoading(false);
       }
     }
-  }, [filters, filtersKey]); // Usar filtersKey ao invés de JSON.stringify
+  }, [filtersKey, stableFilters]);
 
   // Carregar quando filters mudar
   useEffect(() => {
