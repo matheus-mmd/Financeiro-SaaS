@@ -79,9 +79,16 @@ export function useDashboard() {
   const [error, setError] = useState(null);
   const [isFromCache, setIsFromCache] = useState(false);
   const hasMounted = useRef(false);
+  const isUnmounted = useRef(false);
+
+  useEffect(() => () => {
+    isUnmounted.current = true;
+  }, []);
 
   // Função para aplicar dados (do cache ou da API)
   const applyData = useCallback((categoriesData, transactionsData, assetsData) => {
+    if (isUnmounted.current) return;
+
     // Mapear transações
     const mappedTransactions = (transactionsData || []).map((t) => ({
       ...t,
@@ -103,15 +110,19 @@ export function useDashboard() {
 
   // Carregar dados do dashboard (da API)
   const loadDashboardData = useCallback(async (skipLoadingState = false) => {
+    if (isUnmounted.current) return;
+
     if (!skipLoadingState) {
       setLoading(true);
     }
     setError(null);
 
+    let timeoutId;
+
     try {
       // Timeout de segurança
       const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Timeout ao carregar dados do dashboard')), 10000);
+        timeoutId = setTimeout(() => reject(new Error('Timeout ao carregar dados do dashboard')), 10000);
       });
 
       // Carregar dados em paralelo
@@ -158,19 +169,28 @@ export function useDashboard() {
         assets: assetsData,
       });
 
-      setIsFromCache(false);
+      if (!isUnmounted.current) {
+        setIsFromCache(false);
+      }
     } catch (err) {
-      setError(err);
+      if (!isUnmounted.current) {
+        setError(err);
+      }
       console.error('[useDashboard] Erro ao carregar dashboard:', err);
 
       // Se não temos dados em cache, setar dados vazios
-      if (categories.length === 0 && transactions.length === 0) {
+      if (!isUnmounted.current && categories.length === 0 && transactions.length === 0) {
         setCategories([]);
         setTransactions([]);
         setAssets([]);
       }
     } finally {
-      setLoading(false);
+      if (!isUnmounted.current) {
+        setLoading(false);
+      }
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
     }
   }, [applyData, categories.length, transactions.length]);
 

@@ -211,7 +211,7 @@ export const AuthProvider = ({ children }) => {
       // Buscar perfil do usuário (criado pelo trigger do banco)
       if (data.user) {
         const profileData = await fetchProfile(data.user.id);
-        setProfile(profileData);
+        setProfile(profileData.data || null);
       }
 
       return { data, error: null };
