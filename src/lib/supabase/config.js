@@ -7,6 +7,15 @@
 const REQUIRED_ENV_VARS = ['NEXT_PUBLIC_SUPABASE_URL', 'NEXT_PUBLIC_SUPABASE_ANON_KEY'];
 
 export function getSupabaseConfig() {
+  // Durante build/SSR, as env vars podem não estar disponíveis
+  // O client.js já tem guard para isso, mas garantimos aqui também
+  if (typeof window === 'undefined') {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() || '';
+    const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim() || '';
+    // Retorna valores vazios durante SSR - o client.js retornará null de qualquer forma
+    return { url, anonKey };
+  }
+
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim();
 
