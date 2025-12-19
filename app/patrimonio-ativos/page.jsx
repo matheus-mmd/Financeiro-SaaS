@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../../src/contexts/AuthContext";
 import PageHeader from "../../src/components/PageHeader";
@@ -59,6 +59,35 @@ import FABMenu from "../../src/components/FABMenu";
 import { TRANSACTION_TYPE_IDS, DEFAULT_CATEGORY_COLOR } from "../../src/constants";
 import { DollarSign, Percent, Plus, Download, Trash2, Wallet, Copy } from "lucide-react";
 
+const CACHE_KEY = "assets_page_cache_v1";
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutos
+
+const assetsCache = {
+  get: () => {
+    if (typeof window === "undefined") return null;
+    try {
+      const raw = sessionStorage.getItem(CACHE_KEY);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      const isStale = Date.now() - parsed.timestamp > CACHE_TTL;
+      return { ...parsed, isStale };
+    } catch {
+      return null;
+    }
+  },
+  set: (payload) => {
+    if (typeof window === "undefined") return;
+    try {
+      sessionStorage.setItem(
+        CACHE_KEY,
+        JSON.stringify({ ...payload, timestamp: Date.now() })
+      );
+    } catch {
+      // ignorar falhas de cache
+    }
+  },
+};
+
 /**
  * Página Patrimônio e Ativos - Gerenciamento de patrimônio e ativos
  * Permite visualizar, filtrar, adicionar e gerenciar patrimônio e ativos
@@ -66,6 +95,7 @@ import { DollarSign, Percent, Plus, Download, Trash2, Wallet, Copy } from "lucid
 export default function PatrimonioAtivos() {
   const router = useRouter();
   const { user, loading: authLoading, signOut } = useAuth();
+  const isUnmounted = useRef(false);
   const [assets, setAssets] = useState([]);
   const [filteredAssets, setFilteredAssets] = useState([]);
   const [selectedAsset, setSelectedAsset] = useState(null);
@@ -89,6 +119,10 @@ export default function PatrimonioAtivos() {
     purchase_value: "",
   });
 
+  useEffect(() => () => {
+    isUnmounted.current = true;
+  }, []);
+
   const handleAuthFailure = useCallback(async () => {
     await signOut();
     router.replace('/login');
@@ -99,7 +133,6 @@ export default function PatrimonioAtivos() {
   }, []);
 
   useEffect(() => {
-    let isMounted = true;
     let timeoutId;
 
     if (authLoading) return;
@@ -112,7 +145,30 @@ export default function PatrimonioAtivos() {
       return;
     }
 
-    const loadData = async () => {
+    const cached = assetsCache.get();
+    if (cached?.data && !isUnmounted.current) {
+      const mappedAssets = (cached.data.assets || []).map((asset) => ({
+        ...asset,
+        date: asset.valuation_date || new Date().toISOString().split("T")[0],
+        yield: asset.yield_rate || 0,
+        type: asset.category_name || "",
+      }));
+
+      setAssets(mappedAssets);
+      setFilteredAssets(mappedAssets);
+      setCategories(cached.data.categories || []);
+      setLoading(false);
+
+      if (!cached.isStale) {
+        return () => {
+          if (timeoutId) clearTimeout(timeoutId);
+        };
+      }
+    } else {
+      setLoading(true);
+    }
+
+    const loadData = async (skipLoadingState = false) => {
       try {
         const timeoutPromise = new Promise((_, reject) => {
           timeoutId = setTimeout(() => reject(new Error('Timeout ao carregar ativos')), 10000);
@@ -125,7 +181,7 @@ export default function PatrimonioAtivos() {
 
         const [assetsRes, categoriesRes] = await Promise.race([dataPromise, timeoutPromise]);
 
-        if (!isMounted) return;
+        if (isUnmounted.current) return;
 
         if (assetsRes.error?.code === 'AUTH_REQUIRED' || categoriesRes.error?.code === 'AUTH_REQUIRED') {
           await handleAuthFailure();
@@ -145,6 +201,13 @@ export default function PatrimonioAtivos() {
         setAssets(mappedAssets);
         setFilteredAssets(mappedAssets);
         setCategories(categoriesRes.data || []);
+
+        assetsCache.set({
+          data: {
+            assets: assetsRes.data || [],
+            categories: categoriesRes.data || [],
+          },
+        });
       } catch (error) {
         if (error?.code === 'AUTH_REQUIRED') {
           await handleAuthFailure();
@@ -152,23 +215,20 @@ export default function PatrimonioAtivos() {
         } else if (error.name !== 'AbortError') {
           console.error("Erro ao carregar patrimônio e ativos:", error);
         }
-        if (isMounted) {
-          setAssets([]);
-          setFilteredAssets([]);
-          setCategories([]);
-        }
+        setAssets([]);
+        setFilteredAssets([]);
+        setCategories([]);
       } finally {
         if (timeoutId) clearTimeout(timeoutId);
-        if (isMounted) {
+        if (!skipLoadingState && !isUnmounted.current) {
           setLoading(false);
         }
       }
     };
 
-    loadData();
+    loadData(Boolean(cached));
 
     return () => {
-      isMounted = false;
       if (timeoutId) clearTimeout(timeoutId);
     };
   }, [authLoading, user, handleAuthFailure, router]);

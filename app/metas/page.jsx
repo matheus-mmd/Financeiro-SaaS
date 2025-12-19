@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../../src/contexts/AuthContext";
 import PageHeader from "../../src/components/PageHeader";
@@ -59,6 +59,35 @@ import { getIconComponent } from "../../src/components/IconPicker";
 import { GOAL_STATUS } from "../../src/constants";
 import { Target, Plus, Trash2, CheckCircle, Download, TrendingUp, Copy } from "lucide-react";
 
+const CACHE_KEY = "targets_page_cache_v1";
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutos
+
+const targetsCache = {
+  get: () => {
+    if (typeof window === "undefined") return null;
+    try {
+      const raw = sessionStorage.getItem(CACHE_KEY);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      const isStale = Date.now() - parsed.timestamp > CACHE_TTL;
+      return { ...parsed, isStale };
+    } catch {
+      return null;
+    }
+  },
+  set: (payload) => {
+    if (typeof window === "undefined") return;
+    try {
+      sessionStorage.setItem(
+        CACHE_KEY,
+        JSON.stringify({ ...payload, timestamp: Date.now() })
+      );
+    } catch {
+      // ignorar falhas de cache
+    }
+  },
+};
+
 /**
  * Página Metas - Gerenciamento de metas financeiras
  * Permite visualizar, filtrar, adicionar e acompanhar progresso de metas
@@ -66,6 +95,7 @@ import { Target, Plus, Trash2, CheckCircle, Download, TrendingUp, Copy } from "l
 export default function Metas() {
   const router = useRouter();
   const { user, loading: authLoading, signOut } = useAuth();
+  const isUnmounted = useRef(false);
   const [targets, setTargets] = useState([]);
   const [filteredTargets, setFilteredTargets] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -87,6 +117,10 @@ export default function Metas() {
     deadline: null,
   });
 
+  useEffect(() => () => {
+    isUnmounted.current = true;
+  }, []);
+
   const handleAuthFailure = useCallback(async () => {
     await signOut();
     router.replace('/login');
@@ -97,7 +131,6 @@ export default function Metas() {
   }, []);
 
   useEffect(() => {
-    let isMounted = true;
     let timeoutId;
 
     if (authLoading) return;
@@ -110,7 +143,32 @@ export default function Metas() {
       return;
     }
 
-    const loadData = async () => {
+    const cached = targetsCache.get();
+    if (cached?.data && !isUnmounted.current) {
+      const cachedTargets = (cached.data.targets || []).map((target) => ({
+        ...target,
+        goal: target.goal_amount,
+        progress: target.current_amount,
+        monthlyAmount: target.monthly_target,
+        category: target.category_name || "",
+        date: target.start_date || new Date().toISOString().split("T")[0],
+      }));
+
+      setTargets(cachedTargets);
+      setFilteredTargets(cachedTargets);
+      setCategories(cached.data.categories || []);
+      setLoading(false);
+
+      if (!cached.isStale) {
+        return () => {
+          if (timeoutId) clearTimeout(timeoutId);
+        };
+      }
+    } else {
+      setLoading(true);
+    }
+
+    const loadData = async (skipLoadingState = false) => {
       try {
         const timeoutPromise = new Promise((_, reject) => {
           timeoutId = setTimeout(() => reject(new Error('Timeout ao carregar metas')), 10000);
@@ -123,7 +181,7 @@ export default function Metas() {
 
         const [targetsRes, categoriesRes] = await Promise.race([dataPromise, timeoutPromise]);
 
-        if (!isMounted) return;
+        if (isUnmounted.current) return;
 
         if (targetsRes.error?.code === 'AUTH_REQUIRED' || categoriesRes.error?.code === 'AUTH_REQUIRED') {
           await handleAuthFailure();
@@ -145,6 +203,13 @@ export default function Metas() {
         setTargets(mappedTargets);
         setFilteredTargets(mappedTargets);
         setCategories(categoriesRes.data || []);
+
+        targetsCache.set({
+          data: {
+            targets: targetsRes.data || [],
+            categories: categoriesRes.data || [],
+          },
+        });
       } catch (error) {
         if (error?.code === 'AUTH_REQUIRED') {
           await handleAuthFailure();
@@ -152,23 +217,17 @@ export default function Metas() {
         } else if (error.name !== 'AbortError') {
           console.error("Erro ao carregar metas:", error);
         }
-        if (isMounted) {
-          setTargets([]);
-          setFilteredTargets([]);
-          setCategories([]);
-        }
       } finally {
         if (timeoutId) clearTimeout(timeoutId);
-        if (isMounted) {
+        if (!skipLoadingState && !isUnmounted.current) {
           setLoading(false);
         }
       }
     };
 
-    loadData();
+    loadData(Boolean(cached));
 
     return () => {
-      isMounted = false;
       if (timeoutId) clearTimeout(timeoutId);
     };
   }, [authLoading, user, handleAuthFailure, router]);
