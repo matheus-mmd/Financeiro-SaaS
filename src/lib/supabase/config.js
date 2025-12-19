@@ -4,8 +4,6 @@
  * sem apikey (HTTP 400) ao navegar entre páginas.
  */
 
-const REQUIRED_ENV_VARS = ['NEXT_PUBLIC_SUPABASE_URL', 'NEXT_PUBLIC_SUPABASE_ANON_KEY'];
-
 export function getSupabaseConfig() {
   // Durante build/SSR, as env vars podem não estar disponíveis
   // O client.js já tem guard para isso, mas garantimos aqui também
@@ -19,12 +17,14 @@ export function getSupabaseConfig() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim();
 
-  const missing = REQUIRED_ENV_VARS.filter((key) => !process.env[key]);
-
-  if (!url || !anonKey || missing.length) {
-    const missingList = missing.length ? ` Faltando: ${missing.join(', ')}` : '';
+  // Nota: process.env[key] dinâmico não funciona no client-side do Next.js
+  // Apenas acesso estático (process.env.NEXT_PUBLIC_*) é substituído no build
+  if (!url || !anonKey) {
+    const missing = [];
+    if (!url) missing.push('NEXT_PUBLIC_SUPABASE_URL');
+    if (!anonKey) missing.push('NEXT_PUBLIC_SUPABASE_ANON_KEY');
     throw new Error(
-      `Supabase não configurado: defina NEXT_PUBLIC_SUPABASE_URL e NEXT_PUBLIC_SUPABASE_ANON_KEY.${missingList}`
+      `Supabase não configurado: defina NEXT_PUBLIC_SUPABASE_URL e NEXT_PUBLIC_SUPABASE_ANON_KEY. Faltando: ${missing.join(', ')}`
     );
   }
 
