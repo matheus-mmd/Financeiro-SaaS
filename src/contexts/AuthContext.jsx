@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { supabase } from '../lib/supabase/client';
+import { getAuthenticatedUser } from '../lib/supabase/utils/auth';
 
 const AuthContext = createContext({});
 
@@ -101,7 +102,7 @@ export const AuthProvider = ({ children }) => {
 
     const syncSession = async () => {
       try {
-        const { data: { session }, error } = await supabase.auth.getSession();
+        const { user: currentUser, error } = await getAuthenticatedUser();
 
         if (!isMounted) return;
 
@@ -112,9 +113,9 @@ export const AuthProvider = ({ children }) => {
           return;
         }
 
-        if (session?.user) {
-          setUser(session.user);
-          const profileData = await resolveProfile(session.user.id);
+        if (currentUser) {
+          setUser(currentUser);
+          const profileData = await resolveProfile(currentUser.id);
 
           if (isMounted) {
             setProfile(profileData);
