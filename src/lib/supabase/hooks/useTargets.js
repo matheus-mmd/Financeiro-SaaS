@@ -11,10 +11,56 @@ import {
   deleteTarget,
 } from '../api/targets';
 
+const CACHE_KEY = 'targets_cache';
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutos
+
+const targetsCache = {
+  get: (cacheKey) => {
+    if (typeof window === 'undefined') return null;
+
+    try {
+      const cached = sessionStorage.getItem(`${CACHE_KEY}:${cacheKey}`);
+      if (!cached) return null;
+
+      const { data, timestamp } = JSON.parse(cached);
+      const isStale = Date.now() - timestamp > CACHE_TTL;
+
+      return { data, isStale };
+    } catch {
+      return null;
+    }
+  },
+  set: (cacheKey, data) => {
+    if (typeof window === 'undefined') return;
+
+    try {
+      sessionStorage.setItem(
+        `${CACHE_KEY}:${cacheKey}`,
+        JSON.stringify({
+          data,
+          timestamp: Date.now(),
+        }),
+      );
+    } catch {
+      // Ignorar erros de storage
+    }
+  },
+  clear: (cacheKey) => {
+    if (typeof window === 'undefined') return;
+
+    try {
+      sessionStorage.removeItem(`${CACHE_KEY}:${cacheKey}`);
+    } catch {
+      // Ignorar erros
+    }
+  },
+};
+
 export function useTargets(filters = {}) {
   const [targets, setTargets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isFromCache, setIsFromCache] = useState(false);
   const isUnmounted = useRef(false);
 
   // Criar função de carregamento estável
@@ -30,10 +76,12 @@ export function useTargets(filters = {}) {
     isUnmounted.current = true;
   }, []);
 
-  const loadTargets = useCallback(async () => {
+  const loadTargets = useCallback(async (skipLoadingState = false) => {
     if (isUnmounted.current) return;
 
-    setLoading(true);
+    if (!skipLoadingState) {
+      setLoading(true);
+    }
     setError(null);
 
     try {
@@ -44,7 +92,10 @@ export function useTargets(filters = {}) {
       if (fetchError) {
         setError(fetchError);
       } else {
-        setTargets(data || []);
+        const nextData = data || [];
+        setTargets(nextData);
+        targetsCache.set(filtersKey, nextData);
+        setIsFromCache(false);
       }
     } catch (err) {
       if (!isUnmounted.current) {
@@ -55,16 +106,32 @@ export function useTargets(filters = {}) {
         setLoading(false);
       }
     }
-  }, [filtersKey]); // Usar filtersKey ao invés de JSON.stringify
+  }, [filters, filtersKey]); // Usar filtersKey ao invés de JSON.stringify
 
   // Carregar quando filters mudar
   useEffect(() => {
+    const cached = targetsCache.get(filtersKey);
+
+    if (cached?.data) {
+      setTargets(cached.data);
+      setIsFromCache(true);
+      setLoading(false);
+
+      if (!cached.isStale) {
+        return;
+      }
+
+      loadTargets(true);
+      return;
+    }
+
     loadTargets();
-  }, [loadTargets]);
+  }, [filtersKey, loadTargets]);
 
   const create = async (target) => {
     const { data, error: createError } = await createTarget(target);
     if (!createError) {
+      targetsCache.clear(filtersKey);
       await loadTargets();
     }
     return { data, error: createError };
@@ -73,6 +140,7 @@ export function useTargets(filters = {}) {
   const update = async (id, updates) => {
     const { data, error: updateError } = await updateTarget(id, updates);
     if (!updateError) {
+      targetsCache.clear(filtersKey);
       await loadTargets();
     }
     return { data, error: updateError };
@@ -81,6 +149,7 @@ export function useTargets(filters = {}) {
   const remove = async (id) => {
     const { data, error: deleteError } = await deleteTarget(id);
     if (!deleteError) {
+      targetsCache.clear(filtersKey);
       await loadTargets();
     }
     return { data, error: deleteError };
@@ -90,6 +159,7 @@ export function useTargets(filters = {}) {
     targets,
     loading,
     error,
+    isFromCache,
     refresh: loadTargets,
     create,
     update,
