@@ -13,19 +13,7 @@
  */
 
 import { createBrowserClient } from '@supabase/ssr';
-
-const getSupabaseConfig = () => {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
-  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim();
-
-  if (!url || !anonKey) {
-    const message =
-      'Supabase não configurado: defina NEXT_PUBLIC_SUPABASE_URL e NEXT_PUBLIC_SUPABASE_ANON_KEY no ambiente.';
-    throw new Error(message);
-  }
-
-  return { url, anonKey };
-};
+import { getSupabaseConfig } from './config';
 
 // Evita re-criação do client em hot-reloads ou novas páginas
 const getBrowserClient = () => {
