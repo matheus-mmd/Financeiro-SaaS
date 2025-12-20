@@ -327,6 +327,7 @@ export default function CategoriasPage() {
               <Label htmlFor="category-name">Nome da Categoria</Label>
               <Input
                 id="category-name"
+                name="category-name"
                 value={categoryFormData.name}
                 onChange={(e) =>
                   setCategoryFormData({
@@ -341,7 +342,7 @@ export default function CategoriasPage() {
 
             {/* Seletor de Ícone */}
             <div className="space-y-2">
-              <Label>Ícone da Categoria</Label>
+              <p className="text-sm font-medium text-gray-700">Ícone da Categoria</p>
               <button
                 type="button"
                 onClick={() => setIconPickerModalOpen(true)}

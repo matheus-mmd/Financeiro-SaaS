@@ -1062,6 +1062,7 @@ export default function Transacoes() {
               <Label htmlFor="description">Descrição</Label>
               <Input
                 id="description"
+                name="description"
                 placeholder="Ex: Salário, Mercado, Investimento..."
                 value={formData.description}
                 onChange={(e) =>
@@ -1227,6 +1228,7 @@ export default function Transacoes() {
               <Label htmlFor="amount">Valor (R$)</Label>
               <Input
                 id="amount"
+                name="amount"
                 type="number"
                 step="0.01"
                 placeholder="0,00"
@@ -1252,6 +1254,7 @@ export default function Transacoes() {
               <Label htmlFor="notes">Observações (Opcional)</Label>
               <Textarea
                 id="notes"
+                name="notes"
                 placeholder="Ex: Compra relacionada ao projeto X..."
                 value={formData.notes}
                 onChange={(e) => handleInputChange("notes", e.target.value)}
@@ -1319,28 +1322,42 @@ export default function Transacoes() {
 
             {/* Parcelas */}
             <div className="space-y-2">
-              <Label className="text-sm">Parcelas (Opcional)</Label>
+              <p className="text-sm font-medium text-gray-700">Parcelas (Opcional)</p>
               <div className="grid grid-cols-2 gap-2">
-                <Input
-                  type="number"
-                  placeholder="Atual"
-                  value={formData.installments_current}
-                  onChange={(e) =>
-                    handleInputChange("installments_current", e.target.value)
-                  }
-                  min="1"
-                  className="text-sm"
-                />
-                <Input
-                  type="number"
-                  placeholder="Total"
-                  value={formData.installments_total}
-                  onChange={(e) =>
-                    handleInputChange("installments_total", e.target.value)
-                  }
-                  min="1"
-                  className="text-sm"
-                />
+                <div className="space-y-1">
+                  <Label htmlFor="installments-current" className="text-xs text-gray-600">
+                    Parcela atual
+                  </Label>
+                  <Input
+                    id="installments-current"
+                    name="installments_current"
+                    type="number"
+                    placeholder="Atual"
+                    value={formData.installments_current}
+                    onChange={(e) =>
+                      handleInputChange("installments_current", e.target.value)
+                    }
+                    min="1"
+                    className="text-sm"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="installments-total" className="text-xs text-gray-600">
+                    Total de parcelas
+                  </Label>
+                  <Input
+                    id="installments-total"
+                    name="installments_total"
+                    type="number"
+                    placeholder="Total"
+                    value={formData.installments_total}
+                    onChange={(e) =>
+                      handleInputChange("installments_total", e.target.value)
+                    }
+                    min="1"
+                    className="text-sm"
+                  />
+                </div>
               </div>
             </div>
 
@@ -1415,6 +1432,7 @@ export default function Transacoes() {
               </Label>
               <Textarea
                 id="notes"
+                name="notes"
                 placeholder="Adicione observações sobre esta transação..."
                 value={formData.notes}
                 onChange={(e) => handleInputChange("notes", e.target.value)}
