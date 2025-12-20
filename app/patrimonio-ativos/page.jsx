@@ -702,6 +702,7 @@ export default function PatrimonioAtivos() {
               <Label htmlFor="name">Nome do Ativo</Label>
               <Input
                 id="name"
+                name="name"
                 placeholder="Ex: Poupança Banco X, CDB, Tesouro Direto"
                 value={formData.name}
                 onChange={(e) => handleInputChange("name", e.target.value)}
@@ -746,6 +747,7 @@ export default function PatrimonioAtivos() {
               <Label htmlFor="value">Valor (R$)</Label>
               <Input
                 id="value"
+                name="value"
                 type="number"
                 step="0.01"
                 placeholder="0,00"
@@ -762,6 +764,7 @@ export default function PatrimonioAtivos() {
               </Label>
               <Input
                 id="yield"
+                name="yield"
                 type="number"
                 step="0.01"
                 placeholder="0,00"
@@ -788,6 +791,7 @@ export default function PatrimonioAtivos() {
               <Label htmlFor="description">Descrição <span className="text-gray-400 font-normal">(opcional)</span></Label>
               <Textarea
                 id="description"
+                name="description"
                 placeholder="Adicione informações sobre este ativo..."
                 value={formData.description}
                 onChange={(e) => handleInputChange("description", e.target.value)}
@@ -810,6 +814,7 @@ export default function PatrimonioAtivos() {
               <Label htmlFor="purchase_value">Valor de Compra (R$) <span className="text-gray-400 font-normal">(opcional)</span></Label>
               <Input
                 id="purchase_value"
+                name="purchase_value"
                 type="number"
                 step="0.01"
                 placeholder="0,00"
