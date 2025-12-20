@@ -64,7 +64,7 @@ export default function ContasPage() {
     data: referenceData,
     loading: referenceLoading,
     error: referenceError,
-  } = useReferenceData();
+  } = useReferenceData({ resources: ["accountTypes", "cardTypes", "cardBrands"] });
 
   const { accountTypes, cardTypes, cardBrands } = referenceData;
   const loading = banksLoading || cardsLoading || referenceLoading;

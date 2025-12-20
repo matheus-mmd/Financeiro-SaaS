@@ -128,7 +128,15 @@ export default function Transacoes() {
   const router = useRouter();
   const { user, loading: authLoading, signOut } = useAuth();
   const { transactions, loading: transactionsLoading, refresh, create, update, remove } = useTransactions();
-  const { data: referenceData, loading: referenceLoading } = useReferenceData();
+  const { data: referenceData, loading: referenceLoading } = useReferenceData({
+    resources: [
+      "categories",
+      "transactionTypes",
+      "paymentStatuses",
+      "paymentMethods",
+      "recurrenceFrequencies",
+    ],
+  });
   const { banks, loading: banksLoading } = useBanks();
   const { cards, loading: cardsLoading } = useCards();
   const [modalOpen, setModalOpen] = useState(false);

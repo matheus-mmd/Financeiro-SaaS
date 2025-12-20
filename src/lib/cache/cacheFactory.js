@@ -149,7 +149,7 @@ export function createCache(cacheKey, options = {}) {
  * Centralizados aqui para fácil manutenção
  */
 export const dashboardCache = createCache('dashboard_cache');
-export const referenceDataCache = createCache('reference_data_cache_v1');
+export const referenceDataCache = createCache('reference_data_cache_v2', { useKeys: true });
 export const banksCache = createCache('banks_cache');
 export const cardsCache = createCache('cards_cache');
 export const assetsCache = createCache('assets_cache');
