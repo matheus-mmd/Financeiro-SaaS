@@ -11,6 +11,7 @@ import {
   deleteAsset,
 } from '../api/assets';
 import { assetsCache } from '../../cache/cacheFactory';
+import { withTimeout } from '../../utils/requestUtils';
 
 export function useAssets() {
   const [assets, setAssets] = useState([]);
@@ -24,6 +25,13 @@ export function useAssets() {
     isUnmounted.current = true;
   }, []);
 
+  const normalize = useCallback((items = []) =>
+    items.map((asset) => ({
+      ...asset,
+      date: asset.valuation_date || asset.date,
+    })),
+  []);
+
   const loadAssets = useCallback(async (skipLoadingState = false) => {
     if (isUnmounted.current) return;
 
@@ -33,18 +41,22 @@ export function useAssets() {
     setError(null);
 
     try {
-      const { data, error: fetchError } = await getAssets();
+      const { data, error: fetchError } = await withTimeout(
+        getAssets(),
+        10000,
+        'Timeout ao carregar ativos'
+      );
 
       if (isUnmounted.current) return;
 
       if (fetchError) {
         setError(fetchError);
-      } else {
-        const nextData = data || [];
-        setAssets(nextData);
-        assetsCache.set(nextData);
-        setIsFromCache(false);
       }
+
+      const nextData = normalize(data || []);
+      setAssets(nextData);
+      assetsCache.set(nextData);
+      setIsFromCache(false);
     } catch (err) {
       if (!isUnmounted.current) {
         setError(err);
@@ -54,7 +66,7 @@ export function useAssets() {
         setLoading(false);
       }
     }
-  }, []);
+  }, [normalize]);
 
   useEffect(() => {
     if (hasMounted.current) return;

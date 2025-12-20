@@ -11,6 +11,7 @@ import {
   deleteTarget,
 } from '../api/targets';
 import { targetsCache } from '../../cache/cacheFactory';
+import { withTimeout } from '../../utils/requestUtils';
 
 export function useTargets(filters = {}) {
   const [targets, setTargets] = useState([]);
@@ -34,6 +35,13 @@ export function useTargets(filters = {}) {
 
   const stableFilters = useMemo(() => ({ ...filters }), [filtersKey]);
 
+  const normalize = useCallback((items = []) =>
+    items.map((target) => ({
+      ...target,
+      deadline: target.deadline || target.target_date,
+    })),
+  []);
+
   const loadTargets = useCallback(async (skipLoadingState = false) => {
     if (isUnmounted.current) return;
 
@@ -43,18 +51,22 @@ export function useTargets(filters = {}) {
     setError(null);
 
     try {
-      const { data, error: fetchError } = await getTargets(stableFilters);
+      const { data, error: fetchError } = await withTimeout(
+        getTargets(stableFilters),
+        10000,
+        'Timeout ao carregar metas'
+      );
 
       if (isUnmounted.current) return;
 
       if (fetchError) {
         setError(fetchError);
-      } else {
-        const nextData = data || [];
-        setTargets(nextData);
-        targetsCache.set(filtersKey, nextData);
-        setIsFromCache(false);
       }
+
+      const nextData = normalize(data || []);
+      setTargets(nextData);
+      targetsCache.set(filtersKey, nextData);
+      setIsFromCache(false);
     } catch (err) {
       if (!isUnmounted.current) {
         setError(err);
@@ -64,7 +76,7 @@ export function useTargets(filters = {}) {
         setLoading(false);
       }
     }
-  }, [filtersKey, stableFilters]);
+  }, [filtersKey, stableFilters, normalize]);
 
   // Carregar quando filters mudar
   useEffect(() => {

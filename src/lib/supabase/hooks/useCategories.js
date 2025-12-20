@@ -12,6 +12,7 @@ import {
   deleteCategory,
 } from '../api/categories';
 import { categoriesCache } from '../../cache/cacheFactory';
+import { withTimeout } from '../../utils/requestUtils';
 
 export function useCategories() {
   const [categories, setCategories] = useState([]);
@@ -25,6 +26,15 @@ export function useCategories() {
     isUnmounted.current = true;
   }, []);
 
+  const normalize = useCallback((items = []) =>
+    items.map((category) => ({
+      ...category,
+      color: category.color || '#6366f1',
+      icon_name: category.icon_name || category.icon || 'Tag',
+      transaction_type_id: category.transaction_type_id || category.type_id,
+    })),
+  []);
+
   const loadCategories = useCallback(async (skipLoadingState = false) => {
     if (isUnmounted.current) return;
 
@@ -34,18 +44,22 @@ export function useCategories() {
     setError(null);
 
     try {
-      const { data, error: fetchError } = await getCategories();
+      const { data, error: fetchError } = await withTimeout(
+        getCategories(),
+        10000,
+        'Timeout ao carregar categorias'
+      );
 
       if (isUnmounted.current) return;
 
       if (fetchError) {
         setError(fetchError);
-      } else {
-        const nextData = data || [];
-        setCategories(nextData);
-        categoriesCache.set(nextData);
-        setIsFromCache(false);
       }
+
+      const nextData = normalize(data || []);
+      setCategories(nextData);
+      categoriesCache.set(nextData);
+      setIsFromCache(false);
     } catch (err) {
       if (!isUnmounted.current) {
         setError(err);
@@ -55,7 +69,7 @@ export function useCategories() {
         setLoading(false);
       }
     }
-  }, []);
+  }, [normalize]);
 
   useEffect(() => {
     if (hasMounted.current) return;

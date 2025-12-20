@@ -15,6 +15,7 @@ import {
   getCardBrands,
 } from '../api/categories';
 import { referenceDataCache } from '../../cache/cacheFactory';
+import { runInParallel, withTimeout } from '../../utils/requestUtils';
 
 const RESOURCE_FETCHERS = {
   categories: getCategories,
@@ -75,12 +76,15 @@ export function useReferenceData({ resources } = {}) {
     setError(null);
 
     try {
-      const fetchPromises = requestedResources.map((resource) => {
+      const fetchers = requestedResources.map((resource) => {
         const fetcher = RESOURCE_FETCHERS[resource];
-        return fetcher ? fetcher() : Promise.resolve({ data: [] });
+        if (!fetcher) return () => Promise.resolve({ data: [] });
+
+        return () =>
+          withTimeout(fetcher(), 10000, `Timeout ao carregar referência: ${resource}`);
       });
 
-      const fetchResults = await Promise.all(fetchPromises);
+      const fetchResults = await runInParallel(fetchers);
 
       if (isUnmounted.current) return;
 

@@ -128,7 +128,7 @@ export default function Transacoes() {
   const router = useRouter();
   const { user, loading: authLoading, signOut } = useAuth();
   const { transactions, loading: transactionsLoading, refresh, create, update, remove } = useTransactions();
-  const { data: referenceData, loading: referenceLoading } = useReferenceData({
+  const { data: referenceData } = useReferenceData({
     resources: [
       "categories",
       "transactionTypes",
@@ -139,6 +139,13 @@ export default function Transacoes() {
   });
   const { banks, loading: banksLoading } = useBanks();
   const { cards, loading: cardsLoading } = useCards();
+  const {
+    categories = [],
+    transactionTypes = [],
+    paymentStatuses = [],
+    paymentMethods = [],
+    recurrenceFrequencies = [],
+  } = referenceData || {};
   const [modalOpen, setModalOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState(null);
   const [filterCategory, setFilterCategory] = useState("all");
@@ -237,8 +244,8 @@ export default function Transacoes() {
   }, [mappedTransactions, filterCategory, filterTransactionType, filterStatus, filterMonth]);
 
   const loading = useMemo(
-    () => authLoading || transactionsLoading || referenceLoading || banksLoading || cardsLoading,
-    [authLoading, transactionsLoading, referenceLoading, banksLoading, cardsLoading]
+    () => authLoading || (transactionsLoading && transactions.length === 0),
+    [authLoading, transactions.length, transactionsLoading]
   );
 
   const handleAddTransaction = useCallback(() => {
@@ -576,7 +583,8 @@ export default function Transacoes() {
   }, [sortedTransactions]);
 
   if (!authLoading && !user) {
-    return null;
+    router.replace('/login');
+    return <PageSkeleton />;
   }
 
   if (loading) {
