@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../../src/contexts/AuthContext";
 import PageHeader from "../../src/components/PageHeader";
@@ -23,23 +23,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../../src/components/ui/select";
-import {
-  getBanks,
-  createBank,
-  updateBank,
-  deleteBank,
-} from "../../src/lib/supabase/api/banks";
-import {
-  getCards,
-  createCard,
-  updateCard,
-  deleteCard,
-} from "../../src/lib/supabase/api/cards";
-import {
-  getAccountTypes,
-  getCardTypes,
-  getCardBrands,
-} from "../../src/lib/supabase/api/categories";
+import { useBanks } from "../../src/lib/supabase/hooks/useBanks";
+import { useCards } from "../../src/lib/supabase/hooks/useCards";
+import { useReferenceData } from "../../src/lib/supabase/hooks/useReferenceData";
 import { Plus, Trash2, Landmark, CreditCard } from "lucide-react";
 import { getIconComponent } from "../../src/components/IconPicker";
 import { formatCurrency } from "../../src/utils";
@@ -54,12 +40,35 @@ import FABMenu from "../../src/components/FABMenu";
 export default function ContasPage() {
   const router = useRouter();
   const { user, loading: authLoading, signOut } = useAuth();
-  const [banks, setBanks] = useState([]);
-  const [cards, setCards] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [accountTypes, setAccountTypes] = useState([]);
-  const [cardTypes, setCardTypes] = useState([]);
-  const [cardBrands, setCardBrands] = useState([]);
+
+  // Hooks com cache para carregamento instantâneo
+  const {
+    banks,
+    loading: banksLoading,
+    error: banksError,
+    create: createBank,
+    update: updateBank,
+    remove: removeBank,
+  } = useBanks();
+
+  const {
+    cards,
+    loading: cardsLoading,
+    error: cardsError,
+    create: createCard,
+    update: updateCard,
+    remove: removeCard,
+  } = useCards();
+
+  const {
+    data: referenceData,
+    loading: referenceLoading,
+    error: referenceError,
+  } = useReferenceData();
+
+  const { accountTypes, cardTypes, cardBrands } = referenceData;
+  const loading = banksLoading || cardsLoading || referenceLoading;
+  const error = banksError || cardsError || referenceError;
 
   // Estados para modal de banco
   const [bankModalOpen, setBankModalOpen] = useState(false);
@@ -93,101 +102,21 @@ export default function ContasPage() {
   const [iconPickerModalOpen, setIconPickerModalOpen] = useState(false);
   const [iconPickerFor, setIconPickerFor] = useState("bank"); // "bank" ou "card"
 
-  // Função para carregar dados (usada tanto na montagem quanto após operações)
-  const handleAuthFailure = useCallback(async () => {
+  // Funções auxiliares para erros de autenticação
+  const handleAuthFailure = async () => {
     await signOut();
     router.replace('/login');
-  }, [router, signOut]);
-
-  const isAuthError = useCallback((error) => {
-    return error?.code === 'AUTH_REQUIRED' || error?.message?.includes('Usuário não autenticado');
-  }, []);
-
-  const loadData = async (isMountedRef = { current: true }) => {
-    let timeoutId;
-    try {
-      const timeoutPromise = new Promise((_, reject) => {
-        timeoutId = setTimeout(() => reject(new Error('Timeout ao carregar contas')), 10000);
-      });
-
-      const dataPromise = Promise.all([
-        getBanks(),
-        getCards(),
-        getAccountTypes(),
-        getCardTypes(),
-        getCardBrands(),
-      ]);
-
-      const [banksRes, cardsRes, accountTypesRes, cardTypesRes, cardBrandsRes] = await Promise.race([
-        dataPromise,
-        timeoutPromise,
-      ]);
-
-      if (!isMountedRef.current) return;
-
-      if (
-        banksRes.error?.code === 'AUTH_REQUIRED' ||
-        cardsRes.error?.code === 'AUTH_REQUIRED' ||
-        accountTypesRes.error?.code === 'AUTH_REQUIRED' ||
-        cardTypesRes.error?.code === 'AUTH_REQUIRED' ||
-        cardBrandsRes.error?.code === 'AUTH_REQUIRED'
-      ) {
-        await handleAuthFailure();
-        return;
-      }
-
-      if (banksRes.error) throw banksRes.error;
-      if (cardsRes.error) throw cardsRes.error;
-      if (accountTypesRes.error) throw accountTypesRes.error;
-      if (cardTypesRes.error) throw cardTypesRes.error;
-      if (cardBrandsRes.error) throw cardBrandsRes.error;
-
-      setBanks(banksRes.data || []);
-      setCards(cardsRes.data || []);
-      setAccountTypes(accountTypesRes.data || []);
-      setCardTypes(cardTypesRes.data || []);
-      setCardBrands(cardBrandsRes.data || []);
-    } catch (error) {
-      if (error?.code === 'AUTH_REQUIRED') {
-        await handleAuthFailure();
-      } else if (error.name !== 'AbortError') {
-        console.error("Erro ao carregar dados:", error);
-      }
-      setBanks([]);
-      setCards([]);
-      setAccountTypes([]);
-      setCardTypes([]);
-      setCardBrands([]);
-    } finally {
-      if (timeoutId) clearTimeout(timeoutId);
-      if (isMountedRef.current) {
-        setLoading(false);
-      }
-    }
   };
 
-  useEffect(() => {
-    const isMountedRef = { current: true };
+  const isAuthError = (err) => {
+    return err?.code === 'AUTH_REQUIRED' || err?.message?.includes('Usuário não autenticado');
+  };
 
-    // Espera autenticação terminar antes de carregar dados
-    if (authLoading) return;
-    if (!user) {
-      setBanks([]);
-      setCards([]);
-      setAccountTypes([]);
-      setCardTypes([]);
-      setCardBrands([]);
-      setLoading(false);
-      router.replace('/login');
-      return;
-    }
-
-    loadData(isMountedRef);
-
-    return () => {
-      isMountedRef.current = false;
-    };
-  }, [user, authLoading, router, loadData]);
+  // Verificar erro de autenticação
+  if (error && isAuthError(error)) {
+    handleAuthFailure();
+    return null;
+  }
 
   // ===== FUNÇÕES PARA BANCOS =====
 
@@ -243,13 +172,12 @@ export default function ContasPage() {
 
       if (result.error) throw result.error;
 
-      await loadData();
       setBankModalOpen(false);
-    } catch (error) {
-      if (isAuthError(error)) {
+    } catch (err) {
+      if (isAuthError(err)) {
         await handleAuthFailure();
       } else {
-        console.error("Erro ao salvar banco:", error);
+        console.error("Erro ao salvar banco:", err);
         alert("Erro ao salvar banco. Tente novamente.");
       }
     }
@@ -259,14 +187,13 @@ export default function ContasPage() {
     if (!confirm("Tem certeza que deseja deletar este banco?")) return;
 
     try {
-      const result = await deleteBank(id);
+      const result = await removeBank(id);
       if (result.error) throw result.error;
-      await loadData();
-    } catch (error) {
-      if (isAuthError(error)) {
+    } catch (err) {
+      if (isAuthError(err)) {
         await handleAuthFailure();
       } else {
-        console.error("Erro ao deletar banco:", error);
+        console.error("Erro ao deletar banco:", err);
         alert("Erro ao deletar banco. Tente novamente.");
       }
     }
@@ -333,13 +260,12 @@ export default function ContasPage() {
 
       if (result.error) throw result.error;
 
-      await loadData();
       setCardModalOpen(false);
-    } catch (error) {
-      if (isAuthError(error)) {
+    } catch (err) {
+      if (isAuthError(err)) {
         await handleAuthFailure();
       } else {
-        console.error("Erro ao salvar cartão:", error);
+        console.error("Erro ao salvar cartão:", err);
         alert("Erro ao salvar cartão. Tente novamente.");
       }
     }
@@ -349,14 +275,13 @@ export default function ContasPage() {
     if (!confirm("Tem certeza que deseja deletar este cartão?")) return;
 
     try {
-      const result = await deleteCard(id);
+      const result = await removeCard(id);
       if (result.error) throw result.error;
-      await loadData();
-    } catch (error) {
-      if (isAuthError(error)) {
+    } catch (err) {
+      if (isAuthError(err)) {
         await handleAuthFailure();
       } else {
-        console.error("Erro ao deletar cartão:", error);
+        console.error("Erro ao deletar cartão:", err);
         alert("Erro ao deletar cartão. Tente novamente.");
       }
     }

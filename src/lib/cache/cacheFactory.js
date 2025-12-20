@@ -155,3 +155,4 @@ export const cardsCache = createCache('cards_cache');
 export const assetsCache = createCache('assets_cache');
 export const transactionsCache = createCache('transactions_cache', { useKeys: true });
 export const targetsCache = createCache('targets_cache', { useKeys: true });
+export const categoriesCache = createCache('categories_cache');

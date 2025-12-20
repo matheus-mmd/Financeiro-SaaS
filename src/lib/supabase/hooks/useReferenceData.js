@@ -9,6 +9,10 @@ import {
   getPaymentStatuses,
   getPaymentMethods,
   getRecurrenceFrequencies,
+  getIcons,
+  getAccountTypes,
+  getCardTypes,
+  getCardBrands,
 } from '../api/categories';
 import { referenceDataCache } from '../../cache/cacheFactory';
 
@@ -19,6 +23,10 @@ export function useReferenceData() {
     paymentStatuses: [],
     paymentMethods: [],
     recurrenceFrequencies: [],
+    icons: [],
+    accountTypes: [],
+    cardTypes: [],
+    cardBrands: [],
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -39,14 +47,27 @@ export function useReferenceData() {
     setError(null);
 
     try {
-      const [categoriesRes, transactionTypesRes, paymentStatusesRes, paymentMethodsRes, recurrenceFrequenciesRes] =
-        await Promise.all([
-          getCategories(),
-          getTransactionTypes(),
-          getPaymentStatuses(),
-          getPaymentMethods(),
-          getRecurrenceFrequencies(),
-        ]);
+      const [
+        categoriesRes,
+        transactionTypesRes,
+        paymentStatusesRes,
+        paymentMethodsRes,
+        recurrenceFrequenciesRes,
+        iconsRes,
+        accountTypesRes,
+        cardTypesRes,
+        cardBrandsRes,
+      ] = await Promise.all([
+        getCategories(),
+        getTransactionTypes(),
+        getPaymentStatuses(),
+        getPaymentMethods(),
+        getRecurrenceFrequencies(),
+        getIcons(),
+        getAccountTypes(),
+        getCardTypes(),
+        getCardBrands(),
+      ]);
 
       if (isUnmounted.current) return;
 
@@ -56,6 +77,10 @@ export function useReferenceData() {
         paymentStatuses: paymentStatusesRes?.data || [],
         paymentMethods: paymentMethodsRes?.data || [],
         recurrenceFrequencies: recurrenceFrequenciesRes?.data || [],
+        icons: iconsRes?.data || [],
+        accountTypes: accountTypesRes?.data || [],
+        cardTypes: cardTypesRes?.data || [],
+        cardBrands: cardBrandsRes?.data || [],
       };
 
       setData(nextData);

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../../src/contexts/AuthContext";
 import PageHeader from "../../src/components/PageHeader";
@@ -15,14 +15,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "../../src/components/ui/dialog";
-import {
-  getCategories,
-  createCategory,
-  updateCategory,
-  deleteCategory,
-  getTransactionTypes,
-  getIcons,
-} from "../../src/lib/supabase/api/categories";
+import { useCategories } from "../../src/lib/supabase/hooks/useCategories";
+import { useReferenceData } from "../../src/lib/supabase/hooks/useReferenceData";
 import {
   Plus,
   Trash2,
@@ -45,10 +39,26 @@ import PageSkeleton from "../../src/components/PageSkeleton";
 export default function CategoriasPage() {
   const router = useRouter();
   const { user, loading: authLoading, signOut } = useAuth();
-  const [categories, setCategories] = useState([]);
-  const [transactionTypes, setTransactionTypes] = useState([]);
-  const [icons, setIcons] = useState([]);
-  const [loading, setLoading] = useState(true);
+
+  // Hooks com cache para carregamento instantâneo
+  const {
+    categories,
+    loading: categoriesLoading,
+    error: categoriesError,
+    create: createCategory,
+    update: updateCategory,
+    remove: removeCategory,
+  } = useCategories();
+
+  const {
+    data: referenceData,
+    loading: referenceLoading,
+    error: referenceError,
+  } = useReferenceData();
+
+  const { transactionTypes, icons } = referenceData;
+  const loading = categoriesLoading || referenceLoading;
+  const error = categoriesError || referenceError;
 
   // Estados para modal de categoria
   const [categoryModalOpen, setCategoryModalOpen] = useState(false);
@@ -61,82 +71,21 @@ export default function CategoriasPage() {
     transaction_type_id: null,
   });
 
-  // Função para carregar dados (usada tanto na montagem quanto após operações)
-  const handleAuthFailure = useCallback(async () => {
+  // Funções auxiliares para erros de autenticação
+  const handleAuthFailure = async () => {
     await signOut();
     router.replace('/login');
-  }, [router, signOut]);
+  };
 
-  const isAuthError = useCallback((error) => {
-    return error?.code === 'AUTH_REQUIRED' || error?.message?.includes('Usuário não autenticado');
-  }, []);
+  const isAuthError = (err) => {
+    return err?.code === 'AUTH_REQUIRED' || err?.message?.includes('Usuário não autenticado');
+  };
 
-  const loadData = useCallback(async () => {
-    if (authLoading) return;
-    if (!user) {
-      setLoading(false);
-      router.replace('/login');
-      return;
-    }
-
-    setLoading(true);
-
-    let timeoutId;
-    try {
-      const timeoutPromise = new Promise((_, reject) => {
-        timeoutId = setTimeout(() => reject(new Error('Timeout ao carregar categorias')), 10000);
-      });
-
-      const dataPromise = Promise.all([
-        getCategories(),
-        getTransactionTypes(),
-        getIcons(),
-      ]);
-
-      const [categoriesRes, transactionTypesRes, iconsRes] = await Promise.race([dataPromise, timeoutPromise]);
-
-      if (categoriesRes.error?.code === 'AUTH_REQUIRED' ||
-        transactionTypesRes.error?.code === 'AUTH_REQUIRED' ||
-        iconsRes.error?.code === 'AUTH_REQUIRED') {
-        await handleAuthFailure();
-        return;
-      }
-
-      if (categoriesRes.error) throw categoriesRes.error;
-      if (transactionTypesRes.error) throw transactionTypesRes.error;
-      if (iconsRes.error) throw iconsRes.error;
-
-      setCategories(categoriesRes.data || []);
-      setTransactionTypes(transactionTypesRes.data || []);
-      setIcons(iconsRes.data || []);
-    } catch (error) {
-      if (error?.code === 'AUTH_REQUIRED') {
-        await handleAuthFailure();
-      } else if (error.name !== 'AbortError') {
-        console.error("Erro ao carregar dados:", error);
-      }
-      setCategories([]);
-      setTransactionTypes([]);
-      setIcons([]);
-    } finally {
-      if (timeoutId) clearTimeout(timeoutId);
-      setLoading(false);
-    }
-  }, [authLoading, user, handleAuthFailure, router, signOut]);
-
-  useEffect(() => {
-    if (authLoading) return;
-    if (!user) {
-      setCategories([]);
-      setTransactionTypes([]);
-      setIcons([]);
-      setLoading(false);
-      router.replace('/login');
-      return;
-    }
-
-    loadData();
-  }, [user, authLoading, loadData, router]);
+  // Verificar erro de autenticação
+  if (error && isAuthError(error)) {
+    handleAuthFailure();
+    return null;
+  }
 
   // Separar categorias por tipo
   const categorizeByType = () => {
@@ -215,14 +164,13 @@ export default function CategoriasPage() {
         throw result.error;
       }
 
-      await loadData();
       setCategoryModalOpen(false);
-    } catch (error) {
-      if (isAuthError(error)) {
+    } catch (err) {
+      if (isAuthError(err)) {
         await handleAuthFailure();
       } else {
-        console.error("Erro ao salvar categoria:", error);
-        alert("Erro ao salvar categoria: " + (error.message || error));
+        console.error("Erro ao salvar categoria:", err);
+        alert("Erro ao salvar categoria: " + (err.message || err));
       }
     }
   };
@@ -231,15 +179,13 @@ export default function CategoriasPage() {
     if (!confirm("Tem certeza que deseja deletar esta categoria?")) return;
 
     try {
-      const result = await deleteCategory(id);
+      const result = await removeCategory(id);
       if (result.error) throw result.error;
-
-      await loadData();
-    } catch (error) {
-      if (isAuthError(error)) {
+    } catch (err) {
+      if (isAuthError(err)) {
         await handleAuthFailure();
       } else {
-        console.error("Erro ao deletar categoria:", error);
+        console.error("Erro ao deletar categoria:", err);
         alert("Erro ao deletar categoria. Tente novamente.");
       }
     }
