@@ -11,9 +11,10 @@ import {
 } from "lucide-react";
 import { Input } from "./ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
-import { formatCurrency, formatDate, fetchData } from "../utils";
+import { formatCurrency, formatDate } from "../utils";
 import { useDebounce } from "../hooks/useDebounce";
 import { useAuth } from "../contexts/AuthContext";
+import { getSearchDataset } from "../lib/supabase/api/search";
 
 /**
  * GlobalSearch - Componente de busca global na aplicação
@@ -73,29 +74,20 @@ export default function GlobalSearch() {
 
     const loadDataset = async () => {
       try {
-        const [transactionsRes, targetsRes, assetsRes] = await Promise.all([
-          fetchData("/api/transactions"),
-          fetchData("/api/targets"),
-          fetchData("/api/assets"),
-        ]);
+        const { data, error } = await getSearchDataset();
 
-        const hasAuthError =
-          transactionsRes.error?.code === 'AUTH_REQUIRED' ||
-          targetsRes.error?.code === 'AUTH_REQUIRED' ||
-          assetsRes.error?.code === 'AUTH_REQUIRED';
-
-        if (hasAuthError) {
+        if (error?.code === 'AUTH_REQUIRED') {
           await handleAuthFailure();
           return;
         }
 
         if (!isMounted) return;
 
-        setDataset({
-          transactions: transactionsRes.data || [],
-          targets: targetsRes.data || [],
-          assets: assetsRes.data || [],
-        });
+        setDataset(data);
+
+        if (error) {
+          console.warn("[GlobalSearch] Dados carregados com erro parcial:", error);
+        }
       } catch (error) {
         if (error?.code === 'AUTH_REQUIRED') {
           await handleAuthFailure();
