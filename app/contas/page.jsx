@@ -546,11 +546,13 @@ export default function ContasPage() {
               <Label htmlFor="bank-name">Nome do Banco</Label>
               <Input
                 id="bank-name"
+                name="bank_name"
                 value={bankFormData.name}
                 onChange={(e) =>
                   setBankFormData({ ...bankFormData, name: e.target.value })
                 }
                 placeholder="Ex: Nubank, Inter, Caixa..."
+                autoComplete="organization"
                 required
               />
             </div>
@@ -599,11 +601,13 @@ export default function ContasPage() {
                 <Label htmlFor="bank-agency">Agência</Label>
                 <Input
                   id="bank-agency"
+                  name="bank_agency"
                   value={bankFormData.agency}
                   onChange={(e) =>
                     setBankFormData({ ...bankFormData, agency: e.target.value })
                   }
                   placeholder="0001"
+                  autoComplete="off"
                 />
               </div>
 
@@ -611,6 +615,7 @@ export default function ContasPage() {
                 <Label htmlFor="bank-account">Conta</Label>
                 <Input
                   id="bank-account"
+                  name="bank_account"
                   value={bankFormData.account}
                   onChange={(e) =>
                     setBankFormData({
@@ -619,6 +624,7 @@ export default function ContasPage() {
                     })
                   }
                   placeholder="12345-6"
+                  autoComplete="off"
                 />
               </div>
             </div>
@@ -647,6 +653,7 @@ export default function ContasPage() {
               <Label htmlFor="bank-balance">Saldo Inicial</Label>
               <Input
                 id="bank-balance"
+                name="bank_initial_balance"
                 type="number"
                 step="0.01"
                 value={bankFormData.initial_balance}
@@ -657,6 +664,7 @@ export default function ContasPage() {
                   })
                 }
                 placeholder="0.00"
+                autoComplete="off"
               />
             </div>
 
@@ -687,11 +695,13 @@ export default function ContasPage() {
               <Label htmlFor="card-name">Nome do Cartão</Label>
               <Input
                 id="card-name"
+                name="card_name"
                 value={cardFormData.name}
                 onChange={(e) =>
                   setCardFormData({ ...cardFormData, name: e.target.value })
                 }
                 placeholder="Ex: Nubank Crédito, Inter Débito..."
+                autoComplete="organization"
                 required
               />
             </div>
@@ -810,27 +820,30 @@ export default function ContasPage() {
             {cardFormData.card_type === "credito" && (
               <>
                 <div className="space-y-2">
-                  <Label htmlFor="card-limit">Limite</Label>
-                  <Input
-                    id="card-limit"
-                    type="number"
-                    step="0.01"
-                    value={cardFormData.limit || ""}
+                <Label htmlFor="card-limit">Limite</Label>
+                <Input
+                  id="card-limit"
+                  name="card_limit"
+                  type="number"
+                  step="0.01"
+                  value={cardFormData.limit || ""}
                     onChange={(e) =>
                       setCardFormData({
                         ...cardFormData,
                         limit: parseFloat(e.target.value) || 0,
                       })
-                    }
-                    placeholder="0.00"
-                  />
-                </div>
+                  }
+                  placeholder="0.00"
+                  autoComplete="off"
+                />
+              </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="card-closing">Dia de Fechamento</Label>
                     <Input
                       id="card-closing"
+                      name="card_closing_day"
                       type="number"
                       min="1"
                       max="31"
@@ -842,6 +855,7 @@ export default function ContasPage() {
                         })
                       }
                       placeholder="10"
+                      autoComplete="off"
                     />
                   </div>
 
@@ -849,6 +863,7 @@ export default function ContasPage() {
                     <Label htmlFor="card-due">Dia de Vencimento</Label>
                     <Input
                       id="card-due"
+                      name="card_due_day"
                       type="number"
                       min="1"
                       max="31"
@@ -860,6 +875,7 @@ export default function ContasPage() {
                         })
                       }
                       placeholder="17"
+                      autoComplete="off"
                     />
                   </div>
                 </div>

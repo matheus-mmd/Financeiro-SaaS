@@ -97,6 +97,14 @@ const initialFormState = {
   recurrence_frequency: "monthly",
 };
 
+const normalizePaymentMethodName = (name = "") =>
+  name
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+
 /**
  * Reducer para gerenciar o estado do formulário
  * Previne re-renders desnecessários e facilita manutenção
@@ -146,6 +154,17 @@ export default function Transacoes() {
     paymentMethods = [],
     recurrenceFrequencies = [],
   } = referenceData || {};
+  const paymentMethodOptions = useMemo(
+    () =>
+      paymentMethods.length
+        ? paymentMethods
+        : PAYMENT_METHODS.map((name) => ({
+            id: name,
+            name,
+            internal_name: normalizePaymentMethodName(name),
+          })),
+    [paymentMethods]
+  );
   const [modalOpen, setModalOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState(null);
   const [filterCategory, setFilterCategory] = useState("all");
@@ -168,7 +187,8 @@ export default function Transacoes() {
       date: t.transaction_date,
       type_internal_name: t.transaction_type_internal_name,
       status: t.payment_status_internal_name,
-      payment_method: t.payment_method_name,
+      payment_method: normalizePaymentMethodName(t.payment_method_name || ""),
+      payment_method_label: t.payment_method_name || "",
       installments: t.installment_total > 1 ? {
         current: t.installment_number,
         total: t.installment_total,
@@ -431,7 +451,7 @@ export default function Transacoes() {
 
       // Find IDs for enums
       const paymentStatus = paymentStatuses.find(s => s.internal_name === formData.status);
-      const paymentMethod = paymentMethods.find(m => m.internal_name === formData.payment_method);
+      const paymentMethod = paymentMethodOptions.find(m => m.internal_name === formData.payment_method);
       const recurrenceFreq = recurrenceFrequencies.find(f => f.internal_name === formData.recurrence_frequency);
 
       const transactionData = {
@@ -484,7 +504,7 @@ export default function Transacoes() {
         alert("Erro ao salvar transação.");
       }
     }
-  }, [formData, transactionTypes, paymentStatuses, paymentMethods, recurrenceFrequencies, editingTransaction, categories, handleApiError, update, create, refresh]);
+  }, [formData, transactionTypes, paymentStatuses, paymentMethodOptions, recurrenceFrequencies, editingTransaction, categories, handleApiError, update, create, refresh]);
 
   const handleInputChange = useCallback((field, value) => {
     // Atualizar campo principal
@@ -1297,9 +1317,12 @@ export default function Transacoes() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">Nenhuma</SelectItem>
-                  {PAYMENT_METHODS.map((method) => (
-                    <SelectItem key={method} value={method}>
-                      {method}
+                  {paymentMethodOptions.map((method) => (
+                    <SelectItem
+                      key={method.id || method.internal_name || method.name}
+                      value={method.internal_name}
+                    >
+                      {method.name}
                     </SelectItem>
                   ))}
                 </SelectContent>

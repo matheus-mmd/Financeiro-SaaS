@@ -17,6 +17,29 @@ import {
 import { referenceDataCache } from '../../cache/cacheFactory';
 import { runInParallel, withTimeout } from '../../utils/requestUtils';
 
+const normalizePaymentMethod = (method) => {
+  const name = method?.name || '';
+  const internal = name
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '');
+
+  return {
+    ...method,
+    internal_name: method?.internal_name || internal,
+  };
+};
+
+const normalizeResourceData = (resource, items = []) => {
+  if (resource === 'paymentMethods') {
+    return items.map(normalizePaymentMethod);
+  }
+
+  return items;
+};
+
 const RESOURCE_FETCHERS = {
   categories: getCategories,
   transactionTypes: getTransactionTypes,
@@ -96,7 +119,7 @@ export function useReferenceData({ resources } = {}) {
 
         const resultIndex = requestedResources.indexOf(resource);
         const result = fetchResults[resultIndex];
-        acc[resource] = result?.data || [];
+        acc[resource] = normalizeResourceData(resource, result?.data || []);
         return acc;
       }, {});
 
@@ -118,7 +141,11 @@ export function useReferenceData({ resources } = {}) {
     const cached = referenceDataCache.get(resourcesKey);
 
     if (cached?.data) {
-      setData(cached.data);
+      const normalizedFromCache = {
+        ...cached.data,
+        paymentMethods: normalizeResourceData('paymentMethods', cached.data.paymentMethods || []),
+      };
+      setData(normalizedFromCache);
       setIsFromCache(true);
       setLoading(false);
 
