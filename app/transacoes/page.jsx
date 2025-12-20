@@ -200,12 +200,6 @@ export default function Transacoes() {
     }
   }, [authLoading, user, router]);
 
-  const categories = referenceData.categories || [];
-  const transactionTypes = referenceData.transactionTypes || [];
-  const paymentStatuses = referenceData.paymentStatuses || [];
-  const paymentMethods = referenceData.paymentMethods || [];
-  const recurrenceFrequencies = referenceData.recurrenceFrequencies || [];
-
   useEffect(() => {
     if (editingTransaction) return;
     if (!categories.length || !transactionTypes.length) return;
