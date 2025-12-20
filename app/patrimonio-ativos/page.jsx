@@ -776,8 +776,11 @@ export default function PatrimonioAtivos() {
             <div className="space-y-2">
               <Label htmlFor="date">Data</Label>
               <DatePicker
+                id="date"
+                name="date"
                 value={formData.date}
                 onChange={(date) => handleInputChange("date", date)}
+                autoComplete="off"
               />
             </div>
 
@@ -796,8 +799,10 @@ export default function PatrimonioAtivos() {
               <Label htmlFor="purchase_date">Data de Compra <span className="text-gray-400 font-normal">(opcional)</span></Label>
               <DatePicker
                 id="purchase_date"
+                name="purchase_date"
                 value={formData.purchase_date}
                 onChange={(date) => handleInputChange("purchase_date", date)}
+                autoComplete="off"
               />
             </div>
 

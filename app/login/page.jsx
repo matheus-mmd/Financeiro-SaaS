@@ -204,12 +204,14 @@ export default function LoginPage() {
                 </Label>
                 <Input
                   id="name"
+                  name="name"
                   type="text"
                   placeholder="Seu nome"
                   value={formData.name}
                   onChange={(e) => handleInputChange('name', e.target.value)}
                   disabled={loading}
                   required={!isLogin}
+                  autoComplete="name"
                 />
               </div>
             )}
@@ -222,12 +224,14 @@ export default function LoginPage() {
               </Label>
               <Input
                 id="email"
+                name="email"
                 type="email"
                 placeholder="seu@email.com"
                 value={formData.email}
                 onChange={(e) => handleInputChange('email', e.target.value)}
                 disabled={loading}
                 required
+                autoComplete={isLogin ? "email" : "email"}
               />
             </div>
 
@@ -239,12 +243,14 @@ export default function LoginPage() {
               </Label>
               <Input
                 id="password"
+                name="password"
                 type="password"
                 placeholder="Mínimo 6 caracteres"
                 value={formData.password}
                 onChange={(e) => handleInputChange('password', e.target.value)}
                 disabled={loading}
                 required
+                autoComplete={isLogin ? "current-password" : "new-password"}
               />
             </div>
 
@@ -257,12 +263,14 @@ export default function LoginPage() {
                 </Label>
                 <Input
                   id="confirmPassword"
+                  name="confirmPassword"
                   type="password"
                   placeholder="Digite a senha novamente"
                   value={formData.confirmPassword}
                   onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
                   disabled={loading}
                   required={!isLogin}
+                  autoComplete="new-password"
                 />
               </div>
             )}

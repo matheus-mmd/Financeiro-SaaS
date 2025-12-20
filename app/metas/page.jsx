@@ -817,8 +817,11 @@ export default function Metas() {
             <div className="space-y-2">
               <Label htmlFor="date">Data</Label>
               <DatePicker
+                id="date"
+                name="date"
                 value={formData.date}
                 onChange={(date) => handleInputChange("date", date)}
+                autoComplete="off"
               />
             </div>
 
@@ -826,8 +829,10 @@ export default function Metas() {
               <Label htmlFor="deadline">Prazo <span className="text-gray-400 font-normal">(opcional)</span></Label>
               <DatePicker
                 id="deadline"
+                name="deadline"
                 value={formData.deadline}
                 onChange={(date) => handleInputChange("deadline", date)}
+                autoComplete="off"
               />
             </div>
           </form>
