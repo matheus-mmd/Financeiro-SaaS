@@ -1237,8 +1237,11 @@ export default function Transacoes() {
             <div className="space-y-2">
               <Label htmlFor="date">Data</Label>
               <DatePicker
+                id="date"
+                name="date"
                 value={formData.date}
                 onChange={(date) => handleInputChange("date", date)}
+                autoComplete="off"
               />
             </div>
 
@@ -1346,8 +1349,10 @@ export default function Transacoes() {
               </Label>
               <DatePicker
                 id="payment-date"
+                name="payment-date"
                 value={formData.payment_date}
                 onChange={(date) => handleInputChange("payment_date", date)}
+                autoComplete="off"
               />
             </div>
 
