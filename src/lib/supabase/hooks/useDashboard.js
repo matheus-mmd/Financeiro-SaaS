@@ -12,58 +12,13 @@ import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { getTransactions } from '../api/transactions';
 import { getAssets } from '../api/assets';
 import { getCategories } from '../api/categories';
+import { dashboardCache } from '../../cache/cacheFactory';
 import {
   getPreviousMonth,
   calculateHealthScore,
   calculateSavingsRate,
   calculateDailyBudget,
 } from '../../../utils/dashboardAnalytics';
-
-// Chave do cache no sessionStorage
-const CACHE_KEY = 'dashboard_cache';
-const CACHE_TTL = 5 * 60 * 1000; // 5 minutos
-
-/**
- * Utilitário para gerenciar cache no sessionStorage
- */
-const dashboardCache = {
-  get: () => {
-    if (typeof window === 'undefined') return null;
-    try {
-      const cached = sessionStorage.getItem(CACHE_KEY);
-      if (!cached) return null;
-
-      const { data, timestamp } = JSON.parse(cached);
-      const isExpired = Date.now() - timestamp > CACHE_TTL;
-
-      // Retorna dados mesmo expirados (stale-while-revalidate)
-      return { data, isStale: isExpired };
-    } catch {
-      return null;
-    }
-  },
-
-  set: (data) => {
-    if (typeof window === 'undefined') return;
-    try {
-      sessionStorage.setItem(CACHE_KEY, JSON.stringify({
-        data,
-        timestamp: Date.now(),
-      }));
-    } catch {
-      // Ignore storage errors (quota exceeded, etc)
-    }
-  },
-
-  clear: () => {
-    if (typeof window === 'undefined') return;
-    try {
-      sessionStorage.removeItem(CACHE_KEY);
-    } catch {
-      // Ignore errors
-    }
-  },
-};
 
 /**
  * Hook useDashboard

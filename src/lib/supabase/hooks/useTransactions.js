@@ -12,51 +12,7 @@ import {
   getTransactionsByInstallmentGroup,
   getRecurringTransactions,
 } from '../api/transactions';
-
-const CACHE_KEY = 'transactions_cache';
-const CACHE_TTL = 5 * 60 * 1000; // 5 minutos
-
-const transactionsCache = {
-  get: (cacheKey) => {
-    if (typeof window === 'undefined') return null;
-
-    try {
-      const cached = sessionStorage.getItem(`${CACHE_KEY}:${cacheKey}`);
-      if (!cached) return null;
-
-      const { data, timestamp } = JSON.parse(cached);
-      const isStale = Date.now() - timestamp > CACHE_TTL;
-
-      return { data, isStale };
-    } catch {
-      return null;
-    }
-  },
-  set: (cacheKey, data) => {
-    if (typeof window === 'undefined') return;
-
-    try {
-      sessionStorage.setItem(
-        `${CACHE_KEY}:${cacheKey}`,
-        JSON.stringify({
-          data,
-          timestamp: Date.now(),
-        }),
-      );
-    } catch {
-      // Ignorar erros de storage
-    }
-  },
-  clear: (cacheKey) => {
-    if (typeof window === 'undefined') return;
-
-    try {
-      sessionStorage.removeItem(`${CACHE_KEY}:${cacheKey}`);
-    } catch {
-      // Ignorar erros
-    }
-  },
-};
+import { transactionsCache } from '../../cache/cacheFactory';
 
 export function useTransactions(filters = {}) {
   const [transactions, setTransactions] = useState([]);

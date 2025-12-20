@@ -10,51 +10,7 @@ import {
   updateAsset,
   deleteAsset,
 } from '../api/assets';
-
-const CACHE_KEY = 'assets_cache';
-const CACHE_TTL = 5 * 60 * 1000; // 5 minutos
-
-const assetsCache = {
-  get: () => {
-    if (typeof window === 'undefined') return null;
-
-    try {
-      const cached = sessionStorage.getItem(CACHE_KEY);
-      if (!cached) return null;
-
-      const { data, timestamp } = JSON.parse(cached);
-      const isStale = Date.now() - timestamp > CACHE_TTL;
-
-      return { data, isStale };
-    } catch {
-      return null;
-    }
-  },
-  set: (data) => {
-    if (typeof window === 'undefined') return;
-
-    try {
-      sessionStorage.setItem(
-        CACHE_KEY,
-        JSON.stringify({
-          data,
-          timestamp: Date.now(),
-        }),
-      );
-    } catch {
-      // Ignorar erros de storage
-    }
-  },
-  clear: () => {
-    if (typeof window === 'undefined') return;
-
-    try {
-      sessionStorage.removeItem(CACHE_KEY);
-    } catch {
-      // Ignorar erros
-    }
-  },
-};
+import { assetsCache } from '../../cache/cacheFactory';
 
 export function useAssets() {
   const [assets, setAssets] = useState([]);
@@ -199,7 +155,7 @@ export function useAsset(id) {
         setLoading(false);
       }
     }
-  }, [id]); // id é primitivo, não causa loop
+  }, [id]);
 
   useEffect(() => {
     loadAsset();

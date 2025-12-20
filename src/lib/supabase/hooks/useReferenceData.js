@@ -10,47 +10,7 @@ import {
   getPaymentMethods,
   getRecurrenceFrequencies,
 } from '../api/categories';
-
-const CACHE_KEY = 'reference_data_cache_v1';
-const CACHE_TTL = 5 * 60 * 1000; // 5 minutos
-
-const referenceCache = {
-  get: () => {
-    if (typeof window === 'undefined') return null;
-
-    try {
-      const cached = sessionStorage.getItem(CACHE_KEY);
-      if (!cached) return null;
-
-      const { data, timestamp } = JSON.parse(cached);
-      const isStale = Date.now() - timestamp > CACHE_TTL;
-
-      return { data, isStale };
-    } catch {
-      return null;
-    }
-  },
-  set: (data) => {
-    if (typeof window === 'undefined') return;
-
-    try {
-      sessionStorage.setItem(
-        CACHE_KEY,
-        JSON.stringify({ data, timestamp: Date.now() })
-      );
-    } catch {
-      // Ignore cache failures
-    }
-  },
-  clear: () => {
-    if (typeof window === 'undefined') return;
-    try {
-      sessionStorage.removeItem(CACHE_KEY);
-    } catch {
-      // Ignore errors
-    }
-  },
-};
+import { referenceDataCache } from '../../cache/cacheFactory';
 
 export function useReferenceData() {
   const [data, setData] = useState({
@@ -99,7 +59,7 @@ export function useReferenceData() {
       };
 
       setData(nextData);
-      referenceCache.set(nextData);
+      referenceDataCache.set(nextData);
       setIsFromCache(false);
     } catch (err) {
       if (!isUnmounted.current) {
@@ -116,7 +76,7 @@ export function useReferenceData() {
     if (hasMounted.current) return;
     hasMounted.current = true;
 
-    const cached = referenceCache.get();
+    const cached = referenceDataCache.get();
 
     if (cached?.data) {
       setData(cached.data);
@@ -140,6 +100,6 @@ export function useReferenceData() {
     error,
     isFromCache,
     refresh: loadReferenceData,
-    clearCache: referenceCache.clear,
+    clearCache: referenceDataCache.clear,
   };
 }
