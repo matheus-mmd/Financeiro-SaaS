@@ -114,14 +114,15 @@ export const AuthProvider = ({ children }) => {
         }
 
         if (currentUser) {
+          // Libera a aplicação assim que o usuário é conhecido; o perfil vem em background
           setUser(currentUser);
-          const profileData = await resolveProfile(currentUser.id);
+          setLoading(false);
+          clearTimeout(safetyTimeout);
 
-          if (isMounted) {
+          resolveProfile(currentUser.id).then((profileData) => {
+            if (!isMounted) return;
             setProfile(profileData);
-            setLoading(false);
-            clearTimeout(safetyTimeout);
-          }
+          });
         } else {
           setUser(null);
           setProfile(null);
@@ -154,12 +155,11 @@ export const AuthProvider = ({ children }) => {
       if (session?.user) {
         setUser(session.user);
 
-        // Buscar perfil (criado automaticamente pelo trigger do banco)
-        const profileData = await resolveProfile(session.user.id);
-
-        if (isMounted) {
+        // Buscar perfil (criado automaticamente pelo trigger do banco) em background
+        resolveProfile(session.user.id).then((profileData) => {
+          if (!isMounted) return;
           setProfile(profileData);
-        }
+        });
       } else {
         setUser(null);
         setProfile(null);
@@ -167,6 +167,7 @@ export const AuthProvider = ({ children }) => {
 
       if (isMounted) {
         setLoading(false);
+        clearTimeout(safetyTimeout);
       }
     });
 
