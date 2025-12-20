@@ -2,7 +2,7 @@
  * Hook para dados de referência (categorias, tipos, status de pagamento, etc.)
  * Replica o padrão do dashboard: cache em sessionStorage + recarga em background
  */
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   getCategories,
   getTransactionTypes,
@@ -16,7 +16,26 @@ import {
 } from '../api/categories';
 import { referenceDataCache } from '../../cache/cacheFactory';
 
-export function useReferenceData() {
+const RESOURCE_FETCHERS = {
+  categories: getCategories,
+  transactionTypes: getTransactionTypes,
+  paymentStatuses: getPaymentStatuses,
+  paymentMethods: getPaymentMethods,
+  recurrenceFrequencies: getRecurrenceFrequencies,
+  icons: getIcons,
+  accountTypes: getAccountTypes,
+  cardTypes: getCardTypes,
+  cardBrands: getCardBrands,
+};
+
+const DEFAULT_RESOURCES = Object.keys(RESOURCE_FETCHERS);
+
+export function useReferenceData({ resources } = {}) {
+  const normalizedResources = useMemo(() => {
+    const list = resources && resources.length ? resources : DEFAULT_RESOURCES;
+    return Array.from(new Set(list));
+  }, [resources?.join('|')]);
+
   const [data, setData] = useState({
     categories: [],
     transactionTypes: [],
@@ -31,8 +50,17 @@ export function useReferenceData() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isFromCache, setIsFromCache] = useState(false);
-  const hasMounted = useRef(false);
   const isUnmounted = useRef(false);
+
+  const [requestedResources, setRequestedResources] = useState(normalizedResources);
+
+  useEffect(() => {
+    setRequestedResources(normalizedResources);
+  }, [normalizedResources]);
+
+  const resourcesKey = useMemo(() => {
+    return requestedResources.slice().sort().join('|');
+  }, [requestedResources]);
 
   useEffect(() => () => {
     isUnmounted.current = true;
@@ -47,44 +75,29 @@ export function useReferenceData() {
     setError(null);
 
     try {
-      const [
-        categoriesRes,
-        transactionTypesRes,
-        paymentStatusesRes,
-        paymentMethodsRes,
-        recurrenceFrequenciesRes,
-        iconsRes,
-        accountTypesRes,
-        cardTypesRes,
-        cardBrandsRes,
-      ] = await Promise.all([
-        getCategories(),
-        getTransactionTypes(),
-        getPaymentStatuses(),
-        getPaymentMethods(),
-        getRecurrenceFrequencies(),
-        getIcons(),
-        getAccountTypes(),
-        getCardTypes(),
-        getCardBrands(),
-      ]);
+      const fetchPromises = requestedResources.map((resource) => {
+        const fetcher = RESOURCE_FETCHERS[resource];
+        return fetcher ? fetcher() : Promise.resolve({ data: [] });
+      });
+
+      const fetchResults = await Promise.all(fetchPromises);
 
       if (isUnmounted.current) return;
 
-      const nextData = {
-        categories: categoriesRes?.data || [],
-        transactionTypes: transactionTypesRes?.data || [],
-        paymentStatuses: paymentStatusesRes?.data || [],
-        paymentMethods: paymentMethodsRes?.data || [],
-        recurrenceFrequencies: recurrenceFrequenciesRes?.data || [],
-        icons: iconsRes?.data || [],
-        accountTypes: accountTypesRes?.data || [],
-        cardTypes: cardTypesRes?.data || [],
-        cardBrands: cardBrandsRes?.data || [],
-      };
+      const nextData = DEFAULT_RESOURCES.reduce((acc, resource) => {
+        if (!requestedResources.includes(resource)) {
+          acc[resource] = [];
+          return acc;
+        }
+
+        const resultIndex = requestedResources.indexOf(resource);
+        const result = fetchResults[resultIndex];
+        acc[resource] = result?.data || [];
+        return acc;
+      }, {});
 
       setData(nextData);
-      referenceDataCache.set(nextData);
+      referenceDataCache.set(resourcesKey, nextData);
       setIsFromCache(false);
     } catch (err) {
       if (!isUnmounted.current) {
@@ -95,13 +108,10 @@ export function useReferenceData() {
         setLoading(false);
       }
     }
-  }, []);
+  }, [requestedResources, resourcesKey]);
 
   useEffect(() => {
-    if (hasMounted.current) return;
-    hasMounted.current = true;
-
-    const cached = referenceDataCache.get();
+    const cached = referenceDataCache.get(resourcesKey);
 
     if (cached?.data) {
       setData(cached.data);
@@ -117,14 +127,15 @@ export function useReferenceData() {
     }
 
     loadReferenceData();
-  }, [loadReferenceData]);
+  }, [loadReferenceData, resourcesKey]);
 
   return {
     data,
     loading,
     error,
     isFromCache,
+    setResources: setRequestedResources,
     refresh: loadReferenceData,
-    clearCache: referenceDataCache.clear,
+    clearCache: (key) => referenceDataCache.clear(key || resourcesKey),
   };
 }

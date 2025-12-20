@@ -54,7 +54,7 @@ export default function CategoriasPage() {
     data: referenceData,
     loading: referenceLoading,
     error: referenceError,
-  } = useReferenceData();
+  } = useReferenceData({ resources: ["transactionTypes", "icons"] });
 
   const { transactionTypes, icons } = referenceData;
   const loading = categoriesLoading || referenceLoading;
