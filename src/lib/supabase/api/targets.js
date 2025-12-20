@@ -19,6 +19,10 @@ export async function getTargets(filters = {}) {
     .select('*')
     .order('created_at', { ascending: false });
 
+  if (filters.limit) {
+    query = query.limit(Math.min(filters.limit, 500));
+  }
+
   if (filters.status) {
     query = query.eq('status', filters.status);
   }

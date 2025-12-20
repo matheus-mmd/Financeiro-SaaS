@@ -21,7 +21,7 @@ export async function getAssets(filters = {}) {
     .select('*')
     .eq('user_id', user.id)
     .order('valuation_date', { ascending: false })
-    .limit(filters.limit || 200);
+    .limit(Math.min(filters.limit || 200, 500));
 
   if (filters.category_id) {
     query = query.eq('category_id', filters.category_id);
