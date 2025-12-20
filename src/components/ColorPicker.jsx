@@ -1,7 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
-import { Label } from "./ui/label";
+import React from "react";
 import { Check } from "lucide-react";
 
 /**
@@ -34,7 +33,7 @@ const COLOR_PALETTE = [
 export default function ColorPicker({ selectedColor = "#6366f1", onColorSelect }) {
   return (
     <div className="space-y-2">
-      <Label>Cor da Categoria</Label>
+      <p className="text-sm font-medium text-gray-700">Cor da Categoria</p>
       <div className="grid grid-cols-6 gap-2">
         {COLOR_PALETTE.map((color) => {
           const isSelected = color.value.toLowerCase() === selectedColor.toLowerCase();
