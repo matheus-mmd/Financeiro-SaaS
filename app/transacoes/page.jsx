@@ -1249,20 +1249,6 @@ export default function Transacoes() {
               />
             </div>
 
-            {/* Observações */}
-            <div className="space-y-2">
-              <Label htmlFor="notes">Observações (Opcional)</Label>
-              <Textarea
-                id="notes"
-                name="notes"
-                placeholder="Ex: Compra relacionada ao projeto X..."
-                value={formData.notes}
-                onChange={(e) => handleInputChange("notes", e.target.value)}
-                rows={2}
-                className="resize-none"
-              />
-            </div>
-
             {/* Status de Pagamento */}
             <div className="space-y-2">
               <Label htmlFor="status" className="text-sm">
@@ -1566,6 +1552,7 @@ export default function Transacoes() {
               <Label htmlFor="csv-file">Selecionar arquivo CSV</Label>
               <Input
                 id="csv-file"
+                name="csv-file"
                 type="file"
                 accept=".csv"
                 className="cursor-pointer"
