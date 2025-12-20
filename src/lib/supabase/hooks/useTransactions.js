@@ -13,6 +13,7 @@ import {
   getRecurringTransactions,
 } from '../api/transactions';
 import { transactionsCache } from '../../cache/cacheFactory';
+import { withTimeout } from '../../utils/requestUtils';
 
 export function useTransactions(filters = {}) {
   const [transactions, setTransactions] = useState([]);
@@ -36,6 +37,14 @@ export function useTransactions(filters = {}) {
 
   const stableFilters = useMemo(() => ({ ...filters }), [filtersKey]);
 
+  const normalize = useCallback((items = []) =>
+    items.map((transaction) => ({
+      ...transaction,
+      date: transaction.transaction_date || transaction.date,
+      type_internal_name: transaction.transaction_type_internal_name || transaction.type_internal_name,
+    })),
+  []);
+
   const loadTransactions = useCallback(async (skipLoadingState = false) => {
     if (isUnmounted.current) return;
 
@@ -45,18 +54,22 @@ export function useTransactions(filters = {}) {
     setError(null);
 
     try {
-      const { data, error: fetchError } = await getTransactions(stableFilters);
+      const { data, error: fetchError } = await withTimeout(
+        getTransactions(stableFilters),
+        10000,
+        'Timeout ao carregar transações'
+      );
 
       if (isUnmounted.current) return;
 
       if (fetchError) {
         setError(fetchError);
-      } else {
-        const nextData = data || [];
-        setTransactions(nextData);
-        transactionsCache.set(filtersKey || 'all', nextData);
-        setIsFromCache(false);
       }
+
+      const nextData = normalize(data || []);
+      setTransactions(nextData);
+      transactionsCache.set(filtersKey || 'all', nextData);
+      setIsFromCache(false);
     } catch (err) {
       if (!isUnmounted.current) {
         setError(err);
@@ -66,7 +79,7 @@ export function useTransactions(filters = {}) {
         setLoading(false);
       }
     }
-  }, [filtersKey, stableFilters]);
+  }, [filtersKey, stableFilters, normalize]);
 
   useEffect(() => {
     const cacheKey = filtersKey || 'all';

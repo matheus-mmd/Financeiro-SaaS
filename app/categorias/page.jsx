@@ -56,8 +56,8 @@ export default function CategoriasPage() {
     error: referenceError,
   } = useReferenceData({ resources: ["transactionTypes", "icons"] });
 
-  const { transactionTypes, icons } = referenceData;
-  const loading = categoriesLoading || referenceLoading;
+  const { transactionTypes = [], icons = [] } = referenceData;
+  const loading = (categoriesLoading && categories.length === 0) || authLoading;
   const error = categoriesError || referenceError;
 
   // Estados para modal de categoria
@@ -85,6 +85,11 @@ export default function CategoriasPage() {
   if (error && isAuthError(error)) {
     handleAuthFailure();
     return null;
+  }
+
+  if (!authLoading && !user) {
+    router.replace('/login');
+    return <PageSkeleton />;
   }
 
   // Separar categorias por tipo
@@ -134,22 +139,13 @@ export default function CategoriasPage() {
     e.preventDefault();
 
     try {
-      // Verificar se ícones foram carregados
-      if (!icons || icons.length === 0) {
-        throw new Error('Ícones não foram carregados. Por favor, recarregue a página.');
-      }
-
-      // Buscar o ID do ícone pelo nome
-      const icon = icons.find(i => i.name === categoryFormData.icon);
-
-      if (!icon) {
-        throw new Error(`Ícone "${categoryFormData.icon}" não encontrado.`);
-      }
+      const icon = icons.find((i) => i.name === categoryFormData.icon);
+      const iconId = icon?.id ?? editingCategory?.icon_id ?? editingCategory?.iconId ?? null;
 
       const categoryData = {
         name: categoryFormData.name,
         color: categoryFormData.color,
-        iconId: icon.id,
+        iconId,
         transactionTypeId: categoryFormData.transaction_type_id,
       };
 
@@ -276,10 +272,6 @@ export default function CategoriasPage() {
       </Card>
     );
   };
-
-  if (!authLoading && !user) {
-    return null;
-  }
 
   if (authLoading || loading) {
     return <PageSkeleton />;

@@ -11,6 +11,7 @@ import {
   deleteCard,
 } from '../api/cards';
 import { cardsCache } from '../../cache/cacheFactory';
+import { withTimeout } from '../../utils/requestUtils';
 
 export function useCards() {
   const [cards, setCards] = useState([]);
@@ -24,6 +25,14 @@ export function useCards() {
     isUnmounted.current = true;
   }, []);
 
+  const normalize = useCallback((items = []) =>
+    items.map((card) => ({
+      ...card,
+      billing_day: card.billing_day || card.billingDay,
+      limit: card.limit || card.credit_limit,
+    })),
+  []);
+
   const loadCards = useCallback(async (skipLoadingState = false) => {
     if (isUnmounted.current) return;
 
@@ -33,18 +42,22 @@ export function useCards() {
     setError(null);
 
     try {
-      const { data, error: fetchError } = await getCards();
+      const { data, error: fetchError } = await withTimeout(
+        getCards(),
+        10000,
+        'Timeout ao carregar cartões'
+      );
 
       if (isUnmounted.current) return;
 
       if (fetchError) {
         setError(fetchError);
-      } else {
-        const nextData = data || [];
-        setCards(nextData);
-        cardsCache.set(nextData);
-        setIsFromCache(false);
       }
+
+      const nextData = normalize(data || []);
+      setCards(nextData);
+      cardsCache.set(nextData);
+      setIsFromCache(false);
     } catch (err) {
       if (!isUnmounted.current) {
         setError(err);
@@ -54,7 +67,7 @@ export function useCards() {
         setLoading(false);
       }
     }
-  }, []);
+  }, [normalize]);
 
   useEffect(() => {
     if (hasMounted.current) return;

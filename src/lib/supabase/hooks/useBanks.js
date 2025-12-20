@@ -11,6 +11,7 @@ import {
   deleteBank,
 } from '../api/banks';
 import { banksCache } from '../../cache/cacheFactory';
+import { withTimeout } from '../../utils/requestUtils';
 
 export function useBanks() {
   const [banks, setBanks] = useState([]);
@@ -24,6 +25,13 @@ export function useBanks() {
     isUnmounted.current = true;
   }, []);
 
+  const normalize = useCallback((items = []) =>
+    items.map((bank) => ({
+      ...bank,
+      color: bank.color || '#0ea5e9',
+    })),
+  []);
+
   const loadBanks = useCallback(async (skipLoadingState = false) => {
     if (isUnmounted.current) return;
 
@@ -33,18 +41,22 @@ export function useBanks() {
     setError(null);
 
     try {
-      const { data, error: fetchError } = await getBanks();
+      const { data, error: fetchError } = await withTimeout(
+        getBanks(),
+        10000,
+        'Timeout ao carregar contas'
+      );
 
       if (isUnmounted.current) return;
 
       if (fetchError) {
         setError(fetchError);
-      } else {
-        const nextData = data || [];
-        setBanks(nextData);
-        banksCache.set(nextData);
-        setIsFromCache(false);
       }
+
+      const nextData = normalize(data || []);
+      setBanks(nextData);
+      banksCache.set(nextData);
+      setIsFromCache(false);
     } catch (err) {
       if (!isUnmounted.current) {
         setError(err);
@@ -54,7 +66,7 @@ export function useBanks() {
         setLoading(false);
       }
     }
-  }, []);
+  }, [normalize]);
 
   useEffect(() => {
     if (hasMounted.current) return;
