@@ -183,7 +183,7 @@ export async function getPaymentMethods() {
 
   const { data, error } = await supabase
     .from('payment_methods')
-    .select('id, name, internal_name')
+    .select('id, name, requires_card, requires_bank')
     .order('id', { ascending: true });
 
   return { data, error };
