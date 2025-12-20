@@ -46,47 +46,18 @@ import {
   isDateInRange,
 } from "../../src/utils";
 import {
-  getAssets,
   createAsset,
   updateAsset,
   deleteAsset,
 } from "../../src/lib/supabase/api/assets";
-import { getCategories } from "../../src/lib/supabase/api/categories";
+import { useAssets } from "../../src/lib/supabase/hooks/useAssets";
+import { useCategories } from "../../src/lib/supabase/hooks/useCategories";
 import { exportToCSV } from "../../src/utils/exportData";
 import { getIconComponent } from "../../src/components/IconPicker";
 import FilterButton from "../../src/components/FilterButton";
 import FABMenu from "../../src/components/FABMenu";
 import { TRANSACTION_TYPE_IDS, DEFAULT_CATEGORY_COLOR } from "../../src/constants";
 import { DollarSign, Percent, Plus, Download, Trash2, Wallet, Copy } from "lucide-react";
-
-const CACHE_KEY = "assets_page_cache_v1";
-const CACHE_TTL = 5 * 60 * 1000; // 5 minutos
-
-const assetsCache = {
-  get: () => {
-    if (typeof window === "undefined") return null;
-    try {
-      const raw = sessionStorage.getItem(CACHE_KEY);
-      if (!raw) return null;
-      const parsed = JSON.parse(raw);
-      const isStale = Date.now() - parsed.timestamp > CACHE_TTL;
-      return { ...parsed, isStale };
-    } catch {
-      return null;
-    }
-  },
-  set: (payload) => {
-    if (typeof window === "undefined") return;
-    try {
-      sessionStorage.setItem(
-        CACHE_KEY,
-        JSON.stringify({ ...payload, timestamp: Date.now() })
-      );
-    } catch {
-      // ignorar falhas de cache
-    }
-  },
-};
 
 /**
  * Página Patrimônio e Ativos - Gerenciamento de patrimônio e ativos
@@ -95,13 +66,25 @@ const assetsCache = {
 export default function PatrimonioAtivos() {
   const router = useRouter();
   const { user, loading: authLoading, signOut } = useAuth();
+  const {
+    assets: rawAssets,
+    loading: assetsLoading,
+    error: assetsError,
+    refresh: refreshAssets,
+    remove: removeAsset,
+  } = useAssets();
+  const {
+    categories: allCategories,
+    loading: categoriesLoading,
+    error: categoriesError,
+  } = useCategories();
+  const isLoading = authLoading || assetsLoading || categoriesLoading;
   const isUnmounted = useRef(false);
   const [assets, setAssets] = useState([]);
   const [filteredAssets, setFilteredAssets] = useState([]);
   const [selectedAsset, setSelectedAsset] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingAsset, setEditingAsset] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [filterType, setFilterType] = useState("all");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [assetToDelete, setAssetToDelete] = useState(null);
@@ -133,105 +116,49 @@ export default function PatrimonioAtivos() {
   }, []);
 
   useEffect(() => {
-    let timeoutId;
-
     if (authLoading) return;
     if (!user) {
       setAssets([]);
       setFilteredAssets([]);
       setCategories([]);
-      setLoading(false);
       router.replace('/login');
-      return;
     }
+  }, [authLoading, user, router]);
 
-    const cached = assetsCache.get();
-    if (cached?.data && !isUnmounted.current) {
-      const mappedAssets = (cached.data.assets || []).map((asset) => ({
+  const investmentCategories = useMemo(
+    () =>
+      (allCategories || []).filter(
+        (category) => category.transaction_type_id === TRANSACTION_TYPE_IDS.INVESTMENT
+      ),
+    [allCategories]
+  );
+
+  const normalizedAssets = useMemo(
+    () =>
+      (rawAssets || []).map((asset) => ({
         ...asset,
-        date: asset.valuation_date || new Date().toISOString().split("T")[0],
-        yield: asset.yield_rate || 0,
-        type: asset.category_name || "",
-      }));
+        date: asset.valuation_date || asset.date || new Date().toISOString().split("T")[0],
+        yield: asset.yield_rate ?? asset.yield ?? 0,
+        type: asset.category_name || asset.type || "",
+        type_color: asset.category_color || asset.type_color || DEFAULT_CATEGORY_COLOR,
+        type_icon: asset.category_icon || asset.icon_name || "Tag",
+      })),
+    [rawAssets]
+  );
 
-      setAssets(mappedAssets);
-      setFilteredAssets(mappedAssets);
-      setCategories(cached.data.categories || []);
-      setLoading(false);
-
-      if (!cached.isStale) {
-        return () => {
-          if (timeoutId) clearTimeout(timeoutId);
-        };
-      }
-    } else {
-      setLoading(true);
+  useEffect(() => {
+    if (!authLoading && user && !isUnmounted.current) {
+      setAssets(normalizedAssets);
+      setCategories(investmentCategories);
     }
+  }, [authLoading, user, normalizedAssets, investmentCategories]);
 
-    const loadData = async (skipLoadingState = false) => {
-      try {
-        const timeoutPromise = new Promise((_, reject) => {
-          timeoutId = setTimeout(() => reject(new Error('Timeout ao carregar ativos')), 10000);
-        });
-
-        const dataPromise = Promise.all([
-          getAssets(),
-          getCategories({ transaction_type_id: TRANSACTION_TYPE_IDS.INVESTMENT }),
-        ]);
-
-        const [assetsRes, categoriesRes] = await Promise.race([dataPromise, timeoutPromise]);
-
-        if (isUnmounted.current) return;
-
-        if (assetsRes.error?.code === 'AUTH_REQUIRED' || categoriesRes.error?.code === 'AUTH_REQUIRED') {
-          await handleAuthFailure();
-          return;
-        }
-
-        if (assetsRes.error) throw assetsRes.error;
-        if (categoriesRes.error) throw categoriesRes.error;
-
-        const mappedAssets = (assetsRes.data || []).map((asset) => ({
-          ...asset,
-          date: asset.valuation_date || new Date().toISOString().split("T")[0],
-          yield: asset.yield_rate || 0,
-          type: asset.category_name || "",
-        }));
-
-        setAssets(mappedAssets);
-        setFilteredAssets(mappedAssets);
-        setCategories(categoriesRes.data || []);
-
-        assetsCache.set({
-          data: {
-            assets: assetsRes.data || [],
-            categories: categoriesRes.data || [],
-          },
-        });
-      } catch (error) {
-        if (error?.code === 'AUTH_REQUIRED') {
-          await handleAuthFailure();
-          return;
-        } else if (error.name !== 'AbortError') {
-          console.error("Erro ao carregar patrimônio e ativos:", error);
-        }
-        setAssets([]);
-        setFilteredAssets([]);
-        setCategories([]);
-      } finally {
-        if (timeoutId) clearTimeout(timeoutId);
-        if (!skipLoadingState && !isUnmounted.current) {
-          setLoading(false);
-        }
-      }
-    };
-
-    loadData(Boolean(cached));
-
-    return () => {
-      if (timeoutId) clearTimeout(timeoutId);
-    };
-  }, [authLoading, user, handleAuthFailure, router]);
+  useEffect(() => {
+    const authError = assetsError || categoriesError;
+    if (authError?.code === 'AUTH_REQUIRED') {
+      handleAuthFailure();
+    }
+  }, [assetsError, categoriesError, handleAuthFailure]);
 
   useEffect(() => {
     let filtered = assets;
@@ -308,35 +235,23 @@ export default function PatrimonioAtivos() {
   const confirmDelete = async () => {
     if (assetToDelete) {
       try {
-        const result = await deleteAsset(assetToDelete.id);
-        if (result.error) throw result.error;
+        const { error: deleteError } = await removeAsset(assetToDelete.id);
+        if (deleteError) throw deleteError;
 
-        // Reload data
-        const response = await getAssets();
-        if (response.error) throw response.error;
+        await refreshAssets();
 
-        const mappedAssets = (response.data || []).map((asset) => ({
-          ...asset,
-          date: asset.valuation_date || new Date().toISOString().split("T")[0],
-          yield: asset.yield_rate || 0,
-          type: asset.category_name || "",
-        }));
-
-        setAssets(mappedAssets);
-      setFilteredAssets(mappedAssets);
-
-      setDeleteDialogOpen(false);
-      setAssetToDelete(null);
-    } catch (error) {
-      if (isAuthError(error)) {
-        await handleAuthFailure();
-      } else {
-        console.error("Erro ao deletar ativo:", error);
-        alert("Erro ao deletar ativo. Verifique o console para mais detalhes.");
+        setDeleteDialogOpen(false);
+        setAssetToDelete(null);
+      } catch (error) {
+        if (isAuthError(error)) {
+          await handleAuthFailure();
+        } else {
+          console.error("Erro ao deletar ativo:", error);
+          alert("Erro ao deletar ativo. Verifique o console para mais detalhes.");
+        }
       }
     }
-  }
-};
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -370,19 +285,7 @@ export default function PatrimonioAtivos() {
 
       if (result.error) throw result.error;
 
-      // Reload data
-      const response = await getAssets();
-      if (response.error) throw response.error;
-
-      const mappedAssets = (response.data || []).map((asset) => ({
-        ...asset,
-        date: asset.valuation_date || new Date().toISOString().split("T")[0],
-        yield: asset.yield_rate || 0,
-        type: asset.category_name || "",
-      }));
-
-      setAssets(mappedAssets);
-      setFilteredAssets(mappedAssets);
+      await refreshAssets();
 
       setModalOpen(false);
       setFormData({
@@ -465,7 +368,7 @@ export default function PatrimonioAtivos() {
     return null;
   }
 
-  if (loading || authLoading) {
+  if (isLoading) {
     return <PageSkeleton />;
   }
 
