@@ -82,7 +82,7 @@ export function useDashboard() {
 
       // Carregar dados em paralelo
       const dataPromise = Promise.all([
-        getTransactions({ limit: 500 }),
+        getTransactions({ limit: 100 }),
         getCategories(),
         getAssets(),
       ]);

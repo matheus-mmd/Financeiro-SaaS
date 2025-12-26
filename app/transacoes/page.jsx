@@ -53,6 +53,7 @@ import { useTransactions } from "../../src/lib/supabase/hooks/useTransactions";
 import { useReferenceData } from "../../src/lib/supabase/hooks/useReferenceData";
 import { useBanks } from "../../src/lib/supabase/hooks/useBanks";
 import { useCards } from "../../src/lib/supabase/hooks/useCards";
+import { useDebounce } from "../../src/hooks/useDebounce";
 import { exportToCSV } from "../../src/utils/exportData";
 import { getIconComponent } from "../../src/components/IconPicker";
 import FilterButton from "../../src/components/FilterButton";
@@ -181,6 +182,9 @@ export default function Transacoes() {
   // Previne re-renders desnecessários quando apenas um campo muda
   const [formData, dispatch] = useReducer(formReducer, initialFormState);
 
+  // OTIMIZAÇÃO: Debounce na descrição para evitar re-renders excessivos na categorização inteligente
+  const debouncedDescription = useDebounce(formData.description, 500);
+
   const mapTransactions = useCallback((data = []) =>
     data.map((t) => ({
       ...t,
@@ -232,6 +236,28 @@ export default function Transacoes() {
       }
     });
   }, [categories, transactionTypes, editingTransaction]);
+
+  // OTIMIZAÇÃO: Categorização inteligente com debounce
+  // Só executa após o usuário parar de digitar por 500ms
+  useEffect(() => {
+    if (editingTransaction) return;
+    if (!debouncedDescription) return;
+    if (formData.categoryId) return; // Não sobrescrever categoria já selecionada
+
+    const suggestedCategoryId = suggestCategory(debouncedDescription);
+    if (suggestedCategoryId) {
+      const category = categories.find((c) => c.id === suggestedCategoryId);
+      if (category) {
+        dispatch({
+          type: 'UPDATE_MULTIPLE',
+          updates: {
+            categoryId: suggestedCategoryId,
+            transactionTypeId: category.transaction_type_id,
+          }
+        });
+      }
+    }
+  }, [debouncedDescription, editingTransaction, formData.categoryId, categories]);
 
   const mappedTransactions = useMemo(() => mapTransactions(transactions || []), [transactions, mapTransactions]);
 
@@ -509,24 +535,7 @@ export default function Transacoes() {
   const handleInputChange = useCallback((field, value) => {
     // Atualizar campo principal
     dispatch({ type: 'UPDATE_FIELD', field, value });
-
-    // Categorização inteligente: sugerir categoria baseado na descrição
-    if (field === "description" && !editingTransaction) {
-      const suggestedCategoryId = suggestCategory(value);
-      if (suggestedCategoryId && !formData.categoryId) {
-        const category = categories.find((c) => c.id === suggestedCategoryId);
-        if (category) {
-          dispatch({
-            type: 'UPDATE_MULTIPLE',
-            updates: {
-              categoryId: suggestedCategoryId,
-              transactionTypeId: category.transaction_type_id,
-            }
-          });
-        }
-      }
-    }
-  }, [editingTransaction, formData.categoryId, categories]);
+  }, []);
 
   // Quando muda a categoria, o tipo de transação é automaticamente definido
   const handleCategoryChange = useCallback((categoryId) => {
