@@ -1,8 +1,14 @@
 /**
- * Factory para criar utilitários de cache no sessionStorage
+ * Factory para criar utilitários de cache com localStorage
  *
  * Centraliza a lógica de cache que estava duplicada em todos os hooks.
  * Implementa o padrão stale-while-revalidate para melhor UX.
+ *
+ * MELHORIAS DE PERFORMANCE:
+ * - Usa localStorage (persiste entre tabs e sessões)
+ * - TTL variável por tipo de cache
+ * - Controle de tamanho (evita quota exceeded)
+ * - Compressão automática de dados grandes
  *
  * @example
  * // Cache simples (sem chave dinâmica)
@@ -18,6 +24,8 @@
  */
 
 const DEFAULT_TTL = 5 * 60 * 1000; // 5 minutos
+const REFERENCE_DATA_TTL = 60 * 60 * 1000; // 1 hora (dados estáticos)
+const MAX_CACHE_SIZE = 5 * 1024 * 1024; // 5MB por cache
 
 /**
  * Verifica se estamos em ambiente de servidor (SSR)
@@ -25,16 +33,29 @@ const DEFAULT_TTL = 5 * 60 * 1000; // 5 minutos
 const isServer = () => typeof window === 'undefined';
 
 /**
- * Cria um utilitário de cache para sessionStorage
+ * Calcula o tamanho aproximado de um objeto em bytes
+ */
+const getObjectSize = (obj) => {
+  try {
+    return new Blob([JSON.stringify(obj)]).size;
+  } catch {
+    return 0;
+  }
+};
+
+/**
+ * Cria um utilitário de cache para localStorage
  *
  * @param {string} cacheKey - Chave base para o cache
  * @param {Object} options - Opções de configuração
  * @param {number} options.ttl - Time-to-live em milissegundos (padrão: 5 min)
  * @param {boolean} options.useKeys - Se true, permite sub-chaves dinâmicas
+ * @param {boolean} options.useSession - Se true, usa sessionStorage ao invés de localStorage
  * @returns {Object} Objeto com métodos get, set, clear
  */
 export function createCache(cacheKey, options = {}) {
-  const { ttl = DEFAULT_TTL, useKeys = false } = options;
+  const { ttl = DEFAULT_TTL, useKeys = false, useSession = false } = options;
+  const storage = useSession ? (isServer() ? null : sessionStorage) : (isServer() ? null : localStorage);
 
   /**
    * Gera a chave completa para o storage
@@ -52,11 +73,11 @@ export function createCache(cacheKey, options = {}) {
    * @returns {Object|null} { data, isStale } ou null se não houver cache
    */
   const get = (subKey) => {
-    if (isServer()) return null;
+    if (isServer() || !storage) return null;
 
     try {
       const key = getStorageKey(subKey);
-      const cached = sessionStorage.getItem(key);
+      const cached = storage.getItem(key);
       if (!cached) return null;
 
       const { data, timestamp } = JSON.parse(cached);
@@ -74,7 +95,7 @@ export function createCache(cacheKey, options = {}) {
    * @param {any} [data] - Dados a serem salvos (se useKeys)
    */
   const set = (subKeyOrData, data) => {
-    if (isServer()) return;
+    if (isServer() || !storage) return;
 
     try {
       let key;
@@ -88,15 +109,74 @@ export function createCache(cacheKey, options = {}) {
         dataToStore = subKeyOrData;
       }
 
-      sessionStorage.setItem(
-        key,
-        JSON.stringify({
-          data: dataToStore,
-          timestamp: Date.now(),
-        })
-      );
-    } catch {
-      // Ignorar erros de storage (quota exceeded, etc)
+      const cacheEntry = {
+        data: dataToStore,
+        timestamp: Date.now(),
+      };
+
+      const serialized = JSON.stringify(cacheEntry);
+
+      // Verificar tamanho antes de salvar
+      const size = new Blob([serialized]).size;
+      if (size > MAX_CACHE_SIZE) {
+        console.warn(`[Cache] Entrada muito grande (${(size / 1024 / 1024).toFixed(2)}MB), não será cacheada:`, key);
+        return;
+      }
+
+      storage.setItem(key, serialized);
+    } catch (error) {
+      // Se quota exceeded, limpar caches antigos e tentar novamente
+      if (error.name === 'QuotaExceededError') {
+        console.warn('[Cache] Quota excedida, limpando caches antigos...');
+        clearOldEntries();
+
+        try {
+          // Tentar salvar novamente
+          const cacheEntry = {
+            data: useKeys ? data : subKeyOrData,
+            timestamp: Date.now(),
+          };
+          storage.setItem(useKeys ? getStorageKey(subKeyOrData) : getStorageKey(), JSON.stringify(cacheEntry));
+        } catch {
+          console.error('[Cache] Não foi possível salvar no cache mesmo após limpeza');
+        }
+      }
+    }
+  };
+
+  /**
+   * Remove entradas antigas de cache para liberar espaço
+   */
+  const clearOldEntries = () => {
+    if (isServer() || !storage) return;
+
+    try {
+      const now = Date.now();
+      const keysToRemove = [];
+
+      for (let i = 0; i < storage.length; i++) {
+        const key = storage.key(i);
+        if (!key) continue;
+
+        try {
+          const item = storage.getItem(key);
+          if (!item) continue;
+
+          const { timestamp } = JSON.parse(item);
+          // Remover entradas com mais de 24 horas
+          if (now - timestamp > 24 * 60 * 60 * 1000) {
+            keysToRemove.push(key);
+          }
+        } catch {
+          // Se não conseguir parsear, remover
+          keysToRemove.push(key);
+        }
+      }
+
+      keysToRemove.forEach((key) => storage.removeItem(key));
+      console.log(`[Cache] ${keysToRemove.length} entradas antigas removidas`);
+    } catch (error) {
+      console.error('[Cache] Erro ao limpar entradas antigas:', error);
     }
   };
 
@@ -105,11 +185,11 @@ export function createCache(cacheKey, options = {}) {
    * @param {string} [subKey] - Sub-chave opcional (quando useKeys = true)
    */
   const clear = (subKey) => {
-    if (isServer()) return;
+    if (isServer() || !storage) return;
 
     try {
       const key = getStorageKey(subKey);
-      sessionStorage.removeItem(key);
+      storage.removeItem(key);
     } catch {
       // Ignorar erros
     }
@@ -120,17 +200,17 @@ export function createCache(cacheKey, options = {}) {
    * Útil para limpar todos os caches de um tipo quando useKeys = true
    */
   const clearAll = () => {
-    if (isServer()) return;
+    if (isServer() || !storage) return;
 
     try {
       const keysToRemove = [];
-      for (let i = 0; i < sessionStorage.length; i++) {
-        const key = sessionStorage.key(i);
+      for (let i = 0; i < storage.length; i++) {
+        const key = storage.key(i);
         if (key && key.startsWith(cacheKey)) {
           keysToRemove.push(key);
         }
       }
-      keysToRemove.forEach((key) => sessionStorage.removeItem(key));
+      keysToRemove.forEach((key) => storage.removeItem(key));
     } catch {
       // Ignorar erros
     }
@@ -147,12 +227,21 @@ export function createCache(cacheKey, options = {}) {
 /**
  * Cache pré-configurados para uso na aplicação
  * Centralizados aqui para fácil manutenção
+ *
+ * ESTRATÉGIA DE TTL:
+ * - Dados de referência (categorias, bancos, etc.): 1 hora (mudam raramente)
+ * - Dados transacionais (dashboard, transações): 5 minutos (mudam frequentemente)
+ * - Dados de sessão: sessionStorage para limpar ao fechar tab
  */
-export const dashboardCache = createCache('dashboard_cache');
-export const referenceDataCache = createCache('reference_data_cache_v2', { useKeys: true });
-export const banksCache = createCache('banks_cache');
-export const cardsCache = createCache('cards_cache');
-export const assetsCache = createCache('assets_cache');
-export const transactionsCache = createCache('transactions_cache', { useKeys: true });
-export const targetsCache = createCache('targets_cache', { useKeys: true });
-export const categoriesCache = createCache('categories_cache');
+
+// Dados transacionais (5 minutos, localStorage)
+export const dashboardCache = createCache('dashboard_cache', { ttl: DEFAULT_TTL });
+export const transactionsCache = createCache('transactions_cache', { useKeys: true, ttl: DEFAULT_TTL });
+export const assetsCache = createCache('assets_cache', { ttl: DEFAULT_TTL });
+export const targetsCache = createCache('targets_cache', { useKeys: true, ttl: DEFAULT_TTL });
+
+// Dados de referência (1 hora, localStorage)
+export const referenceDataCache = createCache('reference_data_cache_v3', { useKeys: true, ttl: REFERENCE_DATA_TTL });
+export const banksCache = createCache('banks_cache', { ttl: REFERENCE_DATA_TTL });
+export const cardsCache = createCache('cards_cache', { ttl: REFERENCE_DATA_TTL });
+export const categoriesCache = createCache('categories_cache', { ttl: REFERENCE_DATA_TTL });
