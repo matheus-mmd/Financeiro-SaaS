@@ -1341,7 +1341,7 @@ export default function Transacoes() {
             {/* Parcelas */}
             <div className="space-y-2">
               <p className="text-sm font-medium text-gray-700">Parcelas (Opcional)</p>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <div className="space-y-1">
                   <Label htmlFor="installments-current" className="text-xs text-gray-600">
                     Parcela atual

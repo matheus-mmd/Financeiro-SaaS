@@ -305,8 +305,9 @@ export default function ImportStatementDialog({ open, onOpenChange, onImport }) 
                 </Badge>
               </div>
 
-              <div className="border rounded-lg max-h-[300px] overflow-y-auto">
-                <table className="w-full text-sm">
+              <div className="border rounded-lg max-h-[300px] overflow-auto">
+                <div className="min-w-[600px]">
+                  <table className="w-full text-sm">
                   <thead className="bg-gray-50 sticky top-0">
                     <tr>
                       <th className="px-3 py-2 text-left font-medium text-gray-700">
@@ -345,6 +346,7 @@ export default function ImportStatementDialog({ open, onOpenChange, onImport }) 
                     })}
                   </tbody>
                 </table>
+                </div>
               </div>
 
               {/* Resumo */}

@@ -596,7 +596,7 @@ export default function ContasPage() {
               }
             />
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="bank-agency">Agência</Label>
                 <Input
@@ -745,7 +745,7 @@ export default function ContasPage() {
               }
             />
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="card-type">Tipo</Label>
                 <Select
@@ -838,7 +838,7 @@ export default function ContasPage() {
                 />
               </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="card-closing">Dia de Fechamento</Label>
                     <Input
