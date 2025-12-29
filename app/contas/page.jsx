@@ -536,13 +536,13 @@ export default function ContasPage() {
       {/* Modal de Banco */}
       <Dialog open={bankModalOpen} onOpenChange={setBankModalOpen}>
         <DialogContent className="max-w-[95vw] sm:max-w-md max-h-[90vh] flex flex-col p-0">
-          <DialogHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-3 border-b flex-shrink-0">
+          <DialogHeader className="px-4 pt-4 pb-3 border-b flex-shrink-0">
             <DialogTitle>
               {editingBank ? "Editar Banco" : "Adicionar Novo Banco"}
             </DialogTitle>
           </DialogHeader>
 
-          <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4">
+          <div className="flex-1 overflow-y-auto px-4 py-4">
             <form id="bank-form" onSubmit={handleBankSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="bank-name">Nome do Banco</Label>
@@ -672,7 +672,7 @@ export default function ContasPage() {
             </form>
           </div>
 
-          <DialogFooter className="px-4 sm:px-6 py-3 border-t bg-gray-50 flex-shrink-0">
+          <DialogFooter className="px-4 py-3 border-t bg-gray-50 flex-shrink-0">
             <Button
               type="button"
               variant="outline"
@@ -695,13 +695,13 @@ export default function ContasPage() {
       {/* Modal de Cartão */}
       <Dialog open={cardModalOpen} onOpenChange={setCardModalOpen}>
         <DialogContent className="max-w-[95vw] sm:max-w-md max-h-[90vh] flex flex-col p-0">
-          <DialogHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-3 border-b flex-shrink-0">
+          <DialogHeader className="px-4 pt-4 pb-3 border-b flex-shrink-0">
             <DialogTitle>
               {editingCard ? "Editar Cartão" : "Adicionar Novo Cartão"}
             </DialogTitle>
           </DialogHeader>
 
-          <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4">
+          <div className="flex-1 overflow-y-auto px-4 py-4">
             <form id="card-form" onSubmit={handleCardSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="card-name">Nome do Cartão</Label>
@@ -896,7 +896,7 @@ export default function ContasPage() {
             </form>
           </div>
 
-          <DialogFooter className="px-4 sm:px-6 py-3 border-t bg-gray-50 flex-shrink-0">
+          <DialogFooter className="px-4 py-3 border-t bg-gray-50 flex-shrink-0">
             <Button
               type="button"
               variant="outline"

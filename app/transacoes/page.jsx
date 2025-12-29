@@ -1082,13 +1082,13 @@ export default function Transacoes() {
       {/* Dialog de adicionar/editar transação */}
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
         <DialogContent className="max-w-[95vw] sm:max-w-md max-h-[90vh] flex flex-col p-0">
-          <DialogHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-3 border-b flex-shrink-0">
+          <DialogHeader className="px-4 pt-4 pb-3 border-b flex-shrink-0">
             <DialogTitle>
               {editingTransaction ? "Editar Transação" : "Nova Transação"}
             </DialogTitle>
           </DialogHeader>
 
-          <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4">
+          <div className="flex-1 overflow-y-auto px-4 py-4">
             <form
               id="transaction-form"
               onSubmit={handleSubmit}
@@ -1517,7 +1517,7 @@ export default function Transacoes() {
             </form>
           </div>
 
-          <DialogFooter className="px-4 sm:px-6 py-3 border-t bg-gray-50 flex-shrink-0 gap-2">
+          <DialogFooter className="px-4 py-3 border-t bg-gray-50 flex-shrink-0 gap-2">
             <Button
               type="button"
               variant="outline"

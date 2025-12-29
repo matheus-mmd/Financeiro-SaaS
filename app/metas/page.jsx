@@ -694,13 +694,13 @@ export default function Metas() {
       {/* Dialog de adicionar/editar */}
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
         <DialogContent className="max-w-[95vw] sm:max-w-md max-h-[90vh] flex flex-col p-0">
-          <DialogHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-3 border-b flex-shrink-0">
+          <DialogHeader className="px-4 pt-4 pb-3 border-b flex-shrink-0">
             <DialogTitle>
               {editingTarget ? "Editar Meta" : "Nova Meta"}
             </DialogTitle>
           </DialogHeader>
 
-          <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4">
+          <div className="flex-1 overflow-y-auto px-4 py-4">
             <form id="target-form" onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="title">Título da Meta</Label>
@@ -839,7 +839,7 @@ export default function Metas() {
             </form>
           </div>
 
-          <DialogFooter className="px-4 sm:px-6 py-3 border-t bg-gray-50 flex-shrink-0">
+          <DialogFooter className="px-4 py-3 border-t bg-gray-50 flex-shrink-0">
             <Button
               variant="outline"
               onClick={() => setModalOpen(false)}

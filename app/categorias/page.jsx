@@ -317,13 +317,13 @@ export default function CategoriasPage() {
       {/* Modal de Categoria */}
       <Dialog open={categoryModalOpen} onOpenChange={setCategoryModalOpen}>
         <DialogContent className="max-w-[95vw] sm:max-w-md max-h-[90vh] flex flex-col p-0">
-          <DialogHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-3 border-b flex-shrink-0">
+          <DialogHeader className="px-4 pt-4 pb-3 border-b flex-shrink-0">
             <DialogTitle>
               {editingCategory ? "Editar Categoria" : "Criar Nova Categoria"}
             </DialogTitle>
           </DialogHeader>
 
-          <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4">
+          <div className="flex-1 overflow-y-auto px-4 py-4">
             <form id="category-form" onSubmit={handleCategorySubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="category-name">Nome da Categoria</Label>
@@ -382,7 +382,7 @@ export default function CategoriasPage() {
             </form>
           </div>
 
-          <DialogFooter className="px-4 sm:px-6 py-3 border-t bg-gray-50 flex-shrink-0">
+          <DialogFooter className="px-4 py-3 border-t bg-gray-50 flex-shrink-0">
             <Button
               type="button"
               variant="outline"
