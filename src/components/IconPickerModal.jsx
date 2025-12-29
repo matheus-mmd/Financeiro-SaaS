@@ -240,7 +240,7 @@ export default function IconPickerModal({ open, onOpenChange, selectedIcon = "Ta
                 </button>
 
                 {(expandedCategory === category || searchTerm) && (
-                  <div className="grid grid-cols-8 gap-2 p-3 bg-gray-50">
+                  <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2 p-3 bg-gray-50">
                     {icons.map((icon) => {
                       const IconComponent = icon.icon;
                       const isSelected = icon.name === selectedIcon;

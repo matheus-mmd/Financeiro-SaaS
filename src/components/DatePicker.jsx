@@ -44,7 +44,7 @@ export default function DatePicker({
         value={value ? value.toISOString() : ""}
         autoComplete={autoComplete}
       />
-      <PopoverContent className="w-auto overflow-hidden p-0" align="start">
+      <PopoverContent className="w-auto max-w-[calc(100vw-2rem)] overflow-hidden p-0" align="start">
         <Calendar
           mode="single"
           selected={value}

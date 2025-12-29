@@ -186,7 +186,7 @@ export default function GlobalSearch() {
 
       {/* Dialog de resultados */}
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Buscar na aplicação</DialogTitle>
           </DialogHeader>
