@@ -228,11 +228,15 @@ export default function Transacoes() {
     if (editingTransaction) return;
     if (!categories.length || !transactionTypes.length) return;
 
+    // Definir categoria e tipo padrão
+    const defaultCategory = categories[0];
+    const defaultTypeId = defaultCategory.transaction_type_id || transactionTypes[0].id;
+
     dispatch({
       type: 'UPDATE_MULTIPLE',
       updates: {
-        categoryId: categories[0].id,
-        transactionTypeId: transactionTypes[0].id,
+        categoryId: defaultCategory.id,
+        transactionTypeId: defaultTypeId,
       }
     });
   }, [categories, transactionTypes, editingTransaction]);
@@ -291,13 +295,13 @@ export default function Transacoes() {
   const handleAddTransaction = useCallback(() => {
     setEditingTransaction(null);
     const defaultCategory = categories[0];
-    const defaultType = transactionTypes[0];
+    const defaultTypeId = defaultCategory?.transaction_type_id || transactionTypes[0]?.id;
     dispatch({
       type: 'RESET',
       initialState: {
         ...initialFormState,
         categoryId: defaultCategory?.id || null,
-        transactionTypeId: defaultType?.id || null,
+        transactionTypeId: defaultTypeId || null,
       }
     });
     setModalOpen(true);
@@ -515,13 +519,13 @@ export default function Transacoes() {
 
       setModalOpen(false);
       const defaultCategory = categories[0];
-      const defaultType = transactionTypes[0];
+      const defaultTypeId = defaultCategory?.transaction_type_id || transactionTypes[0]?.id;
       dispatch({
         type: 'RESET',
         initialState: {
           ...initialFormState,
           categoryId: defaultCategory?.id || null,
-          transactionTypeId: defaultType?.id || null,
+          transactionTypeId: defaultTypeId || null,
         }
       });
     } catch (error) {
