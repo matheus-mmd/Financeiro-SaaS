@@ -1077,16 +1077,19 @@ export default function Transacoes() {
 
       {/* Dialog de adicionar/editar transação */}
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
-        <DialogContent className="max-w-[95vw] sm:max-w-md max-h-[92vh] sm:max-h-[90vh] p-0 gap-0">
-          <DialogHeader className="px-4 sm:px-6 pt-5 sm:pt-6 pb-3 sm:pb-4">
+        <DialogContent className="max-w-[95vw] sm:max-w-md max-h-[90vh] flex flex-col p-0">
+          <DialogHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-3 border-b flex-shrink-0">
             <DialogTitle>
               {editingTransaction ? "Editar Transação" : "Nova Transação"}
             </DialogTitle>
           </DialogHeader>
-          <form
-            onSubmit={handleSubmit}
-            className="space-y-3 px-4 sm:px-6 pb-4 sm:pb-6 overflow-y-auto max-h-[calc(92vh-140px)] sm:max-h-[calc(90vh-140px)]"
-          >
+
+          <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4">
+            <form
+              id="transaction-form"
+              onSubmit={handleSubmit}
+              className="space-y-3"
+            >
             <div className="space-y-2">
               <Label htmlFor="description">Descrição</Label>
               <Input
@@ -1507,8 +1510,10 @@ export default function Transacoes() {
                 </div>
               )}
             </div>
-          </form>
-          <DialogFooter className="px-4 sm:px-6 py-3 sm:py-4 border-t bg-gray-50/50 gap-2">
+            </form>
+          </div>
+
+          <DialogFooter className="px-4 sm:px-6 py-3 border-t bg-gray-50 flex-shrink-0 gap-2">
             <Button
               type="button"
               variant="outline"
@@ -1519,7 +1524,7 @@ export default function Transacoes() {
             </Button>
             <Button
               type="submit"
-              onClick={handleSubmit}
+              form="transaction-form"
               className="flex-1 sm:flex-none"
             >
               {editingTransaction ? "Salvar" : "Adicionar"}

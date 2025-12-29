@@ -535,13 +535,15 @@ export default function ContasPage() {
 
       {/* Modal de Banco */}
       <Dialog open={bankModalOpen} onOpenChange={setBankModalOpen}>
-        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
+        <DialogContent className="max-w-[95vw] sm:max-w-md max-h-[90vh] flex flex-col p-0">
+          <DialogHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-3 border-b flex-shrink-0">
             <DialogTitle>
               {editingBank ? "Editar Banco" : "Adicionar Novo Banco"}
             </DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleBankSubmit} className="space-y-4">
+
+          <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4">
+            <form id="bank-form" onSubmit={handleBankSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="bank-name">Nome do Banco</Label>
               <Input
@@ -667,30 +669,40 @@ export default function ContasPage() {
                 autoComplete="off"
               />
             </div>
+            </form>
+          </div>
 
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setBankModalOpen(false)}
-              >
-                Cancelar
-              </Button>
-              <Button type="submit">{editingBank ? "Salvar" : "Criar"}</Button>
-            </DialogFooter>
-          </form>
+          <DialogFooter className="px-4 sm:px-6 py-3 border-t bg-gray-50 flex-shrink-0">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setBankModalOpen(false)}
+              className="flex-1 sm:flex-none"
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="submit"
+              form="bank-form"
+              className="flex-1 sm:flex-none"
+            >
+              {editingBank ? "Salvar" : "Criar"}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* Modal de Cartão */}
       <Dialog open={cardModalOpen} onOpenChange={setCardModalOpen}>
-        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
+        <DialogContent className="max-w-[95vw] sm:max-w-md max-h-[90vh] flex flex-col p-0">
+          <DialogHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-3 border-b flex-shrink-0">
             <DialogTitle>
               {editingCard ? "Editar Cartão" : "Adicionar Novo Cartão"}
             </DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleCardSubmit} className="space-y-4">
+
+          <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4">
+            <form id="card-form" onSubmit={handleCardSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="card-name">Nome do Cartão</Label>
               <Input
@@ -881,18 +893,26 @@ export default function ContasPage() {
                 </div>
               </>
             )}
+            </form>
+          </div>
 
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setCardModalOpen(false)}
-              >
-                Cancelar
-              </Button>
-              <Button type="submit">{editingCard ? "Salvar" : "Criar"}</Button>
-            </DialogFooter>
-          </form>
+          <DialogFooter className="px-4 sm:px-6 py-3 border-t bg-gray-50 flex-shrink-0">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setCardModalOpen(false)}
+              className="flex-1 sm:flex-none"
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="submit"
+              form="card-form"
+              className="flex-1 sm:flex-none"
+            >
+              {editingCard ? "Salvar" : "Criar"}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
