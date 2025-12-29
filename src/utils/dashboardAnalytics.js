@@ -34,7 +34,7 @@ export const calculateMonthData = (transactions, month) => {
     .filter(t => t.type_internal_name === TRANSACTION_TYPES.INCOME)
     .reduce((sum, t) => sum + Math.abs(t.amount), 0);
 
-  // Débitos/Despesas Reais: APENAS transações com type_internal_name === 'expense'
+  // Débitos/Despesas Mensais: APENAS transações com type_internal_name === 'expense'
   const debits = monthTransactions
     .filter(t => t.type_internal_name === TRANSACTION_TYPES.EXPENSE)
     .reduce((sum, t) => sum + Math.abs(t.amount), 0);
@@ -47,7 +47,7 @@ export const calculateMonthData = (transactions, month) => {
     .filter(t => t.type_internal_name === TRANSACTION_TYPES.INVESTMENT)
     .reduce((sum, t) => sum + Math.abs(t.amount), 0);
 
-  // Saldo disponível = receitas - despesas reais - aportes
+  // Saldo disponível = receitas - despesas Mensais - aportes
   const balance = credits - debits - investments;
 
   return {
