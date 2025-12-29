@@ -45,7 +45,7 @@ export default function FinancialHealthScore({ score, breakdown }) {
 
   return (
     <Card>
-      <CardContent className="p-4 sm:p-6">
+      <CardContent className="p-4">
         <div className="flex items-center gap-2 mb-4">
           <Heart className="w-5 h-5 text-gray-700" />
           <h3 className="font-semibold text-gray-900">Saúde Financeira</h3>

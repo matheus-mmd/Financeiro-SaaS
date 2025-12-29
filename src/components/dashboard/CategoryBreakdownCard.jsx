@@ -95,7 +95,7 @@ const CategoryBreakdownCard = memo(function CategoryBreakdownCard({
 
   return (
     <Card className="overflow-hidden border-0 shadow-sm">
-      <CardContent className="p-4 sm:p-6">
+      <CardContent className="p-4">
         {/* Header com título e toggle */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <div className="flex items-start gap-3">

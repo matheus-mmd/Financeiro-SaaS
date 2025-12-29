@@ -18,7 +18,7 @@ const IncomeVsExpensesChart = lazy(() => import("../src/components/dashboard/Inc
 // Skeleton para os gráficos enquanto carregam
 const ChartSkeleton = () => (
   <Card className="overflow-hidden border-0 shadow-sm">
-    <CardContent className="p-6">
+    <CardContent className="p-4">
       <div className="animate-pulse space-y-4">
         <div className="h-6 bg-gray-200 rounded w-1/3"></div>
         <div className="h-[400px] bg-gray-100 rounded"></div>
@@ -158,7 +158,7 @@ export default function Dashboard() {
           />
           <StatsCard
             icon={TrendingDown}
-            label="Despesas Mensais"
+            label="Despesas Reais"
             value={formatCurrency(currentMonthData.debits)}
             subtitle={
               currentMonthData.plannedExpenses > 0

@@ -312,7 +312,7 @@ export default function ContasPage() {
   const renderBanksSection = () => {
     return (
       <Card>
-        <CardContent className="p-4 sm:p-6">
+        <CardContent className="p-4">
           <div className="flex items-center gap-3 mb-6">
             <div className="p-2 bg-blue-100 rounded-lg">
               <Landmark className="w-5 h-5 text-blue-600" />
@@ -407,7 +407,7 @@ export default function ContasPage() {
   const renderCardsSection = () => {
     return (
       <Card>
-        <CardContent className="p-4 sm:p-6">
+        <CardContent className="p-4">
           <div className="flex items-center gap-3 mb-6">
             <div className="p-2 bg-purple-100 rounded-lg">
               <CreditCard className="w-5 h-5 text-purple-600" />

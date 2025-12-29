@@ -19,7 +19,7 @@ export default function DashboardSkeleton() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {[1, 2, 3, 4, 5].map((i) => (
           <Card key={i}>
-            <CardContent className="p-4 sm:p-6">
+            <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div className="space-y-2 flex-1">
                   <Skeleton className="h-4 w-24" />

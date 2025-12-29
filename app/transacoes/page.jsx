@@ -1043,7 +1043,7 @@ export default function Transacoes() {
 
       {/* Tabela de transações */}
       <Card>
-        <CardContent className="p-4 sm:p-6">
+        <CardContent className="p-4">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
             <h2 className="text-lg font-semibold text-gray-900">
               Todas as Transações ({sortedTransactions.length})
