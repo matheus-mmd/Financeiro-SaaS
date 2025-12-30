@@ -221,7 +221,7 @@ export default function ImportStatementDialog({ open, onOpenChange, onImport }) 
     const types = {
       credit: { label: 'Crédito', color: 'bg-green-500' },
       debit: { label: 'Débito', color: 'bg-red-500' },
-      investment: { label: 'Aporte', color: 'bg-blue-500' },
+      investment: { label: 'Patrimônio', color: 'bg-purple-500' },
     };
     return types[type] || types.debit;
   };

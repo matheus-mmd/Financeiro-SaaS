@@ -188,7 +188,7 @@ export async function createTransaction(transaction) {
     return { data: null, error };
   }
 
-  // Se for transação de tipo INVESTMENT (Aporte), criar ativo vinculado
+  // Se for transação de tipo INVESTMENT (Patrimônio), criar ativo vinculado
   if (transaction.transactionTypeId === 3 && data) {
     // Validar que a categoria da transação é do tipo INVESTMENT antes de criar o ativo
     const { data: categoryData, error: categoryError } = await supabase

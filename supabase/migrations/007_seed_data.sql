@@ -149,7 +149,7 @@ INSERT INTO public.categories (id, name, color, icon_id, transaction_type_id, us
 (17, 'Impostos', '#f97316', 73, 2, NULL),
 (22, 'Outros', '#64748b', 84, 2, NULL),
 
--- APORTES/INVESTIMENTOS (transaction_type_id = 3)
+-- PATRIMÔNIO/INVESTIMENTOS (transaction_type_id = 3)
 (18, 'Poupança', '#22c55e', 6, 3, NULL),
 (19, 'Ações', '#ef4444', 77, 3, NULL),
 (20, 'Fundos', '#8b5cf6', 78, 3, NULL),

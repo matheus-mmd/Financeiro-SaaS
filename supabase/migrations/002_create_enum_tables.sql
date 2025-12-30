@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS public.transaction_types (
 );
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_transaction_types_internal_name ON public.transaction_types(internal_name);
-COMMENT ON TABLE public.transaction_types IS 'Tipos de transação do sistema (Receita, Despesa, Aporte)';
+COMMENT ON TABLE public.transaction_types IS 'Tipos de transação do sistema (Receita, Despesa, Patrimônio)';
 
 -- ============================================
 -- TABELA: payment_statuses

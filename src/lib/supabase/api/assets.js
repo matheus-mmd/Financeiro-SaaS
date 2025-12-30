@@ -1,7 +1,7 @@
 /**
  * API de Ativos - Supabase
  * Criar ativo diretamente SEM criar transação
- * (Transações de tipo Aporte é que criam ativos automaticamente)
+ * (Transações de tipo Patrimônio é que criam ativos automaticamente)
  */
 
 import { supabase } from '../client';

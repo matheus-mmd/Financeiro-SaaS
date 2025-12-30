@@ -42,7 +42,7 @@ export const calculateMonthData = (transactions, month) => {
   // Despesas Planejadas: mesmos valores (transactions é a fonte única)
   const plannedExpenses = debits;
 
-  // Aportes/Investimentos: APENAS transações com type_internal_name === 'investment'
+  // Patrimônio/Investimentos: APENAS transações com type_internal_name === 'investment'
   const investments = monthTransactions
     .filter(t => t.type_internal_name === TRANSACTION_TYPES.INVESTMENT)
     .reduce((sum, t) => sum + Math.abs(t.amount), 0);
@@ -202,7 +202,7 @@ export const calculateMonthEndProjection = (transactions, currentMonth) => {
 
   const confirmedIncome = monthData.credits; // Receitas já recebidas
   const currentExpenses = monthData.expenses; // Despesas já realizadas
-  const investments = monthData.investments; // Aportes já feitos
+  const investments = monthData.investments; // Patrimônio já investido
 
   // PASSO 3: Calcular média diária de gastos (baseado no histórico até hoje)
   const avgDailyExpense = daysPassed > 0 ? currentExpenses / daysPassed : 0;
