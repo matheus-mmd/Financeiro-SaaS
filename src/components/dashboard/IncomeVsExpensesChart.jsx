@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useMemo, memo } from 'react';
+import React, { useMemo, memo } from 'react';
 import { Bar, BarChart, XAxis, YAxis, CartesianGrid } from "recharts"
 import {
   Card,
@@ -14,13 +14,6 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "../ui/chart"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../ui/select"
 import { formatCurrency } from '../../utils';
 
 /**
@@ -32,14 +25,15 @@ import { formatCurrency } from '../../utils';
  * @param {Array} quarterlyData - Dados trimestrais [{date, income, expense, investment}, ...]
  * @param {Array} semesterData - Dados semestrais [{date, income, expense, investment}, ...]
  * @param {Array} yearlyData - Dados anuais [{date, income, expense, investment}, ...]
+ * @param {string} period - Período selecionado (monthly, quarterly, semester, yearly)
  */
 const IncomeVsExpensesChart = memo(function IncomeVsExpensesChart({
   monthlyData = [],
   quarterlyData = [],
   semesterData = [],
-  yearlyData = []
+  yearlyData = [],
+  period = 'monthly'
 }) {
-  const [period, setPeriod] = useState('yearly');
 
   // Selecionar dados baseado no período escolhido
   const data = useMemo(() =>
@@ -100,24 +94,9 @@ const IncomeVsExpensesChart = memo(function IncomeVsExpensesChart({
   return (
     <Card className="overflow-hidden border-0 shadow-sm">
       <CardHeader className="pb-4">
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex-1">
-            <CardTitle className="text-lg font-semibold text-gray-900">
-              Receitas x Despesas x Patrimônio
-            </CardTitle>
-          </div>
-          <Select value={period} onValueChange={setPeriod}>
-            <SelectTrigger className="w-[160px]">
-              <SelectValue placeholder="Selecione o período" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="yearly">Anual</SelectItem>
-              <SelectItem value="semester">Semestral</SelectItem>
-              <SelectItem value="quarterly">Trimestral</SelectItem>
-              <SelectItem value="monthly">Mensal</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        <CardTitle className="text-lg font-semibold text-gray-900">
+          Receitas x Despesas x Patrimônio
+        </CardTitle>
       </CardHeader>
       <CardContent className="pb-6">
         {data.length > 0 ? (

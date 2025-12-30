@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useEffect, lazy, Suspense } from "react";
+import React, { useCallback, useEffect, lazy, Suspense, useState } from "react";
 import { useRouter } from "next/navigation";
 import PageHeader from "../src/components/PageHeader";
 import StatsCard from "../src/components/StatsCard";
@@ -10,6 +10,13 @@ import { Wallet, TrendingDown, ArrowUpRight, PiggyBank, Coins, Heart, Percent, C
 import { useAuth } from "../src/contexts/AuthContext";
 import { useDashboard } from "../src/lib/supabase/hooks/useDashboard";
 import { Card, CardContent } from "../src/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../src/components/ui/select";
 
 // OTIMIZAÇÃO: Lazy load dos componentes pesados de gráficos
 const CategoryBreakdownCard = lazy(() => import("../src/components/dashboard/CategoryBreakdownCard"));
@@ -34,6 +41,7 @@ const ChartSkeleton = () => (
 export default function Dashboard() {
   const router = useRouter();
   const { user, loading: authLoading, signOut } = useAuth();
+  const [period, setPeriod] = useState('monthly');
 
   // Hook customizado que centraliza toda a lógica do dashboard
   const { loading, error, metrics, categoryData, chartData } = useDashboard();
@@ -80,10 +88,23 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-4 animate-fade-in">
-      <PageHeader
-        title="Dashboard"
-        description="Visão geral do seu controle financeiro"
-      />
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+        <PageHeader
+          title="Dashboard"
+          description="Visão geral do seu controle financeiro"
+        />
+        <Select value={period} onValueChange={setPeriod}>
+          <SelectTrigger className="w-[160px]">
+            <SelectValue placeholder="Selecione o período" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="monthly">Mensal</SelectItem>
+            <SelectItem value="quarterly">Trimestral</SelectItem>
+            <SelectItem value="semester">Semestral</SelectItem>
+            <SelectItem value="yearly">Anual</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
 
       {/* 📊 VISÃO GERAL - Cards Principais */}
       <div>
@@ -130,12 +151,12 @@ export default function Dashboard() {
             valueColor={dailyBudgetData.dailyBudget > 0 ? "text-accent-600" : "text-danger-600"}
           />
           <StatsCard
-            icon={Wallet}
-            label="Saldo Disponível"
-            value={formatCurrency(currentMonthData.balance)}
-            subtitle={`${formatCurrency(dailyBudgetData.dailyBudget)}/dia pelos próximos ${dailyBudgetData.daysRemaining} dias`}
-            iconColor={currentMonthData.balance >= 0 ? "blue" : "red"}
-            valueColor={currentMonthData.balance >= 0 ? "text-brand-600" : "text-danger-600"}
+            icon={PiggyBank}
+            label="Patrimônio Total"
+            value={formatCurrency(totalAssets)}
+            subtitle={`Somando todos os ativos`}
+            iconColor="purple"
+            valueColor="text-purple-600"
           />
         </div>
       </div>
@@ -143,7 +164,7 @@ export default function Dashboard() {
       {/* 💰 ANÁLISE MENSAL - Receitas, Despesas e Patrimônio */}
       <div>
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Análise Mensal</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 min-w-0">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 min-w-0">
           <StatsCard
             icon={ArrowUpRight}
             label="Receitas Mensais"
@@ -158,7 +179,7 @@ export default function Dashboard() {
           />
           <StatsCard
             icon={TrendingDown}
-            label="Despesas Mensais"
+            label="Despesas Reais"
             value={formatCurrency(currentMonthData.debits)}
             subtitle={
               currentMonthData.plannedExpenses > 0
@@ -180,14 +201,6 @@ export default function Dashboard() {
             iconColor="purple"
             valueColor="text-purple-600"
           />
-          <StatsCard
-            icon={PiggyBank}
-            label="Patrimônio Total"
-            value={formatCurrency(totalAssets)}
-            subtitle={`Somando todos os ativos`}
-            iconColor="purple"
-            valueColor="text-accent-600"
-          />
         </div>
       </div>
 
@@ -199,6 +212,7 @@ export default function Dashboard() {
             quarterlyData={chartData.quarterly}
             semesterData={chartData.semester}
             yearlyData={chartData.yearly}
+            period={period}
           />
         </Suspense>
 
