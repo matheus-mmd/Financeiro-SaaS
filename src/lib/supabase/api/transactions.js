@@ -190,33 +190,48 @@ export async function createTransaction(transaction) {
 
   // Se for transação de tipo INVESTMENT (Aporte), criar ativo vinculado
   if (transaction.transactionTypeId === 3 && data) {
-    const { data: assetData, error: assetError } = await supabase
-      .from('assets')
-      .insert({
-        user_id: user.id,
-        category_id: transaction.categoryId,
-        name: transaction.description,
-        description: transaction.notes || null,
-        value: Math.abs(transaction.amount), // Valor positivo para o ativo
-        yield_rate: 0,
-        currency: 'BRL',
-        valuation_date: transaction.transactionDate,
-        purchase_date: transaction.transactionDate,
-        purchase_value: Math.abs(transaction.amount),
-        related_transaction_id: data.id, // Vincular à transação
-      })
-      .select()
+    // Validar que a categoria da transação é do tipo INVESTMENT antes de criar o ativo
+    const { data: categoryData, error: categoryError } = await supabase
+      .from('categories')
+      .select('transaction_type_id')
+      .eq('id', transaction.categoryId)
+      .eq('user_id', user.id)
       .maybeSingle();
 
-    if (assetError) {
-      console.error('[Transactions API] Erro ao criar ativo vinculado:', assetError);
-      // Não falha a transação, apenas loga o erro
-    } else if (assetData) {
-      // Atualizar a transação com o ID do ativo (vínculo bidirecional)
-      await supabase
-        .from('transactions')
-        .update({ related_asset_id: assetData.id })
-        .eq('id', data.id);
+    if (categoryError) {
+      console.error('[Transactions API] Erro ao validar categoria para criação de ativo:', categoryError);
+    } else if (categoryData && categoryData.transaction_type_id === 3) {
+      // Só cria o ativo se a categoria for realmente do tipo INVESTMENT
+      const { data: assetData, error: assetError } = await supabase
+        .from('assets')
+        .insert({
+          user_id: user.id,
+          category_id: transaction.categoryId,
+          name: transaction.description,
+          description: transaction.notes || null,
+          value: Math.abs(transaction.amount), // Valor positivo para o ativo
+          yield_rate: 0,
+          currency: 'BRL',
+          valuation_date: transaction.transactionDate,
+          purchase_date: transaction.transactionDate,
+          purchase_value: Math.abs(transaction.amount),
+          related_transaction_id: data.id, // Vincular à transação
+        })
+        .select()
+        .maybeSingle();
+
+      if (assetError) {
+        console.error('[Transactions API] Erro ao criar ativo vinculado:', assetError);
+        // Não falha a transação, apenas loga o erro
+      } else if (assetData) {
+        // Atualizar a transação com o ID do ativo (vínculo bidirecional)
+        await supabase
+          .from('transactions')
+          .update({ related_asset_id: assetData.id })
+          .eq('id', data.id);
+      }
+    } else {
+      console.warn('[Transactions API] Categoria não é do tipo INVESTMENT, ativo não foi criado para transação:', data.id);
     }
   }
 
