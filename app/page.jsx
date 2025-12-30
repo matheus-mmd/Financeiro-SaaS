@@ -158,7 +158,7 @@ export default function Dashboard() {
           />
           <StatsCard
             icon={TrendingDown}
-            label="Despesas Reais"
+            label="Despesas Mensais"
             value={formatCurrency(currentMonthData.debits)}
             subtitle={
               currentMonthData.plannedExpenses > 0
