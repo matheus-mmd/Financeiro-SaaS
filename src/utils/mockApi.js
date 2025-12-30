@@ -219,7 +219,7 @@ export const fetchData = async (endpoint) => {
     "/api/transactionTypes": mockDatabase.transactionTypes,
     "/api/banks": mockDatabase.banks.map(enrichBankWithIcon),
     "/api/cards": mockDatabase.cards.map(enrichCardWithIcon),
-    // assetTypes agora retorna categories com transactionType = 3 (Aporte) para compatibilidade
+    // assetTypes agora retorna categories com transactionType = 3 (Patrimônio) para compatibilidade
     "/api/assetTypes": mockDatabase.categories
       .filter(c => c.transaction_type_id === 3)
       .map(enrichCategoryWithIcon),

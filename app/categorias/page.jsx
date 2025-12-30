@@ -311,7 +311,7 @@ export default function CategoriasPage() {
         "Gerencie categorias para seus aportes, investimentos e ativos",
         <Tag className="w-5 h-5 text-blue-600" />,
         "bg-blue-100",
-        3 // ID do tipo "Aporte"
+        3 // ID do tipo "Patrimônio"
       )}
 
       {/* Modal de Categoria */}

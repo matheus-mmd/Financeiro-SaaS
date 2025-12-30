@@ -24,7 +24,7 @@ import {
 import { formatCurrency } from '../../utils';
 
 /**
- * IncomeVsExpensesChart - Gráfico comparando Receitas x Despesas x Aportes
+ * IncomeVsExpensesChart - Gráfico comparando Receitas x Despesas x Patrimônio
  * Visualização por período (anual, semestral, trimestral, mensal) com gráfico de barras estilo shadcn/ui
  * Memoizado para evitar re-renders desnecessários
  *
@@ -87,8 +87,8 @@ const IncomeVsExpensesChart = memo(function IncomeVsExpensesChart({
       color: "#ef4444", // red-500
     },
     investment: {
-      label: "Aportes",
-      color: "#3b82f6", // blue-500
+      label: "Patrimônio",
+      color: "#a855f7", // purple-500
     },
   }
 
@@ -103,7 +103,7 @@ const IncomeVsExpensesChart = memo(function IncomeVsExpensesChart({
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1">
             <CardTitle className="text-lg font-semibold text-gray-900">
-              Receitas x Despesas x Aportes
+              Receitas x Despesas x Patrimônio
             </CardTitle>
           </div>
           <Select value={period} onValueChange={setPeriod}>
@@ -137,8 +137,8 @@ const IncomeVsExpensesChart = memo(function IncomeVsExpensesChart({
                   <stop offset="95%" stopColor="#ef4444" stopOpacity={0.6}/>
                 </linearGradient>
                 <linearGradient id="colorInvestment" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8}/>
-                  <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.6}/>
+                  <stop offset="5%" stopColor="#a855f7" stopOpacity={0.8}/>
+                  <stop offset="95%" stopColor="#a855f7" stopOpacity={0.6}/>
                 </linearGradient>
               </defs>
 
@@ -190,7 +190,7 @@ const IncomeVsExpensesChart = memo(function IncomeVsExpensesChart({
                       const labels = {
                         income: "Receitas",
                         expense: "Despesas",
-                        investment: "Aportes"
+                        investment: "Patrimônio"
                       };
                       return (
                         <div className="flex items-center justify-between gap-4 w-full">

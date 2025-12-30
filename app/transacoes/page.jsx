@@ -131,7 +131,7 @@ function formReducer(state, action) {
 
 /**
  * Página Transações - Gerenciamento de transações
- * Nova estrutura: Categoria (Salário, Moradia, etc.) + Tipo de Transação (Receita, Despesa, Aporte)
+ * Nova estrutura: Categoria (Salário, Moradia, etc.) + Tipo de Transação (Receita, Despesa, Patrimônio)
  */
 export default function Transacoes() {
   const router = useRouter();
@@ -469,7 +469,7 @@ export default function Transacoes() {
       );
       let amount = parseFloat(formData.amount);
 
-      // Receitas são positivas, Despesas e Aportes são negativos
+      // Receitas são positivas, Despesas e Patrimônio são negativos
       if (transactionType?.internal_name === TRANSACTION_TYPES.INCOME) {
         amount = Math.abs(amount);
       } else {
@@ -888,12 +888,12 @@ export default function Transacoes() {
                     </SelectGroup>
                   )}
 
-                  {/* Aportes/Investimentos */}
+                  {/* Patrimônio/Investimentos */}
                   {categories.filter((cat) => cat.transaction_type_id === 3)
                     .length > 0 && (
                     <SelectGroup>
-                      <SelectLabel className="text-blue-600 font-bold text-xs uppercase">
-                        Aportes
+                      <SelectLabel className="text-purple-600 font-bold text-xs uppercase">
+                        Patrimônio
                       </SelectLabel>
                       {categories
                         .filter((cat) => cat.transaction_type_id === 3)
@@ -1026,10 +1026,10 @@ export default function Transacoes() {
 
         <StatsCard
           icon={TrendingUp}
-          label="Total de Aportes"
+          label="Total em Patrimônio"
           value={formatCurrency(totalInvestment)}
-          iconColor="blue"
-          valueColor="text-blue-600"
+          iconColor="purple"
+          valueColor="text-purple-600"
         />
 
         <StatsCard
@@ -1120,7 +1120,7 @@ export default function Transacoes() {
                   const typeConfig = {
                     income: { label: 'Receita', color: 'bg-green-100 text-green-700 border-green-200' },
                     expense: { label: 'Despesa', color: 'bg-red-100 text-red-700 border-red-200' },
-                    investment: { label: 'Aporte', color: 'bg-blue-100 text-blue-700 border-blue-200' },
+                    investment: { label: 'Patrimônio', color: 'bg-purple-100 text-purple-700 border-purple-200' },
                   };
 
                   const config = typeConfig[selectedType.internal_name] || { label: selectedType.name, color: 'bg-gray-100 text-gray-700' };
@@ -1218,12 +1218,12 @@ export default function Transacoes() {
                     </SelectGroup>
                   )}
 
-                  {/* Aportes/Investimentos */}
+                  {/* Patrimônio/Investimentos */}
                   {categories.filter((cat) => cat.transaction_type_id === 3)
                     .length > 0 && (
                     <SelectGroup>
-                      <SelectLabel className="text-blue-600 font-bold text-xs uppercase">
-                        Aportes
+                      <SelectLabel className="text-purple-600 font-bold text-xs uppercase">
+                        Patrimônio
                       </SelectLabel>
                       {categories
                         .filter((cat) => cat.transaction_type_id === 3)

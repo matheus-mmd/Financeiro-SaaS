@@ -140,7 +140,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* 💰 ANÁLISE MENSAL - Receitas, Despesas e Aportes */}
+      {/* 💰 ANÁLISE MENSAL - Receitas, Despesas e Patrimônio */}
       <div>
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Análise Mensal</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 min-w-0">
@@ -174,11 +174,11 @@ export default function Dashboard() {
           />
           <StatsCard
             icon={Coins}
-            label="Aportes Mensais"
+            label="Patrimônio Mensal"
             value={formatCurrency(currentMonthData.investments)}
             subtitle={incomeComparison.current > 0 ? `${((currentMonthData.investments / incomeComparison.current) * 100).toFixed(1)}% da receita` : "Sem receitas"}
-            iconColor="info"
-            valueColor="text-info-600"
+            iconColor="purple"
+            valueColor="text-purple-600"
           />
           <StatsCard
             icon={PiggyBank}
