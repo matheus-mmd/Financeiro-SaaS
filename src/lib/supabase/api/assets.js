@@ -69,6 +69,27 @@ export async function createAsset(asset) {
   }
 
   try {
+    // Validar que a categoria é do tipo INVESTMENT (transaction_type_id = 3)
+    const { data: categoryData, error: categoryError } = await supabase
+      .from('categories')
+      .select('transaction_type_id')
+      .eq('id', asset.categoryId)
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    if (categoryError) {
+      console.error('[Assets API] Erro ao validar categoria:', categoryError);
+      return { data: null, error: new Error('Erro ao validar categoria') };
+    }
+
+    if (!categoryData) {
+      return { data: null, error: new Error('Categoria não encontrada') };
+    }
+
+    if (categoryData.transaction_type_id !== 3) {
+      return { data: null, error: new Error('Apenas categorias do tipo Investimento podem ser usadas para ativos') };
+    }
+
     // Criar apenas o ativo (SEM criar transação)
     const insertData = {
       user_id: user.id,
@@ -105,6 +126,37 @@ export async function createAsset(asset) {
 
 export async function updateAsset(id, updates) {
   try {
+    // Validar categoria se está sendo atualizada
+    if (updates.categoryId !== undefined) {
+      const { user, error: authError } = await getAuthenticatedUser();
+
+      if (!user) {
+        const error = authError || new Error('Usuário não autenticado');
+        error.code = 'AUTH_REQUIRED';
+        return { data: null, error };
+      }
+
+      const { data: categoryData, error: categoryError } = await supabase
+        .from('categories')
+        .select('transaction_type_id')
+        .eq('id', updates.categoryId)
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (categoryError) {
+        console.error('[Assets API] Erro ao validar categoria:', categoryError);
+        return { data: null, error: new Error('Erro ao validar categoria') };
+      }
+
+      if (!categoryData) {
+        return { data: null, error: new Error('Categoria não encontrada') };
+      }
+
+      if (categoryData.transaction_type_id !== 3) {
+        return { data: null, error: new Error('Apenas categorias do tipo Investimento podem ser usadas para ativos') };
+      }
+    }
+
     // Atualizar apenas o ativo (não mexe em transação)
     const updateData = {};
 
