@@ -75,7 +75,7 @@ export default function LoginPage() {
   useEffect(() => {
     if (!authLoading && user) {
       console.log('[LoginPage] Usuário já autenticado, redirecionando...');
-      router.replace('/');
+      router.replace('/dashboard');
     }
   }, [user, authLoading, router]);
 
@@ -138,7 +138,7 @@ export default function LoginPage() {
         // O onAuthStateChange do AuthContext já atualizou o estado
         // Usar replace() para evitar volta ao login no histórico
         console.log('[LoginPage] Login bem-sucedido, redirecionando...');
-        router.replace('/');
+        router.replace('/dashboard');
       } else {
         const { error } = await signUp(formData.email, formData.password, formData.name);
 
@@ -160,7 +160,7 @@ export default function LoginPage() {
         } else {
           // Login automático bem-sucedido, redirecionar
           console.log('[LoginPage] Login automático bem-sucedido, redirecionando...');
-          router.replace('/');
+          router.replace('/dashboard');
         }
       }
     } catch (err) {
