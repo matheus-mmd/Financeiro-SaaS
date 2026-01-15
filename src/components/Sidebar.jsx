@@ -52,7 +52,7 @@ export default function Sidebar({
   const pathname = usePathname();
 
   const menuItems = [
-    { path: "/", icon: LayoutGrid, label: "Dashboard" },
+    { path: "/dashboard", icon: LayoutGrid, label: "Dashboard" },
     { path: "/transacoes", icon: ArrowLeftRight, label: "Transações" },
     { path: "/patrimonio-ativos", icon: PiggyBank, label: "Patrimônio" },
     { path: "/metas", icon: Target, label: "Metas" },
