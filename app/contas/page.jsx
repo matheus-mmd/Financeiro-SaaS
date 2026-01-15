@@ -105,7 +105,7 @@ export default function ContasPage() {
   // Funções auxiliares para erros de autenticação
   const handleAuthFailure = async () => {
     await signOut();
-    router.replace('/login');
+    router.replace('/');
   };
 
   const isAuthError = (err) => {

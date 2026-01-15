@@ -202,7 +202,7 @@ export default function Transacoes() {
 
   const handleAuthFailure = useCallback(async () => {
     await signOut();
-    router.replace('/login');
+    router.replace('/');
   }, [router, signOut]);
 
   const isAuthError = useCallback((error) => {
@@ -220,7 +220,7 @@ export default function Transacoes() {
   useEffect(() => {
     if (authLoading) return;
     if (!user) {
-      router.replace('/login');
+      router.replace('/');
     }
   }, [authLoading, user, router]);
 
@@ -610,7 +610,7 @@ export default function Transacoes() {
   }, [sortedTransactions]);
 
   if (!authLoading && !user) {
-    router.replace('/login');
+    router.replace('/');
     return <PageSkeleton />;
   }
 

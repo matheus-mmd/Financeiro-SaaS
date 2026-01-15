@@ -37,7 +37,7 @@ export default function GlobalSearch() {
 
   const handleAuthFailure = useCallback(async () => {
     await signOut();
-    router.replace('/login');
+    router.replace('/');
   }, [router, signOut]);
 
   // Atalho de teclado Ctrl+K ou Cmd+K para abrir busca
@@ -61,7 +61,7 @@ export default function GlobalSearch() {
       setOpen(false);
       setDataset(null);
       setResults({ transactions: [], targets: [], assets: [] });
-      router.replace('/login');
+      router.replace('/');
     }
   }, [open, authLoading, user, router]);
 

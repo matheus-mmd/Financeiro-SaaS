@@ -123,7 +123,7 @@ export default function Metas() {
 
   const handleAuthFailure = useCallback(async () => {
     await signOut();
-    router.replace('/login');
+    router.replace('/');
   }, [router, signOut]);
 
   const isAuthError = useCallback((error) => {
@@ -139,7 +139,7 @@ export default function Metas() {
       setFilteredTargets([]);
       setCategories([]);
       setLoading(false);
-      router.replace('/login');
+      router.replace('/');
       return;
     }
 

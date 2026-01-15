@@ -48,13 +48,13 @@ export default function Dashboard() {
 
   const handleAuthFailure = useCallback(async () => {
     await signOut();
-    router.replace('/login');
+    router.replace('/');
   }, [router, signOut]);
 
   // Redirecionar se não autenticado
   useEffect(() => {
     if (!authLoading && !user) {
-      router.replace('/login');
+      router.replace('/');
     }
   }, [authLoading, user, router]);
 

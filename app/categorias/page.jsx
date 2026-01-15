@@ -74,7 +74,7 @@ export default function CategoriasPage() {
   // Funções auxiliares para erros de autenticação
   const handleAuthFailure = async () => {
     await signOut();
-    router.replace('/login');
+    router.replace('/');
   };
 
   const isAuthError = (err) => {
@@ -88,7 +88,7 @@ export default function CategoriasPage() {
   }
 
   if (!authLoading && !user) {
-    router.replace('/login');
+    router.replace('/');
     return <PageSkeleton />;
   }
 

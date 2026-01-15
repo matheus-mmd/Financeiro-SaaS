@@ -108,7 +108,7 @@ export default function PatrimonioAtivos() {
 
   const handleAuthFailure = useCallback(async () => {
     await signOut();
-    router.replace('/login');
+    router.replace('/');
   }, [router, signOut]);
 
   const isAuthError = useCallback((error) => {
@@ -121,7 +121,7 @@ export default function PatrimonioAtivos() {
       setAssets([]);
       setFilteredAssets([]);
       setCategories([]);
-      router.replace('/login');
+      router.replace('/');
     }
   }, [authLoading, user, router]);
 

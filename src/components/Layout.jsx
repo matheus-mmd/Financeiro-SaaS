@@ -19,7 +19,7 @@ export default function Layout({ children }) {
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   // Rotas públicas que não requerem autenticação
-  const publicRoutes = ['/login'];
+  const publicRoutes = ['/login', '/landing'];
   const isPublicRoute = publicRoutes.includes(pathname);
 
   // Fechar sidebar mobile ao mudar de rota
@@ -35,10 +35,10 @@ export default function Layout({ children }) {
   // - Timeout de segurança (causava redirecionamento prematuro)
   // - Redirecionamento client-side (duplicava proteção do middleware)
 
-  // Redirecionar para login quando autenticação já foi verificada e não há usuário
+  // Redirecionar para página inicial quando autenticação já foi verificada e não há usuário
   useEffect(() => {
     if (!isPublicRoute && !loading && !user) {
-      router.replace('/login');
+      router.replace('/');
     }
   }, [isPublicRoute, loading, user, router]);
 
@@ -63,7 +63,7 @@ export default function Layout({ children }) {
   }
 
   if (!loading && !user) {
-    router.replace('/login');
+    router.replace('/');
     return <div className="h-screen w-full bg-bg" />;
   }
 
@@ -73,12 +73,12 @@ export default function Layout({ children }) {
       if (error) {
         console.error('Erro ao fazer logout:', error);
       }
-      // Forçar redirecionamento imediato
-      router.replace('/login');
+      // Redirecionar para página inicial que vai para /landing
+      router.replace('/');
     } catch (error) {
       console.error('Erro ao fazer logout:', error);
       // Mesmo com erro, tenta redirecionar
-      router.replace('/login');
+      router.replace('/');
     }
   };
 
