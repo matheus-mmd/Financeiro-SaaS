@@ -2,25 +2,25 @@
 
 import React, { useCallback, useEffect, lazy, Suspense, useState } from "react";
 import { useRouter } from "next/navigation";
-import PageHeader from "../src/components/PageHeader";
-import StatsCard from "../src/components/StatsCard";
-import DashboardSkeleton from "../src/components/DashboardSkeleton";
-import { formatCurrency } from "../src/utils";
+import PageHeader from "../../src/components/PageHeader";
+import StatsCard from "../../src/components/StatsCard";
+import DashboardSkeleton from "../../src/components/DashboardSkeleton";
+import { formatCurrency } from "../../src/utils";
 import { Wallet, TrendingDown, ArrowUpRight, PiggyBank, Coins, Heart, Percent, CalendarDays } from "lucide-react";
-import { useAuth } from "../src/contexts/AuthContext";
-import { useDashboard } from "../src/lib/supabase/hooks/useDashboard";
-import { Card, CardContent } from "../src/components/ui/card";
+import { useAuth } from "../../src/contexts/AuthContext";
+import { useDashboard } from "../../src/lib/supabase/hooks/useDashboard";
+import { Card, CardContent } from "../../src/components/ui/card";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../src/components/ui/select";
+} from "../../src/components/ui/select";
 
 // OTIMIZAÇÃO: Lazy load dos componentes pesados de gráficos
-const CategoryBreakdownCard = lazy(() => import("../src/components/dashboard/CategoryBreakdownCard"));
-const IncomeVsExpensesChart = lazy(() => import("../src/components/dashboard/IncomeVsExpensesChart"));
+const CategoryBreakdownCard = lazy(() => import("../../src/components/dashboard/CategoryBreakdownCard"));
+const IncomeVsExpensesChart = lazy(() => import("../../src/components/dashboard/IncomeVsExpensesChart"));
 
 // Skeleton para os gráficos enquanto carregam
 const ChartSkeleton = () => (
