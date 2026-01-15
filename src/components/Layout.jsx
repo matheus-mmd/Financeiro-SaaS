@@ -19,7 +19,7 @@ export default function Layout({ children }) {
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   // Rotas públicas que não requerem autenticação
-  const publicRoutes = ['/login', '/landing'];
+  const publicRoutes = ['/login', '/'];
   const isPublicRoute = publicRoutes.includes(pathname);
 
   // Fechar sidebar mobile ao mudar de rota
