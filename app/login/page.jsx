@@ -7,7 +7,8 @@ import { Button } from '../../src/components/ui/button';
 import { Input } from '../../src/components/ui/input';
 import { Label } from '../../src/components/ui/label';
 import { Card, CardContent } from '../../src/components/ui/card';
-import { Wallet, ArrowRight, Mail, Lock, User } from 'lucide-react';
+import { Wallet, ArrowRight, Mail, Lock, User, ArrowLeft } from 'lucide-react';
+import Link from 'next/link';
 
 /**
  * Traduz mensagens de erro do Supabase para português
@@ -180,6 +181,12 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-brand-50 to-brand-100 p-4">
       <Card className="w-full max-w-md shadow-2xl">
         <CardContent className="p-8">
+          {/* Botão Voltar */}
+          <Link href="/" className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 transition-colors mb-6">
+            <ArrowLeft className="w-4 h-4" />
+            <span>Voltar para página inicial</span>
+          </Link>
+
           {/* Logo e Título */}
           <div className="text-center mb-8">
             <div className="inline-flex items-center justify-center w-16 h-16 bg-brand-600 rounded-full mb-4">
