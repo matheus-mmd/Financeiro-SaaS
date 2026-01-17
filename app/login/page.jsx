@@ -1,12 +1,12 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { Button } from '../../src/components/ui/button';
 import { Input } from '../../src/components/ui/input';
 import { Card, CardContent } from '../../src/components/ui/card';
-import { Compass, Mail, Lock, User, Phone, Eye, EyeOff, ArrowLeft } from 'lucide-react';
+import { Compass, Mail, Lock, User, Phone, Eye, EyeOff, ArrowLeft, Check, X } from 'lucide-react';
 import Link from 'next/link';
 
 /**
@@ -53,6 +53,80 @@ const formatPhone = (value) => {
 };
 
 /**
+ * Componente de validação visual da senha
+ */
+const PasswordStrengthIndicator = ({ password }) => {
+  const requirements = useMemo(() => [
+    { label: 'Mínimo 8 caracteres', test: (p) => p.length >= 8 },
+    { label: 'Uma letra maiúscula', test: (p) => /[A-Z]/.test(p) },
+    { label: 'Uma letra minúscula', test: (p) => /[a-z]/.test(p) },
+    { label: 'Um número', test: (p) => /\d/.test(p) },
+    { label: 'Um caractere especial (!@#$%...)', test: (p) => /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(p) },
+  ], []);
+
+  const passedRequirements = requirements.filter((req) => req.test(password)).length;
+  const strengthPercentage = (passedRequirements / requirements.length) * 100;
+
+  const getStrengthColor = () => {
+    if (strengthPercentage <= 20) return 'bg-red-500';
+    if (strengthPercentage <= 40) return 'bg-orange-500';
+    if (strengthPercentage <= 60) return 'bg-amber-500';
+    if (strengthPercentage <= 80) return 'bg-lime-500';
+    return 'bg-green-500';
+  };
+
+  const getStrengthText = () => {
+    if (strengthPercentage <= 20) return { text: 'Muito fraca', color: 'text-red-500' };
+    if (strengthPercentage <= 40) return { text: 'Fraca', color: 'text-orange-500' };
+    if (strengthPercentage <= 60) return { text: 'Média', color: 'text-amber-500' };
+    if (strengthPercentage <= 80) return { text: 'Boa', color: 'text-lime-600' };
+    return { text: 'Forte', color: 'text-green-600' };
+  };
+
+  const strength = getStrengthText();
+
+  if (!password) return null;
+
+  return (
+    <div className="mt-3 space-y-3">
+      {/* Barra de força */}
+      <div className="space-y-1">
+        <div className="h-1.5 w-full bg-gray-200 rounded-full overflow-hidden">
+          <div
+            className={`h-full transition-all duration-300 ${getStrengthColor()}`}
+            style={{ width: `${strengthPercentage}%` }}
+          />
+        </div>
+        <div className="flex justify-end">
+          <span className={`text-xs font-medium ${strength.color}`}>
+            {strength.text}
+          </span>
+        </div>
+      </div>
+
+      {/* Lista de requisitos */}
+      <ul className="space-y-1.5">
+        {requirements.map((req, index) => {
+          const passed = req.test(password);
+          return (
+            <li key={index} className="flex items-center gap-2 text-xs">
+              {passed ? (
+                <Check className="w-4 h-4 text-green-500" />
+              ) : (
+                <X className="w-4 h-4 text-gray-300" />
+              )}
+              <span className={passed ? 'text-green-600' : 'text-gray-500'}>
+                {req.label}
+              </span>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+};
+
+/**
  * Página de Login e Cadastro
  */
 export default function LoginPage() {
@@ -65,6 +139,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [acceptTerms, setAcceptTerms] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
@@ -72,6 +147,15 @@ export default function LoginPage() {
     password: '',
     confirmPassword: '',
   });
+
+  // Carregar email salvo se existir
+  useEffect(() => {
+    const savedEmail = localStorage.getItem('rememberedEmail');
+    if (savedEmail) {
+      setFormData(prev => ({ ...prev, email: savedEmail }));
+      setRememberMe(true);
+    }
+  }, []);
 
   useEffect(() => {
     if (!authLoading && user) {
@@ -85,6 +169,18 @@ export default function LoginPage() {
     }
     setFormData({ ...formData, [field]: value });
     setError('');
+  };
+
+  // Validação de senha forte para cadastro
+  const isPasswordStrong = (password) => {
+    const requirements = [
+      password.length >= 8,
+      /[A-Z]/.test(password),
+      /[a-z]/.test(password),
+      /\d/.test(password),
+      /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password),
+    ];
+    return requirements.every(Boolean);
   };
 
   const validateForm = () => {
@@ -103,7 +199,14 @@ export default function LoginPage() {
       return false;
     }
 
-    if (formData.password.length < 6) {
+    // Validação de senha forte apenas no cadastro
+    if (!isLogin && !isPasswordStrong(formData.password)) {
+      setError('A senha não atende todos os requisitos de segurança');
+      return false;
+    }
+
+    // Validação básica para login (mínimo 6 caracteres)
+    if (isLogin && formData.password.length < 6) {
       setError('A senha deve ter pelo menos 6 caracteres');
       return false;
     }
@@ -140,6 +243,13 @@ export default function LoginPage() {
           setError(translateError(error.message));
           setLoading(false);
           return;
+        }
+
+        // Salvar ou remover email do localStorage
+        if (rememberMe) {
+          localStorage.setItem('rememberedEmail', formData.email);
+        } else {
+          localStorage.removeItem('rememberedEmail');
         }
 
         router.replace('/dashboard');
@@ -334,6 +444,9 @@ export default function LoginPage() {
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
               </div>
+
+              {/* Indicador de força da senha (apenas no cadastro) */}
+              {!isLogin && <PasswordStrengthIndicator password={formData.password} />}
             </div>
 
             {/* Confirmar senha (apenas no cadastro) */}
@@ -363,6 +476,23 @@ export default function LoginPage() {
                     {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
                 </div>
+              </div>
+            )}
+
+            {/* Lembrar de mim (apenas no login) */}
+            {isLogin && (
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="rememberMe"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="w-4 h-4 text-brand-600 border-gray-300 rounded focus:ring-brand-500"
+                  disabled={loading}
+                />
+                <label htmlFor="rememberMe" className="text-sm text-gray-600">
+                  Lembrar meu e-mail
+                </label>
               </div>
             )}
 
