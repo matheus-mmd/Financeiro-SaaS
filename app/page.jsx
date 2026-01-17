@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { Button } from "../src/components/ui/button";
 import { Card, CardContent } from "../src/components/ui/card";
@@ -36,7 +36,10 @@ import {
   FileSpreadsheet,
   Check,
   X,
+  Clock,
+  MessageCircle,
 } from "lucide-react";
+import { getPlans, formatPrice, calculateDiscount } from "../src/lib/supabase/api/plans";
 
 /**
  * Landing Page - Página inicial do Financeiro SaaS
@@ -44,6 +47,25 @@ import {
  */
 export default function LandingPage() {
   const [openFaq, setOpenFaq] = useState(null);
+  const [plans, setPlans] = useState([]);
+  const [loadingPlans, setLoadingPlans] = useState(true);
+
+  // Buscar planos do banco de dados
+  useEffect(() => {
+    async function fetchPlans() {
+      try {
+        const { data, error } = await getPlans();
+        if (!error && data) {
+          setPlans(data);
+        }
+      } catch (err) {
+        console.error('Erro ao buscar planos:', err);
+      } finally {
+        setLoadingPlans(false);
+      }
+    }
+    fetchPlans();
+  }, []);
 
   const problems = [
     {
@@ -497,8 +519,161 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Pricing Section */}
+      <section id="pricing" className="py-16 px-4 sm:px-6 lg:px-8 bg-gray-50">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center max-w-3xl mx-auto mb-12">
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
+              Escolha seu Plano
+            </h2>
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-100 text-amber-700 text-sm font-medium mb-4">
+              <Zap className="w-4 h-4" />
+              <span>Oferta por tempo limitado!</span>
+            </div>
+          </div>
+
+          {/* Planos */}
+          {loadingPlans ? (
+            <div className="flex justify-center items-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-brand-600"></div>
+            </div>
+          ) : plans.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+              {plans.map((plan) => {
+                const isRecommended = plan.is_recommended;
+                const yearlyDiscount = calculateDiscount(plan.price_original_yearly_cents, plan.price_yearly_cents);
+                const monthlyPrice = plan.price_yearly_cents / 12;
+
+                return (
+                  <Card
+                    key={plan.id}
+                    className={`relative overflow-hidden transition-all duration-300 hover:shadow-xl ${
+                      isRecommended
+                        ? 'border-2 border-brand-500 shadow-lg'
+                        : 'border border-gray-200 shadow-md'
+                    }`}
+                  >
+                    {/* Badge Recomendado */}
+                    {isRecommended && plan.badge_text && (
+                      <div className="absolute top-0 left-0 right-0 bg-brand-600 text-white text-center py-2 text-sm font-semibold">
+                        <div className="flex items-center justify-center gap-2">
+                          <Star className="w-4 h-4 fill-white" />
+                          {plan.badge_text}
+                        </div>
+                      </div>
+                    )}
+
+                    <CardContent className={`p-6 ${isRecommended ? 'pt-14' : ''}`}>
+                      {/* Nome e descrição */}
+                      <div className="text-center mb-6">
+                        <h3 className="text-2xl font-bold text-gray-900 flex items-center justify-center gap-2">
+                          {plan.name}
+                          {plan.slug === 'pro' && <MessageCircle className="w-5 h-5 text-brand-600" />}
+                        </h3>
+                        <p className="text-gray-500 text-sm mt-1">{plan.description}</p>
+                      </div>
+
+                      {/* Features */}
+                      <ul className="space-y-3 mb-6">
+                        {plan.features?.map((feature, idx) => (
+                          <li key={idx} className="flex items-start gap-3">
+                            <Check className={`w-5 h-5 flex-shrink-0 mt-0.5 ${
+                              feature.is_highlighted ? 'text-brand-600' : 'text-gray-400'
+                            }`} />
+                            <span className={`text-sm ${
+                              feature.is_highlighted ? 'text-brand-700 font-medium' : 'text-gray-600'
+                            }`}>
+                              {feature.feature_text}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+
+                      {/* Preço */}
+                      <div className="text-center border-t border-gray-100 pt-6">
+                        <div className="text-sm text-gray-500 mb-1">A partir de</div>
+                        <div className="flex items-baseline justify-center gap-1">
+                          {plan.price_original_yearly_cents && (
+                            <span className="text-gray-400 line-through text-lg">
+                              R$ {formatPrice(plan.price_original_yearly_cents)}
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-baseline justify-center gap-1 mb-1">
+                          <span className="text-4xl font-bold text-gray-900">
+                            R$ {formatPrice(plan.price_yearly_cents)}
+                          </span>
+                          <span className="text-gray-500">/ano</span>
+                        </div>
+                        {yearlyDiscount > 0 && (
+                          <div className="text-brand-600 text-sm font-semibold mb-1">
+                            Economize {yearlyDiscount}%
+                          </div>
+                        )}
+                        <div className="text-gray-500 text-xs">
+                          ou R$ {formatPrice(Math.round(monthlyPrice))}/mês
+                        </div>
+                      </div>
+
+                      {/* Botão */}
+                      <Link href="/login" className="block mt-6">
+                        <Button
+                          className={`w-full h-12 text-base font-semibold ${
+                            isRecommended
+                              ? 'bg-brand-600 hover:bg-brand-700 shadow-lg shadow-brand-600/25'
+                              : 'bg-white border-2 border-gray-300 text-gray-700 hover:bg-gray-50'
+                          }`}
+                          variant={isRecommended ? 'default' : 'outline'}
+                        >
+                          {isRecommended ? 'Escolher PRO' : 'Escolher BASIC'}
+                        </Button>
+                      </Link>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          ) : (
+            // Fallback caso não tenha planos no banco
+            <div className="text-center text-gray-500 py-8">
+              Planos em breve disponíveis.
+            </div>
+          )}
+
+          {/* Seção "Ainda não decidiu?" */}
+          <div className="text-center mt-12 pt-8 border-t border-gray-200">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-brand-100 text-brand-700 text-sm font-medium mb-4">
+              <Clock className="w-4 h-4" />
+              <span>Teste Gratuito</span>
+            </div>
+            <h3 className="text-2xl font-bold text-gray-900 mb-2">Ainda não decidiu?</h3>
+            <p className="text-gray-600 mb-6">Acesso completo por 3 dias. Sem cartão de crédito.</p>
+            <Link href="/login">
+              <Button variant="outline" size="lg" className="border-2 border-gray-300">
+                <Clock className="w-5 h-5 mr-2" />
+                Começar Teste Grátis
+              </Button>
+            </Link>
+            <div className="flex flex-wrap items-center justify-center gap-6 mt-6 text-sm text-gray-500">
+              <div className="flex items-center gap-2">
+                <Check className="w-4 h-4 text-brand-600" />
+                <span>Todas as funcionalidades</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Check className="w-4 h-4 text-brand-600" />
+                <span>Dados sincronizados na nuvem</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Check className="w-4 h-4 text-brand-600" />
+                <span>Cancele quando quiser</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Testimonials Section */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gray-50">
+      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-white">
         <div className="max-w-7xl mx-auto">
           <div className="text-center max-w-3xl mx-auto mb-12">
             <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
