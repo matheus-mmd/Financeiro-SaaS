@@ -5,9 +5,8 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { Button } from '../../src/components/ui/button';
 import { Input } from '../../src/components/ui/input';
-import { Label } from '../../src/components/ui/label';
 import { Card, CardContent } from '../../src/components/ui/card';
-import { Wallet, ArrowRight, Mail, Lock, User, ArrowLeft } from 'lucide-react';
+import { Compass, Mail, Lock, User, Phone, Eye, EyeOff, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 
 /**
@@ -15,7 +14,6 @@ import Link from 'next/link';
  */
 const translateError = (errorMessage) => {
   const translations = {
-    // Erros de autenticação
     'Invalid login credentials': 'E-mail ou senha incorretos',
     'Email not confirmed': 'E-mail não confirmado. Verifique sua caixa de entrada',
     'User already registered': 'Este e-mail já está cadastrado',
@@ -26,34 +24,36 @@ const translateError = (errorMessage) => {
     'Email rate limit exceeded': 'Muitas tentativas. Aguarde alguns minutos',
     'Invalid Refresh Token': 'Sessão expirada. Faça login novamente',
     'Signup requires a valid password': 'Informe uma senha válida',
-
-    // Erros de rede
     'Failed to fetch': 'Erro de conexão. Verifique sua internet',
     'Network request failed': 'Falha na conexão. Tente novamente',
-
-    // Erros genéricos
     'An error occurred': 'Ocorreu um erro. Tente novamente',
   };
 
-  // Procurar tradução exata
   if (translations[errorMessage]) {
     return translations[errorMessage];
   }
 
-  // Procurar tradução parcial
   for (const [english, portuguese] of Object.entries(translations)) {
     if (errorMessage?.includes(english)) {
       return portuguese;
     }
   }
 
-  // Se não encontrar tradução, retornar mensagem genérica
   return errorMessage || 'Ocorreu um erro. Tente novamente';
 };
 
 /**
+ * Formata o celular no padrão (XX) XXXXX-XXXX
+ */
+const formatPhone = (value) => {
+  const numbers = value.replace(/\D/g, '');
+  if (numbers.length <= 2) return numbers.length ? `(${numbers}` : '';
+  if (numbers.length <= 7) return `(${numbers.slice(0, 2)}) ${numbers.slice(2)}`;
+  return `(${numbers.slice(0, 2)}) ${numbers.slice(2, 7)}-${numbers.slice(7, 11)}`;
+};
+
+/**
  * Página de Login e Cadastro
- * Interface unificada para autenticação de usuários com Supabase
  */
 export default function LoginPage() {
   const router = useRouter();
@@ -62,24 +62,27 @@ export default function LoginPage() {
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [acceptTerms, setAcceptTerms] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
+    phone: '',
     email: '',
     password: '',
     confirmPassword: '',
   });
 
-  // CORREÇÃO: Redirecionar usuários autenticados que acessam /login
-  // Usar replace() para evitar loop (não adiciona ao histórico)
-  // Aguardar authLoading para evitar redirecionamento prematuro
   useEffect(() => {
     if (!authLoading && user) {
-      console.log('[LoginPage] Usuário já autenticado, redirecionando...');
       router.replace('/dashboard');
     }
   }, [user, authLoading, router]);
 
   const handleInputChange = (field, value) => {
+    if (field === 'phone') {
+      value = formatPhone(value);
+    }
     setFormData({ ...formData, [field]: value });
     setError('');
   };
@@ -111,6 +114,11 @@ export default function LoginPage() {
       return false;
     }
 
+    if (!isLogin && !acceptTerms) {
+      setError('Você precisa aceitar a Política de Privacidade');
+      return false;
+    }
+
     return true;
   };
 
@@ -134,10 +142,6 @@ export default function LoginPage() {
           return;
         }
 
-        // CORREÇÃO: Redirecionar após login bem-sucedido
-        // O onAuthStateChange do AuthContext já atualizou o estado
-        // Usar replace() para evitar volta ao login no histórico
-        console.log('[LoginPage] Login bem-sucedido, redirecionando...');
         router.replace('/dashboard');
       } else {
         const { error } = await signUp(formData.email, formData.password, formData.name);
@@ -148,18 +152,13 @@ export default function LoginPage() {
           return;
         }
 
-        // CORREÇÃO: Após cadastro bem-sucedido, fazer login automático
-        console.log('[LoginPage] Cadastro bem-sucedido, fazendo login automático...');
         const { error: signInError } = await signIn(formData.email, formData.password);
 
         if (signInError) {
-          // Se falhar o login automático, apenas troca para tela de login
           setError('');
           setIsLogin(true);
-          setFormData({ name: '', email: '', password: '', confirmPassword: '' });
+          setFormData({ name: '', phone: '', email: '', password: '', confirmPassword: '' });
         } else {
-          // Login automático bem-sucedido, redirecionar
-          console.log('[LoginPage] Login automático bem-sucedido, redirecionando...');
           router.replace('/dashboard');
         }
       }
@@ -171,10 +170,13 @@ export default function LoginPage() {
     }
   };
 
-  const toggleMode = () => {
-    setIsLogin(!isLogin);
+  const toggleMode = (mode) => {
+    setIsLogin(mode === 'login');
     setError('');
-    setFormData({ name: '', email: '', password: '', confirmPassword: '' });
+    setFormData({ name: '', phone: '', email: '', password: '', confirmPassword: '' });
+    setAcceptTerms(false);
+    setShowPassword(false);
+    setShowConfirmPassword(false);
   };
 
   return (
@@ -188,97 +190,199 @@ export default function LoginPage() {
           </Link>
 
           {/* Logo e Título */}
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-brand-600 rounded-full mb-4">
-              <Wallet className="w-8 h-8 text-white" />
+          <div className="text-center mb-6">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-brand-600 rounded-xl mb-4">
+              <Compass className="w-8 h-8 text-white" />
             </div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            <h1 className="text-2xl font-bold text-gray-900 mb-1">
               Financeiro SaaS
             </h1>
-            <p className="text-gray-600">
-              {isLogin ? 'Entre na sua conta' : 'Crie sua conta gratuitamente'}
+            <p className="text-gray-500 text-sm">
+              Organize suas finanças de forma simples e eficiente
             </p>
+          </div>
+
+          {/* Tabs */}
+          <div className="flex bg-gray-100 rounded-full p-1 mb-6">
+            <button
+              type="button"
+              onClick={() => toggleMode('login')}
+              className={`flex-1 py-2.5 text-sm font-medium rounded-full transition-all ${
+                isLogin
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              Entrar
+            </button>
+            <button
+              type="button"
+              onClick={() => toggleMode('register')}
+              className={`flex-1 py-2.5 text-sm font-medium rounded-full transition-all ${
+                !isLogin
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              Criar Conta
+            </button>
           </div>
 
           {/* Formulário */}
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Nome (apenas no cadastro) */}
             {!isLogin && (
-              <div className="space-y-2">
-                <Label htmlFor="name" className="flex items-center gap-2">
-                  <User className="w-4 h-4" />
+              <div className="space-y-1.5">
+                <label htmlFor="name" className="text-sm font-medium text-gray-700">
                   Nome completo
-                </Label>
-                <Input
-                  id="name"
-                  name="name"
-                  type="text"
-                  placeholder="Seu nome"
-                  value={formData.name}
-                  onChange={(e) => handleInputChange('name', e.target.value)}
-                  disabled={loading}
-                  required={!isLogin}
-                  autoComplete="name"
-                />
+                </label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <Input
+                    id="name"
+                    name="name"
+                    type="text"
+                    placeholder="Seu nome"
+                    value={formData.name}
+                    onChange={(e) => handleInputChange('name', e.target.value)}
+                    disabled={loading}
+                    className="pl-10 h-11"
+                    autoComplete="name"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Celular (apenas no cadastro) */}
+            {!isLogin && (
+              <div className="space-y-1.5">
+                <label htmlFor="phone" className="text-sm font-medium text-gray-700">
+                  Celular
+                </label>
+                <div className="relative">
+                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <Input
+                    id="phone"
+                    name="phone"
+                    type="tel"
+                    placeholder="(11) 99999-9999"
+                    value={formData.phone}
+                    onChange={(e) => handleInputChange('phone', e.target.value)}
+                    disabled={loading}
+                    className="pl-10 h-11"
+                    autoComplete="tel"
+                    maxLength={15}
+                  />
+                </div>
               </div>
             )}
 
             {/* E-mail */}
-            <div className="space-y-2">
-              <Label htmlFor="email" className="flex items-center gap-2">
-                <Mail className="w-4 h-4" />
-                E-mail
-              </Label>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                placeholder="seu@email.com"
-                value={formData.email}
-                onChange={(e) => handleInputChange('email', e.target.value)}
-                disabled={loading}
-                required
-                autoComplete={isLogin ? "email" : "email"}
-              />
+            <div className="space-y-1.5">
+              <label htmlFor="email" className="text-sm font-medium text-gray-700">
+                Email
+              </label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  placeholder="seu@email.com"
+                  value={formData.email}
+                  onChange={(e) => handleInputChange('email', e.target.value)}
+                  disabled={loading}
+                  className="pl-10 h-11"
+                  autoComplete="email"
+                />
+              </div>
             </div>
 
             {/* Senha */}
-            <div className="space-y-2">
-              <Label htmlFor="password" className="flex items-center gap-2">
-                <Lock className="w-4 h-4" />
-                Senha
-              </Label>
-              <Input
-                id="password"
-                name="password"
-                type="password"
-                placeholder="Mínimo 6 caracteres"
-                value={formData.password}
-                onChange={(e) => handleInputChange('password', e.target.value)}
-                disabled={loading}
-                required
-                autoComplete={isLogin ? "current-password" : "new-password"}
-              />
+            <div className="space-y-1.5">
+              <div className="flex justify-between items-center">
+                <label htmlFor="password" className="text-sm font-medium text-gray-700">
+                  Senha
+                </label>
+                {isLogin && (
+                  <Link
+                    href="/esqueci-senha"
+                    className="text-sm text-brand-600 hover:text-brand-700 transition-colors"
+                  >
+                    Esqueci minha senha
+                  </Link>
+                )}
+              </div>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Input
+                  id="password"
+                  name="password"
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="••••••••"
+                  value={formData.password}
+                  onChange={(e) => handleInputChange('password', e.target.value)}
+                  disabled={loading}
+                  className="pl-10 pr-10 h-11"
+                  autoComplete={isLogin ? 'current-password' : 'new-password'}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
             </div>
 
             {/* Confirmar senha (apenas no cadastro) */}
             {!isLogin && (
-              <div className="space-y-2">
-                <Label htmlFor="confirmPassword" className="flex items-center gap-2">
-                  <Lock className="w-4 h-4" />
+              <div className="space-y-1.5">
+                <label htmlFor="confirmPassword" className="text-sm font-medium text-gray-700">
                   Confirmar senha
-                </Label>
-                <Input
-                  id="confirmPassword"
-                  name="confirmPassword"
-                  type="password"
-                  placeholder="Digite a senha novamente"
-                  value={formData.confirmPassword}
-                  onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
+                </label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <Input
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    placeholder="••••••••"
+                    value={formData.confirmPassword}
+                    onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
+                    disabled={loading}
+                    className="pl-10 pr-10 h-11"
+                    autoComplete="new-password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Checkbox de termos (apenas no cadastro) */}
+            {!isLogin && (
+              <div className="flex items-start gap-3">
+                <input
+                  type="checkbox"
+                  id="acceptTerms"
+                  checked={acceptTerms}
+                  onChange={(e) => setAcceptTerms(e.target.checked)}
+                  className="mt-1 w-4 h-4 text-brand-600 border-gray-300 rounded focus:ring-brand-500"
                   disabled={loading}
-                  required={!isLogin}
-                  autoComplete="new-password"
                 />
+                <label htmlFor="acceptTerms" className="text-sm text-gray-600">
+                  Aceito receber novidades, promoções e comunicações por email ou WhatsApp. Consulte nossa{' '}
+                  <Link href="/politica-privacidade" className="text-brand-600 hover:underline">
+                    Política de Privacidade
+                  </Link>.
+                </label>
               </div>
             )}
 
@@ -292,7 +396,7 @@ export default function LoginPage() {
             {/* Botão de submit */}
             <Button
               type="submit"
-              className="w-full h-12 text-base font-semibold"
+              className="w-full h-12 text-base font-semibold bg-brand-600 hover:bg-brand-700"
               disabled={loading}
             >
               {loading ? (
@@ -301,33 +405,10 @@ export default function LoginPage() {
                   {isLogin ? 'Entrando...' : 'Cadastrando...'}
                 </div>
               ) : (
-                <div className="flex items-center justify-center gap-2">
-                  {isLogin ? 'Entrar' : 'Criar conta'}
-                  <ArrowRight className="w-5 h-5" />
-                </div>
+                isLogin ? 'Entrar' : 'Concluir cadastro'
               )}
             </Button>
           </form>
-
-          {/* Toggle entre Login e Cadastro */}
-          <div className="mt-6 text-center">
-            <button
-              type="button"
-              onClick={toggleMode}
-              disabled={loading}
-              className="text-brand-600 hover:text-brand-700 font-medium text-sm transition-colors disabled:opacity-50"
-            >
-              {isLogin ? (
-                <>
-                  Não tem uma conta? <span className="underline">Cadastre-se</span>
-                </>
-              ) : (
-                <>
-                  Já tem uma conta? <span className="underline">Faça login</span>
-                </>
-              )}
-            </button>
-          </div>
         </CardContent>
       </Card>
     </div>

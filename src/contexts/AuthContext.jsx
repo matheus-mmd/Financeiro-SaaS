@@ -294,6 +294,56 @@ export const AuthProvider = ({ children }) => {
     }
   }, [user]);
 
+  /**
+   * Enviar código de recuperação de senha para o email
+   */
+  const sendPasswordResetCode = useCallback(async (email) => {
+    try {
+      if (!email) {
+        return { error: new Error('Email é obrigatório') };
+      }
+
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/redefinir-senha`,
+      });
+
+      if (error) {
+        console.error('[AuthContext] Erro ao enviar código de recuperação:', error);
+        return { error };
+      }
+
+      return { error: null };
+    } catch (error) {
+      console.error('[AuthContext] Erro ao enviar código de recuperação:', error);
+      return { error };
+    }
+  }, []);
+
+  /**
+   * Atualizar senha do usuário (após recuperação)
+   */
+  const updatePassword = useCallback(async (newPassword) => {
+    try {
+      if (!newPassword || newPassword.length < 6) {
+        return { error: new Error('A senha deve ter pelo menos 6 caracteres') };
+      }
+
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword,
+      });
+
+      if (error) {
+        console.error('[AuthContext] Erro ao atualizar senha:', error);
+        return { error };
+      }
+
+      return { error: null };
+    } catch (error) {
+      console.error('[AuthContext] Erro ao atualizar senha:', error);
+      return { error };
+    }
+  }, []);
+
   const value = {
     user,
     profile,
@@ -302,6 +352,8 @@ export const AuthProvider = ({ children }) => {
     signUp,
     signOut,
     updateProfile,
+    sendPasswordResetCode,
+    updatePassword,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
