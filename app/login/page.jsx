@@ -269,7 +269,8 @@ export default function LoginPage() {
           setIsLogin(true);
           setFormData({ name: '', phone: '', email: '', password: '', confirmPassword: '' });
         } else {
-          router.replace('/dashboard');
+          // Novos usuários vão para a página de escolha de planos
+          router.replace('/escolher-plano');
         }
       }
     } catch (err) {
