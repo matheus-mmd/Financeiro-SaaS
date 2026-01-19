@@ -21,6 +21,7 @@ import {
 // OTIMIZAÇÃO: Lazy load dos componentes pesados de gráficos
 const CategoryBreakdownCard = lazy(() => import("../../src/components/dashboard/CategoryBreakdownCard"));
 const IncomeVsExpensesChart = lazy(() => import("../../src/components/dashboard/IncomeVsExpensesChart"));
+const PricingCards = lazy(() => import("../../src/components/dashboard/PricingCards"));
 
 // Skeleton para os gráficos enquanto carregam
 const ChartSkeleton = () => (
@@ -202,6 +203,14 @@ export default function Dashboard() {
             valueColor="text-purple-600"
           />
         </div>
+      </div>
+
+      {/* 💎 PLANOS E PREÇOS */}
+      <div>
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">Planos e Preços</h2>
+        <Suspense fallback={<ChartSkeleton />}>
+          <PricingCards />
+        </Suspense>
       </div>
 
       {/* 📈 GRÁFICOS E ANÁLISES */}
