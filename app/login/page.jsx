@@ -140,6 +140,7 @@ export default function LoginPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const [isSigningUp, setIsSigningUp] = useState(false); // Flag para evitar redirect durante cadastro
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
@@ -158,10 +159,12 @@ export default function LoginPage() {
   }, []);
 
   useEffect(() => {
-    if (!authLoading && user) {
+    // Não redirecionar se estiver no processo de cadastro
+    // O cadastro tem seu próprio fluxo de redirecionamento para /escolher-plano
+    if (!authLoading && user && !isSigningUp) {
       router.replace('/dashboard');
     }
-  }, [user, authLoading, router]);
+  }, [user, authLoading, router, isSigningUp]);
 
   const handleInputChange = (field, value) => {
     if (field === 'phone') {
@@ -254,10 +257,14 @@ export default function LoginPage() {
 
         router.replace('/dashboard');
       } else {
+        // Marca que está em processo de cadastro para evitar redirect automático para dashboard
+        setIsSigningUp(true);
+
         const { error } = await signUp(formData.email, formData.password, formData.name);
 
         if (error) {
           setError(translateError(error.message));
+          setIsSigningUp(false);
           setLoading(false);
           return;
         }
@@ -267,9 +274,10 @@ export default function LoginPage() {
         if (signInError) {
           setError('');
           setIsLogin(true);
+          setIsSigningUp(false);
           setFormData({ name: '', phone: '', email: '', password: '', confirmPassword: '' });
         } else {
-          // Novos usuários vão para a página de escolha de planos
+          // Novos usuários vão diretamente para a página de escolha de planos
           router.replace('/escolher-plano');
         }
       }

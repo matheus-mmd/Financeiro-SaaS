@@ -26,6 +26,7 @@ import {
   Trash2,
   Home,
   Sparkles,
+  LogOut,
 } from 'lucide-react';
 import { saveUserSetup, parseMoneyToCents } from '../../src/lib/supabase/api/setup';
 
@@ -877,7 +878,7 @@ const Step6BasicServices = ({ basicServices, setBasicServices, accountType, memb
  */
 export default function ConfigurarPerfilPage() {
   const router = useRouter();
-  const { user, profile, loading: authLoading, refreshProfile } = useAuth();
+  const { user, profile, loading: authLoading, refreshProfile, signOut } = useAuth();
 
   const [currentStep, setCurrentStep] = useState(0);
   const [saving, setSaving] = useState(false);
@@ -1033,6 +1034,11 @@ export default function ConfigurarPerfilPage() {
     }
   };
 
+  const handleLogout = async () => {
+    await signOut();
+    router.replace('/login');
+  };
+
   // Loading
   if (authLoading) {
     return (
@@ -1049,6 +1055,17 @@ export default function ConfigurarPerfilPage() {
       <div className="max-w-2xl mx-auto">
         <Card className="shadow-xl">
           <CardContent className="p-8">
+            {/* Header com botão de logout */}
+            <div className="flex justify-end mb-4">
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+              >
+                <LogOut className="w-4 h-4" />
+                Sair da conta
+              </button>
+            </div>
+
             {/* Indicador de progresso */}
             <StepIndicator currentStep={currentStep} totalSteps={TOTAL_STEPS} />
 
