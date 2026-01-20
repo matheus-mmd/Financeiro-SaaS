@@ -41,7 +41,7 @@ const ChartSkeleton = () => (
  */
 export default function Dashboard() {
   const router = useRouter();
-  const { user, loading: authLoading, signOut } = useAuth();
+  const { user, profile, loading: authLoading, signOut } = useAuth();
   const [period, setPeriod] = useState('monthly');
 
   // Hook customizado que centraliza toda a lógica do dashboard
@@ -58,6 +58,13 @@ export default function Dashboard() {
       router.replace('/');
     }
   }, [authLoading, user, router]);
+
+  // Redirecionar para setup se não completou a configuração inicial
+  useEffect(() => {
+    if (!authLoading && user && profile && profile.setup_completed === false) {
+      router.replace('/configurar-perfil');
+    }
+  }, [authLoading, user, profile, router]);
 
   // Tratar erro de autenticação
   useEffect(() => {

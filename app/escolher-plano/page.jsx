@@ -59,8 +59,9 @@ const CheckoutModal = ({ isOpen, onClose, plan, billingCycle }) => {
 
   const handleConfirm = () => {
     // TODO: Integrar com gateway de pagamento (Mercado Pago, Stripe, etc.)
-    alert(`Pagamento via ${selectedPayment} selecionado. Integração com gateway em breve!`);
+    // Por enquanto, redireciona para configuração do perfil
     onClose();
+    window.location.href = '/configurar-perfil';
   };
 
   return (
@@ -208,8 +209,8 @@ export default function EscolherPlanoPage() {
   };
 
   const handleStartTrial = () => {
-    // TODO: Iniciar período de teste e redirecionar para dashboard
-    router.push('/dashboard');
+    // Redirecionar para configuração do perfil antes do dashboard
+    router.push('/configurar-perfil');
   };
 
   const handleLogout = async () => {
