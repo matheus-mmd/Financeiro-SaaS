@@ -38,13 +38,16 @@ export async function checkSetupCompleted(userId) {
  */
 export async function saveUserSetup(userId, setupData) {
   try {
-    const { workType, accountType, members, incomes, fixedExpenses } = setupData;
+    const { workTypes, accountType, members, incomes, fixedExpenses } = setupData;
+
+    // Converte o array de workTypes para string separada por vírgula
+    const workTypeString = Array.isArray(workTypes) ? workTypes.join(',') : workTypes;
 
     // 1. Atualizar perfil do usuário
     const { error: userError } = await supabase
       .from('users')
       .update({
-        work_type: workType,
+        work_type: workTypeString,
         account_type: accountType,
         setup_completed: true,
         setup_completed_at: new Date().toISOString(),

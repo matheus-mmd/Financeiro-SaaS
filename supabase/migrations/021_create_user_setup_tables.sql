@@ -14,12 +14,12 @@ ADD COLUMN IF NOT EXISTS setup_completed BOOLEAN DEFAULT false,
 ADD COLUMN IF NOT EXISTS setup_completed_at TIMESTAMPTZ;
 
 -- Constraints para os novos campos
+-- work_type pode ser: 'clt', 'autonomo', 'clt,autonomo', 'nenhum' ou combinações
 ALTER TABLE public.users
-ADD CONSTRAINT users_work_type_check CHECK (work_type IS NULL OR work_type IN ('clt', 'autonomo')),
 ADD CONSTRAINT users_account_type_check CHECK (account_type IN ('individual', 'conjunta'));
 
 -- Comentários
-COMMENT ON COLUMN public.users.work_type IS 'Tipo de trabalho: clt (carteira assinada) ou autonomo (conta própria)';
+COMMENT ON COLUMN public.users.work_type IS 'Tipo(s) de trabalho separados por vírgula: clt, autonomo, clt,autonomo, nenhum';
 COMMENT ON COLUMN public.users.account_type IS 'Tipo de conta: individual (só para mim) ou conjunta (com outras pessoas)';
 COMMENT ON COLUMN public.users.setup_completed IS 'Indica se o usuário completou o setup inicial';
 COMMENT ON COLUMN public.users.setup_completed_at IS 'Data/hora em que o setup foi completado';
