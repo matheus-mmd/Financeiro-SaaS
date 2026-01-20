@@ -88,6 +88,19 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   /**
+   * Atualizar perfil manualmente (para após alterações como setup)
+   */
+  const refreshProfile = useCallback(async () => {
+    if (!user?.id) return null;
+
+    const profileData = await resolveProfile(user.id);
+    if (profileData) {
+      setProfile(profileData);
+    }
+    return profileData;
+  }, [user?.id, resolveProfile]);
+
+  /**
    * Sincronizar estado de autenticação com Supabase
    */
   useEffect(() => {
@@ -352,6 +365,7 @@ export const AuthProvider = ({ children }) => {
     signUp,
     signOut,
     updateProfile,
+    refreshProfile,
     sendPasswordResetCode,
     updatePassword,
   };

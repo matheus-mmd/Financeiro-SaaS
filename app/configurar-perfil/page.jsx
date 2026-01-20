@@ -877,7 +877,7 @@ const Step6BasicServices = ({ basicServices, setBasicServices, accountType, memb
  */
 export default function ConfigurarPerfilPage() {
   const router = useRouter();
-  const { user, profile, loading: authLoading } = useAuth();
+  const { user, profile, loading: authLoading, refreshProfile } = useAuth();
 
   const [currentStep, setCurrentStep] = useState(0);
   const [saving, setSaving] = useState(false);
@@ -1016,6 +1016,9 @@ export default function ConfigurarPerfilPage() {
       const { success, error } = await saveUserSetup(user.id, setupData);
 
       if (success) {
+        // Atualizar o perfil no contexto antes de redirecionar
+        // para evitar que o dashboard redirecione de volta
+        await refreshProfile();
         router.push('/dashboard');
       } else {
         console.error('Erro ao salvar setup:', error);
