@@ -1019,11 +1019,12 @@ export default function ConfigurarPerfilPage() {
         router.push('/dashboard');
       } else {
         console.error('Erro ao salvar setup:', error);
-        alert('Erro ao salvar configurações. Tente novamente.');
+        const errorMessage = error?.message || error?.details || JSON.stringify(error);
+        alert(`Erro ao salvar configurações: ${errorMessage}`);
       }
     } catch (err) {
       console.error('Erro ao salvar setup:', err);
-      alert('Erro ao salvar configurações. Tente novamente.');
+      alert(`Erro ao salvar configurações: ${err.message || 'Erro desconhecido'}`);
     } finally {
       setSaving(false);
     }

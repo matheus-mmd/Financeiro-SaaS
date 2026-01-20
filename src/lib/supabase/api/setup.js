@@ -57,7 +57,7 @@ export async function saveUserSetup(userId, setupData) {
 
     if (userError) {
       console.error('[Setup API] Erro ao atualizar usuário:', userError);
-      return { success: false, error: userError };
+      return { success: false, error: { ...userError, step: 'atualizar_perfil' } };
     }
 
     // 2. Salvar integrantes da conta (se conjunta)
@@ -84,7 +84,7 @@ export async function saveUserSetup(userId, setupData) {
 
       if (membersError) {
         console.error('[Setup API] Erro ao salvar integrantes:', membersError);
-        return { success: false, error: membersError };
+        return { success: false, error: { ...membersError, step: 'salvar_integrantes' } };
       }
 
       insertedMembers = membersData || [];
