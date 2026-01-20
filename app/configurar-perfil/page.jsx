@@ -202,7 +202,7 @@ const Step2WorkType = ({ workTypes, setWorkTypes }) => {
  */
 const Step3AccountType = ({ accountType, setAccountType, members, setMembers, userEmail }) => {
   const addMember = () => {
-    setMembers([...members, { email: '', phone: '', workType: '' }]);
+    setMembers([...members, { email: '', phone: '', workTypes: [] }]);
   };
 
   const removeMember = (index) => {
@@ -213,6 +213,29 @@ const Step3AccountType = ({ accountType, setAccountType, members, setMembers, us
     const updated = [...members];
     updated[index][field] = value;
     setMembers(updated);
+  };
+
+  const toggleMemberWorkType = (index, type) => {
+    const member = members[index];
+    const currentTypes = member.workTypes || [];
+
+    if (type === 'nenhum') {
+      // Se selecionar "nenhum", desmarca os outros
+      updateMember(index, 'workTypes', ['nenhum']);
+    } else {
+      // Se selecionar CLT ou Autônomo, remove "nenhum" se estiver selecionado
+      let newTypes = currentTypes.filter(t => t !== 'nenhum');
+
+      if (newTypes.includes(type)) {
+        // Remove se já está selecionado
+        newTypes = newTypes.filter(t => t !== type);
+      } else {
+        // Adiciona se não está selecionado
+        newTypes.push(type);
+      }
+
+      updateMember(index, 'workTypes', newTypes);
+    }
   };
 
   const formatPhone = (value) => {
@@ -280,61 +303,88 @@ const Step3AccountType = ({ accountType, setAccountType, members, setMembers, us
             </div>
 
             {/* Membros adicionados */}
-            {members.map((member, index) => (
-              <div key={index} className="p-4 bg-white rounded-lg border border-gray-200 space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-gray-600">Integrante {index + 1}</span>
-                  <button
-                    onClick={() => removeMember(index)}
-                    className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-colors"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-                <Input
-                  type="email"
-                  placeholder="Email do integrante"
-                  value={member.email}
-                  onChange={(e) => updateMember(index, 'email', e.target.value)}
-                />
-                <Input
-                  type="tel"
-                  placeholder="(00) 00000-0000"
-                  value={member.phone}
-                  onChange={(e) => updateMember(index, 'phone', formatPhone(e.target.value))}
-                />
-                <p className="text-xs text-gray-400">
-                  O e-mail é usado para lembretes e o WhatsApp para registrar transações via mensagem.
-                </p>
+            {members.map((member, index) => {
+              const memberWorkTypes = member.workTypes || [];
 
-                {/* Tipo de trabalho do membro */}
-                <div className="flex gap-2 mt-2">
-                  <span className="text-sm text-gray-600 mr-2">Tipo de trabalho</span>
-                  <button
-                    onClick={() => updateMember(index, 'workType', 'clt')}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all ${
-                      member.workType === 'clt'
-                        ? 'bg-brand-600 text-white'
-                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                    }`}
-                  >
-                    <Building2 className="w-3.5 h-3.5" />
-                    CLT
-                  </button>
-                  <button
-                    onClick={() => updateMember(index, 'workType', 'autonomo')}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all ${
-                      member.workType === 'autonomo'
-                        ? 'bg-brand-600 text-white'
-                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                    }`}
-                  >
-                    <Briefcase className="w-3.5 h-3.5" />
-                    Autônomo
-                  </button>
+              return (
+                <div key={index} className="p-4 bg-white rounded-lg border border-gray-200 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-gray-600">Integrante {index + 1}</span>
+                    <button
+                      onClick={() => removeMember(index)}
+                      className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-colors"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <Input
+                    type="email"
+                    placeholder="Email do integrante"
+                    value={member.email}
+                    onChange={(e) => updateMember(index, 'email', e.target.value)}
+                  />
+                  <Input
+                    type="tel"
+                    placeholder="(00) 00000-0000"
+                    value={member.phone}
+                    onChange={(e) => updateMember(index, 'phone', formatPhone(e.target.value))}
+                  />
+                  <p className="text-xs text-gray-400">
+                    O e-mail é usado para lembretes e o WhatsApp para registrar transações via mensagem.
+                  </p>
+
+                  {/* Tipo de trabalho do membro (multisseleção) */}
+                  <div className="mt-2">
+                    <span className="text-sm text-gray-600 block mb-2">Tipo de trabalho</span>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        onClick={() => toggleMemberWorkType(index, 'clt')}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all ${
+                          memberWorkTypes.includes('clt')
+                            ? 'bg-brand-600 text-white'
+                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        }`}
+                      >
+                        <Building2 className="w-3.5 h-3.5" />
+                        CLT
+                        {memberWorkTypes.includes('clt') && <Check className="w-3 h-3 ml-1" />}
+                      </button>
+                      <button
+                        onClick={() => toggleMemberWorkType(index, 'autonomo')}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all ${
+                          memberWorkTypes.includes('autonomo')
+                            ? 'bg-brand-600 text-white'
+                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        }`}
+                      >
+                        <Briefcase className="w-3.5 h-3.5" />
+                        Autônomo
+                        {memberWorkTypes.includes('autonomo') && <Check className="w-3 h-3 ml-1" />}
+                      </button>
+                      <button
+                        onClick={() => toggleMemberWorkType(index, 'nenhum')}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all ${
+                          memberWorkTypes.includes('nenhum')
+                            ? 'bg-gray-600 text-white'
+                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        }`}
+                      >
+                        Nenhum
+                        {memberWorkTypes.includes('nenhum') && <Check className="w-3 h-3 ml-1" />}
+                      </button>
+                    </div>
+                    <p className="text-xs text-gray-400 mt-1">
+                      {memberWorkTypes.length === 0
+                        ? 'Selecione o tipo de trabalho'
+                        : memberWorkTypes.includes('nenhum')
+                        ? 'Nenhum'
+                        : memberWorkTypes.map(t => t === 'clt' ? 'CLT' : 'Autônomo').join(' e ')
+                      }
+                    </p>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
@@ -351,32 +401,73 @@ const dayOptions = Array.from({ length: 31 }, (_, i) => ({
 }));
 
 /**
+ * Gera os tipos de renda baseados nos workTypes selecionados
+ */
+const getIncomeTypesForWorkTypes = (workTypes) => {
+  if (!workTypes || workTypes.length === 0 || workTypes.includes('nenhum')) {
+    return [{ type: 'principal', label: 'Renda principal' }];
+  }
+
+  const types = [];
+  if (workTypes.includes('clt')) {
+    types.push({ type: 'clt', label: 'Renda CLT' });
+  }
+  if (workTypes.includes('autonomo')) {
+    types.push({ type: 'autonomo', label: 'Renda Autônomo' });
+  }
+
+  return types.length > 0 ? types : [{ type: 'principal', label: 'Renda principal' }];
+};
+
+/**
  * Passo 4: Fonte de renda
  */
-const Step4Income = ({ accountType, members, userEmail, incomes, setIncomes }) => {
-  // Sincroniza as rendas com os membros atuais
+const Step4Income = ({ accountType, members, userEmail, workTypes, incomes, setIncomes }) => {
+  // Sincroniza as rendas com os tipos de trabalho e membros atuais
   useEffect(() => {
-    // Garante que sempre tenha a renda do usuário principal
-    const hasUserIncome = incomes.some(i => i.memberEmail === null);
     let updatedIncomes = [...incomes];
 
-    if (!hasUserIncome) {
-      updatedIncomes.unshift({ memberEmail: null, amount: '', paymentDay: '' });
-    }
+    // Tipos de renda do usuário principal baseados em seus workTypes
+    const userIncomeTypes = getIncomeTypesForWorkTypes(workTypes);
+
+    // Garante que as rendas do usuário principal existam para cada tipo
+    userIncomeTypes.forEach(({ type }) => {
+      const hasIncome = updatedIncomes.some(i => i.memberEmail === null && i.incomeType === type);
+      if (!hasIncome) {
+        updatedIncomes.push({ memberEmail: null, incomeType: type, amount: '', paymentDay: '' });
+      }
+    });
+
+    // Remove rendas do usuário que não correspondem aos tipos atuais
+    updatedIncomes = updatedIncomes.filter(i => {
+      if (i.memberEmail !== null) return true;
+      return userIncomeTypes.some(({ type }) => type === i.incomeType);
+    });
 
     // Se for conta conjunta, sincroniza com os membros
     if (accountType === 'conjunta') {
-      const memberEmails = members.filter(m => m.email).map(m => m.email);
+      members.filter(m => m.email).forEach(member => {
+        const memberIncomeTypes = getIncomeTypesForWorkTypes(member.workTypes);
 
-      // Adiciona rendas para membros novos
-      memberEmails.forEach(email => {
-        const hasIncome = updatedIncomes.some(i => i.memberEmail === email);
-        if (!hasIncome) {
-          updatedIncomes.push({ memberEmail: email, amount: '', paymentDay: '' });
-        }
+        // Adiciona rendas para cada tipo do membro
+        memberIncomeTypes.forEach(({ type }) => {
+          const hasIncome = updatedIncomes.some(
+            i => i.memberEmail === member.email && i.incomeType === type
+          );
+          if (!hasIncome) {
+            updatedIncomes.push({ memberEmail: member.email, incomeType: type, amount: '', paymentDay: '' });
+          }
+        });
+
+        // Remove rendas do membro que não correspondem aos tipos atuais
+        updatedIncomes = updatedIncomes.filter(i => {
+          if (i.memberEmail !== member.email) return true;
+          return memberIncomeTypes.some(({ type }) => type === i.incomeType);
+        });
       });
 
       // Remove rendas de membros que não existem mais
+      const memberEmails = members.filter(m => m.email).map(m => m.email);
       updatedIncomes = updatedIncomes.filter(i =>
         i.memberEmail === null || memberEmails.includes(i.memberEmail)
       );
@@ -389,12 +480,12 @@ const Step4Income = ({ accountType, members, userEmail, incomes, setIncomes }) =
     if (JSON.stringify(updatedIncomes) !== JSON.stringify(incomes)) {
       setIncomes(updatedIncomes);
     }
-  }, [accountType, members, incomes, setIncomes]);
+  }, [accountType, members, workTypes, incomes, setIncomes]);
 
-  const updateIncome = (memberEmail, field, value) => {
+  const updateIncome = (memberEmail, incomeType, field, value) => {
     setIncomes(prevIncomes => {
       return prevIncomes.map(income => {
-        if (income.memberEmail === memberEmail) {
+        if (income.memberEmail === memberEmail && income.incomeType === incomeType) {
           return { ...income, [field]: value };
         }
         return income;
@@ -416,7 +507,8 @@ const Step4Income = ({ accountType, members, userEmail, incomes, setIncomes }) =
     });
   };
 
-  const userIncome = incomes.find(i => i.memberEmail === null) || { amount: '', paymentDay: '' };
+  // Tipos de renda do usuário
+  const userIncomeTypes = getIncomeTypesForWorkTypes(workTypes);
 
   return (
     <div>
@@ -428,75 +520,113 @@ const Step4Income = ({ accountType, members, userEmail, incomes, setIncomes }) =
       </p>
 
       <div className="max-w-md mx-auto space-y-6">
-        {/* Renda do usuário principal */}
+        {/* Rendas do usuário principal */}
         <div className="p-4 bg-white rounded-lg border border-gray-200">
-          <h3 className="font-medium text-gray-900 mb-4">Sua renda principal</h3>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm text-gray-600 mb-1">Valor líquido (R$)</label>
-              <Input
-                type="text"
-                placeholder="5.000,00"
-                value={userIncome.amount}
-                onChange={(e) => updateIncome(null, 'amount', formatMoney(e.target.value))}
-              />
-            </div>
-            <div>
-              <label className="block text-sm text-gray-600 mb-1">Dia do recebimento</label>
-              <Select
-                value={userIncome.paymentDay}
-                onValueChange={(value) => updateIncome(null, 'paymentDay', value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione o dia" />
-                </SelectTrigger>
-                <SelectContent>
-                  {dayOptions.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-medium text-gray-900">Suas rendas</h3>
+            <span className="text-xs px-2 py-1 bg-brand-100 text-brand-700 rounded-full">
+              Titular
+            </span>
+          </div>
+
+          <div className="space-y-4">
+            {userIncomeTypes.map(({ type, label }) => {
+              const income = incomes.find(i => i.memberEmail === null && i.incomeType === type) || { amount: '', paymentDay: '' };
+
+              return (
+                <div key={type} className="p-3 bg-gray-50 rounded-lg">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">{label}</label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">Valor líquido (R$)</label>
+                      <Input
+                        type="text"
+                        placeholder="5.000,00"
+                        value={income.amount}
+                        onChange={(e) => updateIncome(null, type, 'amount', formatMoney(e.target.value))}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">Dia do recebimento</label>
+                      <Select
+                        value={income.paymentDay}
+                        onValueChange={(value) => updateIncome(null, type, 'paymentDay', value)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {dayOptions.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
 
         {/* Renda dos membros (conta conjunta) */}
         {accountType === 'conjunta' && members.filter(m => m.email).map((member, idx) => {
-          const memberIncome = incomes.find(i => i.memberEmail === member.email) || { amount: '', paymentDay: '' };
+          const memberIncomeTypes = getIncomeTypesForWorkTypes(member.workTypes);
 
           return (
             <div key={member.email || idx} className="p-4 bg-white rounded-lg border border-gray-200">
-              <h3 className="font-medium text-gray-900 mb-4">Renda de {member.email}</h3>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm text-gray-600 mb-1">Valor líquido (R$)</label>
-                  <Input
-                    type="text"
-                    placeholder="5.000,00"
-                    value={memberIncome.amount}
-                    onChange={(e) => updateIncome(member.email, 'amount', formatMoney(e.target.value))}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm text-gray-600 mb-1">Dia do recebimento</label>
-                  <Select
-                    value={memberIncome.paymentDay}
-                    onValueChange={(value) => updateIncome(member.email, 'paymentDay', value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione o dia" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {dayOptions.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-medium text-gray-900 truncate max-w-[200px]" title={member.email}>
+                  {member.email}
+                </h3>
+                <span className="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded-full">
+                  Dependente
+                </span>
+              </div>
+
+              <div className="space-y-4">
+                {memberIncomeTypes.map(({ type, label }) => {
+                  const income = incomes.find(
+                    i => i.memberEmail === member.email && i.incomeType === type
+                  ) || { amount: '', paymentDay: '' };
+
+                  return (
+                    <div key={type} className="p-3 bg-gray-50 rounded-lg">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">{label}</label>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs text-gray-500 mb-1">Valor líquido (R$)</label>
+                          <Input
+                            type="text"
+                            placeholder="5.000,00"
+                            value={income.amount}
+                            onChange={(e) => updateIncome(member.email, type, 'amount', formatMoney(e.target.value))}
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-gray-500 mb-1">Dia do recebimento</label>
+                          <Select
+                            value={income.paymentDay}
+                            onValueChange={(value) => updateIncome(member.email, type, 'paymentDay', value)}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecione" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {dayOptions.map((option) => (
+                                <SelectItem key={option.value} value={option.value}>
+                                  {option.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           );
@@ -792,9 +922,9 @@ export default function ConfigurarPerfilPage() {
       case 1: return workTypes.length > 0; // Tipo de trabalho (pelo menos uma opção)
       case 2: return !!accountType; // Tipo de conta
       case 3: {
-        // Verifica se renda do usuário foi preenchida
-        const userIncome = incomes.find(i => i.memberEmail === null);
-        return userIncome && userIncome.amount && userIncome.paymentDay;
+        // Verifica se pelo menos uma renda do usuário foi preenchida
+        const userIncomes = incomes.filter(i => i.memberEmail === null);
+        return userIncomes.some(i => i.amount && i.paymentDay);
       }
       case 4: return true; // Moradia (opcional)
       case 5: return true; // Serviços básicos (opcional)
@@ -827,6 +957,8 @@ export default function ConfigurarPerfilPage() {
         .filter(i => i.amount && i.paymentDay)
         .map(i => ({
           memberEmail: i.memberEmail,
+          incomeType: i.incomeType || 'principal',
+          description: i.incomeType === 'clt' ? 'Renda CLT' : i.incomeType === 'autonomo' ? 'Renda Autônomo' : 'Renda principal',
           amountCents: parseMoneyToCents(i.amount),
           paymentDay: parseInt(i.paymentDay, 10),
           isPrimary: true,
@@ -936,6 +1068,7 @@ export default function ConfigurarPerfilPage() {
                   accountType={accountType}
                   members={members}
                   userEmail={userEmail}
+                  workTypes={workTypes}
                   incomes={incomes}
                   setIncomes={setIncomes}
                 />

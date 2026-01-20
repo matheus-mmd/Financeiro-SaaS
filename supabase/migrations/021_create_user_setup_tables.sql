@@ -40,13 +40,12 @@ CREATE TABLE IF NOT EXISTS public.account_members (
   user_id UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
   email VARCHAR(255) NOT NULL,
   phone VARCHAR(20),
-  work_type VARCHAR(20),
+  work_type VARCHAR(50),
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   deleted_at TIMESTAMPTZ,
 
   CONSTRAINT account_members_email_check CHECK (email ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$'),
-  CONSTRAINT account_members_work_type_check CHECK (work_type IS NULL OR work_type IN ('clt', 'autonomo')),
   CONSTRAINT account_members_unique_email_per_user UNIQUE (user_id, email)
 );
 
@@ -55,7 +54,7 @@ CREATE INDEX IF NOT EXISTS idx_account_members_user_id ON public.account_members
 COMMENT ON TABLE public.account_members IS 'Integrantes da conta conjunta do usuário';
 COMMENT ON COLUMN public.account_members.email IS 'Email do integrante (usado para identificação e lembretes)';
 COMMENT ON COLUMN public.account_members.phone IS 'Telefone/WhatsApp do integrante para lembretes';
-COMMENT ON COLUMN public.account_members.work_type IS 'Tipo de trabalho do integrante: clt ou autonomo';
+COMMENT ON COLUMN public.account_members.work_type IS 'Tipo(s) de trabalho do integrante separados por vírgula: clt, autonomo, clt,autonomo, nenhum';
 
 -- ============================================
 -- TABELA: user_incomes
@@ -247,4 +246,25 @@ BEGIN
     CREATE POLICY "Users can delete own fixed expenses" ON public.user_fixed_expenses
       FOR DELETE USING (auth.uid() = user_id);
   END IF;
+END $$;
+
+-- ============================================
+-- REMOÇÃO DE CONSTRAINT OBSOLETA
+-- Permite valores combinados no work_type
+-- ============================================
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'account_members_work_type_check'
+  ) THEN
+    ALTER TABLE public.account_members DROP CONSTRAINT account_members_work_type_check;
+  END IF;
+END $$;
+
+-- Aumentar tamanho do campo work_type se necessário
+DO $$
+BEGIN
+  ALTER TABLE public.account_members ALTER COLUMN work_type TYPE VARCHAR(50);
+EXCEPTION
+  WHEN others THEN NULL;
 END $$;

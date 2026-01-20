@@ -63,12 +63,19 @@ export async function saveUserSetup(userId, setupData) {
     // 2. Salvar integrantes da conta (se conjunta)
     let insertedMembers = [];
     if (accountType === 'conjunta' && members && members.length > 0) {
-      const membersToInsert = members.map(member => ({
-        user_id: userId,
-        email: member.email,
-        phone: member.phone || null,
-        work_type: member.workType || null,
-      }));
+      const membersToInsert = members.map(member => {
+        // Converte workTypes array para string separada por vírgula
+        const workTypeStr = Array.isArray(member.workTypes)
+          ? member.workTypes.join(',')
+          : (member.workType || null);
+
+        return {
+          user_id: userId,
+          email: member.email,
+          phone: member.phone || null,
+          work_type: workTypeStr,
+        };
+      });
 
       const { data: membersData, error: membersError } = await supabase
         .from('account_members')
@@ -116,22 +123,24 @@ export async function saveUserSetup(userId, setupData) {
       }
     }
 
-    // 4. Salvar renda principal do usuário
-    const userIncome = incomes?.find(i => !i.memberEmail);
-    if (userIncome) {
+    // 4. Salvar rendas do usuário (pode ter múltiplas baseado nos tipos de trabalho)
+    const userIncomes = incomes?.filter(i => !i.memberEmail) || [];
+    if (userIncomes.length > 0) {
+      const userIncomesToInsert = userIncomes.map((income, index) => ({
+        user_id: userId,
+        member_id: null,
+        description: income.description || 'Renda principal',
+        amount_cents: income.amountCents,
+        payment_day: income.paymentDay,
+        is_primary: index === 0, // Primeira renda é marcada como primária
+      }));
+
       const { error: incomeError } = await supabase
         .from('user_incomes')
-        .insert({
-          user_id: userId,
-          member_id: null,
-          description: userIncome.description || 'Renda principal',
-          amount_cents: userIncome.amountCents,
-          payment_day: userIncome.paymentDay,
-          is_primary: true,
-        });
+        .insert(userIncomesToInsert);
 
       if (incomeError) {
-        console.error('[Setup API] Erro ao salvar renda do usuário:', incomeError);
+        console.error('[Setup API] Erro ao salvar rendas do usuário:', incomeError);
         // Não retorna erro aqui pois o setup principal foi salvo
       }
     }
