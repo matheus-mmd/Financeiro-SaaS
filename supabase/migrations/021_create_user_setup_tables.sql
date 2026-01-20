@@ -15,8 +15,15 @@ ADD COLUMN IF NOT EXISTS setup_completed_at TIMESTAMPTZ;
 
 -- Constraints para os novos campos
 -- work_type pode ser: 'clt', 'autonomo', 'clt,autonomo', 'nenhum' ou combinações
-ALTER TABLE public.users
-ADD CONSTRAINT users_account_type_check CHECK (account_type IN ('individual', 'conjunta'));
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'users_account_type_check'
+  ) THEN
+    ALTER TABLE public.users
+    ADD CONSTRAINT users_account_type_check CHECK (account_type IN ('individual', 'conjunta'));
+  END IF;
+END $$;
 
 -- Comentários
 COMMENT ON COLUMN public.users.work_type IS 'Tipo(s) de trabalho separados por vírgula: clt, autonomo, clt,autonomo, nenhum';
@@ -117,45 +124,127 @@ COMMENT ON COLUMN public.user_fixed_expenses.due_day IS 'Dia do vencimento (1-31
 -- Habilitar RLS
 ALTER TABLE public.account_members ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.user_incomes ENABLE ROW LEVEL SECURITY;
-
--- Policies para account_members
-CREATE POLICY "Users can view own account members" ON public.account_members
-  FOR SELECT USING (auth.uid() = user_id AND deleted_at IS NULL);
-
-CREATE POLICY "Users can insert own account members" ON public.account_members
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
-
-CREATE POLICY "Users can update own account members" ON public.account_members
-  FOR UPDATE USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can delete own account members" ON public.account_members
-  FOR DELETE USING (auth.uid() = user_id);
-
--- Policies para user_incomes
-CREATE POLICY "Users can view own incomes" ON public.user_incomes
-  FOR SELECT USING (auth.uid() = user_id AND deleted_at IS NULL);
-
-CREATE POLICY "Users can insert own incomes" ON public.user_incomes
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
-
-CREATE POLICY "Users can update own incomes" ON public.user_incomes
-  FOR UPDATE USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can delete own incomes" ON public.user_incomes
-  FOR DELETE USING (auth.uid() = user_id);
-
--- Habilitar RLS para user_fixed_expenses
 ALTER TABLE public.user_fixed_expenses ENABLE ROW LEVEL SECURITY;
 
+-- Policies para account_members
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies WHERE tablename = 'account_members' AND policyname = 'Users can view own account members'
+  ) THEN
+    CREATE POLICY "Users can view own account members" ON public.account_members
+      FOR SELECT USING (auth.uid() = user_id AND deleted_at IS NULL);
+  END IF;
+END $$;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies WHERE tablename = 'account_members' AND policyname = 'Users can insert own account members'
+  ) THEN
+    CREATE POLICY "Users can insert own account members" ON public.account_members
+      FOR INSERT WITH CHECK (auth.uid() = user_id);
+  END IF;
+END $$;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies WHERE tablename = 'account_members' AND policyname = 'Users can update own account members'
+  ) THEN
+    CREATE POLICY "Users can update own account members" ON public.account_members
+      FOR UPDATE USING (auth.uid() = user_id);
+  END IF;
+END $$;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies WHERE tablename = 'account_members' AND policyname = 'Users can delete own account members'
+  ) THEN
+    CREATE POLICY "Users can delete own account members" ON public.account_members
+      FOR DELETE USING (auth.uid() = user_id);
+  END IF;
+END $$;
+
+-- Policies para user_incomes
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies WHERE tablename = 'user_incomes' AND policyname = 'Users can view own incomes'
+  ) THEN
+    CREATE POLICY "Users can view own incomes" ON public.user_incomes
+      FOR SELECT USING (auth.uid() = user_id AND deleted_at IS NULL);
+  END IF;
+END $$;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies WHERE tablename = 'user_incomes' AND policyname = 'Users can insert own incomes'
+  ) THEN
+    CREATE POLICY "Users can insert own incomes" ON public.user_incomes
+      FOR INSERT WITH CHECK (auth.uid() = user_id);
+  END IF;
+END $$;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies WHERE tablename = 'user_incomes' AND policyname = 'Users can update own incomes'
+  ) THEN
+    CREATE POLICY "Users can update own incomes" ON public.user_incomes
+      FOR UPDATE USING (auth.uid() = user_id);
+  END IF;
+END $$;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies WHERE tablename = 'user_incomes' AND policyname = 'Users can delete own incomes'
+  ) THEN
+    CREATE POLICY "Users can delete own incomes" ON public.user_incomes
+      FOR DELETE USING (auth.uid() = user_id);
+  END IF;
+END $$;
+
 -- Policies para user_fixed_expenses
-CREATE POLICY "Users can view own fixed expenses" ON public.user_fixed_expenses
-  FOR SELECT USING (auth.uid() = user_id AND deleted_at IS NULL);
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies WHERE tablename = 'user_fixed_expenses' AND policyname = 'Users can view own fixed expenses'
+  ) THEN
+    CREATE POLICY "Users can view own fixed expenses" ON public.user_fixed_expenses
+      FOR SELECT USING (auth.uid() = user_id AND deleted_at IS NULL);
+  END IF;
+END $$;
 
-CREATE POLICY "Users can insert own fixed expenses" ON public.user_fixed_expenses
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies WHERE tablename = 'user_fixed_expenses' AND policyname = 'Users can insert own fixed expenses'
+  ) THEN
+    CREATE POLICY "Users can insert own fixed expenses" ON public.user_fixed_expenses
+      FOR INSERT WITH CHECK (auth.uid() = user_id);
+  END IF;
+END $$;
 
-CREATE POLICY "Users can update own fixed expenses" ON public.user_fixed_expenses
-  FOR UPDATE USING (auth.uid() = user_id);
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies WHERE tablename = 'user_fixed_expenses' AND policyname = 'Users can update own fixed expenses'
+  ) THEN
+    CREATE POLICY "Users can update own fixed expenses" ON public.user_fixed_expenses
+      FOR UPDATE USING (auth.uid() = user_id);
+  END IF;
+END $$;
 
-CREATE POLICY "Users can delete own fixed expenses" ON public.user_fixed_expenses
-  FOR DELETE USING (auth.uid() = user_id);
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies WHERE tablename = 'user_fixed_expenses' AND policyname = 'Users can delete own fixed expenses'
+  ) THEN
+    CREATE POLICY "Users can delete own fixed expenses" ON public.user_fixed_expenses
+      FOR DELETE USING (auth.uid() = user_id);
+  END IF;
+END $$;
