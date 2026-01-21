@@ -9,8 +9,11 @@ ADD COLUMN IF NOT EXISTS emoji VARCHAR(10);
 
 COMMENT ON COLUMN public.categories.emoji IS 'Emoji representando a categoria (ex: 🏠, 💰, 🚗)';
 
--- Atualizar a view categories_enriched para incluir emoji
-CREATE OR REPLACE VIEW public.categories_enriched AS
+-- Dropar a view existente antes de recriar com a nova coluna
+DROP VIEW IF EXISTS public.categories_enriched;
+
+-- Recriar a view categories_enriched para incluir emoji
+CREATE VIEW public.categories_enriched AS
 SELECT
   c.id,
   c.user_id,
