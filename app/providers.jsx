@@ -13,13 +13,16 @@
 
 import { AuthProvider } from '../src/contexts/AuthContext';
 import { ReferenceDataProvider } from '../src/contexts/ReferenceDataContext';
+import { ToastProvider } from '../src/components/Toast';
 import Layout from '../src/components/Layout';
 
 export function Providers({ children }) {
   return (
     <AuthProvider>
       <ReferenceDataProvider>
-        <Layout>{children}</Layout>
+        <ToastProvider>
+          <Layout>{children}</Layout>
+        </ToastProvider>
       </ReferenceDataProvider>
     </AuthProvider>
   );

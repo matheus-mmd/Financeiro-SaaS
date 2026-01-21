@@ -122,6 +122,7 @@ export async function updateCategory(id, updates) {
   if (updates.name !== undefined) updateData.name = updates.name;
   if (updates.color !== undefined) updateData.color = updates.color;
   if (updates.iconId !== undefined) updateData.icon_id = updates.iconId;
+  if (updates.emoji !== undefined) updateData.emoji = updates.emoji;
   if (updates.transactionTypeId !== undefined) updateData.transaction_type_id = updates.transactionTypeId;
 
   const { data, error } = await supabase

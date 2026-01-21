@@ -17,9 +17,11 @@ import {
   DialogTitle,
 } from "../../src/components/ui/dialog";
 import { useCategories } from "../../src/lib/supabase/hooks/useCategories";
+import { useToast } from "../../src/components/Toast";
 import {
   Plus,
   Trash2,
+  Pencil,
   TrendingDown,
   TrendingUp,
   Layers,
@@ -72,12 +74,14 @@ const defaultIncomeCategories = [
 export default function CategoriasPage() {
   const router = useRouter();
   const { user, loading: authLoading, signOut } = useAuth();
+  const toast = useToast();
 
   const {
     categories,
     loading: categoriesLoading,
     error: categoriesError,
     create: createCategory,
+    update: updateCategory,
     remove: removeCategory,
   } = useCategories();
 
@@ -88,8 +92,9 @@ export default function CategoriasPage() {
 
   // Estados para modal de categoria
   const [modalOpen, setModalOpen] = useState(false);
+  const [editingCategory, setEditingCategory] = useState(null);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-  const [newCategoryData, setNewCategoryData] = useState({
+  const [categoryData, setCategoryData] = useState({
     emoji: '',
     name: '',
   });
@@ -120,30 +125,59 @@ export default function CategoriasPage() {
 
   // Abrir modal para nova categoria
   const handleOpenModal = () => {
-    setNewCategoryData({ emoji: '', name: '' });
+    setEditingCategory(null);
+    setCategoryData({ emoji: '', name: '' });
     setShowEmojiPicker(false);
     setModalOpen(true);
   };
 
-  // Criar categoria
-  const handleCreateCategory = async () => {
-    if (!newCategoryData.name.trim()) {
-      alert('Por favor, informe o nome da categoria');
+  // Abrir modal para editar categoria
+  const handleOpenEditModal = (category) => {
+    setEditingCategory(category);
+    setCategoryData({
+      emoji: category.emoji || '📦',
+      name: category.name,
+    });
+    setShowEmojiPicker(false);
+    setModalOpen(true);
+  };
+
+  // Criar ou editar categoria
+  const handleSubmitCategory = async () => {
+    if (!categoryData.name.trim()) {
+      toast.warning('Por favor, informe o nome da categoria');
       return;
     }
 
     try {
-      const transactionTypeId = activeTab === 'despesas' ? 2 : 1;
+      if (editingCategory) {
+        // Editar categoria existente
+        const result = await updateCategory(editingCategory.id, {
+          name: categoryData.name,
+          emoji: categoryData.emoji || '📦',
+        });
 
-      const result = await createCategory({
-        name: newCategoryData.name,
-        emoji: newCategoryData.emoji || '📦',
-        color: activeTab === 'despesas' ? '#ef4444' : '#22c55e',
-        transactionTypeId,
-      });
+        if (result.error) {
+          throw result.error;
+        }
 
-      if (result.error) {
-        throw result.error;
+        toast.success(`Categoria "${categoryData.name}" atualizada com sucesso!`);
+      } else {
+        // Criar nova categoria
+        const transactionTypeId = activeTab === 'despesas' ? 2 : 1;
+
+        const result = await createCategory({
+          name: categoryData.name,
+          emoji: categoryData.emoji || '📦',
+          color: activeTab === 'despesas' ? '#ef4444' : '#22c55e',
+          transactionTypeId,
+        });
+
+        if (result.error) {
+          throw result.error;
+        }
+
+        toast.success(`Categoria "${categoryData.name}" criada com sucesso!`);
       }
 
       setModalOpen(false);
@@ -151,25 +185,26 @@ export default function CategoriasPage() {
       if (isAuthError(err)) {
         await handleAuthFailure();
       } else {
-        console.error("Erro ao criar categoria:", err);
-        alert("Erro ao criar categoria: " + (err.message || err));
+        console.error("Erro ao salvar categoria:", err);
+        toast.error("Erro ao salvar categoria: " + (err.message || err));
       }
     }
   };
 
   // Deletar categoria
-  const handleDeleteCategory = async (id) => {
-    if (!confirm("Tem certeza que deseja deletar esta categoria?")) return;
+  const handleDeleteCategory = async (category) => {
+    if (!confirm(`Tem certeza que deseja deletar a categoria "${category.name}"?`)) return;
 
     try {
-      const result = await removeCategory(id);
+      const result = await removeCategory(category.id);
       if (result.error) throw result.error;
+      toast.success(`Categoria "${category.name}" removida com sucesso!`);
     } catch (err) {
       if (isAuthError(err)) {
         await handleAuthFailure();
       } else {
         console.error("Erro ao deletar categoria:", err);
-        alert("Erro ao deletar categoria. Tente novamente.");
+        toast.error("Erro ao deletar categoria. Tente novamente.");
       }
     }
   };
@@ -224,9 +259,9 @@ export default function CategoriasPage() {
           <div className="flex items-center gap-3 mb-6">
             <div className={`p-2 rounded-lg ${activeTab === 'despesas' ? 'bg-red-100' : 'bg-green-100'}`}>
               {activeTab === 'despesas' ? (
-                <TrendingDown className={`w-5 h-5 text-red-600`} />
+                <TrendingDown className="w-5 h-5 text-red-600" />
               ) : (
-                <TrendingUp className={`w-5 h-5 text-green-600`} />
+                <TrendingUp className="w-5 h-5 text-green-600" />
               )}
             </div>
             <div className="flex-1">
@@ -237,6 +272,15 @@ export default function CategoriasPage() {
                 Suas categorias de {activeTab === 'despesas' ? 'despesa' : 'receita'} criadas ({currentUserCategories.length})
               </p>
             </div>
+            {/* Botão sempre visível */}
+            <Button
+              onClick={handleOpenModal}
+              size="sm"
+              className={activeTab === 'despesas' ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600'}
+            >
+              <Plus className="w-4 h-4 mr-1" />
+              Nova
+            </Button>
           </div>
 
           {currentUserCategories.length === 0 ? (
@@ -244,15 +288,8 @@ export default function CategoriasPage() {
               <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-3">
                 <Layers className="w-8 h-8 text-gray-400" />
               </div>
-              <p className="text-gray-500 mb-3">Nenhuma categoria personalizada</p>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleOpenModal}
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Adicionar Categoria
-              </Button>
+              <p className="text-gray-500 mb-1">Nenhuma categoria personalizada</p>
+              <p className="text-sm text-gray-400">Clique em "Nova" para criar sua primeira categoria</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -264,13 +301,22 @@ export default function CategoriasPage() {
                   <div className="flex items-center gap-3">
                     <span className="text-2xl">{category.emoji || '📦'}</span>
                     <span className="flex-1 font-medium text-gray-900">{category.name}</span>
-                    <button
-                      onClick={() => handleDeleteCategory(category.id)}
-                      className="flex-shrink-0 p-1.5 opacity-0 group-hover:opacity-100 hover:bg-red-100 rounded-lg transition-all"
-                      title="Deletar categoria"
-                    >
-                      <Trash2 className="w-4 h-4 text-red-600" />
-                    </button>
+                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button
+                        onClick={() => handleOpenEditModal(category)}
+                        className="p-1.5 hover:bg-blue-100 rounded-lg transition-colors"
+                        title="Editar categoria"
+                      >
+                        <Pencil className="w-4 h-4 text-blue-600" />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteCategory(category)}
+                        className="p-1.5 hover:bg-red-100 rounded-lg transition-colors"
+                        title="Deletar categoria"
+                      >
+                        <Trash2 className="w-4 h-4 text-red-600" />
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -309,12 +355,15 @@ export default function CategoriasPage() {
         </CardContent>
       </Card>
 
-      {/* Modal Nova Categoria */}
+      {/* Modal Nova/Editar Categoria */}
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
         <DialogContent className="max-w-[95vw] sm:max-w-md max-h-[90vh] flex flex-col p-0">
           <DialogHeader className="px-4 pt-4 pb-3 border-b flex-shrink-0">
             <DialogTitle>
-              Nova Categoria de {activeTab === 'despesas' ? 'Despesa' : 'Receita'}
+              {editingCategory
+                ? `Editar Categoria`
+                : `Nova Categoria de ${activeTab === 'despesas' ? 'Despesa' : 'Receita'}`
+              }
             </DialogTitle>
           </DialogHeader>
 
@@ -328,8 +377,8 @@ export default function CategoriasPage() {
                   onClick={() => setShowEmojiPicker(!showEmojiPicker)}
                   className="w-full flex items-center gap-3 p-3 border border-gray-200 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors"
                 >
-                  {newCategoryData.emoji ? (
-                    <span className="text-2xl">{newCategoryData.emoji}</span>
+                  {categoryData.emoji ? (
+                    <span className="text-2xl">{categoryData.emoji}</span>
                   ) : (
                     <span className="text-gray-400">🎯 Clique para escolher</span>
                   )}
@@ -338,9 +387,9 @@ export default function CategoriasPage() {
                 {showEmojiPicker && (
                   <div className="mt-2">
                     <EmojiPicker
-                      selectedEmoji={newCategoryData.emoji}
+                      selectedEmoji={categoryData.emoji}
                       onEmojiSelect={(emoji) => {
-                        setNewCategoryData({ ...newCategoryData, emoji });
+                        setCategoryData({ ...categoryData, emoji });
                         setShowEmojiPicker(false);
                       }}
                       onClose={() => setShowEmojiPicker(false)}
@@ -354,19 +403,19 @@ export default function CategoriasPage() {
                 <Label htmlFor="category-name">Nome da Categoria</Label>
                 <Input
                   id="category-name"
-                  value={newCategoryData.name}
-                  onChange={(e) => setNewCategoryData({ ...newCategoryData, name: e.target.value })}
+                  value={categoryData.name}
+                  onChange={(e) => setCategoryData({ ...categoryData, name: e.target.value })}
                   placeholder="Ex: Apostas, Academia, Investimento..."
                 />
               </div>
 
               {/* Preview */}
-              {newCategoryData.name && (
+              {categoryData.name && (
                 <div className="p-3 bg-gray-50 rounded-lg">
                   <p className="text-xs text-gray-500 mb-2">Preview:</p>
                   <div className="flex items-center gap-3">
-                    <span className="text-2xl">{newCategoryData.emoji || '📦'}</span>
-                    <span className="font-medium text-gray-900">{newCategoryData.name}</span>
+                    <span className="text-2xl">{categoryData.emoji || '📦'}</span>
+                    <span className="font-medium text-gray-900">{categoryData.name}</span>
                   </div>
                 </div>
               )}
@@ -383,10 +432,10 @@ export default function CategoriasPage() {
               Cancelar
             </Button>
             <Button
-              onClick={handleCreateCategory}
+              onClick={handleSubmitCategory}
               className="flex-1 sm:flex-none"
             >
-              Criar Categoria
+              {editingCategory ? 'Salvar' : 'Criar Categoria'}
             </Button>
           </DialogFooter>
         </DialogContent>
