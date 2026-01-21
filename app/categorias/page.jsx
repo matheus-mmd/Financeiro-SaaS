@@ -27,6 +27,7 @@ import {
   Layers,
 } from "lucide-react";
 import EmojiPicker from "../../src/components/EmojiPicker";
+import ConfirmDialog from "../../src/components/ConfirmDialog";
 
 // Categorias padrão de Despesas (apenas referência visual)
 const defaultExpenseCategories = [
@@ -98,6 +99,10 @@ export default function CategoriasPage() {
     emoji: '',
     name: '',
   });
+
+  // Estados para modal de confirmação de exclusão
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+  const [categoryToDelete, setCategoryToDelete] = useState(null);
 
   // Funções auxiliares
   const handleAuthFailure = async () => {
@@ -191,14 +196,20 @@ export default function CategoriasPage() {
     }
   };
 
-  // Deletar categoria
-  const handleDeleteCategory = async (category) => {
-    if (!confirm(`Tem certeza que deseja deletar a categoria "${category.name}"?`)) return;
+  // Abrir modal de confirmação para deletar
+  const handleOpenDeleteConfirm = (category) => {
+    setCategoryToDelete(category);
+    setConfirmDeleteOpen(true);
+  };
+
+  // Confirmar exclusão da categoria
+  const handleConfirmDelete = async () => {
+    if (!categoryToDelete) return;
 
     try {
-      const result = await removeCategory(category.id);
+      const result = await removeCategory(categoryToDelete.id);
       if (result.error) throw result.error;
-      toast.success(`Categoria "${category.name}" removida com sucesso!`);
+      toast.success(`Categoria "${categoryToDelete.name}" removida com sucesso!`);
     } catch (err) {
       if (isAuthError(err)) {
         await handleAuthFailure();
@@ -206,6 +217,8 @@ export default function CategoriasPage() {
         console.error("Erro ao deletar categoria:", err);
         toast.error("Erro ao deletar categoria. Tente novamente.");
       }
+    } finally {
+      setCategoryToDelete(null);
     }
   };
 
@@ -310,7 +323,7 @@ export default function CategoriasPage() {
                         <Pencil className="w-4 h-4 text-blue-600" />
                       </button>
                       <button
-                        onClick={() => handleDeleteCategory(category)}
+                        onClick={() => handleOpenDeleteConfirm(category)}
                         className="p-1.5 hover:bg-red-100 rounded-lg transition-colors"
                         title="Deletar categoria"
                       >
@@ -347,7 +360,7 @@ export default function CategoriasPage() {
                 <span className="text-2xl">{category.emoji}</span>
                 <span className="flex-1 font-medium text-gray-700">{category.name}</span>
                 <span className="text-xs px-2 py-0.5 bg-gray-200 text-gray-500 rounded-full">
-                  padrão
+                  Padrão
                 </span>
               </div>
             ))}
@@ -440,6 +453,22 @@ export default function CategoriasPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Modal de Confirmação de Exclusão */}
+      <ConfirmDialog
+        open={confirmDeleteOpen}
+        onOpenChange={setConfirmDeleteOpen}
+        title="Excluir categoria"
+        description={
+          categoryToDelete
+            ? `Tem certeza que deseja excluir a categoria "${categoryToDelete.name}"? Esta ação não pode ser desfeita.`
+            : ''
+        }
+        confirmText="Excluir"
+        cancelText="Cancelar"
+        variant="danger"
+        onConfirm={handleConfirmDelete}
+      />
     </div>
   );
 }
