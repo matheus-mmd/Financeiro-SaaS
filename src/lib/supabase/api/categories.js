@@ -135,9 +135,10 @@ export async function updateCategory(id, updates) {
 }
 
 export async function deleteCategory(id) {
+  // Hard delete - remove completamente do banco
   const { data, error } = await supabase
     .from('categories')
-    .update({ deleted_at: new Date().toISOString() })
+    .delete()
     .eq('id', id)
     .select()
     .maybeSingle();
