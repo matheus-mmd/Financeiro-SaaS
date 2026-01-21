@@ -43,6 +43,25 @@ export async function saveUserSetup(userId, setupData) {
     // Converte o array de workTypes para string separada por vírgula
     const workTypeString = Array.isArray(workTypes) ? workTypes.join(',') : workTypes;
 
+    // 0. Limpar dados existentes para permitir re-execução do setup
+    // Deletar despesas fixas existentes
+    await supabase
+      .from('user_fixed_expenses')
+      .delete()
+      .eq('user_id', userId);
+
+    // Deletar rendas existentes
+    await supabase
+      .from('user_incomes')
+      .delete()
+      .eq('user_id', userId);
+
+    // Deletar membros existentes
+    await supabase
+      .from('account_members')
+      .delete()
+      .eq('user_id', userId);
+
     // 1. Atualizar perfil do usuário
     const { error: userError } = await supabase
       .from('users')
