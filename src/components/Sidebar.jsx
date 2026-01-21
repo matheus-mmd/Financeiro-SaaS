@@ -11,6 +11,7 @@ import {
   PiggyBank,
   X,
   Landmark,
+  Receipt,
 } from "lucide-react";
 import {
   Tooltip,
@@ -58,6 +59,7 @@ export default function Sidebar({
     { path: "/metas", icon: Target, label: "Metas" },
     { path: "/contas", icon: Landmark, label: "Contas" },
     { path: "/categorias", icon: Layers, label: "Categorias" },
+    { path: "/orcamento-categoria", icon: Receipt, label: "Orçamento" },
   ];
 
   const isActive = (path) => pathname === path;
