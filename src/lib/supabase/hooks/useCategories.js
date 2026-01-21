@@ -30,6 +30,7 @@ export function useCategories() {
     items.map((category) => ({
       ...category,
       color: category.color || '#6366f1',
+      emoji: category.emoji || null,
       icon_name: category.icon_name || category.icon || 'Tag',
       transaction_type_id: category.transaction_type_id || category.type_id,
     })),

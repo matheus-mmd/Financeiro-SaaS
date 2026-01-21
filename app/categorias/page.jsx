@@ -3,75 +3,93 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../../src/contexts/AuthContext";
-import PageHeader from "../../src/components/PageHeader";
 import { Card, CardContent } from "../../src/components/ui/card";
 import { Button } from "../../src/components/ui/button";
 import { Input } from "../../src/components/ui/input";
-import { Label } from "../../src/components/ui/label";
 import {
   Dialog,
   DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
 } from "../../src/components/ui/dialog";
 import { useCategories } from "../../src/lib/supabase/hooks/useCategories";
-import { useReferenceData } from "../../src/lib/supabase/hooks/useReferenceData";
 import {
+  ArrowLeft,
   Plus,
-  Trash2,
-  Tag,
-  TrendingUp,
   TrendingDown,
-  Wallet,
+  TrendingUp,
+  Layers,
 } from "lucide-react";
-import { getIconComponent } from "../../src/components/IconPicker";
-import ColorPicker from "../../src/components/ColorPicker";
-import IconPickerModal from "../../src/components/IconPickerModal";
-import FABMenu from "../../src/components/FABMenu";
+import EmojiPicker from "../../src/components/EmojiPicker";
 import PageSkeleton from "../../src/components/PageSkeleton";
+
+// Categorias padrão de Despesas
+const defaultExpenseCategories = [
+  { emoji: '🏠', name: 'Moradia' },
+  { emoji: '🍔', name: 'Alimentação' },
+  { emoji: '🚗', name: 'Transporte' },
+  { emoji: '💊', name: 'Saúde' },
+  { emoji: '📚', name: 'Educação' },
+  { emoji: '🎮', name: 'Lazer' },
+  { emoji: '👗', name: 'Vestuário' },
+  { emoji: '🛒', name: 'Compras' },
+  { emoji: '🔧', name: 'Serviços' },
+  { emoji: '📱', name: 'Assinaturas' },
+  { emoji: '📋', name: 'Impostos' },
+  { emoji: '🤝', name: 'Doações e Ofertas' },
+  { emoji: '🐕', name: 'Pet' },
+  { emoji: '✈️', name: 'Viagens' },
+  { emoji: '💄', name: 'Beleza e Cuidados' },
+  { emoji: '📺', name: 'Streaming/Apps' },
+  { emoji: '📦', name: 'Outros' },
+];
+
+// Categorias padrão de Receitas
+const defaultIncomeCategories = [
+  { emoji: '💰', name: 'Salário Líquido' },
+  { emoji: '🍽️', name: 'Vale Refeição' },
+  { emoji: '🛒', name: 'Vale Alimentação' },
+  { emoji: '🏆', name: 'Bônus/PLR' },
+  { emoji: '🏖️', name: 'Férias' },
+  { emoji: '💵', name: '13º Salário' },
+  { emoji: '📦', name: 'Outros' },
+  { emoji: '🛠️', name: 'Serviços Prestados' },
+  { emoji: '💼', name: 'Projeto/Freela' },
+  { emoji: '🎯', name: 'Consultoria' },
+  { emoji: '📱', name: 'Venda de Produto' },
+  { emoji: '💎', name: 'Comissão' },
+  { emoji: '🏠', name: 'Aluguel/Locação' },
+  { emoji: '📈', name: 'Dividendos/Lucros' },
+];
 
 /**
  * Página de Categorias - Gerenciamento de categorias
- * Categorias organizadas por tipo: Receitas, Despesas e Patrimônio/Ativos
- * Visualização simples e objetiva com ações diretas
+ * Design atualizado com tabs e categorias padrão
  */
 export default function CategoriasPage() {
   const router = useRouter();
   const { user, loading: authLoading, signOut } = useAuth();
 
-  // Hooks com cache para carregamento instantâneo
   const {
     categories,
     loading: categoriesLoading,
     error: categoriesError,
     create: createCategory,
-    update: updateCategory,
     remove: removeCategory,
   } = useCategories();
 
-  const {
-    data: referenceData,
-    loading: referenceLoading,
-    error: referenceError,
-  } = useReferenceData({ resources: ["transactionTypes", "icons"] });
-
-  const { transactionTypes = [], icons = [] } = referenceData;
   const loading = (categoriesLoading && categories.length === 0) || authLoading;
-  const error = categoriesError || referenceError;
+
+  // Estado da tab ativa: 'despesas' ou 'receitas'
+  const [activeTab, setActiveTab] = useState('despesas');
 
   // Estados para modal de categoria
-  const [categoryModalOpen, setCategoryModalOpen] = useState(false);
-  const [iconPickerModalOpen, setIconPickerModalOpen] = useState(false);
-  const [editingCategory, setEditingCategory] = useState(null);
-  const [categoryFormData, setCategoryFormData] = useState({
-    name: "",
-    color: "#6366f1",
-    icon: "Tag",
-    transaction_type_id: null,
+  const [modalOpen, setModalOpen] = useState(false);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [newCategoryData, setNewCategoryData] = useState({
+    emoji: '',
+    name: '',
   });
 
-  // Funções auxiliares para erros de autenticação
+  // Funções auxiliares
   const handleAuthFailure = async () => {
     await signOut();
     router.replace('/');
@@ -81,8 +99,7 @@ export default function CategoriasPage() {
     return err?.code === 'AUTH_REQUIRED' || err?.message?.includes('Usuário não autenticado');
   };
 
-  // Verificar erro de autenticação
-  if (error && isAuthError(error)) {
+  if (categoriesError && isAuthError(categoriesError)) {
     handleAuthFailure();
     return null;
   }
@@ -92,85 +109,50 @@ export default function CategoriasPage() {
     return <PageSkeleton />;
   }
 
-  // Separar categorias por tipo
-  const categorizeByType = () => {
-    const incomeCategories = categories.filter(
-      (cat) => cat.transaction_type_id === 1
-    );
-    const expenseCategories = categories.filter(
-      (cat) => cat.transaction_type_id === 2
-    );
-    const assetCategories = categories.filter(
-      (cat) => cat.transaction_type_id === 3
-    );
+  // Filtrar categorias por tipo
+  const userExpenseCategories = categories.filter(cat => cat.transaction_type_id === 2);
+  const userIncomeCategories = categories.filter(cat => cat.transaction_type_id === 1);
 
-    return {
-      income: incomeCategories,
-      expense: expenseCategories,
-      asset: assetCategories,
-    };
+  // Abrir modal para nova categoria
+  const handleOpenModal = () => {
+    setNewCategoryData({ emoji: '', name: '' });
+    setShowEmojiPicker(false);
+    setModalOpen(true);
   };
 
-  const { income, expense, asset } = categorizeByType();
-
-  // ===== FUNÇÕES PARA CATEGORIAS =====
-
-  const handleOpenCategoryModal = (category = null, defaultType = null) => {
-    setEditingCategory(category);
-    if (category) {
-      setCategoryFormData({
-        name: category.name,
-        color: category.color,
-        icon: category.icon_name || "Tag",
-        transaction_type_id: category.transaction_type_id,
-      });
-    } else {
-      setCategoryFormData({
-        name: "",
-        color: "#6366f1",
-        icon: "Tag",
-        transaction_type_id: defaultType,
-      });
+  // Criar categoria
+  const handleCreateCategory = async () => {
+    if (!newCategoryData.name.trim()) {
+      alert('Por favor, informe o nome da categoria');
+      return;
     }
-    setCategoryModalOpen(true);
-  };
-
-  const handleCategorySubmit = async (e) => {
-    e.preventDefault();
 
     try {
-      const icon = icons.find((i) => i.name === categoryFormData.icon);
-      const iconId = icon?.id ?? editingCategory?.icon_id ?? editingCategory?.iconId ?? null;
+      const transactionTypeId = activeTab === 'despesas' ? 2 : 1;
 
-      const categoryData = {
-        name: categoryFormData.name,
-        color: categoryFormData.color,
-        iconId,
-        transactionTypeId: categoryFormData.transaction_type_id,
-      };
-
-      let result;
-      if (editingCategory) {
-        result = await updateCategory(editingCategory.id, categoryData);
-      } else {
-        result = await createCategory(categoryData);
-      }
+      const result = await createCategory({
+        name: newCategoryData.name,
+        emoji: newCategoryData.emoji || '📦',
+        color: activeTab === 'despesas' ? '#ef4444' : '#22c55e',
+        transactionTypeId,
+      });
 
       if (result.error) {
         throw result.error;
       }
 
-      setCategoryModalOpen(false);
+      setModalOpen(false);
     } catch (err) {
       if (isAuthError(err)) {
         await handleAuthFailure();
       } else {
-        console.error("Erro ao salvar categoria:", err);
-        alert("Erro ao salvar categoria: " + (err.message || err));
+        console.error("Erro ao criar categoria:", err);
+        alert("Erro ao criar categoria: " + (err.message || err));
       }
     }
   };
 
+  // Deletar categoria
   const handleDeleteCategory = async (id) => {
     if (!confirm("Tem certeza que deseja deletar esta categoria?")) return;
 
@@ -187,260 +169,234 @@ export default function CategoriasPage() {
     }
   };
 
-  const getTransactionTypeById = (id) => {
-    return transactionTypes.find((t) => t.id === id);
-  };
-
-  // Função para renderizar uma seção de categorias
-  const renderCategorySection = (
-    sectionCategories,
-    title,
-    description,
-    icon,
-    iconColor,
-    defaultType = null
-  ) => {
-    return (
-      <Card>
-        <CardContent className="p-4">
-          <div className="flex items-center gap-3 mb-6">
-            <div className={`p-2 ${iconColor} rounded-lg`}>{icon}</div>
-            <div>
-              <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
-              <p className="text-sm text-gray-500">
-                {description} ({sectionCategories.length})
-              </p>
-            </div>
-          </div>
-
-          {sectionCategories.length === 0 ? (
-            <div className="text-center py-8">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-3">
-                <Tag className="w-8 h-8 text-gray-400" />
-              </div>
-              <p className="text-gray-500 mb-3">Nenhuma categoria cadastrada</p>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleOpenCategoryModal(null, defaultType)}
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Adicionar Categoria
-              </Button>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {sectionCategories.map((category) => {
-                const IconComponent = getIconComponent(category.icon_name || "Tag");
-
-                return (
-                  <div
-                    key={category.id}
-                    onClick={() => handleOpenCategoryModal(category)}
-                    className="group relative bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md hover:border-gray-300 transition-all cursor-pointer"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div
-                        className="flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center"
-                        style={{ backgroundColor: category.color + "20" }}
-                      >
-                        <IconComponent
-                          className="w-5 h-5"
-                          style={{ color: category.color }}
-                        />
-                      </div>
-                      <span className="font-semibold text-gray-900 flex-1 truncate">
-                        {category.name}
-                      </span>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteCategory(category.id);
-                        }}
-                        className="flex-shrink-0 p-1.5 opacity-0 group-hover:opacity-100 hover:bg-red-100 rounded-lg transition-all"
-                        title="Deletar categoria"
-                      >
-                        <Trash2 className="w-4 h-4 text-red-600" />
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    );
-  };
-
   if (authLoading || loading) {
     return <PageSkeleton />;
   }
 
+  const currentUserCategories = activeTab === 'despesas' ? userExpenseCategories : userIncomeCategories;
+  const currentDefaultCategories = activeTab === 'despesas' ? defaultExpenseCategories : defaultIncomeCategories;
+
   return (
-    <div className="space-y-4 animate-fade-in">
-      <PageHeader
-        title="Categorias"
-        description="Gerencie categorias organizadas por tipo: Receitas, Despesas e Patrimônio/Ativos"
-      />
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white border-b border-gray-200 px-4 py-4">
+        <div className="max-w-2xl mx-auto">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => router.back()}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5 text-gray-600" />
+            </button>
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-brand-100 rounded-lg">
+                <Layers className="w-5 h-5 text-brand-600" />
+              </div>
+              <div>
+                <h1 className="text-lg font-bold text-gray-900">Categorias</h1>
+                <p className="text-sm text-gray-500">Gerencie suas categorias personalizadas</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
-      {/* Seção: Categorias de Receitas */}
-      {renderCategorySection(
-        income,
-        "Categorias de Receitas",
-        "Gerencie categorias para suas receitas e ganhos",
-        <Tag className="w-5 h-5 text-green-600" />,
-        "bg-green-100",
-        1 // ID do tipo "Receita"
-      )}
+      {/* Tabs */}
+      <div className="bg-white border-b border-gray-200 px-4">
+        <div className="max-w-2xl mx-auto">
+          <div className="flex">
+            <button
+              onClick={() => setActiveTab('despesas')}
+              className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-medium border-b-2 transition-colors ${
+                activeTab === 'despesas'
+                  ? 'border-brand-600 text-brand-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              <TrendingDown className="w-4 h-4" />
+              Despesas
+            </button>
+            <button
+              onClick={() => setActiveTab('receitas')}
+              className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-medium border-b-2 transition-colors ${
+                activeTab === 'receitas'
+                  ? 'border-brand-600 text-brand-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              <TrendingUp className="w-4 h-4" />
+              Receitas
+            </button>
+          </div>
+        </div>
+      </div>
 
-      {/* Seção: Categorias de Despesas */}
-      {renderCategorySection(
-        expense,
-        "Categorias de Despesas",
-        "Gerencie categorias para suas despesas e gastos",
-        <Tag className="w-5 h-5 text-red-600" />,
-        "bg-red-100",
-        2 // ID do tipo "Despesa"
-      )}
+      {/* Content */}
+      <div className="max-w-2xl mx-auto p-4 space-y-6">
+        {/* Categorias Personalizadas */}
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h2 className="font-semibold text-gray-900">Categorias Personalizadas</h2>
+                <p className="text-sm text-gray-500">
+                  Suas categorias de {activeTab === 'despesas' ? 'despesa' : 'receita'} criadas
+                </p>
+              </div>
+              <Button
+                onClick={handleOpenModal}
+                size="sm"
+                className="bg-brand-600 hover:bg-brand-700"
+              >
+                <Plus className="w-4 h-4 mr-1" />
+                Nova
+              </Button>
+            </div>
 
-      {/* Seção: Categorias de Patrimônio e Ativos */}
-      {renderCategorySection(
-        asset,
-        "Categorias de Patrimônio e Ativos",
-        "Gerencie categorias para seus aportes, investimentos e ativos",
-        <Tag className="w-5 h-5 text-blue-600" />,
-        "bg-blue-100",
-        3 // ID do tipo "Patrimônio"
-      )}
+            {currentUserCategories.length === 0 ? (
+              <div className="text-center py-8">
+                <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-3">
+                  <Layers className="w-8 h-8 text-gray-400" />
+                </div>
+                <p className="text-gray-500 mb-1">Nenhuma categoria personalizada</p>
+                <p className="text-sm text-gray-400">Clique em "Nova" para criar</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {currentUserCategories.map((category) => (
+                  <div
+                    key={category.id}
+                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg group"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl">{category.emoji || '📦'}</span>
+                      <span className="font-medium text-gray-900">{category.name}</span>
+                    </div>
+                    <button
+                      onClick={() => handleDeleteCategory(category.id)}
+                      className="text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
-      {/* Modal de Categoria */}
-      <Dialog open={categoryModalOpen} onOpenChange={setCategoryModalOpen}>
-        <DialogContent className="max-w-[95vw] sm:max-w-md max-h-[90vh] flex flex-col p-0">
-          <DialogHeader className="px-4 pt-4 pb-3 border-b flex-shrink-0">
-            <DialogTitle>
-              {editingCategory ? "Editar Categoria" : "Criar Nova Categoria"}
-            </DialogTitle>
-          </DialogHeader>
+        {/* Categorias Padrão */}
+        <Card>
+          <CardContent className="p-4">
+            <div className="mb-4">
+              <h2 className="font-semibold text-gray-900">Categorias Padrão</h2>
+              <p className="text-sm text-gray-500">Categorias pré-definidas do sistema</p>
+            </div>
 
-          <div className="flex-1 overflow-y-auto px-4 py-4">
-            <form id="category-form" onSubmit={handleCategorySubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="category-name">Nome da Categoria</Label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {currentDefaultCategories.map((category, index) => (
+                <div
+                  key={index}
+                  className="flex items-center gap-3 p-3 bg-white border border-gray-100 rounded-lg"
+                >
+                  <span className="text-2xl">{category.emoji}</span>
+                  <span className="font-medium text-gray-900">{category.name}</span>
+                  <span className="ml-auto text-xs px-2 py-0.5 bg-gray-100 text-gray-500 rounded-full">
+                    padrão
+                  </span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Modal Nova Categoria */}
+      <Dialog open={modalOpen} onOpenChange={setModalOpen}>
+        <DialogContent className="max-w-sm p-0">
+          <div className="p-5">
+            {/* Header */}
+            <div className="flex items-center gap-2 mb-1">
+              <Plus className="w-5 h-5 text-gray-700" />
+              <h2 className="text-lg font-semibold text-gray-900">
+                Nova Categoria de {activeTab === 'despesas' ? 'Despesa' : 'Receita'}
+              </h2>
+            </div>
+            <p className="text-sm text-gray-500 mb-6">
+              Crie uma categoria personalizada para organizar suas finanças
+            </p>
+
+            {/* Emoji Picker */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Emoji</label>
+              <button
+                type="button"
+                onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                className="w-full flex items-center gap-3 p-3 border border-gray-200 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors"
+              >
+                {newCategoryData.emoji ? (
+                  <span className="text-2xl">{newCategoryData.emoji}</span>
+                ) : (
+                  <span className="text-gray-400">🎯 Clique para escolher</span>
+                )}
+              </button>
+
+              {showEmojiPicker && (
+                <div className="mt-2">
+                  <EmojiPicker
+                    selectedEmoji={newCategoryData.emoji}
+                    onEmojiSelect={(emoji) => {
+                      setNewCategoryData({ ...newCategoryData, emoji });
+                      setShowEmojiPicker(false);
+                    }}
+                    onClose={() => setShowEmojiPicker(false)}
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Nome */}
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Nome da Categoria
+              </label>
               <Input
-                id="category-name"
-                name="category-name"
-                value={categoryFormData.name}
-                onChange={(e) =>
-                  setCategoryFormData({
-                    ...categoryFormData,
-                    name: e.target.value,
-                  })
-                }
-                placeholder="Ex: Salário, Moradia, Alimentação..."
-                required
+                value={newCategoryData.name}
+                onChange={(e) => setNewCategoryData({ ...newCategoryData, name: e.target.value })}
+                placeholder="Ex: Apostas, Academia, Investimento..."
               />
             </div>
 
-            {/* Seletor de Ícone */}
-            <div className="space-y-2">
-              <p className="text-sm font-medium text-gray-700">Ícone da Categoria</p>
-              <button
-                type="button"
-                onClick={() => setIconPickerModalOpen(true)}
-                className="w-full flex items-center gap-3 p-3 border border-gray-300 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors"
-              >
-                <div
-                  className="flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center"
-                  style={{ backgroundColor: categoryFormData.color + "20" }}
-                >
-                  {(() => {
-                    const IconComponent = getIconComponent(
-                      categoryFormData.icon
-                    );
-                    return (
-                      <IconComponent
-                        className="w-5 h-5"
-                        style={{ color: categoryFormData.color }}
-                      />
-                    );
-                  })()}
+            {/* Preview */}
+            {newCategoryData.name && (
+              <div className="mb-6 p-3 bg-gray-50 rounded-lg">
+                <p className="text-xs text-gray-500 mb-2">Preview:</p>
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">{newCategoryData.emoji || '📦'}</span>
+                  <span className="font-medium text-gray-900">{newCategoryData.name}</span>
                 </div>
-                <span className="text-sm text-gray-600">
-                  Clique para escolher o ícone
-                </span>
-              </button>
-            </div>
-
-            {/* Seletor de Cor */}
-            <ColorPicker
-              selectedColor={categoryFormData.color}
-              onColorSelect={(color) =>
-                setCategoryFormData({ ...categoryFormData, color })
-              }
-            />
-            </form>
-          </div>
-
-          <DialogFooter className="px-4 py-3 border-t bg-gray-50 flex-shrink-0">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setCategoryModalOpen(false)}
-              className="flex-1 sm:flex-none"
-            >
-              Cancelar
-            </Button>
-            <Button
-              type="submit"
-              form="category-form"
-              disabled={loading || icons.length === 0}
-              className="flex-1 sm:flex-none"
-            >
-              {editingCategory ? "Salvar" : "Criar"}
-            </Button>
-            {icons.length === 0 && (
-              <p className="text-xs text-red-500 mt-1">
-                Carregando ícones...
-              </p>
+              </div>
             )}
-          </DialogFooter>
+
+            {/* Buttons */}
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                onClick={() => setModalOpen(false)}
+                className="flex-1"
+              >
+                Cancelar
+              </Button>
+              <Button
+                onClick={handleCreateCategory}
+                className="flex-1 bg-brand-600 hover:bg-brand-700"
+              >
+                Criar Categoria
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
-
-      {/* Modal de Seleção de Ícone */}
-      <IconPickerModal
-        open={iconPickerModalOpen}
-        onOpenChange={setIconPickerModalOpen}
-        selectedIcon={categoryFormData.icon}
-        onIconSelect={(iconName) =>
-          setCategoryFormData({ ...categoryFormData, icon: iconName })
-        }
-        color={categoryFormData.color}
-      />
-
-      {/* Floating Action Menu */}
-      <FABMenu
-        primaryIcon={<Plus className="w-6 h-6" />}
-        primaryLabel="Ações de Categorias"
-        actions={[
-          {
-            icon: <TrendingUp className="w-5 h-5" />,
-            label: "Nova Categoria de Receita",
-            onClick: () => handleOpenCategoryModal(null, 1),
-          },
-          {
-            icon: <TrendingDown className="w-5 h-5" />,
-            label: "Nova Categoria de Despesa",
-            onClick: () => handleOpenCategoryModal(null, 2),
-          },
-          {
-            icon: <Wallet className="w-5 h-5" />,
-            label: "Nova Categoria de Patrimônio",
-            onClick: () => handleOpenCategoryModal(null, 3),
-          },
-        ]}
-      />
     </div>
   );
 }

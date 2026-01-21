@@ -21,6 +21,7 @@ export async function getCategories(filters = {}) {
       user_id,
       name,
       color,
+      emoji,
       icon_id,
       icon_name,
       transaction_type_id,
@@ -46,6 +47,7 @@ export async function getCategoryById(id) {
       user_id,
       name,
       color,
+      emoji,
       icon_id,
       icon_name,
       transaction_type_id,
@@ -70,35 +72,44 @@ export async function createCategory(category) {
   }
 
   // Validar campos obrigatórios
-  if (!category.name || !category.color || !category.iconId || !category.transactionTypeId) {
+  if (!category.name || !category.transactionTypeId) {
     return {
       data: null,
-      error: new Error('Campos obrigatórios faltando: name, color, iconId, transactionTypeId')
+      error: new Error('Campos obrigatórios faltando: name, transactionTypeId')
     };
   }
 
   // Garantir que a cor está no formato correto (#RRGGBB)
-  let color = category.color;
+  let color = category.color || '#6366f1';
   if (!color.startsWith('#')) {
     color = '#' + color;
   }
   // Garantir que tem exatamente 7 caracteres (#RRGGBB)
   if (color.length !== 7) {
-    return {
-      data: null,
-      error: new Error(`Cor inválida: ${color}. Deve estar no formato #RRGGBB`)
-    };
+    color = '#6366f1'; // Usar cor padrão se inválida
+  }
+
+  // Preparar dados para inserção
+  const insertData = {
+    user_id: user.id,
+    name: category.name.trim(),
+    color: color.toUpperCase(),
+    transaction_type_id: category.transactionTypeId,
+  };
+
+  // iconId é opcional - se fornecido, usa; caso contrário deixa null
+  if (category.iconId) {
+    insertData.icon_id = category.iconId;
+  }
+
+  // Suporte para emoji - armazenar no campo emoji se existir
+  if (category.emoji) {
+    insertData.emoji = category.emoji;
   }
 
   const { data, error } = await supabase
     .from('categories')
-    .insert({
-      user_id: user.id, // RLS requer user_id - categorias customizadas
-      name: category.name.trim(),
-      color: color.toUpperCase(), // Padronizar para maiúsculas
-      icon_id: category.iconId,
-      transaction_type_id: category.transactionTypeId,
-    })
+    .insert(insertData)
     .select()
     .maybeSingle();
 
