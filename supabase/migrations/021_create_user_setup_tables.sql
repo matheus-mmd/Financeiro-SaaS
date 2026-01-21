@@ -8,10 +8,29 @@
 -- Adicionar campos de configuração
 -- ============================================
 ALTER TABLE public.users
-ADD COLUMN IF NOT EXISTS work_type VARCHAR(20),
+ADD COLUMN IF NOT EXISTS work_type VARCHAR(50),
 ADD COLUMN IF NOT EXISTS account_type VARCHAR(20) DEFAULT 'individual',
 ADD COLUMN IF NOT EXISTS setup_completed BOOLEAN DEFAULT false,
 ADD COLUMN IF NOT EXISTS setup_completed_at TIMESTAMPTZ;
+
+-- Remover constraint restritiva de work_type se existir
+-- (para permitir valores combinados como 'clt,autonomo' e 'nenhum')
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'users_work_type_check'
+  ) THEN
+    ALTER TABLE public.users DROP CONSTRAINT users_work_type_check;
+  END IF;
+END $$;
+
+-- Aumentar tamanho do campo work_type para acomodar valores combinados
+DO $$
+BEGIN
+  ALTER TABLE public.users ALTER COLUMN work_type TYPE VARCHAR(50);
+EXCEPTION
+  WHEN others THEN NULL;
+END $$;
 
 -- Constraints para os novos campos
 -- work_type pode ser: 'clt', 'autonomo', 'clt,autonomo', 'nenhum' ou combinações
