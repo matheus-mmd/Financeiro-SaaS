@@ -29,45 +29,6 @@ import {
 import EmojiPicker from "../../src/components/EmojiPicker";
 import ConfirmDialog from "../../src/components/ConfirmDialog";
 
-// Categorias padrão de Despesas (apenas referência visual)
-const defaultExpenseCategories = [
-  { emoji: '🏠', name: 'Moradia' },
-  { emoji: '🍔', name: 'Alimentação' },
-  { emoji: '🚗', name: 'Transporte' },
-  { emoji: '💊', name: 'Saúde' },
-  { emoji: '📚', name: 'Educação' },
-  { emoji: '🎮', name: 'Lazer' },
-  { emoji: '👗', name: 'Vestuário' },
-  { emoji: '🛒', name: 'Compras' },
-  { emoji: '🔧', name: 'Serviços' },
-  { emoji: '📱', name: 'Assinaturas' },
-  { emoji: '📋', name: 'Impostos' },
-  { emoji: '🤝', name: 'Doações e Ofertas' },
-  { emoji: '🐕', name: 'Pet' },
-  { emoji: '✈️', name: 'Viagens' },
-  { emoji: '💄', name: 'Beleza e Cuidados' },
-  { emoji: '📺', name: 'Streaming/Apps' },
-  { emoji: '📦', name: 'Outros' },
-];
-
-// Categorias padrão de Receitas (apenas referência visual)
-const defaultIncomeCategories = [
-  { emoji: '💰', name: 'Salário Líquido' },
-  { emoji: '🍽️', name: 'Vale Refeição' },
-  { emoji: '🛒', name: 'Vale Alimentação' },
-  { emoji: '🏆', name: 'Bônus/PLR' },
-  { emoji: '🏖️', name: 'Férias' },
-  { emoji: '💵', name: '13º Salário' },
-  { emoji: '📦', name: 'Outros' },
-  { emoji: '🛠️', name: 'Serviços Prestados' },
-  { emoji: '💼', name: 'Projeto/Freela' },
-  { emoji: '🎯', name: 'Consultoria' },
-  { emoji: '📱', name: 'Venda de Produto' },
-  { emoji: '💎', name: 'Comissão' },
-  { emoji: '🏠', name: 'Aluguel/Locação' },
-  { emoji: '📈', name: 'Dividendos/Lucros' },
-];
-
 /**
  * Página de Categorias - Gerenciamento de categorias
  * Layout padronizado com o resto da aplicação
@@ -138,9 +99,15 @@ export default function CategoriasPage() {
     return <PageSkeleton />;
   }
 
-  // Filtrar categorias por tipo
-  const userExpenseCategories = categories.filter(cat => cat.transaction_type_id === 2);
-  const userIncomeCategories = categories.filter(cat => cat.transaction_type_id === 1);
+  // Filtrar categorias por tipo e se é padrão ou personalizada
+  const expenseCategories = categories.filter(cat => cat.transaction_type_id === 2);
+  const incomeCategories = categories.filter(cat => cat.transaction_type_id === 1);
+
+  // Separar categorias padrão (is_default=true) das personalizadas (is_default=false ou null)
+  const defaultExpenseCategories = expenseCategories.filter(cat => cat.is_default === true);
+  const defaultIncomeCategories = incomeCategories.filter(cat => cat.is_default === true);
+  const userExpenseCategories = expenseCategories.filter(cat => !cat.is_default);
+  const userIncomeCategories = incomeCategories.filter(cat => !cat.is_default);
 
   // Abrir modal para nova categoria
   const handleOpenModal = () => {
@@ -352,7 +319,7 @@ export default function CategoriasPage() {
         </CardContent>
       </Card>
 
-      {/* Categorias Padrão (Referência) */}
+      {/* Categorias Padrão */}
       <Card>
         <CardContent className="p-4">
           <div className="flex items-center gap-3 mb-6">
@@ -361,24 +328,36 @@ export default function CategoriasPage() {
             </div>
             <div>
               <h2 className="text-lg font-semibold text-gray-900">Categorias Padrão</h2>
-              <p className="text-sm text-gray-500">Sugestões de categorias para você criar</p>
+              <p className="text-sm text-gray-500">
+                Categorias de {activeTab === 'despesas' ? 'despesa' : 'receita'} do sistema ({currentDefaultCategories.length})
+              </p>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {currentDefaultCategories.map((category, index) => (
-              <div
-                key={index}
-                className="flex items-center gap-3 p-4 bg-gray-50 border border-gray-100 rounded-lg"
-              >
-                <span className="text-2xl">{category.emoji}</span>
-                <span className="flex-1 font-medium text-gray-700">{category.name}</span>
-                <span className="text-xs px-2 py-0.5 bg-gray-200 text-gray-500 rounded-full">
-                  padrão
-                </span>
+          {currentDefaultCategories.length === 0 ? (
+            <div className="text-center py-8">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-3">
+                <Layers className="w-8 h-8 text-gray-400" />
               </div>
-            ))}
-          </div>
+              <p className="text-gray-500 mb-1">Nenhuma categoria padrão</p>
+              <p className="text-sm text-gray-400">Execute a migration para criar as categorias padrão</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {currentDefaultCategories.map((category) => (
+                <div
+                  key={category.id}
+                  className="flex items-center gap-3 p-4 bg-gray-50 border border-gray-100 rounded-lg"
+                >
+                  <span className="text-2xl">{category.emoji || '📦'}</span>
+                  <span className="flex-1 font-medium text-gray-700">{category.name}</span>
+                  <span className="text-xs px-2 py-0.5 bg-gray-200 text-gray-500 rounded-full">
+                    padrão
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
 
