@@ -114,6 +114,20 @@ export default function CategoriasPage() {
     return err?.code === 'AUTH_REQUIRED' || err?.message?.includes('Usuário não autenticado');
   };
 
+  // Função para traduzir mensagens de erro técnicas para mensagens amigáveis
+  const getErrorMessage = (err) => {
+    const errorMessage = err?.message || String(err);
+
+    // Erro de nome duplicado
+    if (errorMessage.includes('categories_unique_name_per_user') ||
+        errorMessage.includes('duplicate key')) {
+      return 'Já existe uma categoria com esse nome. Escolha um nome diferente.';
+    }
+
+    // Erro genérico
+    return 'Erro ao salvar categoria. Tente novamente.';
+  };
+
   if (categoriesError && isAuthError(categoriesError)) {
     handleAuthFailure();
     return null;
@@ -191,7 +205,7 @@ export default function CategoriasPage() {
         await handleAuthFailure();
       } else {
         console.error("Erro ao salvar categoria:", err);
-        toast.error("Erro ao salvar categoria: " + (err.message || err));
+        toast.error(getErrorMessage(err));
       }
     }
   };
@@ -360,7 +374,7 @@ export default function CategoriasPage() {
                 <span className="text-2xl">{category.emoji}</span>
                 <span className="flex-1 font-medium text-gray-700">{category.name}</span>
                 <span className="text-xs px-2 py-0.5 bg-gray-200 text-gray-500 rounded-full">
-                  Padrão
+                  padrão
                 </span>
               </div>
             ))}

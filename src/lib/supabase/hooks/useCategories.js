@@ -1,6 +1,7 @@
 /**
  * Hook para gerenciar categorias
  * Implementa stale-while-revalidate para carregamento instantâneo
+ * Com atualizações otimistas para melhor UX
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
@@ -94,31 +95,61 @@ export function useCategories() {
     loadCategories();
   }, [loadCategories]);
 
+  // Criar categoria com atualização otimista
   const create = async (category) => {
     const { data, error: createError } = await createCategory(category);
-    if (!createError) {
-      categoriesCache.clear();
-      await loadCategories();
+
+    if (createError) {
+      return { data: null, error: createError };
     }
-    return { data, error: createError };
+
+    // Atualização otimista: adiciona ao estado local imediatamente
+    if (data) {
+      const normalizedData = normalize([data])[0];
+      setCategories(prev => [...prev, normalizedData]);
+      categoriesCache.clear();
+    }
+
+    return { data, error: null };
   };
 
+  // Atualizar categoria com atualização otimista
   const update = async (id, updates) => {
     const { data, error: updateError } = await updateCategory(id, updates);
-    if (!updateError) {
-      categoriesCache.clear();
-      await loadCategories();
+
+    if (updateError) {
+      return { data: null, error: updateError };
     }
-    return { data, error: updateError };
+
+    // Atualização otimista: atualiza no estado local imediatamente
+    if (data) {
+      setCategories(prev => prev.map(cat =>
+        cat.id === id ? { ...cat, ...updates, ...data } : cat
+      ));
+      categoriesCache.clear();
+    }
+
+    return { data, error: null };
   };
 
+  // Remover categoria com atualização otimista
   const remove = async (id) => {
+    // Guardar estado anterior para rollback se necessário
+    const previousCategories = [...categories];
+
+    // Atualização otimista: remove do estado local imediatamente
+    setCategories(prev => prev.filter(cat => cat.id !== id));
+
     const { data, error: deleteError } = await deleteCategory(id);
-    if (!deleteError) {
-      categoriesCache.clear();
-      await loadCategories();
+
+    if (deleteError) {
+      // Rollback em caso de erro
+      setCategories(previousCategories);
+      return { data: null, error: deleteError };
     }
-    return { data, error: deleteError };
+
+    categoriesCache.clear();
+    return { data, error: null };
   };
 
   return {
