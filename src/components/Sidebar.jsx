@@ -12,6 +12,7 @@ import {
   X,
   Landmark,
   Receipt,
+  Settings,
 } from "lucide-react";
 import {
   Tooltip,
@@ -60,6 +61,7 @@ export default function Sidebar({
     { path: "/contas", icon: Landmark, label: "Contas" },
     { path: "/categorias", icon: Layers, label: "Categorias" },
     { path: "/orcamento-categoria", icon: Receipt, label: "Orçamento" },
+    { path: "/configuracoes", icon: Settings, label: "Configurações" },
   ];
 
   const isActive = (path) => pathname === path;
