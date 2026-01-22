@@ -10,7 +10,7 @@ import { Button } from "../../src/components/ui/button";
 import { Input } from "../../src/components/ui/input";
 import { Label } from "../../src/components/ui/label";
 import { Switch } from "../../src/components/ui/switch";
-import { SegmentedControl } from "../../src/components/ui/segmented-control";
+import SegmentedControl from "../../src/components/ui/segmented-control";
 import {
   Dialog,
   DialogContent,
