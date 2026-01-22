@@ -11,7 +11,7 @@ COMMENT ON COLUMN public.users.phone IS 'Telefone/WhatsApp do usuário';
 
 -- 2. Adicionar campos de assinatura
 ALTER TABLE public.users
-ADD COLUMN IF NOT EXISTS trial_ends_at TIMESTAMPTZ DEFAULT (NOW() + INTERVAL '7 days');
+ADD COLUMN IF NOT EXISTS trial_ends_at TIMESTAMPTZ DEFAULT (NOW() + INTERVAL '3 days');
 
 ALTER TABLE public.users
 ADD COLUMN IF NOT EXISTS subscription_status VARCHAR(20) DEFAULT 'trial';
@@ -31,7 +31,7 @@ COMMENT ON COLUMN public.users.dark_mode_enabled IS 'Modo escuro habilitado';
 
 -- 4. Atualizar usuários existentes para ter trial_ends_at baseado em created_at
 UPDATE public.users
-SET trial_ends_at = created_at + INTERVAL '7 days'
+SET trial_ends_at = created_at + INTERVAL '3 days'
 WHERE trial_ends_at IS NULL;
 
 -- 5. Adicionar campo name à tabela account_members (se não existir)
