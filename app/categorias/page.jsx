@@ -352,7 +352,7 @@ export default function CategoriasPage() {
                   <span className="text-2xl">{category.emoji || '📦'}</span>
                   <span className="flex-1 font-medium text-gray-700">{category.name}</span>
                   <span className="text-xs px-2 py-0.5 bg-gray-200 text-gray-500 rounded-full">
-                    padrão
+                    Padrão
                   </span>
                 </div>
               ))}
