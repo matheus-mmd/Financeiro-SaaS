@@ -335,26 +335,9 @@ export default function ConfiguracoesPage() {
 
   return (
     <div className="space-y-4 animate-fade-in">
-      {/* Header com botão voltar */}
-      <div className="flex items-center gap-3 mb-2">
-        <button
-          onClick={() => router.back()}
-          className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-          aria-label="Voltar"
-        >
-          <ArrowLeft className="w-5 h-5 text-gray-600" />
-        </button>
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Configuracoes</h1>
-          <p className="text-sm text-gray-500">Gerencie seu perfil e assinatura</p>
-        </div>
-      </div>
-
       {/* Status da Assinatura */}
       <Card>
         <CardContent className="p-4">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Status da Assinatura</h2>
-
           <div className="flex items-center gap-4 p-4 bg-amber-50 rounded-lg border border-amber-100">
             <div className="p-3 bg-amber-100 rounded-full">
               <Clock className="w-6 h-6 text-amber-600" />
@@ -376,6 +359,21 @@ export default function ConfiguracoesPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Header com botão voltar */}
+      <div className="flex items-center gap-3 mb-2">
+        <button
+          onClick={() => router.back()}
+          className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          aria-label="Voltar"
+        >
+          <ArrowLeft className="w-5 h-5 text-gray-600" />
+        </button>
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Configuracoes</h1>
+          <p className="text-sm text-gray-500">Gerencie seu perfil e assinatura</p>
+        </div>
+      </div>
 
       {/* Informações Pessoais */}
       <Card>
