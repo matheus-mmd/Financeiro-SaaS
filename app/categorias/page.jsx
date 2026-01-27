@@ -420,7 +420,9 @@ export default function CategoriasPage() {
                 <div className="p-3 bg-gray-50 rounded-lg">
                   <p className="text-xs text-gray-500 mb-2">Preview:</p>
                   <div className="flex items-center gap-3">
-                    <span className="text-2xl">{categoryData.emoji || '📦'}</span>
+                    {categoryData.emoji && (
+                      <span className="text-2xl">{categoryData.emoji}</span>
+                    )}
                     <span className="font-medium text-gray-900">{categoryData.name}</span>
                   </div>
                 </div>

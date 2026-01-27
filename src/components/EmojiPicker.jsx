@@ -51,7 +51,9 @@ export default function EmojiPicker({ selectedEmoji, onEmojiSelect, onClose }) {
           <ChevronLeft className="w-5 h-5 text-gray-600" />
         </button>
 
-        <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
+        <div
+          className="flex items-center gap-2 overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+        >
           {categoryNames.slice(
             Math.max(0, currentCategoryIndex - 1),
             Math.min(categoryNames.length, currentCategoryIndex + 3)
