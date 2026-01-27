@@ -128,6 +128,41 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-4 animate-fade-in">
+      {/* 💎 STATUS DA ASSINATURA */}
+      {settings && (
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-4 p-4 bg-amber-50 rounded-lg border border-amber-100">
+              <div className="p-3 bg-amber-100 rounded-full">
+                <Clock className="w-6 h-6 text-amber-600" />
+              </div>
+              <div className="flex-1">
+                <p className="font-semibold text-amber-700">
+                  {formatSubscriptionStatus(
+                    settings?.subscription_status || "trial",
+                    settings?.trial_ends_at
+                  ).label}
+                </p>
+                <p className="text-sm text-amber-600">
+                  {formatSubscriptionStatus(
+                    settings?.subscription_status || "trial",
+                    settings?.trial_ends_at
+                  ).expired
+                    ? "Seu período de teste expirou"
+                    : `Menos de ${calculateTrialDaysRemaining(settings?.trial_ends_at)} dias restantes • Expira em ${formatDateTime(settings?.trial_ends_at)}`}
+                </p>
+              </div>
+              <Button
+                onClick={() => router.push("/escolher-plano")}
+                className="bg-brand-500 hover:bg-brand-600"
+              >
+                Fazer upgrade
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
         <PageHeader
           title="Dashboard"
@@ -243,43 +278,6 @@ export default function Dashboard() {
           />
         </div>
       </div>
-
-      {/* 💎 STATUS DA ASSINATURA */}
-      {settings && (
-        <Card>
-          <CardContent className="p-4">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Status da Assinatura</h2>
-
-            <div className="flex items-center gap-4 p-4 bg-amber-50 rounded-lg border border-amber-100">
-              <div className="p-3 bg-amber-100 rounded-full">
-                <Clock className="w-6 h-6 text-amber-600" />
-              </div>
-              <div className="flex-1">
-                <p className="font-semibold text-amber-700">
-                  {formatSubscriptionStatus(
-                    settings?.subscription_status || "trial",
-                    settings?.trial_ends_at
-                  ).label}
-                </p>
-                <p className="text-sm text-amber-600">
-                  {formatSubscriptionStatus(
-                    settings?.subscription_status || "trial",
-                    settings?.trial_ends_at
-                  ).expired
-                    ? "Seu período de teste expirou"
-                    : `Menos de ${calculateTrialDaysRemaining(settings?.trial_ends_at)} dias restantes • Expira em ${formatDateTime(settings?.trial_ends_at)}`}
-                </p>
-              </div>
-              <Button
-                onClick={() => router.push("/escolher-plano")}
-                className="bg-brand-500 hover:bg-brand-600"
-              >
-                Fazer upgrade
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
 
       {/* 📈 GRÁFICOS E ANÁLISES */}
       <div className="space-y-4">
