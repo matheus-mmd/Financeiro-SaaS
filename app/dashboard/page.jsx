@@ -6,7 +6,7 @@ import PageHeader from "../../src/components/PageHeader";
 import StatsCard from "../../src/components/StatsCard";
 import DashboardSkeleton from "../../src/components/DashboardSkeleton";
 import { formatCurrency } from "../../src/utils";
-import { Wallet, TrendingDown, ArrowUpRight, PiggyBank, Coins, Heart, Percent, CalendarDays } from "lucide-react";
+import { Wallet, TrendingDown, ArrowUpRight, PiggyBank, Coins, Heart, Percent, CalendarDays, Clock } from "lucide-react";
 import { useAuth } from "../../src/contexts/AuthContext";
 import { useDashboard } from "../../src/lib/supabase/hooks/useDashboard";
 import { Card, CardContent } from "../../src/components/ui/card";
@@ -17,11 +17,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../../src/components/ui/select";
+import { Button } from "../../src/components/ui/button";
+import {
+  getUserSettings,
+  formatSubscriptionStatus,
+  calculateTrialDaysRemaining,
+} from "../../src/lib/supabase/api/settings";
 
 // OTIMIZAÇÃO: Lazy load dos componentes pesados de gráficos
 const CategoryBreakdownCard = lazy(() => import("../../src/components/dashboard/CategoryBreakdownCard"));
 const IncomeVsExpensesChart = lazy(() => import("../../src/components/dashboard/IncomeVsExpensesChart"));
-const PricingCards = lazy(() => import("../../src/components/dashboard/PricingCards"));
 
 // Skeleton para os gráficos enquanto carregam
 const ChartSkeleton = () => (
@@ -36,6 +41,15 @@ const ChartSkeleton = () => (
 );
 
 /**
+ * Formata data e hora para exibição DD/MM/YYYY às HH:MM
+ */
+function formatDateTime(dateStr) {
+  if (!dateStr) return "-";
+  const date = new Date(dateStr);
+  return `${date.toLocaleDateString("pt-BR")} às ${date.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}`;
+}
+
+/**
  * Página Dashboard - Visão geral do controle financeiro
  * OTIMIZADA: Usa hook useDashboard para centralizar lógica e reduzir cálculos no client
  */
@@ -43,6 +57,7 @@ export default function Dashboard() {
   const router = useRouter();
   const { user, profile, loading: authLoading, signOut } = useAuth();
   const [period, setPeriod] = useState('monthly');
+  const [settings, setSettings] = useState(null);
 
   // Hook customizado que centraliza toda a lógica do dashboard
   const { loading, error, metrics, categoryData, chartData } = useDashboard();
@@ -72,6 +87,23 @@ export default function Dashboard() {
       handleAuthFailure();
     }
   }, [error, handleAuthFailure]);
+
+  // Carregar configurações do usuário para exibir status da assinatura
+  useEffect(() => {
+    async function loadSettings() {
+      if (!user) return;
+
+      try {
+        const { data, error } = await getUserSettings();
+        if (error) throw error;
+        setSettings(data);
+      } catch (err) {
+        console.error("Erro ao carregar configurações:", err);
+      }
+    }
+
+    loadSettings();
+  }, [user]);
 
   // Mostrar skeleton enquanto carregando
   if (!authLoading && !user) {
@@ -212,13 +244,42 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* 💎 PLANOS E PREÇOS */}
-      <div>
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Planos e Preços</h2>
-        <Suspense fallback={<ChartSkeleton />}>
-          <PricingCards />
-        </Suspense>
-      </div>
+      {/* 💎 STATUS DA ASSINATURA */}
+      {settings && (
+        <Card>
+          <CardContent className="p-4">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Status da Assinatura</h2>
+
+            <div className="flex items-center gap-4 p-4 bg-amber-50 rounded-lg border border-amber-100">
+              <div className="p-3 bg-amber-100 rounded-full">
+                <Clock className="w-6 h-6 text-amber-600" />
+              </div>
+              <div className="flex-1">
+                <p className="font-semibold text-amber-700">
+                  {formatSubscriptionStatus(
+                    settings?.subscription_status || "trial",
+                    settings?.trial_ends_at
+                  ).label}
+                </p>
+                <p className="text-sm text-amber-600">
+                  {formatSubscriptionStatus(
+                    settings?.subscription_status || "trial",
+                    settings?.trial_ends_at
+                  ).expired
+                    ? "Seu período de teste expirou"
+                    : `Menos de ${calculateTrialDaysRemaining(settings?.trial_ends_at)} dias restantes • Expira em ${formatDateTime(settings?.trial_ends_at)}`}
+                </p>
+              </div>
+              <Button
+                onClick={() => router.push("/escolher-plano")}
+                className="bg-brand-500 hover:bg-brand-600"
+              >
+                Fazer upgrade
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* 📈 GRÁFICOS E ANÁLISES */}
       <div className="space-y-4">
