@@ -387,7 +387,7 @@ export default function CategoriasPage() {
                   {categoryData.emoji ? (
                     <span className="text-2xl">{categoryData.emoji}</span>
                   ) : (
-                    <span className="text-gray-400">🎯 Clique para escolher</span>
+                    <span className="text-gray-400">Clique para escolher</span>
                   )}
                 </button>
 
