@@ -9,6 +9,7 @@ import { formatCurrency } from "../../src/utils";
 import { Wallet, TrendingDown, ArrowUpRight, PiggyBank, Coins, Heart, Percent, CalendarDays, Clock } from "lucide-react";
 import { useAuth } from "../../src/contexts/AuthContext";
 import { useDashboard } from "../../src/lib/supabase/hooks/useDashboard";
+import { useSettings } from "../../src/lib/supabase/hooks/useSettings";
 import { Card, CardContent } from "../../src/components/ui/card";
 import {
   Select,
@@ -18,11 +19,6 @@ import {
   SelectValue,
 } from "../../src/components/ui/select";
 import { Button } from "../../src/components/ui/button";
-import {
-  getUserSettings,
-  formatSubscriptionStatus,
-  calculateTrialDaysRemaining,
-} from "../../src/lib/supabase/api/settings";
 
 // OTIMIZAÇÃO: Lazy load dos componentes pesados de gráficos
 const CategoryBreakdownCard = lazy(() => import("../../src/components/dashboard/CategoryBreakdownCard"));
@@ -57,10 +53,17 @@ export default function Dashboard() {
   const router = useRouter();
   const { user, profile, loading: authLoading, signOut } = useAuth();
   const [period, setPeriod] = useState('monthly');
-  const [settings, setSettings] = useState(null);
 
   // Hook customizado que centraliza toda a lógica do dashboard
   const { loading, error, metrics, categoryData, chartData } = useDashboard();
+
+  // Hook de settings com cache (mesmo comportamento da tela de Configuracoes)
+  const {
+    settings,
+    loading: settingsLoading,
+    subscriptionInfo,
+    trialDaysRemaining,
+  } = useSettings();
 
   const handleAuthFailure = useCallback(async () => {
     await signOut();
@@ -88,23 +91,6 @@ export default function Dashboard() {
     }
   }, [error, handleAuthFailure]);
 
-  // Carregar configurações do usuário para exibir status da assinatura
-  useEffect(() => {
-    async function loadSettings() {
-      if (!user) return;
-
-      try {
-        const { data, error } = await getUserSettings();
-        if (error) throw error;
-        setSettings(data);
-      } catch (err) {
-        console.error("Erro ao carregar configurações:", err);
-      }
-    }
-
-    loadSettings();
-  }, [user]);
-
   // Mostrar skeleton enquanto carregando
   if (!authLoading && !user) {
     return null;
@@ -128,28 +114,31 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-4 animate-fade-in">
-      {/* 💎 STATUS DA ASSINATURA */}
-      {settings && (
-        <Card>
-          <CardContent className="p-4">
+      {/* 💎 STATUS DA ASSINATURA - Renderiza com skeleton se carregando */}
+      <Card>
+        <CardContent className="p-4">
+          {settingsLoading && !settings ? (
+            <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg border border-gray-100 animate-pulse">
+              <div className="p-3 bg-gray-200 rounded-full w-12 h-12" />
+              <div className="flex-1 space-y-2">
+                <div className="h-4 bg-gray-200 rounded w-32" />
+                <div className="h-3 bg-gray-200 rounded w-48" />
+              </div>
+              <div className="h-9 bg-gray-200 rounded w-28" />
+            </div>
+          ) : (
             <div className="flex items-center gap-4 p-4 bg-amber-50 rounded-lg border border-amber-100">
               <div className="p-3 bg-amber-100 rounded-full">
                 <Clock className="w-6 h-6 text-amber-600" />
               </div>
               <div className="flex-1">
                 <p className="font-semibold text-amber-700">
-                  {formatSubscriptionStatus(
-                    settings?.subscription_status || "trial",
-                    settings?.trial_ends_at
-                  ).label}
+                  {subscriptionInfo?.label || "Carregando..."}
                 </p>
                 <p className="text-sm text-amber-600">
-                  {formatSubscriptionStatus(
-                    settings?.subscription_status || "trial",
-                    settings?.trial_ends_at
-                  ).expired
-                    ? "Seu período de teste expirou"
-                    : `Menos de ${calculateTrialDaysRemaining(settings?.trial_ends_at)} dias restantes • Expira em ${formatDateTime(settings?.trial_ends_at)}`}
+                  {subscriptionInfo?.expired
+                    ? "Seu periodo de teste expirou"
+                    : `Menos de ${trialDaysRemaining} dias restantes • Expira em ${formatDateTime(settings?.trial_ends_at)}`}
                 </p>
               </div>
               <Button
@@ -159,9 +148,9 @@ export default function Dashboard() {
                 Fazer upgrade
               </Button>
             </div>
-          </CardContent>
-        </Card>
-      )}
+          )}
+        </CardContent>
+      </Card>
 
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
         <PageHeader
