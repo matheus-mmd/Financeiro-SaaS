@@ -1,8 +1,8 @@
 "use client";
 
-import React from "react";
+import React, { useCallback } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutGrid,
   ArrowLeftRight,
@@ -30,6 +30,7 @@ import {
 } from "./ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "./ui/avatar";
 import { LogOut, User, Mail } from "lucide-react";
+import { prefetchRoute } from "../lib/prefetch";
 
 /**
  * Gera iniciais a partir do nome
@@ -52,6 +53,15 @@ export default function Sidebar({
   onLogout,
 }) {
   const pathname = usePathname();
+  const router = useRouter();
+
+  // Handler para prefetch de dados ao passar o mouse no link
+  const handleMouseEnter = useCallback((path) => {
+    // Prefetch da rota Next.js
+    router.prefetch(path);
+    // Prefetch dos dados da rota
+    prefetchRoute(path);
+  }, [router]);
 
   const menuItems = [
     { path: "/dashboard", icon: LayoutGrid, label: "Dashboard" },
@@ -141,6 +151,7 @@ export default function Sidebar({
                         <Link
                           href={item.path}
                           onClick={onClose}
+                          onMouseEnter={() => handleMouseEnter(item.path)}
                           className={`
                             group relative flex items-center gap-3 h-11 rounded-xl
                             transition-colors duration-200

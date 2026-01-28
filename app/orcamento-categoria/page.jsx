@@ -73,7 +73,11 @@ export default function OrcamentoCategoriaPage() {
     loading: categoriesLoading,
   } = useCategories();
 
-  const loading = budgetsLoading || categoriesLoading || authLoading;
+  // Loading composto - usado para determinar se esta carregando dados novos
+  const loading = budgetsLoading || categoriesLoading;
+
+  // Tem dados em cache disponiveis para renderizar?
+  const hasData = budgets.length > 0 || categories.length > 0;
 
   // Estados para modal
   const [modalOpen, setModalOpen] = useState(false);
@@ -263,16 +267,31 @@ export default function OrcamentoCategoriaPage() {
     return { spent, limit, percentage, status };
   };
 
-  if (authLoading || loading) {
+  // Mostrar skeleton apenas se estiver carregando E nao ha dados em cache
+  // Isso permite renderizacao progressiva quando ha dados em cache
+  if ((authLoading || loading) && !hasData) {
     return <PageSkeleton />;
   }
+
+  // Indicador de carregamento sutil quando revalidando dados em background
+  const isRevalidating = loading && hasData;
 
   return (
     <div className="space-y-4 animate-fade-in">
       <PageHeader
-        title="Orçamento por Categoria"
+        title="Orcamento por Categoria"
         description="Defina limites mensais de gastos por categoria"
       />
+
+      {/* Indicador sutil de revalidacao */}
+      {isRevalidating && (
+        <div className="fixed top-4 right-4 z-50">
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-white/90 backdrop-blur-sm rounded-full shadow-sm border border-gray-100">
+            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+            <span className="text-xs text-gray-500">Atualizando...</span>
+          </div>
+        </div>
+      )}
 
       {/* Card principal */}
       <Card>

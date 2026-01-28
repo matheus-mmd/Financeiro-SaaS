@@ -1,6 +1,6 @@
 /**
  * Hook para gerenciar orçamentos por categoria
- * Com atualizações otimistas para melhor UX
+ * Com atualizações otimistas e cache para melhor UX
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
@@ -12,6 +12,12 @@ import {
   deleteBudget,
   copyBudgetsToMonth,
 } from '../api/budgets';
+import { budgetsCache } from '../../cache/cacheFactory';
+
+/**
+ * Gera chave de cache para um mês específico
+ */
+const getCacheKey = (year, month) => `${year}-${month}`;
 
 export function useBudgets(year, month) {
   const [budgets, setBudgets] = useState([]);
@@ -27,9 +33,25 @@ export function useBudgets(year, month) {
     if (isUnmounted.current) return;
     if (!year || !month) return;
 
-    if (!skipLoadingState) {
+    const cacheKey = getCacheKey(year, month);
+
+    // Tentar carregar do cache primeiro (stale-while-revalidate)
+    const cached = budgetsCache.get(cacheKey);
+    if (cached?.data) {
+      setBudgets(cached.data);
+      // Se o cache não está stale, não precisa recarregar
+      if (!cached.isStale && !skipLoadingState) {
+        setLoading(false);
+        return;
+      }
+      // Se está stale, continua para revalidar em background
+      if (!skipLoadingState) {
+        setLoading(false);
+      }
+    } else if (!skipLoadingState) {
       setLoading(true);
     }
+
     setError(null);
 
     try {
@@ -41,7 +63,11 @@ export function useBudgets(year, month) {
         setError(fetchError);
       }
 
-      setBudgets(data || []);
+      if (data) {
+        // Atualizar cache
+        budgetsCache.set(cacheKey, data);
+        setBudgets(data);
+      }
     } catch (err) {
       if (!isUnmounted.current) {
         setError(err);
@@ -65,7 +91,9 @@ export function useBudgets(year, month) {
       return { data: null, error: createError };
     }
 
-    // Recarregar para obter os dados completos com spending
+    // Invalidar cache e recarregar para obter os dados completos com spending
+    const cacheKey = getCacheKey(year, month);
+    budgetsCache.clear(cacheKey);
     await loadBudgets(true);
 
     return { data, error: null };
@@ -75,17 +103,21 @@ export function useBudgets(year, month) {
   const update = async (id, updates) => {
     // Guardar estado anterior para rollback
     const previousBudgets = [...budgets];
+    const cacheKey = getCacheKey(year, month);
 
-    // Atualização otimista
-    setBudgets(prev => prev.map(b =>
+    // Atualização otimista - atualiza estado e cache
+    const updatedBudgets = budgets.map(b =>
       b.id === id ? { ...b, limit_amount: updates.limitAmount || b.limit_amount } : b
-    ));
+    );
+    setBudgets(updatedBudgets);
+    budgetsCache.set(cacheKey, updatedBudgets);
 
     const { data, error: updateError } = await updateBudget(id, updates);
 
     if (updateError) {
       // Rollback em caso de erro
       setBudgets(previousBudgets);
+      budgetsCache.set(cacheKey, previousBudgets);
       return { data: null, error: updateError };
     }
 
@@ -96,15 +128,19 @@ export function useBudgets(year, month) {
   const remove = async (id) => {
     // Guardar estado anterior para rollback
     const previousBudgets = [...budgets];
+    const cacheKey = getCacheKey(year, month);
 
-    // Atualização otimista: remove do estado local imediatamente
-    setBudgets(prev => prev.filter(b => b.id !== id));
+    // Atualização otimista: remove do estado e cache imediatamente
+    const filteredBudgets = budgets.filter(b => b.id !== id);
+    setBudgets(filteredBudgets);
+    budgetsCache.set(cacheKey, filteredBudgets);
 
     const { data, error: deleteError } = await deleteBudget(id);
 
     if (deleteError) {
       // Rollback em caso de erro
       setBudgets(previousBudgets);
+      budgetsCache.set(cacheKey, previousBudgets);
       return { data: null, error: deleteError };
     }
 
@@ -124,7 +160,9 @@ export function useBudgets(year, month) {
       return { data: null, error: copyError };
     }
 
-    // Recarregar para obter os dados atualizados
+    // Invalidar cache e recarregar para obter os dados atualizados
+    const cacheKey = getCacheKey(year, month);
+    budgetsCache.clear(cacheKey);
     await loadBudgets(true);
 
     return { data, error: null };

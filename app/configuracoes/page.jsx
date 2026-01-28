@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../../src/contexts/AuthContext";
 import PageHeader from "../../src/components/PageHeader";
@@ -20,15 +20,8 @@ import {
 } from "../../src/components/ui/dialog";
 import { useToast } from "../../src/components/Toast";
 import ConfirmDialog from "../../src/components/ConfirmDialog";
+import { useSettings } from "../../src/lib/supabase/hooks/useSettings";
 import {
-  getUserSettings,
-  updateUserInfo,
-  updatePreferences,
-  addAccountMember,
-  updateAccountMember,
-  removeAccountMember,
-  resetAccount,
-  formatSubscriptionStatus,
   calculateTrialDaysRemaining,
 } from "../../src/lib/supabase/api/settings";
 import {
@@ -99,9 +92,23 @@ export default function ConfiguracoesPage() {
   const { user, loading: authLoading, signOut, refreshProfile } = useAuth();
   const toast = useToast();
 
-  // Estado dos dados
-  const [settings, setSettings] = useState(null);
-  const [loading, setLoading] = useState(true);
+  // Hook de settings com cache
+  const {
+    settings,
+    loading,
+    error: settingsError,
+    subscriptionInfo,
+    trialDaysRemaining,
+    refresh: refreshSettings,
+    updatePersonalInfo: updatePersonalInfoAPI,
+    updatePreferences: updatePreferencesAPI,
+    addMember: addMemberAPI,
+    updateMember: updateMemberAPI,
+    removeMember: removeMemberAPI,
+    resetAccount: resetAccountAPI,
+  } = useSettings();
+
+  // Estado de saving
   const [saving, setSaving] = useState(false);
 
   // Estado de edição de informações pessoais
@@ -128,55 +135,38 @@ export default function ConfiguracoesPage() {
   // Estado de modal de alterar email
   const [emailModalOpen, setEmailModalOpen] = useState(false);
 
-  // Carregar dados
-  const loadSettings = useCallback(async () => {
-    try {
-      setLoading(true);
-      const { data, error } = await getUserSettings();
-
-      if (error) {
-        if (error.code === "AUTH_REQUIRED") {
-          await signOut();
-          router.replace("/");
-          return;
-        }
-        throw error;
-      }
-
-      setSettings(data);
+  // Sincronizar personalInfo quando settings carrega
+  React.useEffect(() => {
+    if (settings) {
       setPersonalInfo({
-        name: data?.name || "",
-        phone: data?.phone || "",
+        name: settings.name || "",
+        phone: settings.phone || "",
       });
-    } catch (err) {
-      console.error("Erro ao carregar configurações:", err);
-      toast.error("Erro ao carregar configurações");
-    } finally {
-      setLoading(false);
     }
-  }, [router, signOut, toast]);
+  }, [settings]);
 
-  useEffect(() => {
-    if (!authLoading && user) {
-      loadSettings();
+  // Tratar erro de autenticacao
+  React.useEffect(() => {
+    if (settingsError?.code === "AUTH_REQUIRED") {
+      signOut();
+      router.replace("/");
     }
-  }, [authLoading, user, loadSettings]);
+  }, [settingsError, signOut, router]);
 
   // Handlers
   const handleSavePersonalInfo = async () => {
     try {
       setSaving(true);
-      const { error } = await updateUserInfo(personalInfo);
+      const { error } = await updatePersonalInfoAPI(personalInfo);
 
       if (error) throw error;
 
-      setSettings((prev) => ({ ...prev, ...personalInfo }));
       setEditingPersonalInfo(false);
       await refreshProfile();
-      toast.success("Informações atualizadas com sucesso!");
+      toast.success("Informacoes atualizadas com sucesso!");
     } catch (err) {
-      console.error("Erro ao salvar informações:", err);
-      toast.error("Erro ao salvar informações");
+      console.error("Erro ao salvar informacoes:", err);
+      toast.error("Erro ao salvar informacoes");
     } finally {
       setSaving(false);
     }
@@ -185,32 +175,30 @@ export default function ConfiguracoesPage() {
   const handleToggleNotifications = async () => {
     try {
       const newValue = !settings.push_notifications_enabled;
-      const { error } = await updatePreferences({
+      const { error } = await updatePreferencesAPI({
         push_notifications_enabled: newValue,
       });
 
       if (error) throw error;
 
-      setSettings((prev) => ({ ...prev, push_notifications_enabled: newValue }));
-      toast.success(newValue ? "Notificações ativadas" : "Notificações desativadas");
+      toast.success(newValue ? "Notificacoes ativadas" : "Notificacoes desativadas");
     } catch (err) {
-      console.error("Erro ao atualizar notificações:", err);
-      toast.error("Erro ao atualizar preferência");
+      console.error("Erro ao atualizar notificacoes:", err);
+      toast.error("Erro ao atualizar preferencia");
     }
   };
 
   const handleToggleDarkMode = async () => {
     try {
       const newValue = !settings.dark_mode_enabled;
-      const { error } = await updatePreferences({ dark_mode_enabled: newValue });
+      const { error } = await updatePreferencesAPI({ dark_mode_enabled: newValue });
 
       if (error) throw error;
 
-      setSettings((prev) => ({ ...prev, dark_mode_enabled: newValue }));
       toast.success(newValue ? "Modo escuro ativado" : "Modo escuro desativado");
     } catch (err) {
       console.error("Erro ao atualizar modo escuro:", err);
-      toast.error("Erro ao atualizar preferência");
+      toast.error("Erro ao atualizar preferencia");
     }
   };
 
@@ -240,24 +228,14 @@ export default function ConfiguracoesPage() {
       setSaving(true);
 
       if (editingMember) {
-        const { error } = await updateAccountMember(editingMember.id, memberData);
+        const { error } = await updateMemberAPI(editingMember.id, memberData);
         if (error) throw error;
 
-        setSettings((prev) => ({
-          ...prev,
-          members: prev.members.map((m) =>
-            m.id === editingMember.id ? { ...m, ...memberData, work_type: memberData.workType } : m
-          ),
-        }));
         toast.success("Integrante atualizado com sucesso!");
       } else {
-        const { data, error } = await addAccountMember(memberData);
+        const { error } = await addMemberAPI(memberData);
         if (error) throw error;
 
-        setSettings((prev) => ({
-          ...prev,
-          members: [...prev.members, data],
-        }));
         toast.success("Integrante adicionado com sucesso!");
       }
 
@@ -274,13 +252,9 @@ export default function ConfiguracoesPage() {
     if (!memberToDelete) return;
 
     try {
-      const { error } = await removeAccountMember(memberToDelete.id);
+      const { error } = await removeMemberAPI(memberToDelete.id);
       if (error) throw error;
 
-      setSettings((prev) => ({
-        ...prev,
-        members: prev.members.filter((m) => m.id !== memberToDelete.id),
-      }));
       toast.success("Integrante removido com sucesso!");
     } catch (err) {
       console.error("Erro ao remover integrante:", err);
@@ -293,7 +267,7 @@ export default function ConfiguracoesPage() {
   const handleResetAccount = async () => {
     try {
       setSaving(true);
-      const { success, error } = await resetAccount();
+      const { success, error } = await resetAccountAPI();
 
       if (error) throw error;
 
@@ -315,48 +289,56 @@ export default function ConfiguracoesPage() {
     toast.info("Tutorial reiniciado! Recarregue a página para ver o tour.");
   };
 
-  // Verificar autenticação
+  // Verificar autenticacao
   if (!authLoading && !user) {
     router.replace("/");
     return <PageSkeleton />;
   }
 
-  if (authLoading || loading) {
+  // Mostrar skeleton apenas se auth estiver carregando E nao houver dados em cache
+  if (authLoading && !settings) {
     return <PageSkeleton />;
   }
 
-  // Calcular status da assinatura
-  const subscriptionInfo = formatSubscriptionStatus(
-    settings?.subscription_status || "trial",
-    settings?.trial_ends_at
-  );
-  const trialDays = calculateTrialDaysRemaining(settings?.trial_ends_at);
+  // Calcular valores derivados
+  const trialDays = trialDaysRemaining;
   const hasUsedTrial = settings?.trial_ends_at && new Date(settings.trial_ends_at) < new Date();
 
   return (
     <div className="space-y-4 animate-fade-in">
-      {/* Status da Assinatura */}
+      {/* Status da Assinatura - Renderiza com skeleton se carregando */}
       <Card>
         <CardContent className="p-4">
-          <div className="flex items-center gap-4 p-4 bg-amber-50 rounded-lg border border-amber-100">
-            <div className="p-3 bg-amber-100 rounded-full">
-              <Clock className="w-6 h-6 text-amber-600" />
+          {loading && !settings ? (
+            <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg border border-gray-100 animate-pulse">
+              <div className="p-3 bg-gray-200 rounded-full w-12 h-12" />
+              <div className="flex-1 space-y-2">
+                <div className="h-4 bg-gray-200 rounded w-32" />
+                <div className="h-3 bg-gray-200 rounded w-48" />
+              </div>
+              <div className="h-9 bg-gray-200 rounded w-28" />
             </div>
-            <div className="flex-1">
-              <p className="font-semibold text-amber-700">{subscriptionInfo.label}</p>
-              <p className="text-sm text-amber-600">
-                {subscriptionInfo.expired
-                  ? "Seu período de teste expirou"
-                  : `Menos de ${trialDays} dias restantes • Expira em ${formatDateTime(settings?.trial_ends_at)}`}
-              </p>
+          ) : (
+            <div className="flex items-center gap-4 p-4 bg-amber-50 rounded-lg border border-amber-100">
+              <div className="p-3 bg-amber-100 rounded-full">
+                <Clock className="w-6 h-6 text-amber-600" />
+              </div>
+              <div className="flex-1">
+                <p className="font-semibold text-amber-700">{subscriptionInfo?.label || "Carregando..."}</p>
+                <p className="text-sm text-amber-600">
+                  {subscriptionInfo?.expired
+                    ? "Seu periodo de teste expirou"
+                    : `Menos de ${trialDays} dias restantes • Expira em ${formatDateTime(settings?.trial_ends_at)}`}
+                </p>
+              </div>
+              <Button
+                onClick={() => router.push("/escolher-plano")}
+                className="bg-brand-500 hover:bg-brand-600"
+              >
+                Fazer upgrade
+              </Button>
             </div>
-            <Button
-              onClick={() => router.push("/escolher-plano")}
-              className="bg-brand-500 hover:bg-brand-600"
-            >
-              Fazer upgrade
-            </Button>
-          </div>
+          )}
         </CardContent>
       </Card>
 
@@ -527,13 +509,7 @@ export default function ConfiguracoesPage() {
                       value={member.work_type || "clt"}
                       onChange={async (value) => {
                         try {
-                          await updateAccountMember(member.id, { workType: value });
-                          setSettings((prev) => ({
-                            ...prev,
-                            members: prev.members.map((m) =>
-                              m.id === member.id ? { ...m, work_type: value } : m
-                            ),
-                          }));
+                          await updateMemberAPI(member.id, { workType: value });
                         } catch (err) {
                           toast.error("Erro ao atualizar tipo de trabalho");
                         }
@@ -570,7 +546,7 @@ export default function ConfiguracoesPage() {
             </div>
 
             <Button
-              onClick={loadSettings}
+              onClick={() => refreshSettings(true)}
               disabled={saving}
               className="w-full bg-brand-500 hover:bg-brand-600"
             >
