@@ -4,17 +4,42 @@
  */
 
 import { supabase } from '../client';
+import { plansCache } from '../../cache/cacheFactory';
 
 /**
  * Busca todos os planos ativos com suas funcionalidades
+ * Otimizado: query unica com JOIN e cache de longa duracao
  * @returns {Promise<{data: Array, error: Error|null}>}
  */
 export async function getPlans() {
+  // Verificar cache primeiro (planos mudam raramente)
+  const cached = plansCache.get();
+  if (cached?.data && !cached.isStale) {
+    return { data: cached.data, error: null };
+  }
+
+  // Se tem cache stale, retorna ele e revalida em background
+  if (cached?.data && cached.isStale) {
+    revalidatePlans();
+    return { data: cached.data, error: null };
+  }
+
+  // Sem cache: buscar do servidor
+  return fetchAndCachePlans();
+}
+
+/**
+ * Busca planos do servidor e atualiza o cache
+ */
+async function fetchAndCachePlans() {
   try {
-    // Buscar planos ativos ordenados
+    // Query unica com relacionamento (JOIN) em vez de 2 queries sequenciais
     const { data: plans, error: plansError } = await supabase
       .from('plans')
-      .select('*')
+      .select(`
+        *,
+        features:plan_features(*)
+      `)
       .eq('is_active', true)
       .order('display_order', { ascending: true });
 
@@ -23,37 +48,32 @@ export async function getPlans() {
       return { data: [], error: plansError };
     }
 
-    if (!plans || plans.length === 0) {
-      return { data: [], error: null };
-    }
-
-    // Buscar funcionalidades de todos os planos
-    const planIds = plans.map(p => p.id);
-    const { data: features, error: featuresError } = await supabase
-      .from('plan_features')
-      .select('*')
-      .in('plan_id', planIds)
-      .order('display_order', { ascending: true });
-
-    if (featuresError) {
-      console.error('[Plans API] Erro ao buscar funcionalidades:', featuresError);
-      // Retorna planos sem funcionalidades em caso de erro
-      return {
-        data: plans.map(plan => ({ ...plan, features: [] })),
-        error: null
-      };
-    }
-
-    // Agrupar funcionalidades por plano
-    const plansWithFeatures = plans.map(plan => ({
+    // Ordenar features por display_order dentro de cada plano
+    const plansWithSortedFeatures = (plans || []).map(plan => ({
       ...plan,
-      features: (features || []).filter(f => f.plan_id === plan.id)
+      features: (plan.features || []).sort((a, b) => (a.display_order || 0) - (b.display_order || 0))
     }));
 
-    return { data: plansWithFeatures, error: null };
+    // Salvar no cache
+    if (plansWithSortedFeatures.length > 0) {
+      plansCache.set(plansWithSortedFeatures);
+    }
+
+    return { data: plansWithSortedFeatures, error: null };
   } catch (error) {
     console.error('[Plans API] Erro inesperado:', error);
     return { data: [], error };
+  }
+}
+
+/**
+ * Revalida o cache de planos em background
+ */
+async function revalidatePlans() {
+  try {
+    await fetchAndCachePlans();
+  } catch (err) {
+    console.debug('[Plans API] Falha ao revalidar cache:', err);
   }
 }
 

@@ -247,3 +247,4 @@ export const referenceDataCache = createCache('reference_data_cache_v3', { useKe
 export const banksCache = createCache('banks_cache', { ttl: REFERENCE_DATA_TTL });
 export const cardsCache = createCache('cards_cache', { ttl: REFERENCE_DATA_TTL });
 export const categoriesCache = createCache('categories_cache', { ttl: REFERENCE_DATA_TTL });
+export const plansCache = createCache('plans_cache', { ttl: REFERENCE_DATA_TTL });
