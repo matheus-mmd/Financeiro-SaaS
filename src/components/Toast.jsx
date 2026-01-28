@@ -84,14 +84,14 @@ function Toast({ toast, onRemove }) {
 
   return (
     <div
-      className={`flex items-center gap-3 px-4 py-3 rounded-lg border shadow-lg animate-slide-in-right ${bgColors[type]}`}
+      className={`flex items-center gap-3 px-4 py-3 rounded-lg border shadow-lg animate-slide-in-right min-w-[300px] ${bgColors[type]}`}
       role="alert"
     >
       {icons[type]}
-      <p className={`text-sm font-medium ${textColors[type]}`}>{message}</p>
+      <p className={`flex-1 text-sm font-medium ${textColors[type]}`}>{message}</p>
       <button
         onClick={() => onRemove(id)}
-        className="ml-2 p-1 hover:bg-black/5 rounded transition-colors"
+        className="flex-shrink-0 ml-2 p-1 hover:bg-black/5 rounded transition-colors"
       >
         <X className="w-4 h-4 text-gray-500" />
       </button>
