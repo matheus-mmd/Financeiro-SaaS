@@ -253,8 +253,37 @@ export default function EscolherPlanoPage() {
 
         {/* Planos */}
         {loadingPlans ? (
-          <div className="flex justify-center items-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-brand-600"></div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            {[1, 2].map((i) => (
+              <Card key={i} className="overflow-hidden border border-gray-200 shadow-md">
+                <CardContent className="p-6 animate-pulse">
+                  {/* Nome e descricao */}
+                  <div className="text-center mb-6">
+                    <div className="h-7 bg-gray-200 rounded w-24 mx-auto mb-2" />
+                    <div className="h-4 bg-gray-100 rounded w-48 mx-auto" />
+                  </div>
+                  {/* Features */}
+                  <div className="space-y-2.5 mb-6">
+                    {[1, 2, 3, 4, 5].map((j) => (
+                      <div key={j} className="flex items-center gap-2.5">
+                        <div className="w-4 h-4 bg-gray-200 rounded-full flex-shrink-0" />
+                        <div className="h-4 bg-gray-100 rounded flex-1" />
+                      </div>
+                    ))}
+                  </div>
+                  {/* Vagas */}
+                  <div className="text-center mb-4">
+                    <div className="h-3 bg-gray-100 rounded w-40 mx-auto mb-1" />
+                    <div className="h-3 bg-gray-100 rounded w-24 mx-auto" />
+                  </div>
+                  {/* Precos */}
+                  <div className="space-y-3">
+                    <div className="h-16 bg-gray-50 rounded-lg" />
+                    <div className="h-20 bg-gray-50 rounded-lg" />
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
