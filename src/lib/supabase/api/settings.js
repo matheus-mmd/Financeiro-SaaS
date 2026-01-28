@@ -8,6 +8,7 @@ import { getAuthenticatedUser } from '../utils/auth';
 
 /**
  * Busca dados completos do usuário para configurações
+ * Otimizado com queries paralelas para melhor performance
  */
 export async function getUserSettings() {
   const { user, error: authError } = await getAuthenticatedUser();
@@ -19,46 +20,49 @@ export async function getUserSettings() {
   }
 
   try {
-    // Buscar dados do usuário
-    const { data: userData, error: userError } = await supabase
-      .from('users')
-      .select(`
-        id,
-        email,
-        name,
-        phone,
-        work_type,
-        account_type,
-        created_at,
-        trial_ends_at,
-        subscription_status,
-        push_notifications_enabled,
-        dark_mode_enabled
-      `)
-      .eq('id', user.id)
-      .maybeSingle();
+    // Executar AMBAS as queries em paralelo para melhor performance
+    const [userResult, membersResult] = await Promise.all([
+      // Query 1: Dados do usuário
+      supabase
+        .from('users')
+        .select(`
+          id,
+          email,
+          name,
+          phone,
+          work_type,
+          account_type,
+          created_at,
+          trial_ends_at,
+          subscription_status,
+          push_notifications_enabled,
+          dark_mode_enabled
+        `)
+        .eq('id', user.id)
+        .maybeSingle(),
 
-    if (userError) {
-      console.error('[Settings API] Erro ao buscar usuário:', userError);
-      return { data: null, error: userError };
+      // Query 2: Integrantes da conta (executada em paralelo)
+      supabase
+        .from('account_members')
+        .select('*')
+        .eq('user_id', user.id)
+        .is('deleted_at', null)
+        .order('created_at', { ascending: true })
+    ]);
+
+    if (userResult.error) {
+      console.error('[Settings API] Erro ao buscar usuário:', userResult.error);
+      return { data: null, error: userResult.error };
     }
 
-    // Buscar integrantes da conta conjunta
-    const { data: members, error: membersError } = await supabase
-      .from('account_members')
-      .select('*')
-      .eq('user_id', user.id)
-      .is('deleted_at', null)
-      .order('created_at', { ascending: true });
-
-    if (membersError) {
-      console.error('[Settings API] Erro ao buscar integrantes:', membersError);
+    if (membersResult.error) {
+      console.error('[Settings API] Erro ao buscar integrantes:', membersResult.error);
     }
 
     return {
       data: {
-        ...userData,
-        members: members || [],
+        ...userResult.data,
+        members: membersResult.data || [],
       },
       error: null,
     };

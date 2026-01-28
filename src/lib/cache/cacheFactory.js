@@ -239,6 +239,8 @@ export const dashboardCache = createCache('dashboard_cache', { ttl: DEFAULT_TTL 
 export const transactionsCache = createCache('transactions_cache', { useKeys: true, ttl: DEFAULT_TTL });
 export const assetsCache = createCache('assets_cache', { ttl: DEFAULT_TTL });
 export const targetsCache = createCache('targets_cache', { useKeys: true, ttl: DEFAULT_TTL });
+export const budgetsCache = createCache('budgets_cache', { useKeys: true, ttl: DEFAULT_TTL });
+export const settingsCache = createCache('settings_cache', { ttl: DEFAULT_TTL, useSession: true });
 
 // Dados de referência (1 hora, localStorage)
 export const referenceDataCache = createCache('reference_data_cache_v3', { useKeys: true, ttl: REFERENCE_DATA_TTL });
