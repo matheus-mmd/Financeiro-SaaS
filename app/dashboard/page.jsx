@@ -6,7 +6,17 @@ import PageHeader from "../../src/components/PageHeader";
 import StatsCard from "../../src/components/StatsCard";
 import DashboardSkeleton from "../../src/components/DashboardSkeleton";
 import { formatCurrency } from "../../src/utils";
-import { Wallet, TrendingDown, ArrowUpRight, PiggyBank, Coins, Heart, Percent, CalendarDays, Clock } from "lucide-react";
+import {
+  Wallet,
+  TrendingDown,
+  ArrowUpRight,
+  PiggyBank,
+  Coins,
+  Heart,
+  Percent,
+  CalendarDays,
+  Clock,
+} from "lucide-react";
 import { useAuth } from "../../src/contexts/AuthContext";
 import { useDashboard } from "../../src/lib/supabase/hooks/useDashboard";
 import { useSettings } from "../../src/lib/supabase/hooks/useSettings";
@@ -21,8 +31,12 @@ import {
 import { Button } from "../../src/components/ui/button";
 
 // OTIMIZAÇÃO: Lazy load dos componentes pesados de gráficos
-const CategoryBreakdownCard = lazy(() => import("../../src/components/dashboard/CategoryBreakdownCard"));
-const IncomeVsExpensesChart = lazy(() => import("../../src/components/dashboard/IncomeVsExpensesChart"));
+const CategoryBreakdownCard = lazy(
+  () => import("../../src/components/dashboard/CategoryBreakdownCard"),
+);
+const IncomeVsExpensesChart = lazy(
+  () => import("../../src/components/dashboard/IncomeVsExpensesChart"),
+);
 
 // Skeleton para os gráficos enquanto carregam
 const ChartSkeleton = () => (
@@ -52,7 +66,7 @@ function formatDateTime(dateStr) {
 export default function Dashboard() {
   const router = useRouter();
   const { user, profile, loading: authLoading, signOut } = useAuth();
-  const [period, setPeriod] = useState('monthly');
+  const [period, setPeriod] = useState("monthly");
 
   // Hook customizado que centraliza toda a lógica do dashboard
   const { loading, error, metrics, categoryData, chartData } = useDashboard();
@@ -67,26 +81,26 @@ export default function Dashboard() {
 
   const handleAuthFailure = useCallback(async () => {
     await signOut();
-    router.replace('/');
+    router.replace("/");
   }, [router, signOut]);
 
   // Redirecionar se não autenticado
   useEffect(() => {
     if (!authLoading && !user) {
-      router.replace('/');
+      router.replace("/");
     }
   }, [authLoading, user, router]);
 
   // Redirecionar para setup se não completou a configuração inicial
   useEffect(() => {
     if (!authLoading && user && profile && profile.setup_completed === false) {
-      router.replace('/configurar-perfil');
+      router.replace("/configurar-perfil");
     }
   }, [authLoading, user, profile, router]);
 
   // Tratar erro de autenticação
   useEffect(() => {
-    if (error?.message === 'AUTH_REQUIRED') {
+    if (error?.message === "AUTH_REQUIRED") {
       handleAuthFailure();
     }
   }, [error, handleAuthFailure]);
@@ -172,26 +186,40 @@ export default function Dashboard() {
 
       {/* 📊 VISÃO GERAL - Cards Principais */}
       <div>
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Visão Geral</h2>
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+          Visão Geral
+        </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 min-w-0">
           <StatsCard
             icon={Heart}
             label="Saúde Financeira"
             value={`${healthScoreData.score}/100`}
             subtitle={
-              healthScoreData.score >= 80 ? "Excelente" :
-              healthScoreData.score >= 60 ? "Bom" :
-              healthScoreData.score >= 40 ? "Regular" : "Precisa atenção"
+              healthScoreData.score >= 80
+                ? "Excelente"
+                : healthScoreData.score >= 60
+                  ? "Bom"
+                  : healthScoreData.score >= 40
+                    ? "Regular"
+                    : "Precisa atenção"
             }
             iconColor={
-              healthScoreData.score >= 80 ? "green" :
-              healthScoreData.score >= 60 ? "blue" :
-              healthScoreData.score >= 40 ? "yellow" : "red"
+              healthScoreData.score >= 80
+                ? "green"
+                : healthScoreData.score >= 60
+                  ? "blue"
+                  : healthScoreData.score >= 40
+                    ? "yellow"
+                    : "red"
             }
             valueColor={
-              healthScoreData.score >= 80 ? "text-success-600" :
-              healthScoreData.score >= 60 ? "text-brand-600" :
-              healthScoreData.score >= 40 ? "text-warning-600" : "text-danger-600"
+              healthScoreData.score >= 80
+                ? "text-success-600"
+                : healthScoreData.score >= 60
+                  ? "text-brand-600"
+                  : healthScoreData.score >= 40
+                    ? "text-warning-600"
+                    : "text-danger-600"
             }
           />
           <StatsCard
@@ -203,8 +231,16 @@ export default function Dashboard() {
                 ? `Meta de ${savingsRateData.goal}% atingida`
                 : `Faltam ${formatCurrency(savingsRateData.amountToGoal)} para meta`
             }
-            iconColor={savingsRateData.savingsRate >= savingsRateData.goal ? "green" : "yellow"}
-            valueColor={savingsRateData.savingsRate >= savingsRateData.goal ? "text-success-600" : "text-warning-600"}
+            iconColor={
+              savingsRateData.savingsRate >= savingsRateData.goal
+                ? "green"
+                : "yellow"
+            }
+            valueColor={
+              savingsRateData.savingsRate >= savingsRateData.goal
+                ? "text-success-600"
+                : "text-warning-600"
+            }
           />
           <StatsCard
             icon={CalendarDays}
@@ -212,7 +248,11 @@ export default function Dashboard() {
             value={formatCurrency(dailyBudgetData.dailyBudget)}
             subtitle={`${dailyBudgetData.daysRemaining} dias restantes no mês`}
             iconColor={dailyBudgetData.dailyBudget > 0 ? "purple" : "red"}
-            valueColor={dailyBudgetData.dailyBudget > 0 ? "text-accent-600" : "text-danger-600"}
+            valueColor={
+              dailyBudgetData.dailyBudget > 0
+                ? "text-accent-600"
+                : "text-danger-600"
+            }
           />
           <StatsCard
             icon={PiggyBank}
@@ -227,7 +267,9 @@ export default function Dashboard() {
 
       {/* 💰 ANÁLISE MENSAL - Receitas, Despesas e Patrimônio */}
       <div>
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Análise Mensal</h2>
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+          Análise Mensal
+        </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 min-w-0">
           <StatsCard
             icon={ArrowUpRight}
@@ -235,7 +277,7 @@ export default function Dashboard() {
             value={formatCurrency(incomeComparison.current)}
             subtitle={
               incomeComparison.change !== 0
-                ? `vs mês anterior: ${incomeComparison.change > 0 ? '+' : ''}${incomeComparison.change.toFixed(1)}% ${incomeComparison.change > 0 ? '↗️' : '↘️'}`
+                ? `vs mês anterior: ${incomeComparison.change > 0 ? "+" : ""}${incomeComparison.change.toFixed(1)}% ${incomeComparison.change > 0 ? "↗️" : "↘️"}`
                 : `${currentMonthIncomeCount} receita(s)`
             }
             iconColor="green"
@@ -250,8 +292,8 @@ export default function Dashboard() {
                 ? currentMonthData.debits > currentMonthData.plannedExpenses
                   ? `⚠️ Acima do planejado (+${formatCurrency(currentMonthData.debits - currentMonthData.plannedExpenses)})`
                   : currentMonthData.debits < currentMonthData.plannedExpenses
-                  ? `✓ Abaixo do planejado (-${formatCurrency(currentMonthData.plannedExpenses - currentMonthData.debits)})`
-                  : `✓ Igual ao planejado (${formatCurrency(currentMonthData.plannedExpenses)})`
+                    ? `✓ Abaixo do planejado (-${formatCurrency(currentMonthData.plannedExpenses - currentMonthData.debits)})`
+                    : `✓ Igual ao planejado (${formatCurrency(currentMonthData.plannedExpenses)})`
                 : `Planejado: ${formatCurrency(currentMonthData.plannedExpenses)}`
             }
             iconColor="red"
@@ -261,7 +303,11 @@ export default function Dashboard() {
             icon={Coins}
             label="Patrimônio Mensal"
             value={formatCurrency(currentMonthData.investments)}
-            subtitle={incomeComparison.current > 0 ? `${((currentMonthData.investments / incomeComparison.current) * 100).toFixed(1)}% da receita` : "Sem receitas"}
+            subtitle={
+              incomeComparison.current > 0
+                ? `${((currentMonthData.investments / incomeComparison.current) * 100).toFixed(1)}% da receita`
+                : "Sem receitas"
+            }
             iconColor="purple"
             valueColor="text-purple-600"
           />

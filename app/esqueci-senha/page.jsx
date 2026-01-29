@@ -1,12 +1,12 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { useAuth } from '../../src/contexts/AuthContext';
-import { Button } from '../../src/components/ui/button';
-import { Input } from '../../src/components/ui/input';
-import { Card, CardContent } from '../../src/components/ui/card';
-import { Compass, Mail, ArrowLeft, CheckCircle } from 'lucide-react';
-import Link from 'next/link';
+import React, { useState } from "react";
+import { useAuth } from "../../src/contexts/AuthContext";
+import { Button } from "../../src/components/ui/button";
+import { Input } from "../../src/components/ui/input";
+import { Card, CardContent } from "../../src/components/ui/card";
+import { Compass, Mail, ArrowLeft, CheckCircle } from "lucide-react";
+import Link from "next/link";
 
 /**
  * Página de Recuperação de Senha
@@ -15,23 +15,23 @@ import Link from 'next/link';
 export default function EsqueciSenhaPage() {
   const { sendPasswordResetCode } = useAuth();
 
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
+    setError("");
 
     if (!email) {
-      setError('Por favor, informe seu e-mail');
+      setError("Por favor, informe seu e-mail");
       return;
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      setError('Por favor, informe um e-mail válido');
+      setError("Por favor, informe um e-mail válido");
       return;
     }
 
@@ -41,10 +41,10 @@ export default function EsqueciSenhaPage() {
       const { error } = await sendPasswordResetCode(email);
 
       if (error) {
-        if (error.message?.includes('rate limit')) {
-          setError('Muitas tentativas. Aguarde alguns minutos.');
+        if (error.message?.includes("rate limit")) {
+          setError("Muitas tentativas. Aguarde alguns minutos.");
         } else {
-          setError('Ocorreu um erro. Tente novamente.');
+          setError("Ocorreu um erro. Tente novamente.");
         }
         setLoading(false);
         return;
@@ -52,8 +52,8 @@ export default function EsqueciSenhaPage() {
 
       setSuccess(true);
     } catch (err) {
-      console.error('[EsqueciSenhaPage] Erro:', err);
-      setError('Ocorreu um erro inesperado. Tente novamente.');
+      console.error("[EsqueciSenhaPage] Erro:", err);
+      setError("Ocorreu um erro inesperado. Tente novamente.");
     } finally {
       setLoading(false);
     }
@@ -86,7 +86,8 @@ export default function EsqueciSenhaPage() {
                 Enviamos um link de recuperação para <strong>{email}</strong>.
               </p>
               <p className="text-sm text-gray-500 dark:text-gray-400">
-                Clique no link do email para criar uma nova senha. Se não encontrar, verifique a pasta de spam.
+                Clique no link do email para criar uma nova senha. Se não
+                encontrar, verifique a pasta de spam.
               </p>
             </div>
 
@@ -134,7 +135,7 @@ export default function EsqueciSenhaPage() {
                   value={email}
                   onChange={(e) => {
                     setEmail(e.target.value);
-                    setError('');
+                    setError("");
                   }}
                   disabled={loading}
                   className="pl-10 h-11"
@@ -163,7 +164,7 @@ export default function EsqueciSenhaPage() {
                   Enviando...
                 </div>
               ) : (
-                'Enviar Código'
+                "Enviar Código"
               )}
             </Button>
           </form>

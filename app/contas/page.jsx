@@ -64,7 +64,9 @@ export default function ContasPage() {
     data: referenceData,
     loading: referenceLoading,
     error: referenceError,
-  } = useReferenceData({ resources: ["accountTypes", "cardTypes", "cardBrands"] });
+  } = useReferenceData({
+    resources: ["accountTypes", "cardTypes", "cardBrands"],
+  });
 
   const { accountTypes, cardTypes, cardBrands } = referenceData;
   const loading = banksLoading || cardsLoading || referenceLoading;
@@ -105,11 +107,14 @@ export default function ContasPage() {
   // Funções auxiliares para erros de autenticação
   const handleAuthFailure = async () => {
     await signOut();
-    router.replace('/');
+    router.replace("/");
   };
 
   const isAuthError = (err) => {
-    return err?.code === 'AUTH_REQUIRED' || err?.message?.includes('Usuário não autenticado');
+    return (
+      err?.code === "AUTH_REQUIRED" ||
+      err?.message?.includes("Usuário não autenticado")
+    );
   };
 
   // Verificar erro de autenticação
@@ -151,7 +156,9 @@ export default function ContasPage() {
 
     try {
       // Find account_type_id by internal_name
-      const accountType = accountTypes.find(t => t.internal_name === bankFormData.account_type);
+      const accountType = accountTypes.find(
+        (t) => t.internal_name === bankFormData.account_type,
+      );
 
       const bankData = {
         name: bankFormData.name,
@@ -236,8 +243,12 @@ export default function ContasPage() {
 
     try {
       // Find IDs by internal_name
-      const cardType = cardTypes.find(t => t.internal_name === cardFormData.card_type);
-      const cardBrand = cardBrands.find(b => b.name === cardFormData.card_brand);
+      const cardType = cardTypes.find(
+        (t) => t.internal_name === cardFormData.card_type,
+      );
+      const cardBrand = cardBrands.find(
+        (b) => b.name === cardFormData.card_brand,
+      );
 
       const cardData = {
         name: cardFormData.name,
@@ -332,7 +343,9 @@ export default function ContasPage() {
               <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 dark:bg-slate-700 rounded-full mb-3">
                 <Landmark className="w-8 h-8 text-gray-400" />
               </div>
-              <p className="text-gray-500 dark:text-gray-400 mb-3">Nenhuma conta bancária cadastrada</p>
+              <p className="text-gray-500 dark:text-gray-400 mb-3">
+                Nenhuma conta bancária cadastrada
+              </p>
               <Button
                 variant="outline"
                 size="sm"
@@ -413,7 +426,9 @@ export default function ContasPage() {
               <CreditCard className="w-5 h-5 text-purple-600" />
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Cartões</h2>
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                Cartões
+              </h2>
               <p className="text-sm text-gray-500 dark:text-gray-400">
                 Gerencie seus cartões de crédito e débito ({cards.length})
               </p>
@@ -425,7 +440,9 @@ export default function ContasPage() {
               <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 dark:bg-slate-700 rounded-full mb-3">
                 <CreditCard className="w-8 h-8 text-gray-400" />
               </div>
-              <p className="text-gray-500 dark:text-gray-400 mb-3">Nenhum cartão cadastrado</p>
+              <p className="text-gray-500 dark:text-gray-400 mb-3">
+                Nenhum cartão cadastrado
+              </p>
               <Button
                 variant="outline"
                 size="sm"
@@ -438,7 +455,9 @@ export default function ContasPage() {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {cards.map((card) => {
-                const IconComponent = getIconComponent(card.icon || "CreditCard");
+                const IconComponent = getIconComponent(
+                  card.icon || "CreditCard",
+                );
                 const bank = banks.find((b) => b.id === card.bank_id);
 
                 return (
@@ -543,132 +562,139 @@ export default function ContasPage() {
           </DialogHeader>
 
           <div className="flex-1 overflow-y-auto px-4 py-4">
-            <form id="bank-form" onSubmit={handleBankSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="bank-name">Nome do Banco</Label>
-              <Input
-                id="bank-name"
-                name="bank_name"
-                value={bankFormData.name}
-                onChange={(e) =>
-                  setBankFormData({ ...bankFormData, name: e.target.value })
-                }
-                placeholder="Ex: Nubank, Inter, Caixa..."
-                autoComplete="organization"
-                required
-              />
-            </div>
-
-            {/* Seletor de Ícone */}
-            <div className="space-y-2">
-              <Label>Ícone do Banco</Label>
-              <button
-                type="button"
-                onClick={() => {
-                  setIconPickerFor("bank");
-                  setIconPickerModalOpen(true);
-                }}
-                className="w-full flex items-center gap-3 p-3 border border-gray-300 dark:border-slate-600 rounded-lg bg-gray-50 dark:bg-slate-800 hover:bg-gray-100 dark:hover:bg-slate-700 dark:bg-slate-700 transition-colors"
-              >
-                <div
-                  className="flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center"
-                  style={{ backgroundColor: bankFormData.color + "20" }}
-                >
-                  {(() => {
-                    const IconComponent = getIconComponent(bankFormData.icon);
-                    return (
-                      <IconComponent
-                        className="w-5 h-5"
-                        style={{ color: bankFormData.color }}
-                      />
-                    );
-                  })()}
-                </div>
-                <span className="text-sm text-gray-600 dark:text-gray-400">
-                  Clique para escolher o ícone
-                </span>
-              </button>
-            </div>
-
-            {/* Seletor de Cor */}
-            <ColorPicker
-              selectedColor={bankFormData.color}
-              onColorSelect={(color) =>
-                setBankFormData({ ...bankFormData, color })
-              }
-            />
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <form
+              id="bank-form"
+              onSubmit={handleBankSubmit}
+              className="space-y-4"
+            >
               <div className="space-y-2">
-                <Label htmlFor="bank-agency">Agência</Label>
+                <Label htmlFor="bank-name">Nome do Banco</Label>
                 <Input
-                  id="bank-agency"
-                  name="bank_agency"
-                  value={bankFormData.agency}
+                  id="bank-name"
+                  name="bank_name"
+                  value={bankFormData.name}
                   onChange={(e) =>
-                    setBankFormData({ ...bankFormData, agency: e.target.value })
+                    setBankFormData({ ...bankFormData, name: e.target.value })
                   }
-                  placeholder="0001"
-                  autoComplete="off"
+                  placeholder="Ex: Nubank, Inter, Caixa..."
+                  autoComplete="organization"
+                  required
                 />
               </div>
 
+              {/* Seletor de Ícone */}
               <div className="space-y-2">
-                <Label htmlFor="bank-account">Conta</Label>
+                <Label>Ícone do Banco</Label>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIconPickerFor("bank");
+                    setIconPickerModalOpen(true);
+                  }}
+                  className="w-full flex items-center gap-3 p-3 border border-gray-300 dark:border-slate-600 rounded-lg bg-gray-50 dark:bg-slate-800 hover:bg-gray-100 dark:hover:bg-slate-700 dark:bg-slate-700 transition-colors"
+                >
+                  <div
+                    className="flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center"
+                    style={{ backgroundColor: bankFormData.color + "20" }}
+                  >
+                    {(() => {
+                      const IconComponent = getIconComponent(bankFormData.icon);
+                      return (
+                        <IconComponent
+                          className="w-5 h-5"
+                          style={{ color: bankFormData.color }}
+                        />
+                      );
+                    })()}
+                  </div>
+                  <span className="text-sm text-gray-600 dark:text-gray-400">
+                    Clique para escolher o ícone
+                  </span>
+                </button>
+              </div>
+
+              {/* Seletor de Cor */}
+              <ColorPicker
+                selectedColor={bankFormData.color}
+                onColorSelect={(color) =>
+                  setBankFormData({ ...bankFormData, color })
+                }
+              />
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="bank-agency">Agência</Label>
+                  <Input
+                    id="bank-agency"
+                    name="bank_agency"
+                    value={bankFormData.agency}
+                    onChange={(e) =>
+                      setBankFormData({
+                        ...bankFormData,
+                        agency: e.target.value,
+                      })
+                    }
+                    placeholder="0001"
+                    autoComplete="off"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="bank-account">Conta</Label>
+                  <Input
+                    id="bank-account"
+                    name="bank_account"
+                    value={bankFormData.account}
+                    onChange={(e) =>
+                      setBankFormData({
+                        ...bankFormData,
+                        account: e.target.value,
+                      })
+                    }
+                    placeholder="12345-6"
+                    autoComplete="off"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="bank-type">Tipo de Conta</Label>
+                <Select
+                  value={bankFormData.account_type}
+                  onValueChange={(value) =>
+                    setBankFormData({ ...bankFormData, account_type: value })
+                  }
+                >
+                  <SelectTrigger id="bank-type">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="corrente">Conta Corrente</SelectItem>
+                    <SelectItem value="poupanca">Poupança</SelectItem>
+                    <SelectItem value="pagamento">Pagamento</SelectItem>
+                    <SelectItem value="investimento">Investimento</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="bank-balance">Saldo Inicial</Label>
                 <Input
-                  id="bank-account"
-                  name="bank_account"
-                  value={bankFormData.account}
+                  id="bank-balance"
+                  name="bank_initial_balance"
+                  type="number"
+                  step="0.01"
+                  value={bankFormData.initial_balance}
                   onChange={(e) =>
                     setBankFormData({
                       ...bankFormData,
-                      account: e.target.value,
+                      initial_balance: parseFloat(e.target.value) || 0,
                     })
                   }
-                  placeholder="12345-6"
+                  placeholder="0.00"
                   autoComplete="off"
                 />
               </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="bank-type">Tipo de Conta</Label>
-              <Select
-                value={bankFormData.account_type}
-                onValueChange={(value) =>
-                  setBankFormData({ ...bankFormData, account_type: value })
-                }
-              >
-                <SelectTrigger id="bank-type">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="corrente">Conta Corrente</SelectItem>
-                  <SelectItem value="poupanca">Poupança</SelectItem>
-                  <SelectItem value="pagamento">Pagamento</SelectItem>
-                  <SelectItem value="investimento">Investimento</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="bank-balance">Saldo Inicial</Label>
-              <Input
-                id="bank-balance"
-                name="bank_initial_balance"
-                type="number"
-                step="0.01"
-                value={bankFormData.initial_balance}
-                onChange={(e) =>
-                  setBankFormData({
-                    ...bankFormData,
-                    initial_balance: parseFloat(e.target.value) || 0,
-                  })
-                }
-                placeholder="0.00"
-                autoComplete="off"
-              />
-            </div>
             </form>
           </div>
 
@@ -702,197 +728,201 @@ export default function ContasPage() {
           </DialogHeader>
 
           <div className="flex-1 overflow-y-auto px-4 py-4">
-            <form id="card-form" onSubmit={handleCardSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="card-name">Nome do Cartão</Label>
-              <Input
-                id="card-name"
-                name="card_name"
-                value={cardFormData.name}
-                onChange={(e) =>
-                  setCardFormData({ ...cardFormData, name: e.target.value })
-                }
-                placeholder="Ex: Nubank Crédito, Inter Débito..."
-                autoComplete="organization"
-                required
-              />
-            </div>
-
-            {/* Seletor de Ícone */}
-            <div className="space-y-2">
-              <Label>Ícone do Cartão</Label>
-              <button
-                type="button"
-                onClick={() => {
-                  setIconPickerFor("card");
-                  setIconPickerModalOpen(true);
-                }}
-                className="w-full flex items-center gap-3 p-3 border border-gray-300 dark:border-slate-600 rounded-lg bg-gray-50 dark:bg-slate-800 hover:bg-gray-100 dark:hover:bg-slate-700 dark:bg-slate-700 transition-colors"
-              >
-                <div
-                  className="flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center"
-                  style={{ backgroundColor: cardFormData.color + "20" }}
-                >
-                  {(() => {
-                    const IconComponent = getIconComponent(cardFormData.icon);
-                    return (
-                      <IconComponent
-                        className="w-5 h-5"
-                        style={{ color: cardFormData.color }}
-                      />
-                    );
-                  })()}
-                </div>
-                <span className="text-sm text-gray-600 dark:text-gray-400">
-                  Clique para escolher o ícone
-                </span>
-              </button>
-            </div>
-
-            {/* Seletor de Cor */}
-            <ColorPicker
-              selectedColor={cardFormData.color}
-              onColorSelect={(color) =>
-                setCardFormData({ ...cardFormData, color })
-              }
-            />
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <form
+              id="card-form"
+              onSubmit={handleCardSubmit}
+              className="space-y-4"
+            >
               <div className="space-y-2">
-                <Label htmlFor="card-type">Tipo</Label>
-                <Select
-                  value={cardFormData.card_type}
-                  onValueChange={(value) =>
-                    setCardFormData({ ...cardFormData, card_type: value })
-                  }
-                >
-                  <SelectTrigger id="card-type">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="credito">Crédito</SelectItem>
-                    <SelectItem value="debito">Débito</SelectItem>
-                    <SelectItem value="pre-pago">Pré-pago</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="card-brand">Bandeira</Label>
-                <Select
-                  value={cardFormData.card_brand}
-                  onValueChange={(value) =>
-                    setCardFormData({ ...cardFormData, card_brand: value })
-                  }
-                >
-                  <SelectTrigger id="card-brand">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Visa">Visa</SelectItem>
-                    <SelectItem value="Mastercard">Mastercard</SelectItem>
-                    <SelectItem value="Elo">Elo</SelectItem>
-                    <SelectItem value="American Express">
-                      American Express
-                    </SelectItem>
-                    <SelectItem value="Hipercard">Hipercard</SelectItem>
-                    <SelectItem value="Outros">Outros</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="card-bank">Banco Associado (Opcional)</Label>
-              <Select
-                value={
-                  cardFormData.bank_id ? String(cardFormData.bank_id) : "none"
-                }
-                onValueChange={(value) =>
-                  setCardFormData({
-                    ...cardFormData,
-                    bank_id: value === "none" ? null : parseInt(value),
-                  })
-                }
-              >
-                <SelectTrigger id="card-bank">
-                  <SelectValue placeholder="Selecione um banco" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Nenhum</SelectItem>
-                  {banks.map((bank) => (
-                    <SelectItem key={bank.id} value={String(bank.id)}>
-                      {bank.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {cardFormData.card_type === "credito" && (
-              <>
-                <div className="space-y-2">
-                <Label htmlFor="card-limit">Limite</Label>
+                <Label htmlFor="card-name">Nome do Cartão</Label>
                 <Input
-                  id="card-limit"
-                  name="card_limit"
-                  type="number"
-                  step="0.01"
-                  value={cardFormData.limit || ""}
-                    onChange={(e) =>
-                      setCardFormData({
-                        ...cardFormData,
-                        limit: parseFloat(e.target.value) || 0,
-                      })
+                  id="card-name"
+                  name="card_name"
+                  value={cardFormData.name}
+                  onChange={(e) =>
+                    setCardFormData({ ...cardFormData, name: e.target.value })
                   }
-                  placeholder="0.00"
-                  autoComplete="off"
+                  placeholder="Ex: Nubank Crédito, Inter Débito..."
+                  autoComplete="organization"
+                  required
                 />
               </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Seletor de Ícone */}
+              <div className="space-y-2">
+                <Label>Ícone do Cartão</Label>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIconPickerFor("card");
+                    setIconPickerModalOpen(true);
+                  }}
+                  className="w-full flex items-center gap-3 p-3 border border-gray-300 dark:border-slate-600 rounded-lg bg-gray-50 dark:bg-slate-800 hover:bg-gray-100 dark:hover:bg-slate-700 dark:bg-slate-700 transition-colors"
+                >
+                  <div
+                    className="flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center"
+                    style={{ backgroundColor: cardFormData.color + "20" }}
+                  >
+                    {(() => {
+                      const IconComponent = getIconComponent(cardFormData.icon);
+                      return (
+                        <IconComponent
+                          className="w-5 h-5"
+                          style={{ color: cardFormData.color }}
+                        />
+                      );
+                    })()}
+                  </div>
+                  <span className="text-sm text-gray-600 dark:text-gray-400">
+                    Clique para escolher o ícone
+                  </span>
+                </button>
+              </div>
+
+              {/* Seletor de Cor */}
+              <ColorPicker
+                selectedColor={cardFormData.color}
+                onColorSelect={(color) =>
+                  setCardFormData({ ...cardFormData, color })
+                }
+              />
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="card-type">Tipo</Label>
+                  <Select
+                    value={cardFormData.card_type}
+                    onValueChange={(value) =>
+                      setCardFormData({ ...cardFormData, card_type: value })
+                    }
+                  >
+                    <SelectTrigger id="card-type">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="credito">Crédito</SelectItem>
+                      <SelectItem value="debito">Débito</SelectItem>
+                      <SelectItem value="pre-pago">Pré-pago</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="card-brand">Bandeira</Label>
+                  <Select
+                    value={cardFormData.card_brand}
+                    onValueChange={(value) =>
+                      setCardFormData({ ...cardFormData, card_brand: value })
+                    }
+                  >
+                    <SelectTrigger id="card-brand">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Visa">Visa</SelectItem>
+                      <SelectItem value="Mastercard">Mastercard</SelectItem>
+                      <SelectItem value="Elo">Elo</SelectItem>
+                      <SelectItem value="American Express">
+                        American Express
+                      </SelectItem>
+                      <SelectItem value="Hipercard">Hipercard</SelectItem>
+                      <SelectItem value="Outros">Outros</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="card-bank">Banco Associado (Opcional)</Label>
+                <Select
+                  value={
+                    cardFormData.bank_id ? String(cardFormData.bank_id) : "none"
+                  }
+                  onValueChange={(value) =>
+                    setCardFormData({
+                      ...cardFormData,
+                      bank_id: value === "none" ? null : parseInt(value),
+                    })
+                  }
+                >
+                  <SelectTrigger id="card-bank">
+                    <SelectValue placeholder="Selecione um banco" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Nenhum</SelectItem>
+                    {banks.map((bank) => (
+                      <SelectItem key={bank.id} value={String(bank.id)}>
+                        {bank.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {cardFormData.card_type === "credito" && (
+                <>
                   <div className="space-y-2">
-                    <Label htmlFor="card-closing">Dia de Fechamento</Label>
+                    <Label htmlFor="card-limit">Limite</Label>
                     <Input
-                      id="card-closing"
-                      name="card_closing_day"
+                      id="card-limit"
+                      name="card_limit"
                       type="number"
-                      min="1"
-                      max="31"
-                      value={cardFormData.closing_day || ""}
+                      step="0.01"
+                      value={cardFormData.limit || ""}
                       onChange={(e) =>
                         setCardFormData({
                           ...cardFormData,
-                          closing_day: parseInt(e.target.value) || 1,
+                          limit: parseFloat(e.target.value) || 0,
                         })
                       }
-                      placeholder="10"
+                      placeholder="0.00"
                       autoComplete="off"
                     />
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="card-due">Dia de Vencimento</Label>
-                    <Input
-                      id="card-due"
-                      name="card_due_day"
-                      type="number"
-                      min="1"
-                      max="31"
-                      value={cardFormData.due_day || ""}
-                      onChange={(e) =>
-                        setCardFormData({
-                          ...cardFormData,
-                          due_day: parseInt(e.target.value) || 10,
-                        })
-                      }
-                      placeholder="17"
-                      autoComplete="off"
-                    />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="card-closing">Dia de Fechamento</Label>
+                      <Input
+                        id="card-closing"
+                        name="card_closing_day"
+                        type="number"
+                        min="1"
+                        max="31"
+                        value={cardFormData.closing_day || ""}
+                        onChange={(e) =>
+                          setCardFormData({
+                            ...cardFormData,
+                            closing_day: parseInt(e.target.value) || 1,
+                          })
+                        }
+                        placeholder="10"
+                        autoComplete="off"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="card-due">Dia de Vencimento</Label>
+                      <Input
+                        id="card-due"
+                        name="card_due_day"
+                        type="number"
+                        min="1"
+                        max="31"
+                        value={cardFormData.due_day || ""}
+                        onChange={(e) =>
+                          setCardFormData({
+                            ...cardFormData,
+                            due_day: parseInt(e.target.value) || 10,
+                          })
+                        }
+                        placeholder="17"
+                        autoComplete="off"
+                      />
+                    </div>
                   </div>
-                </div>
-              </>
-            )}
+                </>
+              )}
             </form>
           </div>
 
