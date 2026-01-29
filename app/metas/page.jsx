@@ -7,7 +7,6 @@ import PageHeader from "../../src/components/PageHeader";
 import StatsCard from "../../src/components/StatsCard";
 import DateRangePicker from "../../src/components/DateRangePicker";
 import FilterButton from "../../src/components/FilterButton";
-import FABMenu from "../../src/components/FABMenu";
 import { Card, CardContent } from "../../src/components/ui/card";
 import { Badge } from "../../src/components/ui/badge";
 import { Button } from "../../src/components/ui/button";
@@ -57,7 +56,7 @@ import { getCategories } from "../../src/lib/supabase/api/categories";
 import { exportToCSV } from "../../src/utils/exportData";
 import { getIconComponent } from "../../src/components/IconPicker";
 import { GOAL_STATUS } from "../../src/constants";
-import { Target, Plus, Trash2, CheckCircle, Download, TrendingUp, Copy } from "lucide-react";
+import { Target, Plus, Trash2, CheckCircle, TrendingUp, Copy } from "lucide-react";
 
 const CACHE_KEY = "targets_page_cache_v1";
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutos
@@ -656,26 +655,45 @@ export default function Metas() {
       {/* Tabela de metas */}
       <Card>
         <CardContent className="p-4">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-              Todas as Metas ({sortedTargets.length})
-            </h2>
-            {columnSelectorElement}
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
+                <Target className="w-5 h-5 text-blue-600" />
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Metas</h2>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              {columnSelectorElement}
+              <Button
+                onClick={handleAddTarget}
+                size="sm"
+                className="bg-brand-500 hover:bg-brand-600"
+              >
+                <Plus className="w-4 h-4 mr-1" />
+                Novo
+              </Button>
+            </div>
           </div>
 
           {sortedTargets.length === 0 ? (
             <div className="text-center py-12">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 dark:bg-slate-700 rounded-full mb-3">
-                <Target className="w-8 h-8 text-gray-400" />
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 dark:bg-blue-900 rounded-full mb-4">
+                <Target className="w-8 h-8 text-blue-500" />
               </div>
-              <p className="text-gray-500 dark:text-gray-400 mb-3">Nenhuma meta encontrada</p>
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                Comece a definir suas metas
+              </h3>
+              <p className="text-gray-500 dark:text-gray-400 mb-6 max-w-sm mx-auto">
+                Defina metas financeiras e acompanhe seu progresso ao longo do tempo.
+              </p>
               <Button
-                variant="outline"
-                size="sm"
                 onClick={handleAddTarget}
+                className="bg-brand-500 hover:bg-brand-600"
               >
                 <Plus className="w-4 h-4 mr-2" />
-                Criar Nova Meta
+                Criar Primeira Meta
               </Button>
             </div>
           ) : (
@@ -881,23 +899,6 @@ export default function Metas() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Floating Action Menu */}
-      <FABMenu
-        primaryIcon={<Plus className="w-6 h-6" />}
-        primaryLabel="Ações de Metas"
-        actions={[
-          {
-            icon: <Download className="w-5 h-5" />,
-            label: "Exportar",
-            onClick: handleExport,
-          },
-          {
-            icon: <Plus className="w-5 h-5" />,
-            label: "Nova Meta",
-            onClick: handleAddTarget,
-          },
-        ]}
-      />
     </div>
   );
 }

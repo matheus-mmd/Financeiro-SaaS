@@ -57,7 +57,6 @@ import { useDebounce } from "../../src/hooks/useDebounce";
 import { exportToCSV } from "../../src/utils/exportData";
 import { getIconComponent } from "../../src/components/IconPicker";
 import FilterButton from "../../src/components/FilterButton";
-import FABMenu from "../../src/components/FABMenu";
 import {
   TRANSACTION_TYPES,
   PAYMENT_STATUS,
@@ -1044,26 +1043,45 @@ export default function Transacoes() {
       {/* Tabela de transações */}
       <Card>
         <CardContent className="p-4">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-              Todas as Transações ({sortedTransactions.length})
-            </h2>
-            {columnSelectorElement}
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-brand-100 dark:bg-brand-900 rounded-lg">
+                <ArrowUpRight className="w-5 h-5 text-brand-600" />
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Transações</h2>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              {columnSelectorElement}
+              <Button
+                onClick={handleAddTransaction}
+                size="sm"
+                className="bg-brand-500 hover:bg-brand-600"
+              >
+                <Plus className="w-4 h-4 mr-1" />
+                Novo
+              </Button>
+            </div>
           </div>
 
           {sortedTransactions.length === 0 ? (
             <div className="text-center py-12">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 dark:bg-slate-700 rounded-full mb-3">
-                <ArrowUpRight className="w-8 h-8 text-gray-400" />
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-brand-100 dark:bg-brand-900 rounded-full mb-4">
+                <ArrowUpRight className="w-8 h-8 text-brand-500" />
               </div>
-              <p className="text-gray-500 dark:text-gray-400 mb-3">Nenhuma transação encontrada</p>
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                Comece a registrar suas transações
+              </h3>
+              <p className="text-gray-500 dark:text-gray-400 mb-6 max-w-sm mx-auto">
+                Registre suas receitas e despesas para acompanhar sua vida financeira.
+              </p>
               <Button
-                variant="outline"
-                size="sm"
                 onClick={handleAddTransaction}
+                className="bg-brand-500 hover:bg-brand-600"
               >
                 <Plus className="w-4 h-4 mr-2" />
-                Adicionar Transação
+                Criar Primeira Transação
               </Button>
             </div>
           ) : (
@@ -1620,27 +1638,6 @@ export default function Transacoes() {
         </DialogContent>
       </Dialog>
 
-      <FABMenu
-        primaryIcon={<Plus className="w-6 h-6" />}
-        primaryLabel="Ações de Transações"
-        actions={[
-          {
-            icon: <Upload className="w-5 h-5" />,
-            label: "Importar CSV",
-            onClick: () => setImportModalOpen(true),
-          },
-          {
-            icon: <Download className="w-5 h-5" />,
-            label: "Exportar",
-            onClick: handleExport,
-          },
-          {
-            icon: <Plus className="w-5 h-5" />,
-            label: "Nova Transação",
-            onClick: handleAddTransaction,
-          },
-        ]}
-      />
     </div>
   );
 }
