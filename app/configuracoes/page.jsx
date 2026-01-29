@@ -21,6 +21,7 @@ import {
 import { useToast } from "../../src/components/Toast";
 import ConfirmDialog from "../../src/components/ConfirmDialog";
 import { useSettings } from "../../src/lib/supabase/hooks/useSettings";
+import { useTheme } from "../../src/contexts/ThemeContext";
 import {
   calculateTrialDaysRemaining,
 } from "../../src/lib/supabase/api/settings";
@@ -108,6 +109,9 @@ export default function ConfiguracoesPage() {
     resetAccount: resetAccountAPI,
   } = useSettings();
 
+  // Theme
+  const { isDark, setDarkMode } = useTheme();
+
   // Estado de saving
   const [saving, setSaving] = useState(false);
 
@@ -190,10 +194,14 @@ export default function ConfiguracoesPage() {
 
   const handleToggleDarkMode = async () => {
     try {
-      const newValue = !settings.dark_mode_enabled;
+      const newValue = !isDark;
+      setDarkMode(newValue);
       const { error } = await updatePreferencesAPI({ dark_mode_enabled: newValue });
 
-      if (error) throw error;
+      if (error) {
+        setDarkMode(!newValue);
+        throw error;
+      }
 
       toast.success(newValue ? "Modo escuro ativado" : "Modo escuro desativado");
     } catch (err) {
@@ -310,13 +318,13 @@ export default function ConfiguracoesPage() {
       <Card>
         <CardContent className="p-4">
           {loading && !settings ? (
-            <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg border border-gray-100 animate-pulse">
-              <div className="p-3 bg-gray-200 rounded-full w-12 h-12" />
+            <div className="flex items-center gap-4 p-4 bg-gray-50 dark:bg-slate-800 rounded-lg border border-gray-100 dark:border-slate-700 animate-pulse">
+              <div className="p-3 bg-gray-200 dark:bg-slate-600 rounded-full w-12 h-12" />
               <div className="flex-1 space-y-2">
-                <div className="h-4 bg-gray-200 rounded w-32" />
-                <div className="h-3 bg-gray-200 rounded w-48" />
+                <div className="h-4 bg-gray-200 dark:bg-slate-600 rounded w-32" />
+                <div className="h-3 bg-gray-200 dark:bg-slate-600 rounded w-48" />
               </div>
-              <div className="h-9 bg-gray-200 rounded w-28" />
+              <div className="h-9 bg-gray-200 dark:bg-slate-600 rounded w-28" />
             </div>
           ) : (
             <div className="flex items-center gap-4 p-4 bg-amber-50 rounded-lg border border-amber-100">
@@ -346,48 +354,48 @@ export default function ConfiguracoesPage() {
       <div className="flex items-center gap-3 mb-2">
         <button
           onClick={() => router.back()}
-          className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          className="p-2 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
           aria-label="Voltar"
         >
-          <ArrowLeft className="w-5 h-5 text-gray-600" />
+          <ArrowLeft className="w-5 h-5 text-gray-600 dark:text-gray-400" />
         </button>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Configuracoes</h1>
-          <p className="text-sm text-gray-500">Gerencie seu perfil e assinatura</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Configuracoes</h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Gerencie seu perfil e assinatura</p>
         </div>
       </div>
 
       {/* Informações Pessoais */}
       <Card>
         <CardContent className="p-4">
-          <h2 className="text-lg font-semibold text-gray-900 mb-1">Informacoes Pessoais</h2>
-          <p className="text-sm text-gray-500 mb-4">Atualize seus dados de perfil</p>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">Informacoes Pessoais</h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Atualize seus dados de perfil</p>
 
           <div className="space-y-4">
             {/* Nome */}
             <div>
-              <Label className="text-sm text-gray-600">Nome completo</Label>
-              <div className="flex items-center gap-3 mt-1 p-3 bg-gray-50 rounded-lg">
+              <Label className="text-sm text-gray-600 dark:text-gray-400">Nome completo</Label>
+              <div className="flex items-center gap-3 mt-1 p-3 bg-gray-50 dark:bg-slate-800 rounded-lg">
                 <User className="w-5 h-5 text-gray-400" />
                 {editingPersonalInfo ? (
                   <Input
                     value={personalInfo.name}
                     onChange={(e) => setPersonalInfo({ ...personalInfo, name: e.target.value })}
-                    className="flex-1 bg-white"
+                    className="flex-1 bg-white dark:bg-slate-800"
                     placeholder="Seu nome"
                   />
                 ) : (
-                  <span className="flex-1 text-gray-900">{settings?.name || "-"}</span>
+                  <span className="flex-1 text-gray-900 dark:text-white">{settings?.name || "-"}</span>
                 )}
               </div>
             </div>
 
             {/* Email */}
             <div>
-              <Label className="text-sm text-gray-600">Email</Label>
-              <div className="flex items-center gap-3 mt-1 p-3 bg-gray-50 rounded-lg">
+              <Label className="text-sm text-gray-600 dark:text-gray-400">Email</Label>
+              <div className="flex items-center gap-3 mt-1 p-3 bg-gray-50 dark:bg-slate-800 rounded-lg">
                 <Mail className="w-5 h-5 text-gray-400" />
-                <span className="flex-1 text-gray-900">{settings?.email || "-"}</span>
+                <span className="flex-1 text-gray-900 dark:text-white">{settings?.email || "-"}</span>
                 <button
                   onClick={() => setEmailModalOpen(true)}
                   className="flex items-center gap-1 text-sm text-brand-600 hover:text-brand-700"
@@ -400,18 +408,18 @@ export default function ConfiguracoesPage() {
 
             {/* Celular */}
             <div>
-              <Label className="text-sm text-gray-600">Celular</Label>
-              <div className="flex items-center gap-3 mt-1 p-3 bg-gray-50 rounded-lg">
+              <Label className="text-sm text-gray-600 dark:text-gray-400">Celular</Label>
+              <div className="flex items-center gap-3 mt-1 p-3 bg-gray-50 dark:bg-slate-800 rounded-lg">
                 <Phone className="w-5 h-5 text-gray-400" />
                 {editingPersonalInfo ? (
                   <Input
                     value={personalInfo.phone}
                     onChange={(e) => setPersonalInfo({ ...personalInfo, phone: e.target.value })}
-                    className="flex-1 bg-white"
+                    className="flex-1 bg-white dark:bg-slate-800"
                     placeholder="(11) 99999-9999"
                   />
                 ) : (
-                  <span className="flex-1 text-gray-900">
+                  <span className="flex-1 text-gray-900 dark:text-white">
                     {formatPhone(settings?.phone) || "-"}
                   </span>
                 )}
@@ -457,10 +465,10 @@ export default function ConfiguracoesPage() {
       <Card>
         <CardContent className="p-4">
           <div className="flex items-center gap-3 mb-1">
-            <Users className="w-5 h-5 text-gray-600" />
-            <h2 className="text-lg font-semibold text-gray-900">Integrantes da Conta Conjunta</h2>
+            <Users className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Integrantes da Conta Conjunta</h2>
           </div>
-          <p className="text-sm text-gray-500 mb-4 ml-8">
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-4 ml-8">
             Gerencie os integrantes e configure emails para lembretes
           </p>
 
@@ -468,15 +476,15 @@ export default function ConfiguracoesPage() {
           <div className="space-y-4">
             {settings?.members?.length > 0 ? (
               settings.members.map((member) => (
-                <div key={member.id} className="p-4 bg-gray-50 rounded-lg border border-gray-100">
+                <div key={member.id} className="p-4 bg-gray-50 dark:bg-slate-800 rounded-lg border border-gray-100 dark:border-slate-700">
                   <div className="flex items-start justify-between mb-3">
-                    <span className="font-medium text-gray-900">{member.name || member.email}</span>
+                    <span className="font-medium text-gray-900 dark:text-white">{member.name || member.email}</span>
                     <button
                       onClick={() => {
                         setMemberToDelete(member);
                         setConfirmDeleteMemberOpen(true);
                       }}
-                      className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                      className="p-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-950 rounded-lg transition-colors"
                       title="Remover integrante"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -484,11 +492,11 @@ export default function ConfiguracoesPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                       <Mail className="w-4 h-4 text-gray-400" />
                       <span>{member.email || "email@exemplo.com"}</span>
                     </div>
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                       <Phone className="w-4 h-4 text-gray-400" />
                       <span>{formatPhone(member.phone) || "(11) 99999-9999"}</span>
                     </div>
@@ -500,7 +508,7 @@ export default function ConfiguracoesPage() {
 
                   {/* Tipo de trabalho */}
                   <div>
-                    <Label className="text-xs text-gray-500 mb-2 block">Tipo de trabalho</Label>
+                    <Label className="text-xs text-gray-500 dark:text-gray-400 mb-2 block">Tipo de trabalho</Label>
                     <SegmentedControl
                       options={[
                         { value: "clt", label: "CLT", icon: Briefcase },
@@ -519,7 +527,7 @@ export default function ConfiguracoesPage() {
                 </div>
               ))
             ) : (
-              <div className="text-center py-6 text-gray-500">
+              <div className="text-center py-6 text-gray-500 dark:text-gray-400">
                 <Users className="w-8 h-8 mx-auto mb-2 text-gray-300" />
                 <p>Nenhum integrante adicionado</p>
               </div>
@@ -559,18 +567,18 @@ export default function ConfiguracoesPage() {
       {/* Informações da Conta */}
       <Card>
         <CardContent className="p-4">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Informacoes da Conta</h2>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Informacoes da Conta</h2>
 
           <div className="space-y-3">
             <div className="flex justify-between items-center py-2">
-              <span className="text-gray-600">ID da conta</span>
-              <span className="text-gray-900 font-mono text-sm">
+              <span className="text-gray-600 dark:text-gray-400">ID da conta</span>
+              <span className="text-gray-900 dark:text-white font-mono text-sm">
                 {truncateString(settings?.id, 8)}...
               </span>
             </div>
             <div className="flex justify-between items-center py-2">
-              <span className="text-gray-600">Conta criada em</span>
-              <span className="text-gray-900">{formatDate(settings?.created_at)}</span>
+              <span className="text-gray-600 dark:text-gray-400">Conta criada em</span>
+              <span className="text-gray-900 dark:text-white">{formatDate(settings?.created_at)}</span>
             </div>
           </div>
         </CardContent>
@@ -579,22 +587,22 @@ export default function ConfiguracoesPage() {
       {/* Preferências do App */}
       <Card>
         <CardContent className="p-4">
-          <h2 className="text-lg font-semibold text-gray-900 mb-1">Preferencias do App</h2>
-          <p className="text-sm text-gray-500 mb-4">Configuracoes e ajustes do aplicativo</p>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">Preferencias do App</h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Configuracoes e ajustes do aplicativo</p>
 
           <div className="space-y-4">
             {/* Notificações */}
             <div>
               <div className="flex items-center gap-2 mb-2">
-                <Bell className="w-4 h-4 text-gray-500" />
-                <span className="text-sm font-medium text-gray-700">Notificacoes</span>
+                <Bell className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Notificacoes</span>
               </div>
-              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-slate-800 rounded-lg">
                 <div className="flex items-center gap-3">
                   <BellOff className="w-5 h-5 text-gray-400" />
                   <div>
-                    <p className="text-sm font-medium text-gray-900">Notificacoes Push</p>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-sm font-medium text-gray-900 dark:text-white">Notificacoes Push</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
                       {settings?.push_notifications_enabled ? "Ativadas" : "Desativadas"}
                     </p>
                   </div>
@@ -611,27 +619,27 @@ export default function ConfiguracoesPage() {
             </div>
 
             {/* Modo escuro */}
-            <div className="flex items-center justify-between py-3 border-t border-gray-100">
+            <div className="flex items-center justify-between py-3 border-t border-gray-100 dark:border-slate-700">
               <div className="flex items-center gap-3">
-                <Moon className="w-5 h-5 text-gray-500" />
+                <Moon className="w-5 h-5 text-gray-500 dark:text-gray-400" />
                 <div>
-                  <p className="text-sm font-medium text-gray-900">Modo escuro</p>
-                  <p className="text-xs text-gray-500">Ativar tema escuro no app</p>
+                  <p className="text-sm font-medium text-gray-900 dark:text-white">Modo escuro</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Ativar tema escuro no app</p>
                 </div>
               </div>
               <Switch
-                checked={settings?.dark_mode_enabled || false}
+                checked={isDark}
                 onCheckedChange={handleToggleDarkMode}
               />
             </div>
 
             {/* Tutorial */}
-            <div className="flex items-center justify-between py-3 border-t border-gray-100">
+            <div className="flex items-center justify-between py-3 border-t border-gray-100 dark:border-slate-700">
               <div className="flex items-center gap-3">
-                <BookOpen className="w-5 h-5 text-gray-500" />
+                <BookOpen className="w-5 h-5 text-gray-500 dark:text-gray-400" />
                 <div>
-                  <p className="text-sm font-medium text-gray-900">Tutorial do app</p>
-                  <p className="text-xs text-gray-500">Reveja o tour de introducao</p>
+                  <p className="text-sm font-medium text-gray-900 dark:text-white">Tutorial do app</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Reveja o tour de introducao</p>
                 </div>
               </div>
               <Button variant="outline" size="sm" onClick={handleRestartTutorial}>
@@ -643,17 +651,17 @@ export default function ConfiguracoesPage() {
       </Card>
 
       {/* Zona de Perigo */}
-      <Card className="border-red-200">
+      <Card className="border-red-200 dark:border-red-800">
         <CardContent className="p-4">
           <div className="flex items-center gap-2 mb-1">
             <AlertTriangle className="w-5 h-5 text-red-500" />
             <h2 className="text-lg font-semibold text-red-600">Zona de Perigo</h2>
           </div>
-          <p className="text-sm text-gray-500 mb-4">
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
             Acoes irreversiveis que afetam todos os dados da sua conta
           </p>
 
-          <div className="p-4 bg-red-50 rounded-lg border border-red-100">
+          <div className="p-4 bg-red-50 dark:bg-red-950 rounded-lg border border-red-100 dark:border-red-800">
             <div className="flex items-start justify-between gap-4">
               <div className="flex-1">
                 <p className="font-semibold text-red-700">Resetar conta</p>

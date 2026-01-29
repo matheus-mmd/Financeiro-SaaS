@@ -50,21 +50,21 @@ export default function Layout({ children }) {
   // Mostrar loading enquanto verifica autenticação (APENAS para rotas protegidas)
   if (loading && !isPublicRoute) {
     return (
-      <div className="flex flex-col items-center justify-center h-screen bg-bg gap-4">
+      <div className="flex flex-col items-center justify-center h-screen bg-bg dark:bg-slate-900 gap-4">
         <div className="relative">
           <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center shadow-lg shadow-brand-500/30">
             <span className="text-white font-bold text-2xl">F</span>
           </div>
           <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-brand-400 animate-ping" />
         </div>
-        <p className="text-sm text-gray-500 animate-pulse">Carregando...</p>
+        <p className="text-sm text-gray-500 dark:text-gray-400 animate-pulse">Carregando...</p>
       </div>
     );
   }
 
   if (!loading && !user) {
     router.replace('/');
-    return <div className="h-screen w-full bg-bg" />;
+    return <div className="h-screen w-full bg-bg dark:bg-slate-900" />;
   }
 
   const handleLogout = async () => {
@@ -90,7 +90,7 @@ export default function Layout({ children }) {
   };
 
   return (
-    <div className="flex h-screen bg-bg">
+    <div className="flex h-screen bg-bg dark:bg-slate-900">
       <Sidebar
         isCollapsed={isSidebarCollapsed}
         isOpen={isMobileSidebarOpen}

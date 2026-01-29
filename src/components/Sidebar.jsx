@@ -94,7 +94,7 @@ export default function Sidebar({
       <aside
         className={`
           fixed lg:sticky top-0 left-0 z-50 h-screen
-          bg-white border-r border-gray-200
+          bg-white dark:bg-slate-900 border-r border-gray-200 dark:border-slate-700
           flex flex-col
           shadow-lg lg:shadow-none
           transition-all duration-300 ease-in-out
@@ -104,7 +104,7 @@ export default function Sidebar({
         `}
       >
         {/* Header */}
-        <div className="flex items-center h-16 px-4 border-b border-gray-200 flex-shrink-0">
+        <div className="flex items-center h-16 px-4 border-b border-gray-200 dark:border-slate-700 flex-shrink-0">
           <div className="flex items-center gap-3 min-w-0">
             {/* Logo icon - sempre fixo */}
             <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center">
@@ -117,10 +117,10 @@ export default function Sidebar({
               ${isCollapsed ? "lg:w-0" : "lg:w-40"}
               w-40
             `}>
-              <h1 className="text-lg font-bold text-gray-900 whitespace-nowrap">
+              <h1 className="text-lg font-bold text-gray-900 dark:text-white whitespace-nowrap">
                 Financeiro
               </h1>
-              <p className="text-xs text-gray-500 whitespace-nowrap -mt-0.5">
+              <p className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap -mt-0.5">
                 Controle Pessoal
               </p>
             </div>
@@ -129,10 +129,10 @@ export default function Sidebar({
           {/* Botão fechar (mobile) */}
           <button
             onClick={onClose}
-            className="lg:hidden ml-auto p-2 rounded-lg hover:bg-gray-100 transition-colors"
+            className="lg:hidden ml-auto p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
             aria-label="Fechar menu"
           >
-            <X className="w-5 h-5 text-gray-500" />
+            <X className="w-5 h-5 text-gray-500 dark:text-gray-400" />
           </button>
         </div>
 
@@ -156,8 +156,8 @@ export default function Sidebar({
                             group relative flex items-center gap-3 h-11 rounded-xl
                             transition-colors duration-200
                             ${active
-                              ? "bg-brand-50 text-brand-600"
-                              : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                              ? "bg-brand-50 dark:bg-brand-950 text-brand-600 dark:text-brand-400"
+                              : "text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-800 hover:text-gray-900 dark:hover:text-white"
                             }
                           `}
                           aria-current={active ? "page" : undefined}
@@ -168,7 +168,7 @@ export default function Sidebar({
                             transition-colors duration-200
                             ${active
                               ? "bg-brand-500 text-white"
-                              : "bg-gray-100 text-gray-500 group-hover:bg-gray-200"
+                              : "bg-gray-100 dark:bg-slate-700 text-gray-500 dark:text-gray-400 group-hover:bg-gray-200 dark:group-hover:bg-slate-600"
                             }
                           `}>
                             <Icon className="w-5 h-5" strokeWidth={active ? 2.5 : 2} />
@@ -208,7 +208,7 @@ export default function Sidebar({
         {/* Informações do usuário e Logout */}
         {user && (
           <div className={`
-            flex-shrink-0 px-4 py-3 border-t border-gray-200
+            flex-shrink-0 px-4 py-3 border-t border-gray-200 dark:border-slate-700
             transition-all duration-300 ease-in-out
           `}>
             {/* Quando colapsado: Avatar clicável com dropdown */}
@@ -217,7 +217,7 @@ export default function Sidebar({
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <button className="focus:outline-none focus:ring-2 focus:ring-brand-500 rounded-full">
-                      <Avatar className="w-10 h-10 ring-2 ring-gray-100 cursor-pointer hover:ring-brand-300 transition-all">
+                      <Avatar className="w-10 h-10 ring-2 ring-gray-100 dark:ring-slate-700 cursor-pointer hover:ring-brand-300 transition-all">
                         <AvatarFallback className="bg-gradient-to-br from-brand-500 to-brand-600 text-white text-sm font-medium">
                           {getInitials(user.name)}
                         </AvatarFallback>
@@ -250,7 +250,7 @@ export default function Sidebar({
               /* Quando expandido: Layout normal */
               <div className="flex items-center gap-3">
                 {/* Avatar */}
-                <Avatar className="w-10 h-10 ring-2 ring-gray-100 flex-shrink-0">
+                <Avatar className="w-10 h-10 ring-2 ring-gray-100 dark:ring-slate-700 flex-shrink-0">
                   <AvatarFallback className="bg-gradient-to-br from-brand-500 to-brand-600 text-white text-sm font-medium">
                     {getInitials(user.name)}
                   </AvatarFallback>
@@ -258,11 +258,11 @@ export default function Sidebar({
 
                 {/* Nome e Email */}
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900 truncate">
+                  <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
                     {user.name}
                   </p>
                   {user.email && (
-                    <p className="text-xs text-gray-500 truncate">
+                    <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
                       {user.email}
                     </p>
                   )}
@@ -271,7 +271,7 @@ export default function Sidebar({
                 {/* Botão Logout */}
                 <button
                   onClick={onLogout}
-                  className="flex-shrink-0 p-2 rounded-lg text-gray-500 hover:text-red-600 hover:bg-red-50 transition-colors"
+                  className="flex-shrink-0 p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950 transition-colors"
                   aria-label="Sair"
                   title="Sair"
                 >

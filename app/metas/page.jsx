@@ -487,7 +487,7 @@ export default function Metas() {
       sortable: true,
       render: (row) => (
         <div className="flex flex-col gap-0.5">
-          <span className="font-medium text-gray-900">{row.title}</span>
+          <span className="font-medium text-gray-900 dark:text-white">{row.title}</span>
         </div>
       ),
     },
@@ -546,7 +546,7 @@ export default function Metas() {
               e.stopPropagation();
               handleDuplicateTarget(row);
             }}
-            className="p-1.5 hover:bg-blue-50 rounded transition-colors"
+            className="p-1.5 hover:bg-blue-50 dark:hover:bg-blue-950 rounded transition-colors"
             title="Duplicar meta"
           >
             <Copy className="w-4 h-4 text-blue-600" />
@@ -556,7 +556,7 @@ export default function Metas() {
               e.stopPropagation();
               handleDeleteTarget(row);
             }}
-            className="p-1.5 hover:bg-red-50 rounded transition-colors"
+            className="p-1.5 hover:bg-red-50 dark:hover:bg-red-950 rounded transition-colors"
             title="Excluir meta"
           >
             <Trash2 className="w-4 h-4 text-red-600" />
@@ -587,7 +587,7 @@ export default function Metas() {
             <div className="space-y-2">
               <Label
                 htmlFor="filter-status"
-                className="text-sm font-medium text-gray-700"
+                className="text-sm font-medium text-gray-700 dark:text-gray-300"
               >
                 Status
               </Label>
@@ -605,7 +605,7 @@ export default function Metas() {
 
             {/* Filtro por período */}
             <div className="space-y-2">
-              <Label className="text-sm font-medium text-gray-700">
+              <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 Período
               </Label>
               <DateRangePicker
@@ -657,7 +657,7 @@ export default function Metas() {
       <Card>
         <CardContent className="p-4">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-            <h2 className="text-lg font-semibold text-gray-900">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
               Todas as Metas ({sortedTargets.length})
             </h2>
             {columnSelectorElement}
@@ -665,10 +665,10 @@ export default function Metas() {
 
           {sortedTargets.length === 0 ? (
             <div className="text-center py-12">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-3">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 dark:bg-slate-700 rounded-full mb-3">
                 <Target className="w-8 h-8 text-gray-400" />
               </div>
-              <p className="text-gray-500 mb-3">Nenhuma meta encontrada</p>
+              <p className="text-gray-500 dark:text-gray-400 mb-3">Nenhuma meta encontrada</p>
               <Button
                 variant="outline"
                 size="sm"
@@ -790,7 +790,7 @@ export default function Metas() {
               {formData.monthlyAmount &&
                 parseFloat(formData.monthlyAmount) > 0 &&
                 formData.goal && (
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                     {(() => {
                       const months = calculateMonthsToGoal(
                         parseFloat(formData.goal),
@@ -839,7 +839,7 @@ export default function Metas() {
             </form>
           </div>
 
-          <DialogFooter className="px-4 py-3 border-t bg-gray-50 flex-shrink-0">
+          <DialogFooter className="px-4 py-3 border-t bg-gray-50 dark:bg-slate-800 flex-shrink-0">
             <Button
               variant="outline"
               onClick={() => setModalOpen(false)}

@@ -29,8 +29,8 @@ const ChartSkeleton = () => (
   <Card className="overflow-hidden border-0 shadow-sm">
     <CardContent className="p-4">
       <div className="animate-pulse space-y-4">
-        <div className="h-6 bg-gray-200 rounded w-1/3"></div>
-        <div className="h-[400px] bg-gray-100 rounded"></div>
+        <div className="h-6 bg-gray-200 dark:bg-slate-700 rounded w-1/3"></div>
+        <div className="h-[400px] bg-gray-100 dark:bg-slate-800 rounded"></div>
       </div>
     </CardContent>
   </Card>
@@ -118,16 +118,16 @@ export default function Dashboard() {
       <Card>
         <CardContent className="p-4">
           {settingsLoading && !settings ? (
-            <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg border border-gray-100 animate-pulse">
-              <div className="p-3 bg-gray-200 rounded-full w-12 h-12" />
+            <div className="flex items-center gap-4 p-4 bg-gray-50 dark:bg-slate-800 rounded-lg border border-gray-100 dark:border-slate-700 animate-pulse">
+              <div className="p-3 bg-gray-200 dark:bg-slate-700 rounded-full w-12 h-12" />
               <div className="flex-1 space-y-2">
-                <div className="h-4 bg-gray-200 rounded w-32" />
-                <div className="h-3 bg-gray-200 rounded w-48" />
+                <div className="h-4 bg-gray-200 dark:bg-slate-700 rounded w-32" />
+                <div className="h-3 bg-gray-200 dark:bg-slate-700 rounded w-48" />
               </div>
-              <div className="h-9 bg-gray-200 rounded w-28" />
+              <div className="h-9 bg-gray-200 dark:bg-slate-700 rounded w-28" />
             </div>
           ) : (
-            <div className="flex items-center gap-4 p-4 bg-amber-50 rounded-lg border border-amber-100">
+            <div className="flex items-center gap-4 p-4 bg-amber-50 dark:bg-amber-950 rounded-lg border border-amber-100 dark:border-amber-800">
               <div className="p-3 bg-amber-100 rounded-full">
                 <Clock className="w-6 h-6 text-amber-600" />
               </div>
@@ -172,7 +172,7 @@ export default function Dashboard() {
 
       {/* 📊 VISÃO GERAL - Cards Principais */}
       <div>
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Visão Geral</h2>
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Visão Geral</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 min-w-0">
           <StatsCard
             icon={Heart}
@@ -227,7 +227,7 @@ export default function Dashboard() {
 
       {/* 💰 ANÁLISE MENSAL - Receitas, Despesas e Patrimônio */}
       <div>
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Análise Mensal</h2>
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Análise Mensal</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 min-w-0">
           <StatsCard
             icon={ArrowUpRight}

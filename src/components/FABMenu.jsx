@@ -63,14 +63,14 @@ export default function FABMenu({
                   onClick={() => handleActionClick(action)}
                   aria-label={action.label}
                   className="flex-shrink-0 w-12 h-12
-                    bg-white hover:bg-brand-50 active:bg-brand-100
+                    bg-white dark:bg-slate-800 hover:bg-brand-50 dark:hover:bg-slate-700 active:bg-brand-100
                     text-brand-600 hover:text-brand-700
                     rounded-xl
                     shadow-lg hover:shadow-xl
                     transition-all duration-200 ease-out
                     transform hover:scale-105 active:scale-95
                     flex items-center justify-center
-                    border border-gray-200 hover:border-brand-200"
+                    border border-gray-200 dark:border-slate-700 hover:border-brand-200"
                 >
                   {action.icon}
                 </button>

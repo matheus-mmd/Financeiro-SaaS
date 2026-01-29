@@ -85,14 +85,14 @@ export default function RedefinirSenhaPage() {
   // Estado de carregamento inicial
   if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-brand-50 to-brand-100 p-4">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-brand-50 to-brand-100 dark:from-slate-900 dark:to-slate-800 p-4">
         <Card className="w-full max-w-md shadow-2xl">
           <CardContent className="p-8">
             <div className="text-center">
               <div className="inline-flex items-center justify-center w-16 h-16 bg-brand-600 rounded-xl mb-4">
                 <Compass className="w-8 h-8 text-white" />
               </div>
-              <div className="flex items-center justify-center gap-2 text-gray-600">
+              <div className="flex items-center justify-center gap-2 text-gray-600 dark:text-gray-400">
                 <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-brand-600"></div>
                 Verificando...
               </div>
@@ -106,23 +106,23 @@ export default function RedefinirSenhaPage() {
   // Link expirado ou inválido
   if (!sessionReady && !authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-brand-50 to-brand-100 p-4">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-brand-50 to-brand-100 dark:from-slate-900 dark:to-slate-800 p-4">
         <Card className="w-full max-w-md shadow-2xl">
           <CardContent className="p-8">
             <div className="text-center mb-6">
               <div className="inline-flex items-center justify-center w-16 h-16 bg-brand-600 rounded-xl mb-4">
                 <Compass className="w-8 h-8 text-white" />
               </div>
-              <h1 className="text-2xl font-bold text-gray-900 mb-1">
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
                 Link Expirado
               </h1>
-              <p className="text-gray-500 text-sm">
+              <p className="text-gray-500 dark:text-gray-400 text-sm">
                 O link de recuperação não é mais válido
               </p>
             </div>
 
             <div className="text-center space-y-4">
-              <p className="text-gray-600 text-sm">
+              <p className="text-gray-600 dark:text-gray-400 text-sm">
                 O link de recuperação de senha expirou ou já foi utilizado.
                 Solicite um novo link para redefinir sua senha.
               </p>
@@ -149,26 +149,26 @@ export default function RedefinirSenhaPage() {
   // Sucesso na redefinição
   if (success) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-brand-50 to-brand-100 p-4">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-brand-50 to-brand-100 dark:from-slate-900 dark:to-slate-800 p-4">
         <Card className="w-full max-w-md shadow-2xl">
           <CardContent className="p-8">
             <div className="text-center mb-6">
               <div className="inline-flex items-center justify-center w-16 h-16 bg-brand-600 rounded-xl mb-4">
                 <Compass className="w-8 h-8 text-white" />
               </div>
-              <h1 className="text-2xl font-bold text-gray-900 mb-1">
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
                 Senha Atualizada!
               </h1>
-              <p className="text-gray-500 text-sm">
+              <p className="text-gray-500 dark:text-gray-400 text-sm">
                 Sua senha foi redefinida com sucesso
               </p>
             </div>
 
             <div className="text-center space-y-4">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-2">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 dark:bg-green-900 rounded-full mb-2">
                 <CheckCircle className="w-8 h-8 text-green-600" />
               </div>
-              <p className="text-gray-600 text-sm">
+              <p className="text-gray-600 dark:text-gray-400 text-sm">
                 Agora você pode fazer login com sua nova senha.
               </p>
             </div>
@@ -188,7 +188,7 @@ export default function RedefinirSenhaPage() {
 
   // Formulário de nova senha
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-brand-50 to-brand-100 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-brand-50 to-brand-100 dark:from-slate-900 dark:to-slate-800 p-4">
       <Card className="w-full max-w-md shadow-2xl">
         <CardContent className="p-8">
           {/* Logo e Título */}
@@ -196,10 +196,10 @@ export default function RedefinirSenhaPage() {
             <div className="inline-flex items-center justify-center w-16 h-16 bg-brand-600 rounded-xl mb-4">
               <Compass className="w-8 h-8 text-white" />
             </div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-1">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
               Nova Senha
             </h1>
-            <p className="text-gray-500 text-sm">
+            <p className="text-gray-500 dark:text-gray-400 text-sm">
               Digite sua nova senha
             </p>
           </div>
@@ -215,7 +215,7 @@ export default function RedefinirSenhaPage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Nova Senha */}
             <div className="space-y-1.5">
-              <label htmlFor="password" className="text-sm font-medium text-gray-700">
+              <label htmlFor="password" className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 Nova senha
               </label>
               <div className="relative">
@@ -238,7 +238,7 @@ export default function RedefinirSenhaPage() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:text-gray-400"
                 >
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
@@ -247,7 +247,7 @@ export default function RedefinirSenhaPage() {
 
             {/* Confirmar Nova Senha */}
             <div className="space-y-1.5">
-              <label htmlFor="confirmPassword" className="text-sm font-medium text-gray-700">
+              <label htmlFor="confirmPassword" className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 Confirmar nova senha
               </label>
               <div className="relative">
@@ -269,7 +269,7 @@ export default function RedefinirSenhaPage() {
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:text-gray-400"
                 >
                   {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
@@ -278,7 +278,7 @@ export default function RedefinirSenhaPage() {
 
             {/* Mensagem de erro */}
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+              <div className="bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 text-red-700 px-4 py-3 rounded-lg text-sm">
                 {error}
               </div>
             )}

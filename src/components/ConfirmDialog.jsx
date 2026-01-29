@@ -70,21 +70,21 @@ export default function ConfirmDialog({
 
           {/* Title */}
           <DialogHeader className="text-center mb-2">
-            <DialogTitle className="text-lg font-semibold text-gray-900">
+            <DialogTitle className="text-lg font-semibold text-gray-900 dark:text-white">
               {title}
             </DialogTitle>
           </DialogHeader>
 
           {/* Description */}
           {description && (
-            <DialogDescription className="text-center text-gray-500 text-sm">
+            <DialogDescription className="text-center text-gray-500 dark:text-gray-400 text-sm">
               {description}
             </DialogDescription>
           )}
         </div>
 
         {/* Actions */}
-        <DialogFooter className="px-6 py-4 bg-gray-50 border-t flex gap-3">
+        <DialogFooter className="px-6 py-4 bg-gray-50 dark:bg-slate-800 border-t dark:border-slate-700 flex gap-3">
           <Button
             type="button"
             variant="outline"

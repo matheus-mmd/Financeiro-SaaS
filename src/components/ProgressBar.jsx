@@ -20,7 +20,7 @@ export default function ProgressBar({ progress, goal, variant = 'brand', showPer
   return (
     <div className={className}>
       {showPercentage && (
-        <div className="flex justify-between text-sm text-gray-600 mb-2">
+        <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400 mb-2">
           <span>{percentage}% completo</span>
           <span>{progress.toLocaleString('pt-BR')} / {goal.toLocaleString('pt-BR')}</span>
         </div>
@@ -28,7 +28,7 @@ export default function ProgressBar({ progress, goal, variant = 'brand', showPer
       <Progress
         value={percentage}
         className={cn(
-          'h-3 bg-gray-200',
+          'h-3 bg-gray-200 dark:bg-slate-700',
           variantClasses[variant]
         )}
       />

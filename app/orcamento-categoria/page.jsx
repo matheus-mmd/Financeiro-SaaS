@@ -286,9 +286,9 @@ export default function OrcamentoCategoriaPage() {
       {/* Indicador sutil de revalidacao */}
       {isRevalidating && (
         <div className="fixed top-4 right-4 z-50">
-          <div className="flex items-center gap-2 px-3 py-1.5 bg-white/90 backdrop-blur-sm rounded-full shadow-sm border border-gray-100">
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-slate-800/90 backdrop-blur-sm rounded-full shadow-sm border border-gray-100 dark:border-slate-700">
             <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-            <span className="text-xs text-gray-500">Atualizando...</span>
+            <span className="text-xs text-gray-500 dark:text-gray-400">Atualizando...</span>
           </div>
         </div>
       )}
@@ -299,11 +299,11 @@ export default function OrcamentoCategoriaPage() {
           {/* Header com navegação de mês e botão adicionar */}
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-green-100 rounded-lg">
+              <div className="p-2 bg-green-100 dark:bg-green-900 rounded-lg">
                 <PiggyBank className="w-5 h-5 text-green-600" />
               </div>
               <div>
-                <h2 className="text-lg font-semibold text-gray-900">Controle de Categoria</h2>
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Controle de Categoria</h2>
               </div>
             </div>
             <Button
@@ -318,34 +318,34 @@ export default function OrcamentoCategoriaPage() {
           </div>
 
           {/* Navegação de mês */}
-          <div className="flex items-center justify-center gap-4 mb-6 py-3 bg-gray-50 rounded-lg">
+          <div className="flex items-center justify-center gap-4 mb-6 py-3 bg-gray-50 dark:bg-slate-800 rounded-lg">
             <button
               onClick={goToPreviousMonth}
-              className="p-2 hover:bg-gray-200 rounded-lg transition-colors"
+              className="p-2 hover:bg-gray-200 dark:hover:bg-slate-600 dark:bg-slate-600 rounded-lg transition-colors"
             >
-              <ChevronLeft className="w-5 h-5 text-gray-600" />
+              <ChevronLeft className="w-5 h-5 text-gray-600 dark:text-gray-400" />
             </button>
-            <span className="text-lg font-medium text-gray-900 min-w-[160px] text-center">
+            <span className="text-lg font-medium text-gray-900 dark:text-white min-w-[160px] text-center">
               {MONTH_NAMES[selectedMonth - 1]} {selectedYear}
             </span>
             <button
               onClick={goToNextMonth}
-              className="p-2 hover:bg-gray-200 rounded-lg transition-colors"
+              className="p-2 hover:bg-gray-200 dark:hover:bg-slate-600 dark:bg-slate-600 rounded-lg transition-colors"
             >
-              <ChevronRight className="w-5 h-5 text-gray-600" />
+              <ChevronRight className="w-5 h-5 text-gray-600 dark:text-gray-400" />
             </button>
           </div>
 
           {/* Lista de orçamentos ou estado vazio */}
           {budgets.length === 0 ? (
             <div className="text-center py-12">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 dark:bg-green-900 rounded-full mb-4">
                 <PiggyBank className="w-8 h-8 text-green-500" />
               </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
                 Comece a controlar seus gastos
               </h3>
-              <p className="text-gray-500 mb-6 max-w-sm mx-auto">
+              <p className="text-gray-500 dark:text-gray-400 mb-6 max-w-sm mx-auto">
                 Defina limites mensais por categoria e receba alertas antes de estourar o orçamento.
               </p>
               <Button
@@ -365,21 +365,21 @@ export default function OrcamentoCategoriaPage() {
           ) : (
             <div className="space-y-4">
               {/* Resumo geral */}
-              <div className="grid grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg mb-4">
+              <div className="grid grid-cols-3 gap-4 p-4 bg-gray-50 dark:bg-slate-800 rounded-lg mb-4">
                 <div className="text-center">
-                  <p className="text-sm text-gray-500">Orçamento Total</p>
-                  <p className="text-lg font-semibold text-gray-900">
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Orçamento Total</p>
+                  <p className="text-lg font-semibold text-gray-900 dark:text-white">
                     {formatCurrency(totals.totalLimit)}
                   </p>
                 </div>
                 <div className="text-center">
-                  <p className="text-sm text-gray-500">Gasto</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Gasto</p>
                   <p className="text-lg font-semibold text-red-600">
                     {formatCurrency(totals.totalSpent)}
                   </p>
                 </div>
                 <div className="text-center">
-                  <p className="text-sm text-gray-500">Disponível</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Disponível</p>
                   <p className={`text-lg font-semibold ${totals.remaining >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                     {formatCurrency(totals.remaining)}
                   </p>
@@ -394,27 +394,27 @@ export default function OrcamentoCategoriaPage() {
                   return (
                     <div
                       key={budget.id}
-                      className="group p-4 bg-white border border-gray-200 rounded-lg hover:shadow-md transition-all"
+                      className="group p-4 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg hover:shadow-md transition-all"
                     >
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-3">
                           <span className="text-2xl">{budget.category_emoji || '📦'}</span>
                           <div>
-                            <h3 className="font-medium text-gray-900">{budget.category_name}</h3>
-                            <p className="text-sm text-gray-500">
+                            <h3 className="font-medium text-gray-900 dark:text-white">{budget.category_name}</h3>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">
                               {formatCurrency(spent)} de {formatCurrency(limit)}
                             </p>
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
                           {status === 'warning' && (
-                            <div className="flex items-center gap-1 px-2 py-1 bg-yellow-100 text-yellow-700 rounded-full text-xs">
+                            <div className="flex items-center gap-1 px-2 py-1 bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-300 rounded-full text-xs">
                               <AlertTriangle className="w-3 h-3" />
                               <span>Atenção</span>
                             </div>
                           )}
                           {status === 'exceeded' && (
-                            <div className="flex items-center gap-1 px-2 py-1 bg-red-100 text-red-700 rounded-full text-xs">
+                            <div className="flex items-center gap-1 px-2 py-1 bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 rounded-full text-xs">
                               <TrendingDown className="w-3 h-3" />
                               <span>Excedido</span>
                             </div>
@@ -422,14 +422,14 @@ export default function OrcamentoCategoriaPage() {
                           <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                             <button
                               onClick={() => handleOpenEditModal(budget)}
-                              className="p-1.5 hover:bg-blue-100 rounded-lg transition-colors"
+                              className="p-1.5 hover:bg-blue-100 dark:hover:bg-blue-900 rounded-lg transition-colors"
                               title="Editar orçamento"
                             >
                               <Pencil className="w-4 h-4 text-blue-600" />
                             </button>
                             <button
                               onClick={() => handleOpenDeleteConfirm(budget)}
-                              className="p-1.5 hover:bg-red-100 rounded-lg transition-colors"
+                              className="p-1.5 hover:bg-red-100 dark:hover:bg-red-900 rounded-lg transition-colors"
                               title="Deletar orçamento"
                             >
                               <Trash2 className="w-4 h-4 text-red-600" />
@@ -439,7 +439,7 @@ export default function OrcamentoCategoriaPage() {
                       </div>
 
                       {/* Barra de progresso */}
-                      <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+                      <div className="w-full h-2 bg-gray-200 dark:bg-slate-600 rounded-full overflow-hidden">
                         <div
                           className={`h-full transition-all ${
                             status === 'exceeded'
@@ -452,10 +452,10 @@ export default function OrcamentoCategoriaPage() {
                         />
                       </div>
                       <div className="flex justify-between mt-1">
-                        <span className="text-xs text-gray-500">
+                        <span className="text-xs text-gray-500 dark:text-gray-400">
                           {percentage.toFixed(0)}% utilizado
                         </span>
-                        <span className="text-xs text-gray-500">
+                        <span className="text-xs text-gray-500 dark:text-gray-400">
                           Restam {formatCurrency(Math.max(limit - spent, 0))}
                         </span>
                       </div>
@@ -508,7 +508,7 @@ export default function OrcamentoCategoriaPage() {
               {editingBudget && (
                 <div className="space-y-2">
                   <Label>Categoria</Label>
-                  <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg">
+                  <div className="flex items-center gap-2 p-3 bg-gray-50 dark:bg-slate-800 rounded-lg">
                     <span className="text-xl">{editingBudget.category_emoji || '📦'}</span>
                     <span className="font-medium">{editingBudget.category_name}</span>
                   </div>
@@ -548,14 +548,14 @@ export default function OrcamentoCategoriaPage() {
                     <SelectItem value="100">100% (Sem alerta)</SelectItem>
                   </SelectContent>
                 </Select>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-gray-500 dark:text-gray-400">
                   Você receberá um aviso quando atingir este percentual do limite.
                 </p>
               </div>
             </div>
           </div>
 
-          <DialogFooter className="px-4 py-3 border-t bg-gray-50 flex-shrink-0">
+          <DialogFooter className="px-4 py-3 border-t bg-gray-50 dark:bg-slate-800 flex-shrink-0">
             <Button
               type="button"
               variant="outline"

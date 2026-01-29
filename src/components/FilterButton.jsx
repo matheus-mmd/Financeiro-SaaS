@@ -54,8 +54,8 @@ export default function FilterButton({
         <div className="p-4 space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Filter className="w-5 h-5 text-gray-500" />
-              <span className="text-sm font-medium text-gray-700">
+              <Filter className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 Filtros
               </span>
             </div>

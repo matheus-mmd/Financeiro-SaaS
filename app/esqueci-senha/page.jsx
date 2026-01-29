@@ -61,7 +61,7 @@ export default function EsqueciSenhaPage() {
 
   if (success) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-brand-50 to-brand-100 p-4">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-brand-50 to-brand-100 dark:from-slate-900 dark:to-slate-800 p-4">
         <Card className="w-full max-w-md shadow-2xl">
           <CardContent className="p-8">
             {/* Logo e Título */}
@@ -69,23 +69,23 @@ export default function EsqueciSenhaPage() {
               <div className="inline-flex items-center justify-center w-16 h-16 bg-brand-600 rounded-xl mb-4">
                 <Compass className="w-8 h-8 text-white" />
               </div>
-              <h1 className="text-2xl font-bold text-gray-900 mb-1">
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
                 Email Enviado!
               </h1>
-              <p className="text-gray-500 text-sm">
+              <p className="text-gray-500 dark:text-gray-400 text-sm">
                 Verifique sua caixa de entrada
               </p>
             </div>
 
             {/* Mensagem de sucesso */}
             <div className="text-center space-y-4">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-2">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 dark:bg-green-900 rounded-full mb-2">
                 <CheckCircle className="w-8 h-8 text-green-600" />
               </div>
-              <p className="text-gray-600">
+              <p className="text-gray-600 dark:text-gray-400">
                 Enviamos um link de recuperação para <strong>{email}</strong>.
               </p>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-gray-500 dark:text-gray-400">
                 Clique no link do email para criar uma nova senha. Se não encontrar, verifique a pasta de spam.
               </p>
             </div>
@@ -104,7 +104,7 @@ export default function EsqueciSenhaPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-brand-50 to-brand-100 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-brand-50 to-brand-100 dark:from-slate-900 dark:to-slate-800 p-4">
       <Card className="w-full max-w-md shadow-2xl">
         <CardContent className="p-8">
           {/* Logo e Título */}
@@ -112,10 +112,10 @@ export default function EsqueciSenhaPage() {
             <div className="inline-flex items-center justify-center w-16 h-16 bg-brand-600 rounded-xl mb-4">
               <Compass className="w-8 h-8 text-white" />
             </div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-1">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
               Redefinir Senha
             </h1>
-            <p className="text-gray-500 text-sm">
+            <p className="text-gray-500 dark:text-gray-400 text-sm">
               Digite seu e-mail para receber um código de verificação
             </p>
           </div>
@@ -146,7 +146,7 @@ export default function EsqueciSenhaPage() {
 
             {/* Mensagem de erro */}
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+              <div className="bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 text-red-700 px-4 py-3 rounded-lg text-sm">
                 {error}
               </div>
             )}

@@ -68,7 +68,7 @@ const PasswordStrengthIndicator = ({ password }) => {
   const strengthPercentage = (passedRequirements / requirements.length) * 100;
 
   const getStrengthColor = () => {
-    if (strengthPercentage <= 20) return 'bg-red-500';
+    if (strengthPercentage <= 20) return 'bg-red-50 dark:bg-red-9500';
     if (strengthPercentage <= 40) return 'bg-orange-500';
     if (strengthPercentage <= 60) return 'bg-amber-500';
     if (strengthPercentage <= 80) return 'bg-lime-500';
@@ -91,7 +91,7 @@ const PasswordStrengthIndicator = ({ password }) => {
     <div className="mt-3 space-y-3">
       {/* Barra de força */}
       <div className="space-y-1">
-        <div className="h-1.5 w-full bg-gray-200 rounded-full overflow-hidden">
+        <div className="h-1.5 w-full bg-gray-200 dark:bg-slate-600 rounded-full overflow-hidden">
           <div
             className={`h-full transition-all duration-300 ${getStrengthColor()}`}
             style={{ width: `${strengthPercentage}%` }}
@@ -115,7 +115,7 @@ const PasswordStrengthIndicator = ({ password }) => {
               ) : (
                 <X className="w-4 h-4 text-gray-300" />
               )}
-              <span className={passed ? 'text-green-600' : 'text-gray-500'}>
+              <span className={passed ? 'text-green-600' : 'text-gray-500 dark:text-gray-400'}>
                 {req.label}
               </span>
             </li>
@@ -299,11 +299,11 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-brand-50 to-brand-100 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-brand-50 to-brand-100 dark:from-slate-900 dark:to-slate-800 p-4">
       <Card className="w-full max-w-md shadow-2xl">
         <CardContent className="p-8">
           {/* Botão Voltar */}
-          <Link href="/" className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 transition-colors mb-6">
+          <Link href="/" className="inline-flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:text-white transition-colors mb-6">
             <ArrowLeft className="w-4 h-4" />
             <span>Voltar para página inicial</span>
           </Link>
@@ -313,23 +313,23 @@ export default function LoginPage() {
             <div className="inline-flex items-center justify-center w-16 h-16 bg-brand-600 rounded-xl mb-4">
               <Compass className="w-8 h-8 text-white" />
             </div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-1">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
               Financeiro SaaS
             </h1>
-            <p className="text-gray-500 text-sm">
+            <p className="text-gray-500 dark:text-gray-400 text-sm">
               Organize suas finanças de forma simples e eficiente
             </p>
           </div>
 
           {/* Tabs */}
-          <div className="flex bg-gray-100 rounded-full p-1 mb-6">
+          <div className="flex bg-gray-100 dark:bg-slate-700 rounded-full p-1 mb-6">
             <button
               type="button"
               onClick={() => toggleMode('login')}
               className={`flex-1 py-2.5 text-sm font-medium rounded-full transition-all ${
                 isLogin
-                  ? 'bg-white text-gray-900 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
+                  ? 'bg-white text-gray-900 dark:text-white shadow-sm'
+                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:text-white'
               }`}
             >
               Entrar
@@ -339,8 +339,8 @@ export default function LoginPage() {
               onClick={() => toggleMode('register')}
               className={`flex-1 py-2.5 text-sm font-medium rounded-full transition-all ${
                 !isLogin
-                  ? 'bg-white text-gray-900 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
+                  ? 'bg-white text-gray-900 dark:text-white shadow-sm'
+                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:text-white'
               }`}
             >
               Criar Conta
@@ -352,7 +352,7 @@ export default function LoginPage() {
             {/* Nome (apenas no cadastro) */}
             {!isLogin && (
               <div className="space-y-1.5">
-                <label htmlFor="name" className="text-sm font-medium text-gray-700">
+                <label htmlFor="name" className="text-sm font-medium text-gray-700 dark:text-gray-300">
                   Nome completo
                 </label>
                 <div className="relative">
@@ -375,7 +375,7 @@ export default function LoginPage() {
             {/* Celular (apenas no cadastro) */}
             {!isLogin && (
               <div className="space-y-1.5">
-                <label htmlFor="phone" className="text-sm font-medium text-gray-700">
+                <label htmlFor="phone" className="text-sm font-medium text-gray-700 dark:text-gray-300">
                   Celular
                 </label>
                 <div className="relative">
@@ -398,7 +398,7 @@ export default function LoginPage() {
 
             {/* E-mail */}
             <div className="space-y-1.5">
-              <label htmlFor="email" className="text-sm font-medium text-gray-700">
+              <label htmlFor="email" className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 Email
               </label>
               <div className="relative">
@@ -420,7 +420,7 @@ export default function LoginPage() {
             {/* Senha */}
             <div className="space-y-1.5">
               <div className="flex justify-between items-center">
-                <label htmlFor="password" className="text-sm font-medium text-gray-700">
+                <label htmlFor="password" className="text-sm font-medium text-gray-700 dark:text-gray-300">
                   Senha
                 </label>
                 {isLogin && (
@@ -448,7 +448,7 @@ export default function LoginPage() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:text-gray-400"
                 >
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
@@ -461,7 +461,7 @@ export default function LoginPage() {
             {/* Confirmar senha (apenas no cadastro) */}
             {!isLogin && (
               <div className="space-y-1.5">
-                <label htmlFor="confirmPassword" className="text-sm font-medium text-gray-700">
+                <label htmlFor="confirmPassword" className="text-sm font-medium text-gray-700 dark:text-gray-300">
                   Confirmar senha
                 </label>
                 <div className="relative">
@@ -480,7 +480,7 @@ export default function LoginPage() {
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:text-gray-400"
                   >
                     {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
@@ -499,7 +499,7 @@ export default function LoginPage() {
                   className="w-4 h-4 text-brand-600 border-gray-300 rounded focus:ring-brand-500"
                   disabled={loading}
                 />
-                <label htmlFor="rememberMe" className="text-sm text-gray-600">
+                <label htmlFor="rememberMe" className="text-sm text-gray-600 dark:text-gray-400">
                   Lembrar meu e-mail
                 </label>
               </div>
@@ -516,7 +516,7 @@ export default function LoginPage() {
                   className="mt-1 w-4 h-4 text-brand-600 border-gray-300 rounded focus:ring-brand-500"
                   disabled={loading}
                 />
-                <label htmlFor="acceptTerms" className="text-sm text-gray-600">
+                <label htmlFor="acceptTerms" className="text-sm text-gray-600 dark:text-gray-400">
                   Aceito receber novidades, promoções e comunicações por email ou WhatsApp. Consulte nossa{' '}
                   <Link href="/politica-privacidade" className="text-brand-600 hover:underline">
                     Política de Privacidade
@@ -527,7 +527,7 @@ export default function LoginPage() {
 
             {/* Mensagem de erro */}
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+              <div className="bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 text-red-700 px-4 py-3 rounded-lg text-sm">
                 {error}
               </div>
             )}

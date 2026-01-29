@@ -85,14 +85,14 @@ const StatsCard = memo(function StatsCard({
 
           {/* Content */}
           <div className="flex-1 min-w-0">
-            <p className="text-xs sm:text-sm text-gray-500 font-medium mb-0.5 truncate">
+            <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 font-medium mb-0.5 truncate">
               {label}
             </p>
             <p className={`text-xl sm:text-2xl font-bold ${valueColor} truncate`}>
               {value}
             </p>
             {subtitle && (
-              <p className="text-xs text-gray-400 mt-1 truncate">
+              <p className="text-xs text-gray-400 dark:text-gray-500 mt-1 truncate">
                 {subtitle}
               </p>
             )}

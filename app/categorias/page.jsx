@@ -221,13 +221,13 @@ export default function CategoriasPage() {
       {/* Tabs */}
       <Card>
         <CardContent className="p-0">
-          <div className="flex border-b border-gray-200">
+          <div className="flex border-b border-gray-200 dark:border-slate-700">
             <button
               onClick={() => setActiveTab('despesas')}
               className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-medium border-b-2 transition-colors ${
                 activeTab === 'despesas'
                   ? 'border-brand-600 text-brand-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
+                  : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-300'
               }`}
             >
               <TrendingDown className="w-4 h-4" />
@@ -238,7 +238,7 @@ export default function CategoriasPage() {
               className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-medium border-b-2 transition-colors ${
                 activeTab === 'receitas'
                   ? 'border-brand-600 text-brand-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
+                  : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-300'
               }`}
             >
               <TrendingUp className="w-4 h-4" />
@@ -260,10 +260,10 @@ export default function CategoriasPage() {
               )}
             </div>
             <div className="flex-1">
-              <h2 className="text-lg font-semibold text-gray-900">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
                 Categorias Personalizadas
               </h2>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-gray-500 dark:text-gray-400">
                 Suas categorias de {activeTab === 'despesas' ? 'despesa' : 'receita'} criadas ({currentUserCategories.length})
               </p>
             </div>
@@ -280,10 +280,10 @@ export default function CategoriasPage() {
 
           {currentUserCategories.length === 0 ? (
             <div className="text-center py-8">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-3">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 dark:bg-slate-700 rounded-full mb-3">
                 <Layers className="w-8 h-8 text-gray-400" />
               </div>
-              <p className="text-gray-500 mb-1">Nenhuma categoria personalizada</p>
+              <p className="text-gray-500 dark:text-gray-400 mb-1">Nenhuma categoria personalizada</p>
               <p className="text-sm text-gray-400">Clique em "Nova" para criar sua primeira categoria</p>
             </div>
           ) : (
@@ -291,11 +291,11 @@ export default function CategoriasPage() {
               {currentUserCategories.map((category) => (
                 <div
                   key={category.id}
-                  className="group relative bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md hover:border-gray-300 transition-all"
+                  className="group relative bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg p-4 hover:shadow-md hover:border-gray-300 dark:hover:border-slate-600 transition-all"
                 >
                   <div className="flex items-center gap-3">
                     <span className="text-2xl">{category.emoji || '📦'}</span>
-                    <span className="flex-1 font-medium text-gray-900">{category.name}</span>
+                    <span className="flex-1 font-medium text-gray-900 dark:text-white">{category.name}</span>
                     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                       <button
                         onClick={() => handleOpenEditModal(category)}
@@ -324,12 +324,12 @@ export default function CategoriasPage() {
       <Card>
         <CardContent className="p-4">
           <div className="flex items-center gap-3 mb-6">
-            <div className="p-2 bg-gray-100 rounded-lg">
-              <Layers className="w-5 h-5 text-gray-600" />
+            <div className="p-2 bg-gray-100 dark:bg-slate-700 rounded-lg">
+              <Layers className="w-5 h-5 text-gray-600 dark:text-gray-400" />
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-gray-900">Categorias Padrão</h2>
-              <p className="text-sm text-gray-500">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Categorias Padrão</h2>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
                 Categorias de {activeTab === 'despesas' ? 'despesa' : 'receita'} do sistema ({currentDefaultCategories.length})
               </p>
             </div>
@@ -337,10 +337,10 @@ export default function CategoriasPage() {
 
           {currentDefaultCategories.length === 0 ? (
             <div className="text-center py-8">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-3">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 dark:bg-slate-700 rounded-full mb-3">
                 <Layers className="w-8 h-8 text-gray-400" />
               </div>
-              <p className="text-gray-500 mb-1">Nenhuma categoria padrão</p>
+              <p className="text-gray-500 dark:text-gray-400 mb-1">Nenhuma categoria padrão</p>
               <p className="text-sm text-gray-400">Execute a migration para criar as categorias padrão</p>
             </div>
           ) : (
@@ -348,11 +348,11 @@ export default function CategoriasPage() {
               {currentDefaultCategories.map((category) => (
                 <div
                   key={category.id}
-                  className="flex items-center gap-3 p-4 bg-gray-50 border border-gray-100 rounded-lg"
+                  className="flex items-center gap-3 p-4 bg-gray-50 dark:bg-slate-800 border border-gray-100 dark:border-slate-700 rounded-lg"
                 >
                   <span className="text-2xl">{category.emoji || '📦'}</span>
-                  <span className="flex-1 font-medium text-gray-700">{category.name}</span>
-                  <span className="text-xs px-2 py-0.5 bg-gray-200 text-gray-500 rounded-full">
+                  <span className="flex-1 font-medium text-gray-700 dark:text-gray-300">{category.name}</span>
+                  <span className="text-xs px-2 py-0.5 bg-gray-200 dark:bg-slate-600 text-gray-500 dark:text-gray-400 rounded-full">
                     Padrão
                   </span>
                 </div>
@@ -382,7 +382,7 @@ export default function CategoriasPage() {
                 <button
                   type="button"
                   onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                  className="w-full flex items-center gap-3 p-3 border border-gray-200 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors"
+                  className="w-full flex items-center gap-3 p-3 border border-gray-200 dark:border-slate-700 rounded-lg bg-gray-50 dark:bg-slate-800 hover:bg-gray-100 dark:hover:bg-slate-700 dark:bg-slate-700 transition-colors"
                 >
                   {categoryData.emoji ? (
                     <span className="text-2xl">{categoryData.emoji}</span>
@@ -418,20 +418,20 @@ export default function CategoriasPage() {
 
               {/* Preview */}
               {categoryData.name && (
-                <div className="p-3 bg-gray-50 rounded-lg">
-                  <p className="text-xs text-gray-500 mb-2">Preview:</p>
+                <div className="p-3 bg-gray-50 dark:bg-slate-800 rounded-lg">
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">Preview:</p>
                   <div className="flex items-center gap-3">
                     {categoryData.emoji && (
                       <span className="text-2xl">{categoryData.emoji}</span>
                     )}
-                    <span className="font-medium text-gray-900">{categoryData.name}</span>
+                    <span className="font-medium text-gray-900 dark:text-white">{categoryData.name}</span>
                   </div>
                 </div>
               )}
             </div>
           </div>
 
-          <DialogFooter className="px-4 py-3 border-t bg-gray-50 flex-shrink-0">
+          <DialogFooter className="px-4 py-3 border-t bg-gray-50 dark:bg-slate-800 flex-shrink-0">
             <Button
               type="button"
               variant="outline"

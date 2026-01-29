@@ -19,8 +19,8 @@ export class ErrorBoundary extends React.Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50">
-          <div className="max-w-md w-full bg-white shadow-lg rounded-lg p-6">
+        <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-slate-900">
+          <div className="max-w-md w-full bg-white dark:bg-slate-800 shadow-lg rounded-lg p-6">
             <div className="flex items-center justify-center w-12 h-12 mx-auto bg-red-100 rounded-full">
               <svg
                 className="w-6 h-6 text-red-600"
@@ -36,14 +36,14 @@ export class ErrorBoundary extends React.Component {
                 />
               </svg>
             </div>
-            <h1 className="mt-4 text-xl font-semibold text-gray-900 text-center">
+            <h1 className="mt-4 text-xl font-semibold text-gray-900 dark:text-white text-center">
               Algo deu errado
             </h1>
-            <p className="mt-2 text-sm text-gray-600 text-center">
+            <p className="mt-2 text-sm text-gray-600 dark:text-gray-400 text-center">
               Ocorreu um erro inesperado. Por favor, recarregue a página.
             </p>
             {process.env.NODE_ENV === 'development' && this.state.error && (
-              <pre className="mt-4 p-4 bg-gray-100 rounded text-xs overflow-auto">
+              <pre className="mt-4 p-4 bg-gray-100 dark:bg-slate-700 rounded text-xs overflow-auto dark:text-gray-300">
                 {this.state.error.toString()}
               </pre>
             )}

@@ -47,12 +47,12 @@ const StepIndicator = ({ currentStep, totalSteps }) => {
                 ? 'w-8 bg-brand-600'
                 : i === currentStep
                 ? 'w-8 bg-brand-400'
-                : 'w-2 bg-gray-200'
+                : 'w-2 bg-gray-200 dark:bg-slate-600'
             }`}
           />
         ))}
       </div>
-      <span className="text-sm text-gray-500">Passo {currentStep + 1} de {totalSteps}</span>
+      <span className="text-sm text-gray-500 dark:text-gray-400">Passo {currentStep + 1} de {totalSteps}</span>
     </div>
   );
 };
@@ -67,12 +67,12 @@ const OptionCard = ({ icon: Icon, title, subtitle, selected, onClick }) => {
       className={`flex flex-col items-center justify-center p-6 rounded-xl border-2 transition-all duration-200 min-h-[140px] w-full ${
         selected
           ? 'border-brand-500 bg-brand-50 shadow-md'
-          : 'border-gray-200 bg-white hover:border-brand-200 hover:bg-gray-50'
+          : 'border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-brand-200 hover:bg-gray-50 dark:hover:bg-slate-800 dark:bg-slate-800'
       }`}
     >
       <Icon className={`w-8 h-8 mb-3 ${selected ? 'text-brand-600' : 'text-gray-400'}`} />
-      <span className={`font-semibold ${selected ? 'text-brand-700' : 'text-gray-700'}`}>{title}</span>
-      <span className="text-sm text-gray-500 mt-1">{subtitle}</span>
+      <span className={`font-semibold ${selected ? 'text-brand-700' : 'text-gray-700 dark:text-gray-300'}`}>{title}</span>
+      <span className="text-sm text-gray-500 dark:text-gray-400 mt-1">{subtitle}</span>
     </button>
   );
 };
@@ -87,16 +87,16 @@ const Step1Welcome = ({ onNext }) => {
         <Compass className="w-10 h-10 text-brand-600" />
       </div>
 
-      <h1 className="text-2xl font-bold text-gray-900 mb-4">
+      <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
         Bem-vindo à Bússola Financeira!
       </h1>
 
-      <p className="text-gray-600 mb-2 max-w-md mx-auto">
+      <p className="text-gray-600 dark:text-gray-400 mb-2 max-w-md mx-auto">
         Vamos configurar algumas informações iniciais para personalizar
         sua experiência e já criar suas primeiras transações recorrentes.
       </p>
 
-      <p className="text-sm text-gray-500 mb-8">
+      <p className="text-sm text-gray-500 dark:text-gray-400 mb-8">
         Isso levará apenas alguns minutos.
       </p>
     </div>
@@ -129,10 +129,10 @@ const Step2WorkType = ({ workTypes, setWorkTypes }) => {
 
   return (
     <div>
-      <h2 className="text-xl font-bold text-gray-900 text-center mb-2">
+      <h2 className="text-xl font-bold text-gray-900 dark:text-white text-center mb-2">
         Qual é o seu tipo de trabalho?
       </h2>
-      <p className="text-gray-500 text-center mb-8">
+      <p className="text-gray-500 dark:text-gray-400 text-center mb-8">
         Isso nos ajuda a categorizar melhor suas receitas e despesas. Você pode selecionar mais de uma opção.
       </p>
 
@@ -143,12 +143,12 @@ const Step2WorkType = ({ workTypes, setWorkTypes }) => {
             className={`flex flex-col items-center justify-center p-6 rounded-xl border-2 transition-all duration-200 min-h-[140px] w-full ${
               workTypes.includes('clt')
                 ? 'border-brand-500 bg-brand-50 shadow-md'
-                : 'border-gray-200 bg-white hover:border-brand-200 hover:bg-gray-50'
+                : 'border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-brand-200 hover:bg-gray-50 dark:hover:bg-slate-800 dark:bg-slate-800'
             }`}
           >
             <Building2 className={`w-8 h-8 mb-3 ${workTypes.includes('clt') ? 'text-brand-600' : 'text-gray-400'}`} />
-            <span className={`font-semibold ${workTypes.includes('clt') ? 'text-brand-700' : 'text-gray-700'}`}>CLT</span>
-            <span className="text-sm text-gray-500 mt-1">Carteira assinada</span>
+            <span className={`font-semibold ${workTypes.includes('clt') ? 'text-brand-700' : 'text-gray-700 dark:text-gray-300'}`}>CLT</span>
+            <span className="text-sm text-gray-500 dark:text-gray-400 mt-1">Carteira assinada</span>
             {workTypes.includes('clt') && (
               <Check className="w-5 h-5 text-brand-600 mt-2" />
             )}
@@ -158,12 +158,12 @@ const Step2WorkType = ({ workTypes, setWorkTypes }) => {
             className={`flex flex-col items-center justify-center p-6 rounded-xl border-2 transition-all duration-200 min-h-[140px] w-full ${
               workTypes.includes('autonomo')
                 ? 'border-brand-500 bg-brand-50 shadow-md'
-                : 'border-gray-200 bg-white hover:border-brand-200 hover:bg-gray-50'
+                : 'border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-brand-200 hover:bg-gray-50 dark:hover:bg-slate-800 dark:bg-slate-800'
             }`}
           >
             <Briefcase className={`w-8 h-8 mb-3 ${workTypes.includes('autonomo') ? 'text-brand-600' : 'text-gray-400'}`} />
-            <span className={`font-semibold ${workTypes.includes('autonomo') ? 'text-brand-700' : 'text-gray-700'}`}>Autônomo</span>
-            <span className="text-sm text-gray-500 mt-1">Conta própria</span>
+            <span className={`font-semibold ${workTypes.includes('autonomo') ? 'text-brand-700' : 'text-gray-700 dark:text-gray-300'}`}>Autônomo</span>
+            <span className="text-sm text-gray-500 dark:text-gray-400 mt-1">Conta própria</span>
             {workTypes.includes('autonomo') && (
               <Check className="w-5 h-5 text-brand-600 mt-2" />
             )}
@@ -171,8 +171,8 @@ const Step2WorkType = ({ workTypes, setWorkTypes }) => {
         </div>
 
         {/* Opção Nenhum */}
-        <label className="flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer hover:bg-gray-50 transition-colors ${
-          workTypes.includes('nenhum') ? 'border-brand-500 bg-brand-50' : 'border-gray-200'
+        <label className="flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-800 dark:bg-slate-800 transition-colors ${
+          workTypes.includes('nenhum') ? 'border-brand-500 bg-brand-50' : 'border-gray-200 dark:border-slate-700'
         }">
           <input
             type="checkbox"
@@ -180,7 +180,7 @@ const Step2WorkType = ({ workTypes, setWorkTypes }) => {
             onChange={() => toggleWorkType('nenhum')}
             className="w-4 h-4 text-brand-600 rounded border-gray-300 focus:ring-brand-500"
           />
-          <span className={`${workTypes.includes('nenhum') ? 'text-brand-700 font-medium' : 'text-gray-600'}`}>
+          <span className={`${workTypes.includes('nenhum') ? 'text-brand-700 font-medium' : 'text-gray-600 dark:text-gray-400'}`}>
             Nenhum dos anteriores / Não se aplica
           </span>
         </label>
@@ -251,10 +251,10 @@ const Step3AccountType = ({ accountType, setAccountType, members, setMembers, us
 
   return (
     <div>
-      <h2 className="text-xl font-bold text-gray-900 text-center mb-2">
+      <h2 className="text-xl font-bold text-gray-900 dark:text-white text-center mb-2">
         Este controle é individual ou conjunto?
       </h2>
-      <p className="text-gray-500 text-center mb-8">
+      <p className="text-gray-500 dark:text-gray-400 text-center mb-8">
         Você pode gerenciar as finanças sozinho ou com outras pessoas.
       </p>
 
@@ -279,7 +279,7 @@ const Step3AccountType = ({ accountType, setAccountType, members, setMembers, us
       {accountType === 'conjunta' && (
         <div className="max-w-md mx-auto mt-8 animate-in fade-in slide-in-from-top-2 duration-300">
           <div className="flex items-center justify-between mb-4">
-            <span className="text-sm font-medium text-gray-700">Integrantes da conta</span>
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Integrantes da conta</span>
             <Button
               variant="outline"
               size="sm"
@@ -293,14 +293,14 @@ const Step3AccountType = ({ accountType, setAccountType, members, setMembers, us
 
           {/* Usuário principal (sempre visível) */}
           <div className="space-y-3">
-            <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+            <div className="p-4 bg-gray-50 dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700">
               <Input
                 type="email"
                 value={userEmail}
                 disabled
-                className="bg-white mb-2"
+                className="bg-white dark:bg-slate-800 mb-2"
               />
-              <p className="text-xs text-gray-500">Você (proprietário da conta)</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Você (proprietário da conta)</p>
             </div>
 
             {/* Membros adicionados */}
@@ -308,12 +308,12 @@ const Step3AccountType = ({ accountType, setAccountType, members, setMembers, us
               const memberWorkTypes = member.workTypes || [];
 
               return (
-                <div key={index} className="p-4 bg-white rounded-lg border border-gray-200 space-y-3">
+                <div key={index} className="p-4 bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700 space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-gray-600">Integrante {index + 1}</span>
+                    <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Integrante {index + 1}</span>
                     <button
                       onClick={() => removeMember(index)}
-                      className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-colors"
+                      className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950 rounded-md transition-colors"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -336,14 +336,14 @@ const Step3AccountType = ({ accountType, setAccountType, members, setMembers, us
 
                   {/* Tipo de trabalho do membro (multisseleção) */}
                   <div className="mt-2">
-                    <span className="text-sm text-gray-600 block mb-2">Tipo de trabalho</span>
+                    <span className="text-sm text-gray-600 dark:text-gray-400 block mb-2">Tipo de trabalho</span>
                     <div className="flex flex-wrap gap-2">
                       <button
                         onClick={() => toggleMemberWorkType(index, 'clt')}
                         className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all ${
                           memberWorkTypes.includes('clt')
                             ? 'bg-brand-600 text-white'
-                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                            : 'bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-slate-600 dark:bg-slate-600'
                         }`}
                       >
                         <Building2 className="w-3.5 h-3.5" />
@@ -355,7 +355,7 @@ const Step3AccountType = ({ accountType, setAccountType, members, setMembers, us
                         className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all ${
                           memberWorkTypes.includes('autonomo')
                             ? 'bg-brand-600 text-white'
-                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                            : 'bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-slate-600 dark:bg-slate-600'
                         }`}
                       >
                         <Briefcase className="w-3.5 h-3.5" />
@@ -367,7 +367,7 @@ const Step3AccountType = ({ accountType, setAccountType, members, setMembers, us
                         className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all ${
                           memberWorkTypes.includes('nenhum')
                             ? 'bg-gray-600 text-white'
-                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                            : 'bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-slate-600 dark:bg-slate-600'
                         }`}
                       >
                         Nenhum
@@ -513,18 +513,18 @@ const Step4Income = ({ accountType, members, userEmail, workTypes, incomes, setI
 
   return (
     <div>
-      <h2 className="text-xl font-bold text-gray-900 text-center mb-2">
+      <h2 className="text-xl font-bold text-gray-900 dark:text-white text-center mb-2">
         Qual é sua principal fonte de renda?
       </h2>
-      <p className="text-gray-500 text-center mb-8">
+      <p className="text-gray-500 dark:text-gray-400 text-center mb-8">
         Informe o valor líquido e o dia que você costuma receber.
       </p>
 
       <div className="max-w-md mx-auto space-y-6">
         {/* Rendas do usuário principal */}
-        <div className="p-4 bg-white rounded-lg border border-gray-200">
+        <div className="p-4 bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-medium text-gray-900">Suas rendas</h3>
+            <h3 className="font-medium text-gray-900 dark:text-white">Suas rendas</h3>
             <span className="text-xs px-2 py-1 bg-brand-100 text-brand-700 rounded-full">
               Titular
             </span>
@@ -535,11 +535,11 @@ const Step4Income = ({ accountType, members, userEmail, workTypes, incomes, setI
               const income = incomes.find(i => i.memberEmail === null && i.incomeType === type) || { amount: '', paymentDay: '' };
 
               return (
-                <div key={type} className="p-3 bg-gray-50 rounded-lg">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">{label}</label>
+                <div key={type} className="p-3 bg-gray-50 dark:bg-slate-800 rounded-lg">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{label}</label>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs text-gray-500 mb-1">Valor líquido (R$)</label>
+                      <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Valor líquido (R$)</label>
                       <Input
                         type="text"
                         placeholder="5.000,00"
@@ -548,7 +548,7 @@ const Step4Income = ({ accountType, members, userEmail, workTypes, incomes, setI
                       />
                     </div>
                     <div>
-                      <label className="block text-xs text-gray-500 mb-1">Dia do recebimento</label>
+                      <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Dia do recebimento</label>
                       <Select
                         value={income.paymentDay}
                         onValueChange={(value) => updateIncome(null, type, 'paymentDay', value)}
@@ -577,12 +577,12 @@ const Step4Income = ({ accountType, members, userEmail, workTypes, incomes, setI
           const memberIncomeTypes = getIncomeTypesForWorkTypes(member.workTypes);
 
           return (
-            <div key={member.email || idx} className="p-4 bg-white rounded-lg border border-gray-200">
+            <div key={member.email || idx} className="p-4 bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="font-medium text-gray-900 truncate max-w-[200px]" title={member.email}>
+                <h3 className="font-medium text-gray-900 dark:text-white truncate max-w-[200px]" title={member.email}>
                   {member.email}
                 </h3>
-                <span className="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded-full">
+                <span className="text-xs px-2 py-1 bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-400 rounded-full">
                   Dependente
                 </span>
               </div>
@@ -594,11 +594,11 @@ const Step4Income = ({ accountType, members, userEmail, workTypes, incomes, setI
                   ) || { amount: '', paymentDay: '' };
 
                   return (
-                    <div key={type} className="p-3 bg-gray-50 rounded-lg">
-                      <label className="block text-sm font-medium text-gray-700 mb-2">{label}</label>
+                    <div key={type} className="p-3 bg-gray-50 dark:bg-slate-800 rounded-lg">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{label}</label>
                       <div className="grid grid-cols-2 gap-3">
                         <div>
-                          <label className="block text-xs text-gray-500 mb-1">Valor líquido (R$)</label>
+                          <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Valor líquido (R$)</label>
                           <Input
                             type="text"
                             placeholder="5.000,00"
@@ -607,7 +607,7 @@ const Step4Income = ({ accountType, members, userEmail, workTypes, incomes, setI
                           />
                         </div>
                         <div>
-                          <label className="block text-xs text-gray-500 mb-1">Dia do recebimento</label>
+                          <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Dia do recebimento</label>
                           <Select
                             value={income.paymentDay}
                             onValueChange={(value) => updateIncome(member.email, type, 'paymentDay', value)}
@@ -659,24 +659,24 @@ const Step5Housing = ({ housing, setHousing, accountType, members, userEmail }) 
 
   return (
     <div>
-      <h2 className="text-xl font-bold text-gray-900 text-center mb-2">
+      <h2 className="text-xl font-bold text-gray-900 dark:text-white text-center mb-2">
         Quanto você paga de moradia?
       </h2>
-      <p className="text-gray-500 text-center mb-8">
+      <p className="text-gray-500 dark:text-gray-400 text-center mb-8">
         Informe o valor e dia de vencimento.
       </p>
 
       <div className="max-w-md mx-auto space-y-6">
         {/* Tipo de despesa */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Tipo de despesa</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Tipo de despesa</label>
           <div className="grid grid-cols-2 gap-3">
             <button
               onClick={() => setHousing({ ...housing, type: 'aluguel' })}
               className={`p-4 rounded-xl border-2 text-center font-medium transition-all ${
                 housing.type === 'aluguel'
                   ? 'border-brand-500 bg-brand-50 text-brand-700'
-                  : 'border-gray-200 bg-white text-gray-700 hover:border-brand-200'
+                  : 'border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-700 dark:text-gray-300 hover:border-brand-200'
               }`}
             >
               Aluguel
@@ -686,7 +686,7 @@ const Step5Housing = ({ housing, setHousing, accountType, members, userEmail }) 
               className={`p-4 rounded-xl border-2 text-center font-medium transition-all ${
                 housing.type === 'financiamento'
                   ? 'border-brand-500 bg-brand-50 text-brand-700'
-                  : 'border-gray-200 bg-white text-gray-700 hover:border-brand-200'
+                  : 'border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-700 dark:text-gray-300 hover:border-brand-200'
               }`}
             >
               Financiamento
@@ -697,7 +697,7 @@ const Step5Housing = ({ housing, setHousing, accountType, members, userEmail }) 
         {/* Valor e Dia */}
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm text-gray-600 mb-1">Valor (R$)</label>
+            <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Valor (R$)</label>
             <Input
               type="text"
               placeholder="ex: 1.500,00"
@@ -707,7 +707,7 @@ const Step5Housing = ({ housing, setHousing, accountType, members, userEmail }) 
             />
           </div>
           <div>
-            <label className="block text-sm text-gray-600 mb-1">Dia do vencimento</label>
+            <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Dia do vencimento</label>
             <Select
               value={housing.dueDay}
               onValueChange={(value) => setHousing({ ...housing, dueDay: value })}
@@ -730,7 +730,7 @@ const Step5Housing = ({ housing, setHousing, accountType, members, userEmail }) 
         {/* Responsável */}
         {accountType === 'conjunta' && (
           <div>
-            <label className="block text-sm text-gray-600 mb-1">Responsável</label>
+            <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Responsável</label>
             <Select
               value={housing.responsible}
               onValueChange={(value) => setHousing({ ...housing, responsible: value })}
@@ -751,14 +751,14 @@ const Step5Housing = ({ housing, setHousing, accountType, members, userEmail }) 
         )}
 
         {/* Opção de pular */}
-        <label className="flex items-center gap-3 p-4 rounded-xl border border-gray-200 cursor-pointer hover:bg-gray-50 transition-colors">
+        <label className="flex items-center gap-3 p-4 rounded-xl border border-gray-200 dark:border-slate-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-800 dark:bg-slate-800 transition-colors">
           <input
             type="checkbox"
             checked={housing.skip}
             onChange={(e) => setHousing({ ...housing, skip: e.target.checked })}
             className="w-4 h-4 text-brand-600 rounded border-gray-300 focus:ring-brand-500"
           />
-          <span className="text-gray-600">Não tenho essa despesa ou não quero informar agora</span>
+          <span className="text-gray-600 dark:text-gray-400">Não tenho essa despesa ou não quero informar agora</span>
         </label>
 
         <p className="text-sm text-gray-400 text-center">
@@ -808,18 +808,18 @@ const Step6BasicServices = ({ basicServices, setBasicServices, accountType, memb
 
   return (
     <div>
-      <h2 className="text-xl font-bold text-gray-900 text-center mb-2">
+      <h2 className="text-xl font-bold text-gray-900 dark:text-white text-center mb-2">
         Serviços básicos mensais
       </h2>
-      <p className="text-gray-500 text-center mb-8">
+      <p className="text-gray-500 dark:text-gray-400 text-center mb-8">
         Informe os valores médios que você paga por mês. Deixe em branco os que não se aplicam.
         Se preencher um campo, preencha ambos.
       </p>
 
       <div className="max-w-md mx-auto space-y-4">
         {services.map((service) => (
-          <div key={service.key} className="p-4 bg-white rounded-lg border border-gray-200">
-            <h3 className="font-medium text-gray-900 mb-3">{service.label}</h3>
+          <div key={service.key} className="p-4 bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700">
+            <h3 className="font-medium text-gray-900 dark:text-white mb-3">{service.label}</h3>
             <div className={`grid gap-3 ${accountType === 'conjunta' ? 'grid-cols-3' : 'grid-cols-2'}`}>
               <div>
                 <Input
@@ -1042,7 +1042,7 @@ export default function ConfigurarPerfilPage() {
   // Loading
   if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-brand-50 to-brand-100">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-brand-50 to-brand-100 dark:from-slate-900 dark:to-slate-800">
         <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-brand-600"></div>
       </div>
     );
@@ -1051,7 +1051,7 @@ export default function ConfigurarPerfilPage() {
   const userEmail = user?.email || profile?.email || '';
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-brand-50 to-brand-100 py-8 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-brand-50 to-brand-100 dark:from-slate-900 dark:to-slate-800 py-8 px-4">
       <div className="max-w-2xl mx-auto">
         <Card className="shadow-xl">
           <CardContent className="p-8">
@@ -1059,7 +1059,7 @@ export default function ConfigurarPerfilPage() {
             <div className="flex justify-end mb-4">
               <button
                 onClick={handleLogout}
-                className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+                className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-300 transition-colors"
               >
                 <LogOut className="w-4 h-4" />
                 Sair da conta
@@ -1114,11 +1114,11 @@ export default function ConfigurarPerfilPage() {
             </div>
 
             {/* Navegação */}
-            <div className="flex items-center justify-between mt-8 pt-6 border-t border-gray-100">
+            <div className="flex items-center justify-between mt-8 pt-6 border-t border-gray-100 dark:border-slate-700">
               <button
                 onClick={handleBack}
                 disabled={currentStep === 0}
-                className={`flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors ${
+                className={`flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:text-white transition-colors ${
                   currentStep === 0 ? 'opacity-50 cursor-not-allowed' : ''
                 }`}
               >

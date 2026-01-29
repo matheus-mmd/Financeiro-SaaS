@@ -13,17 +13,20 @@
 
 import { AuthProvider } from '../src/contexts/AuthContext';
 import { ReferenceDataProvider } from '../src/contexts/ReferenceDataContext';
+import { ThemeProvider } from '../src/contexts/ThemeContext';
 import { ToastProvider } from '../src/components/Toast';
 import Layout from '../src/components/Layout';
 
 export function Providers({ children }) {
   return (
-    <AuthProvider>
-      <ReferenceDataProvider>
-        <ToastProvider>
-          <Layout>{children}</Layout>
-        </ToastProvider>
-      </ReferenceDataProvider>
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <ReferenceDataProvider>
+          <ToastProvider>
+            <Layout>{children}</Layout>
+          </ToastProvider>
+        </ReferenceDataProvider>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }

@@ -349,7 +349,7 @@ export default function Table({
               {displayColumns.map((column) => (
                 <TableHead
                   key={column.key}
-                  className={column.sortable ? 'cursor-pointer select-none hover:bg-gray-50' : ''}
+                  className={column.sortable ? 'cursor-pointer select-none hover:bg-gray-50 dark:hover:bg-slate-800' : ''}
                   onClick={() => column.sortable && handleSort(column.key)}
                 >
                   <div className="flex items-center gap-2 uppercase text-xs font-semibold">
@@ -369,7 +369,7 @@ export default function Table({
               <TableRow
                 key={row.id || index}
                 onClick={(e) => handleRowClick(row, e)}
-                className={onRowClick ? 'cursor-pointer hover:bg-gray-50 transition-colors' : ''}
+                className={onRowClick ? 'cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors' : ''}
               >
                 {displayColumns.map((column) => (
                   <TableCell key={column.key}>
