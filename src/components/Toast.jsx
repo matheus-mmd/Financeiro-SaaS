@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, createContext, useContext, useCallback } from 'react';
+import React, { useState, useEffect, createContext, useContext, useCallback, useRef } from 'react';
 import { CheckCircle, XCircle, AlertCircle, X } from 'lucide-react';
 
 // Context para gerenciar toasts globalmente
@@ -19,7 +19,7 @@ export function ToastProvider({ children }) {
 
   const addToast = useCallback((message, type = 'success', duration = 3000) => {
     const id = Date.now();
-    setToasts(prev => [...prev, { id, message, type }]);
+    setToasts(prev => [...prev, { id, message, type, duration }]);
 
     // Auto remove after duration
     setTimeout(() => {
@@ -59,7 +59,18 @@ function ToastContainer({ toasts, onRemove }) {
 }
 
 function Toast({ toast, onRemove }) {
-  const { id, message, type } = toast;
+  const { id, message, type, duration = 3000 } = toast;
+  const progressRef = useRef(null);
+
+  // Animar a barra de progresso via CSS
+  useEffect(() => {
+    const el = progressRef.current;
+    if (!el) return;
+    // Forcar reflow antes de iniciar a animacao
+    el.getBoundingClientRect();
+    el.style.transition = `width ${duration}ms linear`;
+    el.style.width = '0%';
+  }, [duration]);
 
   const icons = {
     success: <CheckCircle className="w-5 h-5 text-green-500" />,
@@ -82,19 +93,36 @@ function Toast({ toast, onRemove }) {
     info: 'text-blue-800',
   };
 
+  const progressColors = {
+    success: 'bg-green-500',
+    error: 'bg-red-500',
+    warning: 'bg-yellow-500',
+    info: 'bg-blue-500',
+  };
+
   return (
     <div
-      className={`flex items-center gap-3 px-4 py-3 rounded-lg border shadow-lg animate-slide-in-right ${bgColors[type]}`}
+      className={`relative overflow-hidden rounded-lg border shadow-lg animate-slide-in-right min-w-[300px] ${bgColors[type]}`}
       role="alert"
     >
-      {icons[type]}
-      <p className={`text-sm font-medium ${textColors[type]}`}>{message}</p>
-      <button
-        onClick={() => onRemove(id)}
-        className="ml-2 p-1 hover:bg-black/5 rounded transition-colors"
-      >
-        <X className="w-4 h-4 text-gray-500" />
-      </button>
+      <div className="flex items-center gap-3 px-4 py-3">
+        {icons[type]}
+        <p className={`flex-1 text-sm font-medium ${textColors[type]}`}>{message}</p>
+        <button
+          onClick={() => onRemove(id)}
+          className="flex-shrink-0 ml-2 p-1 hover:bg-black/5 rounded transition-colors"
+        >
+          <X className="w-4 h-4 text-gray-500" />
+        </button>
+      </div>
+      {/* Barra de progresso */}
+      <div className="h-1 w-full bg-black/5">
+        <div
+          ref={progressRef}
+          className={`h-full ${progressColors[type]}`}
+          style={{ width: '100%' }}
+        />
+      </div>
     </div>
   );
 }
