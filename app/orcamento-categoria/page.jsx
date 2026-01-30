@@ -309,7 +309,7 @@ export default function OrcamentoCategoriaPage() {
             <Button
               onClick={handleOpenModal}
               size="sm"
-              className="bg-green-500 hover:bg-green-600"
+              className="bg-brand-500 hover:bg-brand-600"
               disabled={availableCategories.length === 0}
             >
               <Plus className="w-4 h-4 mr-1" />
@@ -350,7 +350,7 @@ export default function OrcamentoCategoriaPage() {
               </p>
               <Button
                 onClick={handleOpenModal}
-                className="bg-green-500 hover:bg-green-600"
+                className="bg-brand-500 hover:bg-brand-600"
                 disabled={availableCategories.length === 0}
               >
                 <Plus className="w-4 h-4 mr-2" />
@@ -566,7 +566,7 @@ export default function OrcamentoCategoriaPage() {
             </Button>
             <Button
               onClick={handleSubmitBudget}
-              className="flex-1 sm:flex-none bg-green-500 hover:bg-green-600"
+              className="flex-1 sm:flex-none bg-brand-500 hover:bg-brand-600"
             >
               {editingBudget ? 'Salvar' : 'Criar Orçamento'}
             </Button>

@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState } from "react";
@@ -50,15 +51,15 @@ export default function CategoriasPage() {
   const loading = (categoriesLoading && categories.length === 0) || authLoading;
 
   // Estado da tab ativa: 'despesas' ou 'receitas'
-  const [activeTab, setActiveTab] = useState("despesas");
+  const [activeTab, setActiveTab] = useState('despesas');
 
   // Estados para modal de categoria
   const [modalOpen, setModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState(null);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [categoryData, setCategoryData] = useState({
-    emoji: "",
-    name: "",
+    emoji: '',
+    name: '',
   });
 
   // Estados para modal de confirmação de exclusão
@@ -68,14 +69,11 @@ export default function CategoriasPage() {
   // Funções auxiliares
   const handleAuthFailure = async () => {
     await signOut();
-    router.replace("/");
+    router.replace('/');
   };
 
   const isAuthError = (err) => {
-    return (
-      err?.code === "AUTH_REQUIRED" ||
-      err?.message?.includes("Usuário não autenticado")
-    );
+    return err?.code === 'AUTH_REQUIRED' || err?.message?.includes('Usuário não autenticado');
   };
 
   // Função para traduzir mensagens de erro técnicas para mensagens amigáveis
@@ -83,15 +81,13 @@ export default function CategoriasPage() {
     const errorMessage = err?.message || String(err);
 
     // Erro de nome duplicado
-    if (
-      errorMessage.includes("categories_unique_name_per_user") ||
-      errorMessage.includes("duplicate key")
-    ) {
-      return "Já existe uma categoria com esse nome. Escolha um nome diferente.";
+    if (errorMessage.includes('categories_unique_name_per_user') ||
+        errorMessage.includes('duplicate key')) {
+      return 'Já existe uma categoria com esse nome. Escolha um nome diferente.';
     }
 
     // Erro genérico
-    return "Erro ao salvar categoria. Tente novamente.";
+    return 'Erro ao salvar categoria. Tente novamente.';
   };
 
   if (categoriesError && isAuthError(categoriesError)) {
@@ -100,36 +96,24 @@ export default function CategoriasPage() {
   }
 
   if (!authLoading && !user) {
-    router.replace("/");
+    router.replace('/');
     return <PageSkeleton />;
   }
 
   // Filtrar categorias por tipo e se é padrão ou personalizada
-  const expenseCategories = categories.filter(
-    (cat) => cat.transaction_type_id === 2,
-  );
-  const incomeCategories = categories.filter(
-    (cat) => cat.transaction_type_id === 1,
-  );
+  const expenseCategories = categories.filter(cat => cat.transaction_type_id === 2);
+  const incomeCategories = categories.filter(cat => cat.transaction_type_id === 1);
 
   // Separar categorias padrão (is_default=true) das personalizadas (is_default=false ou null)
-  const defaultExpenseCategories = expenseCategories.filter(
-    (cat) => cat.is_default === true,
-  );
-  const defaultIncomeCategories = incomeCategories.filter(
-    (cat) => cat.is_default === true,
-  );
-  const userExpenseCategories = expenseCategories.filter(
-    (cat) => !cat.is_default,
-  );
-  const userIncomeCategories = incomeCategories.filter(
-    (cat) => !cat.is_default,
-  );
+  const defaultExpenseCategories = expenseCategories.filter(cat => cat.is_default === true);
+  const defaultIncomeCategories = incomeCategories.filter(cat => cat.is_default === true);
+  const userExpenseCategories = expenseCategories.filter(cat => !cat.is_default);
+  const userIncomeCategories = incomeCategories.filter(cat => !cat.is_default);
 
   // Abrir modal para nova categoria
   const handleOpenModal = () => {
     setEditingCategory(null);
-    setCategoryData({ emoji: "", name: "" });
+    setCategoryData({ emoji: '', name: '' });
     setShowEmojiPicker(false);
     setModalOpen(true);
   };
@@ -138,7 +122,7 @@ export default function CategoriasPage() {
   const handleOpenEditModal = (category) => {
     setEditingCategory(category);
     setCategoryData({
-      emoji: category.emoji || "📦",
+      emoji: category.emoji || '📦',
       name: category.name,
     });
     setShowEmojiPicker(false);
@@ -148,7 +132,7 @@ export default function CategoriasPage() {
   // Criar ou editar categoria
   const handleSubmitCategory = async () => {
     if (!categoryData.name.trim()) {
-      toast.warning("Por favor, informe o nome da categoria");
+      toast.warning('Por favor, informe o nome da categoria');
       return;
     }
 
@@ -157,24 +141,22 @@ export default function CategoriasPage() {
         // Editar categoria existente
         const result = await updateCategory(editingCategory.id, {
           name: categoryData.name,
-          emoji: categoryData.emoji || "📦",
+          emoji: categoryData.emoji || '📦',
         });
 
         if (result.error) {
           throw result.error;
         }
 
-        toast.success(
-          `Categoria "${categoryData.name}" atualizada com sucesso!`,
-        );
+        toast.success(`Categoria "${categoryData.name}" atualizada com sucesso!`);
       } else {
         // Criar nova categoria
-        const transactionTypeId = activeTab === "despesas" ? 2 : 1;
+        const transactionTypeId = activeTab === 'despesas' ? 2 : 1;
 
         const result = await createCategory({
           name: categoryData.name,
-          emoji: categoryData.emoji || "📦",
-          color: activeTab === "despesas" ? "#ef4444" : "#22c55e",
+          emoji: categoryData.emoji || '📦',
+          color: activeTab === 'despesas' ? '#ef4444' : '#22c55e',
           transactionTypeId,
         });
 
@@ -209,9 +191,7 @@ export default function CategoriasPage() {
     try {
       const result = await removeCategory(categoryToDelete.id);
       if (result.error) throw result.error;
-      toast.success(
-        `Categoria "${categoryToDelete.name}" removida com sucesso!`,
-      );
+      toast.success(`Categoria "${categoryToDelete.name}" removida com sucesso!`);
     } catch (err) {
       if (isAuthError(err)) {
         await handleAuthFailure();
@@ -228,12 +208,8 @@ export default function CategoriasPage() {
     return <PageSkeleton />;
   }
 
-  const currentUserCategories =
-    activeTab === "despesas" ? userExpenseCategories : userIncomeCategories;
-  const currentDefaultCategories =
-    activeTab === "despesas"
-      ? defaultExpenseCategories
-      : defaultIncomeCategories;
+  const currentUserCategories = activeTab === 'despesas' ? userExpenseCategories : userIncomeCategories;
+  const currentDefaultCategories = activeTab === 'despesas' ? defaultExpenseCategories : defaultIncomeCategories;
 
   return (
     <div className="space-y-4 animate-fade-in">
@@ -247,22 +223,22 @@ export default function CategoriasPage() {
         <CardContent className="p-0">
           <div className="flex border-b border-gray-200 dark:border-slate-700">
             <button
-              onClick={() => setActiveTab("despesas")}
+              onClick={() => setActiveTab('despesas')}
               className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-medium border-b-2 transition-colors ${
-                activeTab === "despesas"
-                  ? "border-brand-600 text-brand-600"
-                  : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-300"
+                activeTab === 'despesas'
+                  ? 'border-brand-600 text-brand-600'
+                  : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-300'
               }`}
             >
               <TrendingDown className="w-4 h-4" />
               Despesas
             </button>
             <button
-              onClick={() => setActiveTab("receitas")}
+              onClick={() => setActiveTab('receitas')}
               className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-medium border-b-2 transition-colors ${
-                activeTab === "receitas"
-                  ? "border-brand-600 text-brand-600"
-                  : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-300"
+                activeTab === 'receitas'
+                  ? 'border-brand-600 text-brand-600'
+                  : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-300'
               }`}
             >
               <TrendingUp className="w-4 h-4" />
@@ -275,35 +251,25 @@ export default function CategoriasPage() {
       {/* Categorias Personalizadas */}
       <Card>
         <CardContent className="p-4">
-          <div className="flex items-center gap-3 mb-6">
-            <div
-              className={`p-2 rounded-lg ${activeTab === "despesas" ? "bg-red-100" : "bg-green-100"}`}
-            >
-              {activeTab === "despesas" ? (
-                <TrendingDown className="w-5 h-5 text-red-600" />
-              ) : (
-                <TrendingUp className="w-5 h-5 text-green-600" />
-              )}
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <div className={`p-2 rounded-lg ${activeTab === 'despesas' ? 'bg-red-100 dark:bg-red-900' : 'bg-green-100 dark:bg-green-900'}`}>
+                {activeTab === 'despesas' ? (
+                  <TrendingDown className="w-5 h-5 text-red-600" />
+                ) : (
+                  <TrendingUp className="w-5 h-5 text-green-600" />
+                )}
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  Categorias Personalizadas
+                </h2>
+              </div>
             </div>
-            <div className="flex-1">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                Categorias Personalizadas
-              </h2>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Suas categorias de{" "}
-                {activeTab === "despesas" ? "despesa" : "receita"} criadas (
-                {currentUserCategories.length})
-              </p>
-            </div>
-            {/* Botão sempre visível */}
             <Button
               onClick={handleOpenModal}
               size="sm"
-              className={
-                activeTab === "despesas"
-                  ? "bg-red-500 hover:bg-red-600"
-                  : "bg-green-500 hover:bg-green-600"
-              }
+              className="bg-brand-500 hover:bg-brand-600"
             >
               <Plus className="w-4 h-4 mr-1" />
               Nova
@@ -311,16 +277,20 @@ export default function CategoriasPage() {
           </div>
 
           {currentUserCategories.length === 0 ? (
-            <div className="text-center py-8">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 dark:bg-slate-700 rounded-full mb-3">
-                <Layers className="w-8 h-8 text-gray-400" />
+            <div className="text-center py-12">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-brand-100 dark:bg-brand-900 rounded-full mb-4">
+                <Layers className="w-8 h-8 text-brand-500" />
               </div>
-              <p className="text-gray-500 dark:text-gray-400 mb-1">
-                Nenhuma categoria personalizada
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                Crie suas categorias personalizadas
+              </h3>
+              <p className="text-gray-500 dark:text-gray-400 mb-6 max-w-sm mx-auto">
+                Organize suas {activeTab === 'despesas' ? 'despesas' : 'receitas'} com categorias personalizadas.
               </p>
-              <p className="text-sm text-gray-400">
-                Clique em "Nova" para criar sua primeira categoria
-              </p>
+              <Button onClick={handleOpenModal} className="bg-brand-500 hover:bg-brand-600">
+                <Plus className="w-4 h-4 mr-2" />
+                Criar Primeira Categoria
+              </Button>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -330,10 +300,8 @@ export default function CategoriasPage() {
                   className="group relative bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg p-4 hover:shadow-md hover:border-gray-300 dark:hover:border-slate-600 transition-all"
                 >
                   <div className="flex items-center gap-3">
-                    <span className="text-2xl">{category.emoji || "📦"}</span>
-                    <span className="flex-1 font-medium text-gray-900 dark:text-white">
-                      {category.name}
-                    </span>
+                    <span className="text-2xl">{category.emoji || '📦'}</span>
+                    <span className="flex-1 font-medium text-gray-900 dark:text-white">{category.name}</span>
                     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                       <button
                         onClick={() => handleOpenEditModal(category)}
@@ -366,26 +334,23 @@ export default function CategoriasPage() {
               <Layers className="w-5 h-5 text-gray-600 dark:text-gray-400" />
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                Categorias Padrão
-              </h2>
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Categorias Padrão</h2>
               <p className="text-sm text-gray-500 dark:text-gray-400">
-                Categorias de {activeTab === "despesas" ? "despesa" : "receita"}{" "}
-                do sistema ({currentDefaultCategories.length})
+                Categorias de {activeTab === 'despesas' ? 'despesa' : 'receita'} do sistema ({currentDefaultCategories.length})
               </p>
             </div>
           </div>
 
           {currentDefaultCategories.length === 0 ? (
-            <div className="text-center py-8">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 dark:bg-slate-700 rounded-full mb-3">
+            <div className="text-center py-12">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 dark:bg-slate-700 rounded-full mb-4">
                 <Layers className="w-8 h-8 text-gray-400" />
               </div>
-              <p className="text-gray-500 dark:text-gray-400 mb-1">
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
                 Nenhuma categoria padrão
-              </p>
-              <p className="text-sm text-gray-400">
-                Execute a migration para criar as categorias padrão
+              </h3>
+              <p className="text-gray-500 dark:text-gray-400 mb-6 max-w-sm mx-auto">
+                As categorias padrão do sistema aparecerão aqui.
               </p>
             </div>
           ) : (
@@ -395,10 +360,8 @@ export default function CategoriasPage() {
                   key={category.id}
                   className="flex items-center gap-3 p-4 bg-gray-50 dark:bg-slate-800 border border-gray-100 dark:border-slate-700 rounded-lg"
                 >
-                  <span className="text-2xl">{category.emoji || "📦"}</span>
-                  <span className="flex-1 font-medium text-gray-700 dark:text-gray-300">
-                    {category.name}
-                  </span>
+                  <span className="text-2xl">{category.emoji || '📦'}</span>
+                  <span className="flex-1 font-medium text-gray-700 dark:text-gray-300">{category.name}</span>
                   <span className="text-xs px-2 py-0.5 bg-gray-200 dark:bg-slate-600 text-gray-500 dark:text-gray-400 rounded-full">
                     Padrão
                   </span>
@@ -416,7 +379,8 @@ export default function CategoriasPage() {
             <DialogTitle>
               {editingCategory
                 ? `Editar Categoria`
-                : `Nova Categoria de ${activeTab === "despesas" ? "Despesa" : "Receita"}`}
+                : `Nova Categoria de ${activeTab === 'despesas' ? 'Despesa' : 'Receita'}`
+              }
             </DialogTitle>
           </DialogHeader>
 
@@ -457,9 +421,7 @@ export default function CategoriasPage() {
                 <Input
                   id="category-name"
                   value={categoryData.name}
-                  onChange={(e) =>
-                    setCategoryData({ ...categoryData, name: e.target.value })
-                  }
+                  onChange={(e) => setCategoryData({ ...categoryData, name: e.target.value })}
                   placeholder="Ex: Apostas, Academia, Investimento..."
                 />
               </div>
@@ -467,16 +429,12 @@ export default function CategoriasPage() {
               {/* Preview */}
               {categoryData.name && (
                 <div className="p-3 bg-gray-50 dark:bg-slate-800 rounded-lg">
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
-                    Preview:
-                  </p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">Preview:</p>
                   <div className="flex items-center gap-3">
                     {categoryData.emoji && (
                       <span className="text-2xl">{categoryData.emoji}</span>
                     )}
-                    <span className="font-medium text-gray-900 dark:text-white">
-                      {categoryData.name}
-                    </span>
+                    <span className="font-medium text-gray-900 dark:text-white">{categoryData.name}</span>
                   </div>
                 </div>
               )}
@@ -496,7 +454,7 @@ export default function CategoriasPage() {
               onClick={handleSubmitCategory}
               className="flex-1 sm:flex-none"
             >
-              {editingCategory ? "Salvar" : "Criar Categoria"}
+              {editingCategory ? 'Salvar' : 'Criar Categoria'}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -510,7 +468,7 @@ export default function CategoriasPage() {
         description={
           categoryToDelete
             ? `Tem certeza que deseja excluir a categoria "${categoryToDelete.name}"? Esta ação não pode ser desfeita.`
-            : ""
+            : ''
         }
         confirmText="Excluir"
         cancelText="Cancelar"
