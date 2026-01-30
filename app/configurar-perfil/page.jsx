@@ -1,18 +1,18 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { useAuth } from "../../src/contexts/AuthContext";
-import { Button } from "../../src/components/ui/button";
-import { Card, CardContent } from "../../src/components/ui/card";
-import { Input } from "../../src/components/ui/input";
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '../../src/contexts/AuthContext';
+import { Button } from '../../src/components/ui/button';
+import { Card, CardContent } from '../../src/components/ui/card';
+import { Input } from '../../src/components/ui/input';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../../src/components/ui/select";
+} from '../../src/components/ui/select';
 import {
   Compass,
   ChevronLeft,
@@ -27,11 +27,8 @@ import {
   Home,
   Sparkles,
   LogOut,
-} from "lucide-react";
-import {
-  saveUserSetup,
-  parseMoneyToCents,
-} from "../../src/lib/supabase/api/setup";
+} from 'lucide-react';
+import { saveUserSetup, parseMoneyToCents } from '../../src/lib/supabase/api/setup';
 
 const TOTAL_STEPS = 6;
 
@@ -47,17 +44,15 @@ const StepIndicator = ({ currentStep, totalSteps }) => {
             key={i}
             className={`h-2 rounded-full transition-all duration-300 ${
               i < currentStep
-                ? "w-8 bg-brand-600"
+                ? 'w-8 bg-brand-600'
                 : i === currentStep
-                  ? "w-8 bg-brand-400"
-                  : "w-2 bg-gray-200 dark:bg-slate-600"
+                ? 'w-8 bg-brand-400'
+                : 'w-2 bg-gray-200 dark:bg-slate-600'
             }`}
           />
         ))}
       </div>
-      <span className="text-sm text-gray-500 dark:text-gray-400">
-        Passo {currentStep + 1} de {totalSteps}
-      </span>
+      <span className="text-sm text-gray-500 dark:text-gray-400">Passo {currentStep + 1} de {totalSteps}</span>
     </div>
   );
 };
@@ -71,21 +66,13 @@ const OptionCard = ({ icon: Icon, title, subtitle, selected, onClick }) => {
       onClick={onClick}
       className={`flex flex-col items-center justify-center p-6 rounded-xl border-2 transition-all duration-200 min-h-[140px] w-full ${
         selected
-          ? "border-brand-500 bg-brand-50 shadow-md"
-          : "border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-brand-200 hover:bg-gray-50 dark:hover:bg-slate-800 dark:bg-slate-800"
+          ? 'border-brand-500 bg-brand-50 shadow-md'
+          : 'border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-brand-200 hover:bg-gray-50 dark:hover:bg-slate-800'
       }`}
     >
-      <Icon
-        className={`w-8 h-8 mb-3 ${selected ? "text-brand-600" : "text-gray-400"}`}
-      />
-      <span
-        className={`font-semibold ${selected ? "text-brand-700" : "text-gray-700 dark:text-gray-300"}`}
-      >
-        {title}
-      </span>
-      <span className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-        {subtitle}
-      </span>
+      <Icon className={`w-8 h-8 mb-3 ${selected ? 'text-brand-600' : 'text-gray-400'}`} />
+      <span className={`font-semibold ${selected ? 'text-brand-700' : 'text-gray-700 dark:text-gray-300'}`}>{title}</span>
+      <span className="text-sm text-gray-500 dark:text-gray-400 mt-1">{subtitle}</span>
     </button>
   );
 };
@@ -105,8 +92,8 @@ const Step1Welcome = ({ onNext }) => {
       </h1>
 
       <p className="text-gray-600 dark:text-gray-400 mb-2 max-w-md mx-auto">
-        Vamos configurar algumas informações iniciais para personalizar sua
-        experiência e já criar suas primeiras transações recorrentes.
+        Vamos configurar algumas informações iniciais para personalizar
+        sua experiência e já criar suas primeiras transações recorrentes.
       </p>
 
       <p className="text-sm text-gray-500 dark:text-gray-400 mb-8">
@@ -121,16 +108,16 @@ const Step1Welcome = ({ onNext }) => {
  */
 const Step2WorkType = ({ workTypes, setWorkTypes }) => {
   const toggleWorkType = (type) => {
-    if (type === "nenhum") {
+    if (type === 'nenhum') {
       // Se selecionar "nenhum", desmarca os outros
-      setWorkTypes(["nenhum"]);
+      setWorkTypes(['nenhum']);
     } else {
       // Se selecionar CLT ou Autônomo, remove "nenhum" se estiver selecionado
-      let newTypes = workTypes.filter((t) => t !== "nenhum");
+      let newTypes = workTypes.filter(t => t !== 'nenhum');
 
       if (newTypes.includes(type)) {
         // Remove se já está selecionado
-        newTypes = newTypes.filter((t) => t !== type);
+        newTypes = newTypes.filter(t => t !== type);
       } else {
         // Adiciona se não está selecionado
         newTypes.push(type);
@@ -146,85 +133,65 @@ const Step2WorkType = ({ workTypes, setWorkTypes }) => {
         Qual é o seu tipo de trabalho?
       </h2>
       <p className="text-gray-500 dark:text-gray-400 text-center mb-8">
-        Isso nos ajuda a categorizar melhor suas receitas e despesas. Você pode
-        selecionar mais de uma opção.
+        Isso nos ajuda a categorizar melhor suas receitas e despesas. Você pode selecionar mais de uma opção.
       </p>
 
       <div className="max-w-md mx-auto space-y-4">
         <div className="grid grid-cols-2 gap-4">
           <button
-            onClick={() => toggleWorkType("clt")}
+            onClick={() => toggleWorkType('clt')}
             className={`flex flex-col items-center justify-center p-6 rounded-xl border-2 transition-all duration-200 min-h-[140px] w-full ${
-              workTypes.includes("clt")
-                ? "border-brand-500 bg-brand-50 shadow-md"
-                : "border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-brand-200 hover:bg-gray-50 dark:hover:bg-slate-800 dark:bg-slate-800"
+              workTypes.includes('clt')
+                ? 'border-brand-500 bg-brand-50 shadow-md'
+                : 'border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-brand-200 hover:bg-gray-50 dark:hover:bg-slate-800'
             }`}
           >
-            <Building2
-              className={`w-8 h-8 mb-3 ${workTypes.includes("clt") ? "text-brand-600" : "text-gray-400"}`}
-            />
-            <span
-              className={`font-semibold ${workTypes.includes("clt") ? "text-brand-700" : "text-gray-700 dark:text-gray-300"}`}
-            >
-              CLT
-            </span>
-            <span className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-              Carteira assinada
-            </span>
-            {workTypes.includes("clt") && (
+            <Building2 className={`w-8 h-8 mb-3 ${workTypes.includes('clt') ? 'text-brand-600' : 'text-gray-400'}`} />
+            <span className={`font-semibold ${workTypes.includes('clt') ? 'text-brand-700' : 'text-gray-700 dark:text-gray-300'}`}>CLT</span>
+            <span className="text-sm text-gray-500 dark:text-gray-400 mt-1">Carteira assinada</span>
+            {workTypes.includes('clt') && (
               <Check className="w-5 h-5 text-brand-600 mt-2" />
             )}
           </button>
           <button
-            onClick={() => toggleWorkType("autonomo")}
+            onClick={() => toggleWorkType('autonomo')}
             className={`flex flex-col items-center justify-center p-6 rounded-xl border-2 transition-all duration-200 min-h-[140px] w-full ${
-              workTypes.includes("autonomo")
-                ? "border-brand-500 bg-brand-50 shadow-md"
-                : "border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-brand-200 hover:bg-gray-50 dark:hover:bg-slate-800 dark:bg-slate-800"
+              workTypes.includes('autonomo')
+                ? 'border-brand-500 bg-brand-50 shadow-md'
+                : 'border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-brand-200 hover:bg-gray-50 dark:hover:bg-slate-800'
             }`}
           >
-            <Briefcase
-              className={`w-8 h-8 mb-3 ${workTypes.includes("autonomo") ? "text-brand-600" : "text-gray-400"}`}
-            />
-            <span
-              className={`font-semibold ${workTypes.includes("autonomo") ? "text-brand-700" : "text-gray-700 dark:text-gray-300"}`}
-            >
-              Autônomo
-            </span>
-            <span className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-              Conta própria
-            </span>
-            {workTypes.includes("autonomo") && (
+            <Briefcase className={`w-8 h-8 mb-3 ${workTypes.includes('autonomo') ? 'text-brand-600' : 'text-gray-400'}`} />
+            <span className={`font-semibold ${workTypes.includes('autonomo') ? 'text-brand-700' : 'text-gray-700 dark:text-gray-300'}`}>Autônomo</span>
+            <span className="text-sm text-gray-500 dark:text-gray-400 mt-1">Conta própria</span>
+            {workTypes.includes('autonomo') && (
               <Check className="w-5 h-5 text-brand-600 mt-2" />
             )}
           </button>
         </div>
 
         {/* Opção Nenhum */}
-        <label
-          className="flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-800 dark:bg-slate-800 transition-colors ${
+        <label className="flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-800 dark:bg-slate-800 transition-colors ${
           workTypes.includes('nenhum') ? 'border-brand-500 bg-brand-50' : 'border-gray-200 dark:border-slate-700'
-        }"
-        >
+        }">
           <input
             type="checkbox"
-            checked={workTypes.includes("nenhum")}
-            onChange={() => toggleWorkType("nenhum")}
+            checked={workTypes.includes('nenhum')}
+            onChange={() => toggleWorkType('nenhum')}
             className="w-4 h-4 text-brand-600 rounded border-gray-300 focus:ring-brand-500"
           />
-          <span
-            className={`${workTypes.includes("nenhum") ? "text-brand-700 font-medium" : "text-gray-600 dark:text-gray-400"}`}
-          >
+          <span className={`${workTypes.includes('nenhum') ? 'text-brand-700 font-medium' : 'text-gray-600 dark:text-gray-400'}`}>
             Nenhum dos anteriores / Não se aplica
           </span>
         </label>
 
         <p className="text-sm text-gray-400 text-center">
           {workTypes.length === 0
-            ? "Selecione pelo menos uma opção para continuar"
-            : workTypes.includes("nenhum")
-              ? "Você selecionou: Nenhum"
-              : `Selecionado: ${workTypes.map((t) => (t === "clt" ? "CLT" : "Autônomo")).join(" e ")}`}
+            ? 'Selecione pelo menos uma opção para continuar'
+            : workTypes.includes('nenhum')
+            ? 'Você selecionou: Nenhum'
+            : `Selecionado: ${workTypes.map(t => t === 'clt' ? 'CLT' : 'Autônomo').join(' e ')}`
+          }
         </p>
       </div>
     </div>
@@ -234,15 +201,9 @@ const Step2WorkType = ({ workTypes, setWorkTypes }) => {
 /**
  * Passo 3: Tipo de conta
  */
-const Step3AccountType = ({
-  accountType,
-  setAccountType,
-  members,
-  setMembers,
-  userEmail,
-}) => {
+const Step3AccountType = ({ accountType, setAccountType, members, setMembers, userEmail }) => {
   const addMember = () => {
-    setMembers([...members, { email: "", phone: "", workTypes: [] }]);
+    setMembers([...members, { email: '', phone: '', workTypes: [] }]);
   };
 
   const removeMember = (index) => {
@@ -259,33 +220,32 @@ const Step3AccountType = ({
     const member = members[index];
     const currentTypes = member.workTypes || [];
 
-    if (type === "nenhum") {
+    if (type === 'nenhum') {
       // Se selecionar "nenhum", desmarca os outros
-      updateMember(index, "workTypes", ["nenhum"]);
+      updateMember(index, 'workTypes', ['nenhum']);
     } else {
       // Se selecionar CLT ou Autônomo, remove "nenhum" se estiver selecionado
-      let newTypes = currentTypes.filter((t) => t !== "nenhum");
+      let newTypes = currentTypes.filter(t => t !== 'nenhum');
 
       if (newTypes.includes(type)) {
         // Remove se já está selecionado
-        newTypes = newTypes.filter((t) => t !== type);
+        newTypes = newTypes.filter(t => t !== type);
       } else {
         // Adiciona se não está selecionado
         newTypes.push(type);
       }
 
-      updateMember(index, "workTypes", newTypes);
+      updateMember(index, 'workTypes', newTypes);
     }
   };
 
   const formatPhone = (value) => {
     // Remove tudo que não é número
-    const numbers = value.replace(/\D/g, "");
+    const numbers = value.replace(/\D/g, '');
 
     // Formata como (XX) XXXXX-XXXX
     if (numbers.length <= 2) return `(${numbers}`;
-    if (numbers.length <= 7)
-      return `(${numbers.slice(0, 2)}) ${numbers.slice(2)}`;
+    if (numbers.length <= 7) return `(${numbers.slice(0, 2)}) ${numbers.slice(2)}`;
     return `(${numbers.slice(0, 2)}) ${numbers.slice(2, 7)}-${numbers.slice(7, 11)}`;
   };
 
@@ -303,25 +263,23 @@ const Step3AccountType = ({
           icon={User}
           title="Individual"
           subtitle="Só para mim"
-          selected={accountType === "individual"}
-          onClick={() => setAccountType("individual")}
+          selected={accountType === 'individual'}
+          onClick={() => setAccountType('individual')}
         />
         <OptionCard
           icon={Users}
           title="Conjunta"
           subtitle="Com outras pessoas"
-          selected={accountType === "conjunta"}
-          onClick={() => setAccountType("conjunta")}
+          selected={accountType === 'conjunta'}
+          onClick={() => setAccountType('conjunta')}
         />
       </div>
 
       {/* Seção de integrantes (apenas para conta conjunta) */}
-      {accountType === "conjunta" && (
+      {accountType === 'conjunta' && (
         <div className="max-w-md mx-auto mt-8 animate-in fade-in slide-in-from-top-2 duration-300">
           <div className="flex items-center justify-between mb-4">
-            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Integrantes da conta
-            </span>
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Integrantes da conta</span>
             <Button
               variant="outline"
               size="sm"
@@ -342,9 +300,7 @@ const Step3AccountType = ({
                 disabled
                 className="bg-white dark:bg-slate-800 mb-2"
               />
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                Você (proprietário da conta)
-              </p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Você (proprietário da conta)</p>
             </div>
 
             {/* Membros adicionados */}
@@ -352,14 +308,9 @@ const Step3AccountType = ({
               const memberWorkTypes = member.workTypes || [];
 
               return (
-                <div
-                  key={index}
-                  className="p-4 bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700 space-y-3"
-                >
+                <div key={index} className="p-4 bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700 space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                      Integrante {index + 1}
-                    </span>
+                    <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Integrante {index + 1}</span>
                     <button
                       onClick={() => removeMember(index)}
                       className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950 rounded-md transition-colors"
@@ -371,79 +322,65 @@ const Step3AccountType = ({
                     type="email"
                     placeholder="Email do integrante"
                     value={member.email}
-                    onChange={(e) =>
-                      updateMember(index, "email", e.target.value)
-                    }
+                    onChange={(e) => updateMember(index, 'email', e.target.value)}
                   />
                   <Input
                     type="tel"
                     placeholder="(00) 00000-0000"
                     value={member.phone}
-                    onChange={(e) =>
-                      updateMember(index, "phone", formatPhone(e.target.value))
-                    }
+                    onChange={(e) => updateMember(index, 'phone', formatPhone(e.target.value))}
                   />
                   <p className="text-xs text-gray-400">
-                    O e-mail é usado para lembretes e o WhatsApp para registrar
-                    transações via mensagem.
+                    O e-mail é usado para lembretes e o WhatsApp para registrar transações via mensagem.
                   </p>
 
                   {/* Tipo de trabalho do membro (multisseleção) */}
                   <div className="mt-2">
-                    <span className="text-sm text-gray-600 dark:text-gray-400 block mb-2">
-                      Tipo de trabalho
-                    </span>
+                    <span className="text-sm text-gray-600 dark:text-gray-400 block mb-2">Tipo de trabalho</span>
                     <div className="flex flex-wrap gap-2">
                       <button
-                        onClick={() => toggleMemberWorkType(index, "clt")}
+                        onClick={() => toggleMemberWorkType(index, 'clt')}
                         className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all ${
-                          memberWorkTypes.includes("clt")
-                            ? "bg-brand-600 text-white"
-                            : "bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-slate-600 dark:bg-slate-600"
+                          memberWorkTypes.includes('clt')
+                            ? 'bg-brand-600 text-white'
+                            : 'bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-slate-600'
                         }`}
                       >
                         <Building2 className="w-3.5 h-3.5" />
                         CLT
-                        {memberWorkTypes.includes("clt") && (
-                          <Check className="w-3 h-3 ml-1" />
-                        )}
+                        {memberWorkTypes.includes('clt') && <Check className="w-3 h-3 ml-1" />}
                       </button>
                       <button
-                        onClick={() => toggleMemberWorkType(index, "autonomo")}
+                        onClick={() => toggleMemberWorkType(index, 'autonomo')}
                         className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all ${
-                          memberWorkTypes.includes("autonomo")
-                            ? "bg-brand-600 text-white"
-                            : "bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-slate-600 dark:bg-slate-600"
+                          memberWorkTypes.includes('autonomo')
+                            ? 'bg-brand-600 text-white'
+                            : 'bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-slate-600'
                         }`}
                       >
                         <Briefcase className="w-3.5 h-3.5" />
                         Autônomo
-                        {memberWorkTypes.includes("autonomo") && (
-                          <Check className="w-3 h-3 ml-1" />
-                        )}
+                        {memberWorkTypes.includes('autonomo') && <Check className="w-3 h-3 ml-1" />}
                       </button>
                       <button
-                        onClick={() => toggleMemberWorkType(index, "nenhum")}
+                        onClick={() => toggleMemberWorkType(index, 'nenhum')}
                         className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all ${
-                          memberWorkTypes.includes("nenhum")
-                            ? "bg-gray-600 text-white"
-                            : "bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-slate-600 dark:bg-slate-600"
+                          memberWorkTypes.includes('nenhum')
+                            ? 'bg-gray-600 text-white'
+                            : 'bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-slate-600'
                         }`}
                       >
                         Nenhum
-                        {memberWorkTypes.includes("nenhum") && (
-                          <Check className="w-3 h-3 ml-1" />
-                        )}
+                        {memberWorkTypes.includes('nenhum') && <Check className="w-3 h-3 ml-1" />}
                       </button>
                     </div>
                     <p className="text-xs text-gray-400 mt-1">
                       {memberWorkTypes.length === 0
-                        ? "Selecione o tipo de trabalho"
-                        : memberWorkTypes.includes("nenhum")
-                          ? "Nenhum"
-                          : memberWorkTypes
-                              .map((t) => (t === "clt" ? "CLT" : "Autônomo"))
-                              .join(" e ")}
+                        ? 'Selecione o tipo de trabalho'
+                        : memberWorkTypes.includes('nenhum')
+                        ? 'Nenhum'
+                        : memberWorkTypes.map(t => t === 'clt' ? 'CLT' : 'Autônomo').join(' e ')
+                      }
                     </p>
                   </div>
                 </div>
@@ -468,34 +405,25 @@ const dayOptions = Array.from({ length: 31 }, (_, i) => ({
  * Gera os tipos de renda baseados nos workTypes selecionados
  */
 const getIncomeTypesForWorkTypes = (workTypes) => {
-  if (!workTypes || workTypes.length === 0 || workTypes.includes("nenhum")) {
-    return [{ type: "principal", label: "Renda principal" }];
+  if (!workTypes || workTypes.length === 0 || workTypes.includes('nenhum')) {
+    return [{ type: 'principal', label: 'Renda principal' }];
   }
 
   const types = [];
-  if (workTypes.includes("clt")) {
-    types.push({ type: "clt", label: "Renda CLT" });
+  if (workTypes.includes('clt')) {
+    types.push({ type: 'clt', label: 'Renda CLT' });
   }
-  if (workTypes.includes("autonomo")) {
-    types.push({ type: "autonomo", label: "Renda Autônomo" });
+  if (workTypes.includes('autonomo')) {
+    types.push({ type: 'autonomo', label: 'Renda Autônomo' });
   }
 
-  return types.length > 0
-    ? types
-    : [{ type: "principal", label: "Renda principal" }];
+  return types.length > 0 ? types : [{ type: 'principal', label: 'Renda principal' }];
 };
 
 /**
  * Passo 4: Fonte de renda
  */
-const Step4Income = ({
-  accountType,
-  members,
-  userEmail,
-  workTypes,
-  incomes,
-  setIncomes,
-}) => {
+const Step4Income = ({ accountType, members, userEmail, workTypes, incomes, setIncomes }) => {
   // Sincroniza as rendas com os tipos de trabalho e membros atuais
   useEffect(() => {
     let updatedIncomes = [...incomes];
@@ -505,64 +433,48 @@ const Step4Income = ({
 
     // Garante que as rendas do usuário principal existam para cada tipo
     userIncomeTypes.forEach(({ type }) => {
-      const hasIncome = updatedIncomes.some(
-        (i) => i.memberEmail === null && i.incomeType === type,
-      );
+      const hasIncome = updatedIncomes.some(i => i.memberEmail === null && i.incomeType === type);
       if (!hasIncome) {
-        updatedIncomes.push({
-          memberEmail: null,
-          incomeType: type,
-          amount: "",
-          paymentDay: "",
-        });
+        updatedIncomes.push({ memberEmail: null, incomeType: type, amount: '', paymentDay: '' });
       }
     });
 
     // Remove rendas do usuário que não correspondem aos tipos atuais
-    updatedIncomes = updatedIncomes.filter((i) => {
+    updatedIncomes = updatedIncomes.filter(i => {
       if (i.memberEmail !== null) return true;
       return userIncomeTypes.some(({ type }) => type === i.incomeType);
     });
 
     // Se for conta conjunta, sincroniza com os membros
-    if (accountType === "conjunta") {
-      members
-        .filter((m) => m.email)
-        .forEach((member) => {
-          const memberIncomeTypes = getIncomeTypesForWorkTypes(
-            member.workTypes,
+    if (accountType === 'conjunta') {
+      members.filter(m => m.email).forEach(member => {
+        const memberIncomeTypes = getIncomeTypesForWorkTypes(member.workTypes);
+
+        // Adiciona rendas para cada tipo do membro
+        memberIncomeTypes.forEach(({ type }) => {
+          const hasIncome = updatedIncomes.some(
+            i => i.memberEmail === member.email && i.incomeType === type
           );
-
-          // Adiciona rendas para cada tipo do membro
-          memberIncomeTypes.forEach(({ type }) => {
-            const hasIncome = updatedIncomes.some(
-              (i) => i.memberEmail === member.email && i.incomeType === type,
-            );
-            if (!hasIncome) {
-              updatedIncomes.push({
-                memberEmail: member.email,
-                incomeType: type,
-                amount: "",
-                paymentDay: "",
-              });
-            }
-          });
-
-          // Remove rendas do membro que não correspondem aos tipos atuais
-          updatedIncomes = updatedIncomes.filter((i) => {
-            if (i.memberEmail !== member.email) return true;
-            return memberIncomeTypes.some(({ type }) => type === i.incomeType);
-          });
+          if (!hasIncome) {
+            updatedIncomes.push({ memberEmail: member.email, incomeType: type, amount: '', paymentDay: '' });
+          }
         });
 
+        // Remove rendas do membro que não correspondem aos tipos atuais
+        updatedIncomes = updatedIncomes.filter(i => {
+          if (i.memberEmail !== member.email) return true;
+          return memberIncomeTypes.some(({ type }) => type === i.incomeType);
+        });
+      });
+
       // Remove rendas de membros que não existem mais
-      const memberEmails = members.filter((m) => m.email).map((m) => m.email);
-      updatedIncomes = updatedIncomes.filter(
-        (i) => i.memberEmail === null || memberEmails.includes(i.memberEmail),
+      const memberEmails = members.filter(m => m.email).map(m => m.email);
+      updatedIncomes = updatedIncomes.filter(i =>
+        i.memberEmail === null || memberEmails.includes(i.memberEmail)
       );
     } else {
       // Se for individual, remove rendas de membros
-      updatedIncomes = updatedIncomes.filter((i) => i.memberEmail === null);
+      updatedIncomes = updatedIncomes.filter(i => i.memberEmail === null);
     }
 
     // Só atualiza se houver mudanças
@@ -572,12 +484,9 @@ const Step4Income = ({
   }, [accountType, members, workTypes, incomes, setIncomes]);
 
   const updateIncome = (memberEmail, incomeType, field, value) => {
-    setIncomes((prevIncomes) => {
-      return prevIncomes.map((income) => {
-        if (
-          income.memberEmail === memberEmail &&
-          income.incomeType === incomeType
-        ) {
+    setIncomes(prevIncomes => {
+      return prevIncomes.map(income => {
+        if (income.memberEmail === memberEmail && income.incomeType === incomeType) {
           return { ...income, [field]: value };
         }
         return income;
@@ -587,13 +496,13 @@ const Step4Income = ({
 
   const formatMoney = (value) => {
     // Remove tudo que não é número
-    const numbers = value.replace(/\D/g, "");
+    const numbers = value.replace(/\D/g, '');
 
-    if (!numbers) return "";
+    if (!numbers) return '';
 
     // Converte para número e formata
     const amount = parseInt(numbers, 10) / 100;
-    return amount.toLocaleString("pt-BR", {
+    return amount.toLocaleString('pt-BR', {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     });
@@ -615,9 +524,7 @@ const Step4Income = ({
         {/* Rendas do usuário principal */}
         <div className="p-4 bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-medium text-gray-900 dark:text-white">
-              Suas rendas
-            </h3>
+            <h3 className="font-medium text-gray-900 dark:text-white">Suas rendas</h3>
             <span className="text-xs px-2 py-1 bg-brand-100 text-brand-700 rounded-full">
               Titular
             </span>
@@ -625,46 +532,26 @@ const Step4Income = ({
 
           <div className="space-y-4">
             {userIncomeTypes.map(({ type, label }) => {
-              const income = incomes.find(
-                (i) => i.memberEmail === null && i.incomeType === type,
-              ) || { amount: "", paymentDay: "" };
+              const income = incomes.find(i => i.memberEmail === null && i.incomeType === type) || { amount: '', paymentDay: '' };
 
               return (
-                <div
-                  key={type}
-                  className="p-3 bg-gray-50 dark:bg-slate-800 rounded-lg"
-                >
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    {label}
-                  </label>
+                <div key={type} className="p-3 bg-gray-50 dark:bg-slate-800 rounded-lg">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{label}</label>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">
-                        Valor líquido (R$)
-                      </label>
+                      <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Valor líquido (R$)</label>
                       <Input
                         type="text"
                         placeholder="5.000,00"
                         value={income.amount}
-                        onChange={(e) =>
-                          updateIncome(
-                            null,
-                            type,
-                            "amount",
-                            formatMoney(e.target.value),
-                          )
-                        }
+                        onChange={(e) => updateIncome(null, type, 'amount', formatMoney(e.target.value))}
                       />
                     </div>
                     <div>
-                      <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">
-                        Dia do recebimento
-                      </label>
+                      <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Dia do recebimento</label>
                       <Select
                         value={income.paymentDay}
-                        onValueChange={(value) =>
-                          updateIncome(null, type, "paymentDay", value)
-                        }
+                        onValueChange={(value) => updateIncome(null, type, 'paymentDay', value)}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Selecione" />
@@ -686,104 +573,65 @@ const Step4Income = ({
         </div>
 
         {/* Renda dos membros (conta conjunta) */}
-        {accountType === "conjunta" &&
-          members
-            .filter((m) => m.email)
-            .map((member, idx) => {
-              const memberIncomeTypes = getIncomeTypesForWorkTypes(
-                member.workTypes,
-              );
+        {accountType === 'conjunta' && members.filter(m => m.email).map((member, idx) => {
+          const memberIncomeTypes = getIncomeTypesForWorkTypes(member.workTypes);
 
-              return (
-                <div
-                  key={member.email || idx}
-                  className="p-4 bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700"
-                >
-                  <div className="flex items-center justify-between mb-4">
-                    <h3
-                      className="font-medium text-gray-900 dark:text-white truncate max-w-[200px]"
-                      title={member.email}
-                    >
-                      {member.email}
-                    </h3>
-                    <span className="text-xs px-2 py-1 bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-400 rounded-full">
-                      Dependente
-                    </span>
-                  </div>
+          return (
+            <div key={member.email || idx} className="p-4 bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-medium text-gray-900 dark:text-white truncate max-w-[200px]" title={member.email}>
+                  {member.email}
+                </h3>
+                <span className="text-xs px-2 py-1 bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-400 rounded-full">
+                  Dependente
+                </span>
+              </div>
 
-                  <div className="space-y-4">
-                    {memberIncomeTypes.map(({ type, label }) => {
-                      const income = incomes.find(
-                        (i) =>
-                          i.memberEmail === member.email &&
-                          i.incomeType === type,
-                      ) || { amount: "", paymentDay: "" };
+              <div className="space-y-4">
+                {memberIncomeTypes.map(({ type, label }) => {
+                  const income = incomes.find(
+                    i => i.memberEmail === member.email && i.incomeType === type
+                  ) || { amount: '', paymentDay: '' };
 
-                      return (
-                        <div
-                          key={type}
-                          className="p-3 bg-gray-50 dark:bg-slate-800 rounded-lg"
-                        >
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            {label}
-                          </label>
-                          <div className="grid grid-cols-2 gap-3">
-                            <div>
-                              <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">
-                                Valor líquido (R$)
-                              </label>
-                              <Input
-                                type="text"
-                                placeholder="5.000,00"
-                                value={income.amount}
-                                onChange={(e) =>
-                                  updateIncome(
-                                    member.email,
-                                    type,
-                                    "amount",
-                                    formatMoney(e.target.value),
-                                  )
-                                }
-                              />
-                            </div>
-                            <div>
-                              <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">
-                                Dia do recebimento
-                              </label>
-                              <Select
-                                value={income.paymentDay}
-                                onValueChange={(value) =>
-                                  updateIncome(
-                                    member.email,
-                                    type,
-                                    "paymentDay",
-                                    value,
-                                  )
-                                }
-                              >
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Selecione" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {dayOptions.map((option) => (
-                                    <SelectItem
-                                      key={option.value}
-                                      value={option.value}
-                                    >
-                                      {option.label}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </div>
-                          </div>
+                  return (
+                    <div key={type} className="p-3 bg-gray-50 dark:bg-slate-800 rounded-lg">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{label}</label>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Valor líquido (R$)</label>
+                          <Input
+                            type="text"
+                            placeholder="5.000,00"
+                            value={income.amount}
+                            onChange={(e) => updateIncome(member.email, type, 'amount', formatMoney(e.target.value))}
+                          />
                         </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              );
-            })}
+                        <div>
+                          <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Dia do recebimento</label>
+                          <Select
+                            value={income.paymentDay}
+                            onValueChange={(value) => updateIncome(member.email, type, 'paymentDay', value)}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecione" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {dayOptions.map((option) => (
+                                <SelectItem key={option.value} value={option.value}>
+                                  {option.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
@@ -792,18 +640,12 @@ const Step4Income = ({
 /**
  * Passo 5: Moradia
  */
-const Step5Housing = ({
-  housing,
-  setHousing,
-  accountType,
-  members,
-  userEmail,
-}) => {
+const Step5Housing = ({ housing, setHousing, accountType, members, userEmail }) => {
   const formatMoney = (value) => {
-    const numbers = value.replace(/\D/g, "");
-    if (!numbers) return "";
+    const numbers = value.replace(/\D/g, '');
+    if (!numbers) return '';
     const amount = parseInt(numbers, 10) / 100;
-    return amount.toLocaleString("pt-BR", {
+    return amount.toLocaleString('pt-BR', {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     });
@@ -811,10 +653,8 @@ const Step5Housing = ({
 
   // Lista de responsáveis (Titular + membros)
   const responsibleOptions = [
-    { value: "titular", label: "Titular" },
-    ...members
-      .filter((m) => m.email)
-      .map((m) => ({ value: m.email, label: m.email })),
+    { value: 'titular', label: 'Titular' },
+    ...members.filter(m => m.email).map(m => ({ value: m.email, label: m.email }))
   ];
 
   return (
@@ -829,26 +669,24 @@ const Step5Housing = ({
       <div className="max-w-md mx-auto space-y-6">
         {/* Tipo de despesa */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Tipo de despesa
-          </label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Tipo de despesa</label>
           <div className="grid grid-cols-2 gap-3">
             <button
-              onClick={() => setHousing({ ...housing, type: "aluguel" })}
+              onClick={() => setHousing({ ...housing, type: 'aluguel' })}
               className={`p-4 rounded-xl border-2 text-center font-medium transition-all ${
-                housing.type === "aluguel"
-                  ? "border-brand-500 bg-brand-50 text-brand-700"
-                  : "border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-700 dark:text-gray-300 hover:border-brand-200"
+                housing.type === 'aluguel'
+                  ? 'border-brand-500 bg-brand-50 text-brand-700'
+                  : 'border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-700 dark:text-gray-300 hover:border-brand-200'
               }`}
             >
               Aluguel
             </button>
             <button
-              onClick={() => setHousing({ ...housing, type: "financiamento" })}
+              onClick={() => setHousing({ ...housing, type: 'financiamento' })}
               className={`p-4 rounded-xl border-2 text-center font-medium transition-all ${
-                housing.type === "financiamento"
-                  ? "border-brand-500 bg-brand-50 text-brand-700"
-                  : "border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-700 dark:text-gray-300 hover:border-brand-200"
+                housing.type === 'financiamento'
+                  ? 'border-brand-500 bg-brand-50 text-brand-700'
+                  : 'border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-700 dark:text-gray-300 hover:border-brand-200'
               }`}
             >
               Financiamento
@@ -859,28 +697,20 @@ const Step5Housing = ({
         {/* Valor e Dia */}
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">
-              Valor (R$)
-            </label>
+            <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Valor (R$)</label>
             <Input
               type="text"
               placeholder="ex: 1.500,00"
               value={housing.amount}
-              onChange={(e) =>
-                setHousing({ ...housing, amount: formatMoney(e.target.value) })
-              }
+              onChange={(e) => setHousing({ ...housing, amount: formatMoney(e.target.value) })}
               disabled={housing.skip}
             />
           </div>
           <div>
-            <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">
-              Dia do vencimento
-            </label>
+            <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Dia do vencimento</label>
             <Select
               value={housing.dueDay}
-              onValueChange={(value) =>
-                setHousing({ ...housing, dueDay: value })
-              }
+              onValueChange={(value) => setHousing({ ...housing, dueDay: value })}
               disabled={housing.skip}
             >
               <SelectTrigger>
@@ -898,16 +728,12 @@ const Step5Housing = ({
         </div>
 
         {/* Responsável */}
-        {accountType === "conjunta" && (
+        {accountType === 'conjunta' && (
           <div>
-            <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">
-              Responsável
-            </label>
+            <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Responsável</label>
             <Select
               value={housing.responsible}
-              onValueChange={(value) =>
-                setHousing({ ...housing, responsible: value })
-              }
+              onValueChange={(value) => setHousing({ ...housing, responsible: value })}
               disabled={housing.skip}
             >
               <SelectTrigger>
@@ -932,14 +758,11 @@ const Step5Housing = ({
             onChange={(e) => setHousing({ ...housing, skip: e.target.checked })}
             className="w-4 h-4 text-brand-600 rounded border-gray-300 focus:ring-brand-500"
           />
-          <span className="text-gray-600 dark:text-gray-400">
-            Não tenho essa despesa ou não quero informar agora
-          </span>
+          <span className="text-gray-600 dark:text-gray-400">Não tenho essa despesa ou não quero informar agora</span>
         </label>
 
         <p className="text-sm text-gray-400 text-center">
-          Deixe em branco se não tiver esse gasto. Se preencher um campo,
-          preencha ambos.
+          Deixe em branco se não tiver esse gasto. Se preencher um campo, preencha ambos.
         </p>
       </div>
     </div>
@@ -949,17 +772,12 @@ const Step5Housing = ({
 /**
  * Passo 6: Serviços básicos mensais
  */
-const Step6BasicServices = ({
-  basicServices,
-  setBasicServices,
-  accountType,
-  members,
-}) => {
+const Step6BasicServices = ({ basicServices, setBasicServices, accountType, members }) => {
   const formatMoney = (value) => {
-    const numbers = value.replace(/\D/g, "");
-    if (!numbers) return "";
+    const numbers = value.replace(/\D/g, '');
+    if (!numbers) return '';
     const amount = parseInt(numbers, 10) / 100;
-    return amount.toLocaleString("pt-BR", {
+    return amount.toLocaleString('pt-BR', {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     });
@@ -967,10 +785,8 @@ const Step6BasicServices = ({
 
   // Lista de responsáveis
   const responsibleOptions = [
-    { value: "titular", label: "Titular" },
-    ...members
-      .filter((m) => m.email)
-      .map((m) => ({ value: m.email, label: m.email })),
+    { value: 'titular', label: 'Titular' },
+    ...members.filter(m => m.email).map(m => ({ value: m.email, label: m.email }))
   ];
 
   const updateService = (serviceName, field, value) => {
@@ -984,20 +800,10 @@ const Step6BasicServices = ({
   };
 
   const services = [
-    {
-      key: "condominio",
-      label: "Condomínio",
-      placeholder: "500,00",
-      dayPlaceholder: "10",
-    },
-    {
-      key: "energia",
-      label: "Energia",
-      placeholder: "250,00",
-      dayPlaceholder: "15",
-    },
-    { key: "agua", label: "Água", placeholder: "80,00", dayPlaceholder: "20" },
-    { key: "gas", label: "Gás", placeholder: "50,00", dayPlaceholder: "25" },
+    { key: 'condominio', label: 'Condomínio', placeholder: '500,00', dayPlaceholder: '10' },
+    { key: 'energia', label: 'Energia', placeholder: '250,00', dayPlaceholder: '15' },
+    { key: 'agua', label: 'Água', placeholder: '80,00', dayPlaceholder: '20' },
+    { key: 'gas', label: 'Gás', placeholder: '50,00', dayPlaceholder: '25' },
   ];
 
   return (
@@ -1006,42 +812,27 @@ const Step6BasicServices = ({
         Serviços básicos mensais
       </h2>
       <p className="text-gray-500 dark:text-gray-400 text-center mb-8">
-        Informe os valores médios que você paga por mês. Deixe em branco os que
-        não se aplicam. Se preencher um campo, preencha ambos.
+        Informe os valores médios que você paga por mês. Deixe em branco os que não se aplicam.
+        Se preencher um campo, preencha ambos.
       </p>
 
       <div className="max-w-md mx-auto space-y-4">
         {services.map((service) => (
-          <div
-            key={service.key}
-            className="p-4 bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700"
-          >
-            <h3 className="font-medium text-gray-900 dark:text-white mb-3">
-              {service.label}
-            </h3>
-            <div
-              className={`grid gap-3 ${accountType === "conjunta" ? "grid-cols-3" : "grid-cols-2"}`}
-            >
+          <div key={service.key} className="p-4 bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700">
+            <h3 className="font-medium text-gray-900 dark:text-white mb-3">{service.label}</h3>
+            <div className={`grid gap-3 ${accountType === 'conjunta' ? 'grid-cols-3' : 'grid-cols-2'}`}>
               <div>
                 <Input
                   type="text"
                   placeholder={`ex: ${service.placeholder}`}
-                  value={basicServices[service.key]?.amount || ""}
-                  onChange={(e) =>
-                    updateService(
-                      service.key,
-                      "amount",
-                      formatMoney(e.target.value),
-                    )
-                  }
+                  value={basicServices[service.key]?.amount || ''}
+                  onChange={(e) => updateService(service.key, 'amount', formatMoney(e.target.value))}
                 />
               </div>
               <div>
                 <Select
-                  value={basicServices[service.key]?.dueDay || ""}
-                  onValueChange={(value) =>
-                    updateService(service.key, "dueDay", value)
-                  }
+                  value={basicServices[service.key]?.dueDay || ''}
+                  onValueChange={(value) => updateService(service.key, 'dueDay', value)}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Dia" />
@@ -1055,13 +846,11 @@ const Step6BasicServices = ({
                   </SelectContent>
                 </Select>
               </div>
-              {accountType === "conjunta" && (
+              {accountType === 'conjunta' && (
                 <div>
                   <Select
-                    value={basicServices[service.key]?.responsible || "titular"}
-                    onValueChange={(value) =>
-                      updateService(service.key, "responsible", value)
-                    }
+                    value={basicServices[service.key]?.responsible || 'titular'}
+                    onValueChange={(value) => updateService(service.key, 'responsible', value)}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Titular" />
@@ -1089,70 +878,58 @@ const Step6BasicServices = ({
  */
 export default function ConfigurarPerfilPage() {
   const router = useRouter();
-  const {
-    user,
-    profile,
-    loading: authLoading,
-    refreshProfile,
-    signOut,
-  } = useAuth();
+  const { user, profile, loading: authLoading, refreshProfile, signOut } = useAuth();
 
   const [currentStep, setCurrentStep] = useState(0);
   const [saving, setSaving] = useState(false);
 
   // Estado do formulário
   const [workTypes, setWorkTypes] = useState([]);
-  const [accountType, setAccountType] = useState("individual");
+  const [accountType, setAccountType] = useState('individual');
   const [members, setMembers] = useState([]);
   const [incomes, setIncomes] = useState([]);
   const [housing, setHousing] = useState({
-    type: "aluguel",
-    amount: "",
-    dueDay: "",
-    responsible: "titular",
+    type: 'aluguel',
+    amount: '',
+    dueDay: '',
+    responsible: 'titular',
     skip: false,
   });
   const [basicServices, setBasicServices] = useState({
-    condominio: { amount: "", dueDay: "", responsible: "titular" },
-    energia: { amount: "", dueDay: "", responsible: "titular" },
-    agua: { amount: "", dueDay: "", responsible: "titular" },
-    gas: { amount: "", dueDay: "", responsible: "titular" },
+    condominio: { amount: '', dueDay: '', responsible: 'titular' },
+    energia: { amount: '', dueDay: '', responsible: 'titular' },
+    agua: { amount: '', dueDay: '', responsible: 'titular' },
+    gas: { amount: '', dueDay: '', responsible: 'titular' },
   });
 
   // Redirecionar se não estiver logado
   useEffect(() => {
     if (!authLoading && !user) {
-      router.replace("/login");
+      router.replace('/login');
     }
   }, [user, authLoading, router]);
 
   // Redirecionar para dashboard se setup já foi completado
   useEffect(() => {
     if (!authLoading && user && profile && profile.setup_completed === true) {
-      router.replace("/dashboard");
+      router.replace('/dashboard');
     }
   }, [authLoading, user, profile, router]);
 
   // Verificação de se pode avançar em cada passo
   const canProceed = () => {
     switch (currentStep) {
-      case 0:
-        return true; // Boas-vindas
-      case 1:
-        return workTypes.length > 0; // Tipo de trabalho (pelo menos uma opção)
-      case 2:
-        return !!accountType; // Tipo de conta
+      case 0: return true; // Boas-vindas
+      case 1: return workTypes.length > 0; // Tipo de trabalho (pelo menos uma opção)
+      case 2: return !!accountType; // Tipo de conta
       case 3: {
         // Verifica se pelo menos uma renda do usuário foi preenchida
-        const userIncomes = incomes.filter((i) => i.memberEmail === null);
-        return userIncomes.some((i) => i.amount && i.paymentDay);
+        const userIncomes = incomes.filter(i => i.memberEmail === null);
+        return userIncomes.some(i => i.amount && i.paymentDay);
       }
-      case 4:
-        return true; // Moradia (opcional)
-      case 5:
-        return true; // Serviços básicos (opcional)
-      default:
-        return true;
+      case 4: return true; // Moradia (opcional)
+      case 5: return true; // Serviços básicos (opcional)
+      default: return true;
     }
   };
 
@@ -1178,24 +955,20 @@ export default function ConfigurarPerfilPage() {
     try {
       // Preparar dados das rendas
       const incomesData = incomes
-        .filter((i) => i.amount && i.paymentDay)
-        .map((i) => ({
+        .filter(i => i.amount && i.paymentDay)
+        .map(i => ({
           memberEmail: i.memberEmail,
-          incomeType: i.incomeType || "principal",
-          description:
-            i.incomeType === "clt"
-              ? "Renda CLT"
-              : i.incomeType === "autonomo"
-                ? "Renda Autônomo"
-                : "Renda principal",
+          incomeType: i.incomeType || 'principal',
+          description: i.incomeType === 'clt' ? 'Renda CLT' : i.incomeType === 'autonomo' ? 'Renda Autônomo' : 'Renda principal',
           amountCents: parseMoneyToCents(i.amount),
           paymentDay: parseInt(i.paymentDay, 10),
           isPrimary: true,
         }));
 
       // Preparar dados dos membros
-      const membersData =
-        accountType === "conjunta" ? members.filter((m) => m.email) : [];
+      const membersData = accountType === 'conjunta'
+        ? members.filter(m => m.email)
+        : [];
 
       // Preparar despesas fixas (moradia + serviços básicos)
       const fixedExpenses = [];
@@ -1204,8 +977,8 @@ export default function ConfigurarPerfilPage() {
       if (!housing.skip && housing.amount && housing.dueDay) {
         fixedExpenses.push({
           type: housing.type,
-          category: "moradia",
-          description: housing.type === "aluguel" ? "Aluguel" : "Financiamento",
+          category: 'moradia',
+          description: housing.type === 'aluguel' ? 'Aluguel' : 'Financiamento',
           amountCents: parseMoneyToCents(housing.amount),
           dueDay: parseInt(housing.dueDay, 10),
           responsible: housing.responsible,
@@ -1214,21 +987,21 @@ export default function ConfigurarPerfilPage() {
 
       // Adicionar serviços básicos preenchidos
       const serviceLabels = {
-        condominio: "Condomínio",
-        energia: "Energia",
-        agua: "Água",
-        gas: "Gás",
+        condominio: 'Condomínio',
+        energia: 'Energia',
+        agua: 'Água',
+        gas: 'Gás',
       };
 
       Object.entries(basicServices).forEach(([key, service]) => {
         if (service.amount && service.dueDay) {
           fixedExpenses.push({
             type: key,
-            category: "servicos_basicos",
+            category: 'servicos_basicos',
             description: serviceLabels[key],
             amountCents: parseMoneyToCents(service.amount),
             dueDay: parseInt(service.dueDay, 10),
-            responsible: service.responsible || "titular",
+            responsible: service.responsible || 'titular',
           });
         }
       });
@@ -1247,18 +1020,15 @@ export default function ConfigurarPerfilPage() {
         // Atualizar o perfil no contexto antes de redirecionar
         // para evitar que o dashboard redirecione de volta
         await refreshProfile();
-        router.push("/dashboard");
+        router.push('/dashboard');
       } else {
-        console.error("Erro ao salvar setup:", error);
-        const errorMessage =
-          error?.message || error?.details || JSON.stringify(error);
+        console.error('Erro ao salvar setup:', error);
+        const errorMessage = error?.message || error?.details || JSON.stringify(error);
         alert(`Erro ao salvar configurações: ${errorMessage}`);
       }
     } catch (err) {
-      console.error("Erro ao salvar setup:", err);
-      alert(
-        `Erro ao salvar configurações: ${err.message || "Erro desconhecido"}`,
-      );
+      console.error('Erro ao salvar setup:', err);
+      alert(`Erro ao salvar configurações: ${err.message || 'Erro desconhecido'}`);
     } finally {
       setSaving(false);
     }
@@ -1266,7 +1036,7 @@ export default function ConfigurarPerfilPage() {
 
   const handleLogout = async () => {
     await signOut();
-    router.replace("/login");
+    router.replace('/login');
   };
 
   // Loading
@@ -1278,7 +1048,7 @@ export default function ConfigurarPerfilPage() {
     );
   }
 
-  const userEmail = user?.email || profile?.email || "";
+  const userEmail = user?.email || profile?.email || '';
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-brand-50 to-brand-100 dark:from-slate-900 dark:to-slate-800 py-8 px-4">
@@ -1289,7 +1059,7 @@ export default function ConfigurarPerfilPage() {
             <div className="flex justify-end mb-4">
               <button
                 onClick={handleLogout}
-                className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-300 transition-colors"
+                className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
               >
                 <LogOut className="w-4 h-4" />
                 Sair da conta
@@ -1303,10 +1073,7 @@ export default function ConfigurarPerfilPage() {
             <div className="min-h-[400px] flex flex-col justify-center">
               {currentStep === 0 && <Step1Welcome />}
               {currentStep === 1 && (
-                <Step2WorkType
-                  workTypes={workTypes}
-                  setWorkTypes={setWorkTypes}
-                />
+                <Step2WorkType workTypes={workTypes} setWorkTypes={setWorkTypes} />
               )}
               {currentStep === 2 && (
                 <Step3AccountType
@@ -1351,8 +1118,8 @@ export default function ConfigurarPerfilPage() {
               <button
                 onClick={handleBack}
                 disabled={currentStep === 0}
-                className={`flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:text-white transition-colors ${
-                  currentStep === 0 ? "opacity-50 cursor-not-allowed" : ""
+                className={`flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors ${
+                  currentStep === 0 ? 'opacity-50 cursor-not-allowed' : ''
                 }`}
               >
                 <ChevronLeft className="w-4 h-4" />

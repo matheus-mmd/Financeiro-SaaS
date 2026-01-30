@@ -227,7 +227,7 @@ export default function CategoriasPage() {
               className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-medium border-b-2 transition-colors ${
                 activeTab === 'despesas'
                   ? 'border-brand-600 text-brand-600'
-                  : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-300'
+                  : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
               }`}
             >
               <TrendingDown className="w-4 h-4" />
@@ -238,7 +238,7 @@ export default function CategoriasPage() {
               className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-medium border-b-2 transition-colors ${
                 activeTab === 'receitas'
                   ? 'border-brand-600 text-brand-600'
-                  : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-300'
+                  : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
               }`}
             >
               <TrendingUp className="w-4 h-4" />
@@ -392,7 +392,7 @@ export default function CategoriasPage() {
                 <button
                   type="button"
                   onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                  className="w-full flex items-center gap-3 p-3 border border-gray-200 dark:border-slate-700 rounded-lg bg-gray-50 dark:bg-slate-800 hover:bg-gray-100 dark:hover:bg-slate-700 dark:bg-slate-700 transition-colors"
+                  className="w-full flex items-center gap-3 p-3 border border-gray-200 dark:border-slate-700 rounded-lg bg-gray-50 dark:bg-slate-800 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
                 >
                   {categoryData.emoji ? (
                     <span className="text-2xl">{categoryData.emoji}</span>

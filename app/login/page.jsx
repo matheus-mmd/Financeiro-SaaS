@@ -1,46 +1,32 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect, useMemo } from "react";
-import { useRouter } from "next/navigation";
-import { useAuth } from "../../src/contexts/AuthContext";
-import { Button } from "../../src/components/ui/button";
-import { Input } from "../../src/components/ui/input";
-import { Card, CardContent } from "../../src/components/ui/card";
-import {
-  Compass,
-  Mail,
-  Lock,
-  User,
-  Phone,
-  Eye,
-  EyeOff,
-  ArrowLeft,
-  Check,
-  X,
-} from "lucide-react";
-import Link from "next/link";
+import React, { useState, useEffect, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '../../src/contexts/AuthContext';
+import { Button } from '../../src/components/ui/button';
+import { Input } from '../../src/components/ui/input';
+import { Card, CardContent } from '../../src/components/ui/card';
+import { Compass, Mail, Lock, User, Phone, Eye, EyeOff, ArrowLeft, Check, X } from 'lucide-react';
+import Link from 'next/link';
 
 /**
  * Traduz mensagens de erro do Supabase para português
  */
 const translateError = (errorMessage) => {
   const translations = {
-    "Invalid login credentials": "E-mail ou senha incorretos",
-    "Email not confirmed":
-      "E-mail não confirmado. Verifique sua caixa de entrada",
-    "User already registered": "Este e-mail já está cadastrado",
-    "Password should be at least 6 characters":
-      "A senha deve ter pelo menos 6 caracteres",
-    "Unable to validate email address: invalid format":
-      "Formato de e-mail inválido",
-    "User not found": "Usuário não encontrado",
-    "Invalid email or password": "E-mail ou senha inválidos",
-    "Email rate limit exceeded": "Muitas tentativas. Aguarde alguns minutos",
-    "Invalid Refresh Token": "Sessão expirada. Faça login novamente",
-    "Signup requires a valid password": "Informe uma senha válida",
-    "Failed to fetch": "Erro de conexão. Verifique sua internet",
-    "Network request failed": "Falha na conexão. Tente novamente",
-    "An error occurred": "Ocorreu um erro. Tente novamente",
+    'Invalid login credentials': 'E-mail ou senha incorretos',
+    'Email not confirmed': 'E-mail não confirmado. Verifique sua caixa de entrada',
+    'User already registered': 'Este e-mail já está cadastrado',
+    'Password should be at least 6 characters': 'A senha deve ter pelo menos 6 caracteres',
+    'Unable to validate email address: invalid format': 'Formato de e-mail inválido',
+    'User not found': 'Usuário não encontrado',
+    'Invalid email or password': 'E-mail ou senha inválidos',
+    'Email rate limit exceeded': 'Muitas tentativas. Aguarde alguns minutos',
+    'Invalid Refresh Token': 'Sessão expirada. Faça login novamente',
+    'Signup requires a valid password': 'Informe uma senha válida',
+    'Failed to fetch': 'Erro de conexão. Verifique sua internet',
+    'Network request failed': 'Falha na conexão. Tente novamente',
+    'An error occurred': 'Ocorreu um erro. Tente novamente',
   };
 
   if (translations[errorMessage]) {
@@ -53,17 +39,16 @@ const translateError = (errorMessage) => {
     }
   }
 
-  return errorMessage || "Ocorreu um erro. Tente novamente";
+  return errorMessage || 'Ocorreu um erro. Tente novamente';
 };
 
 /**
  * Formata o celular no padrão (XX) XXXXX-XXXX
  */
 const formatPhone = (value) => {
-  const numbers = value.replace(/\D/g, "");
-  if (numbers.length <= 2) return numbers.length ? `(${numbers}` : "";
-  if (numbers.length <= 7)
-    return `(${numbers.slice(0, 2)}) ${numbers.slice(2)}`;
+  const numbers = value.replace(/\D/g, '');
+  if (numbers.length <= 2) return numbers.length ? `(${numbers}` : '';
+  if (numbers.length <= 7) return `(${numbers.slice(0, 2)}) ${numbers.slice(2)}`;
   return `(${numbers.slice(0, 2)}) ${numbers.slice(2, 7)}-${numbers.slice(7, 11)}`;
 };
 
@@ -71,43 +56,31 @@ const formatPhone = (value) => {
  * Componente de validação visual da senha
  */
 const PasswordStrengthIndicator = ({ password }) => {
-  const requirements = useMemo(
-    () => [
-      { label: "Mínimo 8 caracteres", test: (p) => p.length >= 8 },
-      { label: "Uma letra maiúscula", test: (p) => /[A-Z]/.test(p) },
-      { label: "Uma letra minúscula", test: (p) => /[a-z]/.test(p) },
-      { label: "Um número", test: (p) => /\d/.test(p) },
-      {
-        label: "Um caractere especial (!@#$%...)",
-        test: (p) => /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(p),
-      },
-    ],
-    [],
-  );
+  const requirements = useMemo(() => [
+    { label: 'Mínimo 8 caracteres', test: (p) => p.length >= 8 },
+    { label: 'Uma letra maiúscula', test: (p) => /[A-Z]/.test(p) },
+    { label: 'Uma letra minúscula', test: (p) => /[a-z]/.test(p) },
+    { label: 'Um número', test: (p) => /\d/.test(p) },
+    { label: 'Um caractere especial (!@#$%...)', test: (p) => /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(p) },
+  ], []);
 
-  const passedRequirements = requirements.filter((req) =>
-    req.test(password),
-  ).length;
+  const passedRequirements = requirements.filter((req) => req.test(password)).length;
   const strengthPercentage = (passedRequirements / requirements.length) * 100;
 
   const getStrengthColor = () => {
-    if (strengthPercentage <= 20) return "bg-red-50 dark:bg-red-9500";
-    if (strengthPercentage <= 40) return "bg-orange-500";
-    if (strengthPercentage <= 60) return "bg-amber-500";
-    if (strengthPercentage <= 80) return "bg-lime-500";
-    return "bg-green-500";
+    if (strengthPercentage <= 20) return 'bg-red-50 dark:bg-red-9500';
+    if (strengthPercentage <= 40) return 'bg-orange-500';
+    if (strengthPercentage <= 60) return 'bg-amber-500';
+    if (strengthPercentage <= 80) return 'bg-lime-500';
+    return 'bg-green-500';
   };
 
   const getStrengthText = () => {
-    if (strengthPercentage <= 20)
-      return { text: "Muito fraca", color: "text-red-500" };
-    if (strengthPercentage <= 40)
-      return { text: "Fraca", color: "text-orange-500" };
-    if (strengthPercentage <= 60)
-      return { text: "Média", color: "text-amber-500" };
-    if (strengthPercentage <= 80)
-      return { text: "Boa", color: "text-lime-600" };
-    return { text: "Forte", color: "text-green-600" };
+    if (strengthPercentage <= 20) return { text: 'Muito fraca', color: 'text-red-500' };
+    if (strengthPercentage <= 40) return { text: 'Fraca', color: 'text-orange-500' };
+    if (strengthPercentage <= 60) return { text: 'Média', color: 'text-amber-500' };
+    if (strengthPercentage <= 80) return { text: 'Boa', color: 'text-lime-600' };
+    return { text: 'Forte', color: 'text-green-600' };
   };
 
   const strength = getStrengthText();
@@ -142,11 +115,7 @@ const PasswordStrengthIndicator = ({ password }) => {
               ) : (
                 <X className="w-4 h-4 text-gray-300" />
               )}
-              <span
-                className={
-                  passed ? "text-green-600" : "text-gray-500 dark:text-gray-400"
-                }
-              >
+              <span className={passed ? 'text-green-600' : 'text-gray-500 dark:text-gray-400'}>
                 {req.label}
               </span>
             </li>
@@ -166,25 +135,25 @@ export default function LoginPage() {
 
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [isSigningUp, setIsSigningUp] = useState(false); // Flag para evitar redirect durante cadastro
   const [formData, setFormData] = useState({
-    name: "",
-    phone: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
+    name: '',
+    phone: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
   });
 
   // Carregar email salvo se existir
   useEffect(() => {
-    const savedEmail = localStorage.getItem("rememberedEmail");
+    const savedEmail = localStorage.getItem('rememberedEmail');
     if (savedEmail) {
-      setFormData((prev) => ({ ...prev, email: savedEmail }));
+      setFormData(prev => ({ ...prev, email: savedEmail }));
       setRememberMe(true);
     }
   }, []);
@@ -193,16 +162,16 @@ export default function LoginPage() {
     // Não redirecionar se estiver no processo de cadastro
     // O cadastro tem seu próprio fluxo de redirecionamento para /escolher-plano
     if (!authLoading && user && !isSigningUp) {
-      router.replace("/dashboard");
+      router.replace('/dashboard');
     }
   }, [user, authLoading, router, isSigningUp]);
 
   const handleInputChange = (field, value) => {
-    if (field === "phone") {
+    if (field === 'phone') {
       value = formatPhone(value);
     }
     setFormData({ ...formData, [field]: value });
-    setError("");
+    setError('');
   };
 
   // Validação de senha forte para cadastro
@@ -219,40 +188,40 @@ export default function LoginPage() {
 
   const validateForm = () => {
     if (!formData.email || !formData.password) {
-      setError("Por favor, preencha todos os campos obrigatórios");
+      setError('Por favor, preencha todos os campos obrigatórios');
       return false;
     }
 
     if (!isLogin && !formData.name) {
-      setError("Por favor, informe seu nome");
+      setError('Por favor, informe seu nome');
       return false;
     }
 
     if (!isLogin && formData.password !== formData.confirmPassword) {
-      setError("As senhas não coincidem");
+      setError('As senhas não coincidem');
       return false;
     }
 
     // Validação de senha forte apenas no cadastro
     if (!isLogin && !isPasswordStrong(formData.password)) {
-      setError("A senha não atende todos os requisitos de segurança");
+      setError('A senha não atende todos os requisitos de segurança');
       return false;
     }
 
     // Validação básica para login (mínimo 6 caracteres)
     if (isLogin && formData.password.length < 6) {
-      setError("A senha deve ter pelo menos 6 caracteres");
+      setError('A senha deve ter pelo menos 6 caracteres');
       return false;
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email)) {
-      setError("Por favor, informe um e-mail válido");
+      setError('Por favor, informe um e-mail válido');
       return false;
     }
 
     if (!isLogin && !acceptTerms) {
-      setError("Você precisa aceitar a Política de Privacidade");
+      setError('Você precisa aceitar a Política de Privacidade');
       return false;
     }
 
@@ -261,7 +230,7 @@ export default function LoginPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
+    setError('');
 
     if (!validateForm()) {
       return;
@@ -281,21 +250,17 @@ export default function LoginPage() {
 
         // Salvar ou remover email do localStorage
         if (rememberMe) {
-          localStorage.setItem("rememberedEmail", formData.email);
+          localStorage.setItem('rememberedEmail', formData.email);
         } else {
-          localStorage.removeItem("rememberedEmail");
+          localStorage.removeItem('rememberedEmail');
         }
 
-        router.replace("/dashboard");
+        router.replace('/dashboard');
       } else {
         // Marca que está em processo de cadastro para evitar redirect automático para dashboard
         setIsSigningUp(true);
 
-        const { error } = await signUp(
-          formData.email,
-          formData.password,
-          formData.name,
-        );
+        const { error } = await signUp(formData.email, formData.password, formData.name);
 
         if (error) {
           setError(translateError(error.message));
@@ -304,45 +269,30 @@ export default function LoginPage() {
           return;
         }
 
-        const { error: signInError } = await signIn(
-          formData.email,
-          formData.password,
-        );
+        const { error: signInError } = await signIn(formData.email, formData.password);
 
         if (signInError) {
-          setError("");
+          setError('');
           setIsLogin(true);
           setIsSigningUp(false);
-          setFormData({
-            name: "",
-            phone: "",
-            email: "",
-            password: "",
-            confirmPassword: "",
-          });
+          setFormData({ name: '', phone: '', email: '', password: '', confirmPassword: '' });
         } else {
           // Novos usuários vão diretamente para a página de escolha de planos
-          router.replace("/escolher-plano");
+          router.replace('/escolher-plano');
         }
       }
     } catch (err) {
-      console.error("[LoginPage] Erro inesperado:", err);
-      setError("Ocorreu um erro inesperado. Tente novamente.");
+      console.error('[LoginPage] Erro inesperado:', err);
+      setError('Ocorreu um erro inesperado. Tente novamente.');
     } finally {
       setLoading(false);
     }
   };
 
   const toggleMode = (mode) => {
-    setIsLogin(mode === "login");
-    setError("");
-    setFormData({
-      name: "",
-      phone: "",
-      email: "",
-      password: "",
-      confirmPassword: "",
-    });
+    setIsLogin(mode === 'login');
+    setError('');
+    setFormData({ name: '', phone: '', email: '', password: '', confirmPassword: '' });
     setAcceptTerms(false);
     setShowPassword(false);
     setShowConfirmPassword(false);
@@ -353,10 +303,7 @@ export default function LoginPage() {
       <Card className="w-full max-w-md shadow-2xl">
         <CardContent className="p-8">
           {/* Botão Voltar */}
-          <Link
-            href="/"
-            className="inline-flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:text-white transition-colors mb-6"
-          >
+          <Link href="/" className="inline-flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors mb-6">
             <ArrowLeft className="w-4 h-4" />
             <span>Voltar para página inicial</span>
           </Link>
@@ -378,22 +325,22 @@ export default function LoginPage() {
           <div className="flex bg-gray-100 dark:bg-slate-700 rounded-full p-1 mb-6">
             <button
               type="button"
-              onClick={() => toggleMode("login")}
+              onClick={() => toggleMode('login')}
               className={`flex-1 py-2.5 text-sm font-medium rounded-full transition-all ${
                 isLogin
-                  ? "bg-white text-gray-900 dark:text-white shadow-sm"
-                  : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:text-white"
+                  ? 'bg-white text-gray-900 dark:text-white shadow-sm'
+                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
               }`}
             >
               Entrar
             </button>
             <button
               type="button"
-              onClick={() => toggleMode("register")}
+              onClick={() => toggleMode('register')}
               className={`flex-1 py-2.5 text-sm font-medium rounded-full transition-all ${
                 !isLogin
-                  ? "bg-white text-gray-900 dark:text-white shadow-sm"
-                  : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:text-white"
+                  ? 'bg-white text-gray-900 dark:text-white shadow-sm'
+                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
               }`}
             >
               Criar Conta
@@ -405,10 +352,7 @@ export default function LoginPage() {
             {/* Nome (apenas no cadastro) */}
             {!isLogin && (
               <div className="space-y-1.5">
-                <label
-                  htmlFor="name"
-                  className="text-sm font-medium text-gray-700 dark:text-gray-300"
-                >
+                <label htmlFor="name" className="text-sm font-medium text-gray-700 dark:text-gray-300">
                   Nome completo
                 </label>
                 <div className="relative">
@@ -419,7 +363,7 @@ export default function LoginPage() {
                     type="text"
                     placeholder="Seu nome"
                     value={formData.name}
-                    onChange={(e) => handleInputChange("name", e.target.value)}
+                    onChange={(e) => handleInputChange('name', e.target.value)}
                     disabled={loading}
                     className="pl-10 h-11"
                     autoComplete="name"
@@ -431,10 +375,7 @@ export default function LoginPage() {
             {/* Celular (apenas no cadastro) */}
             {!isLogin && (
               <div className="space-y-1.5">
-                <label
-                  htmlFor="phone"
-                  className="text-sm font-medium text-gray-700 dark:text-gray-300"
-                >
+                <label htmlFor="phone" className="text-sm font-medium text-gray-700 dark:text-gray-300">
                   Celular
                 </label>
                 <div className="relative">
@@ -445,7 +386,7 @@ export default function LoginPage() {
                     type="tel"
                     placeholder="(11) 99999-9999"
                     value={formData.phone}
-                    onChange={(e) => handleInputChange("phone", e.target.value)}
+                    onChange={(e) => handleInputChange('phone', e.target.value)}
                     disabled={loading}
                     className="pl-10 h-11"
                     autoComplete="tel"
@@ -457,10 +398,7 @@ export default function LoginPage() {
 
             {/* E-mail */}
             <div className="space-y-1.5">
-              <label
-                htmlFor="email"
-                className="text-sm font-medium text-gray-700 dark:text-gray-300"
-              >
+              <label htmlFor="email" className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 Email
               </label>
               <div className="relative">
@@ -471,7 +409,7 @@ export default function LoginPage() {
                   type="email"
                   placeholder="seu@email.com"
                   value={formData.email}
-                  onChange={(e) => handleInputChange("email", e.target.value)}
+                  onChange={(e) => handleInputChange('email', e.target.value)}
                   disabled={loading}
                   className="pl-10 h-11"
                   autoComplete="email"
@@ -482,10 +420,7 @@ export default function LoginPage() {
             {/* Senha */}
             <div className="space-y-1.5">
               <div className="flex justify-between items-center">
-                <label
-                  htmlFor="password"
-                  className="text-sm font-medium text-gray-700 dark:text-gray-300"
-                >
+                <label htmlFor="password" className="text-sm font-medium text-gray-700 dark:text-gray-300">
                   Senha
                 </label>
                 {isLogin && (
@@ -502,42 +437,31 @@ export default function LoginPage() {
                 <Input
                   id="password"
                   name="password"
-                  type={showPassword ? "text" : "password"}
+                  type={showPassword ? 'text' : 'password'}
                   placeholder="••••••••"
                   value={formData.password}
-                  onChange={(e) =>
-                    handleInputChange("password", e.target.value)
-                  }
+                  onChange={(e) => handleInputChange('password', e.target.value)}
                   disabled={loading}
                   className="pl-10 pr-10 h-11"
-                  autoComplete={isLogin ? "current-password" : "new-password"}
+                  autoComplete={isLogin ? 'current-password' : 'new-password'}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:text-gray-400"
                 >
-                  {showPassword ? (
-                    <EyeOff className="w-5 h-5" />
-                  ) : (
-                    <Eye className="w-5 h-5" />
-                  )}
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
               </div>
 
               {/* Indicador de força da senha (apenas no cadastro) */}
-              {!isLogin && (
-                <PasswordStrengthIndicator password={formData.password} />
-              )}
+              {!isLogin && <PasswordStrengthIndicator password={formData.password} />}
             </div>
 
             {/* Confirmar senha (apenas no cadastro) */}
             {!isLogin && (
               <div className="space-y-1.5">
-                <label
-                  htmlFor="confirmPassword"
-                  className="text-sm font-medium text-gray-700 dark:text-gray-300"
-                >
+                <label htmlFor="confirmPassword" className="text-sm font-medium text-gray-700 dark:text-gray-300">
                   Confirmar senha
                 </label>
                 <div className="relative">
@@ -545,12 +469,10 @@ export default function LoginPage() {
                   <Input
                     id="confirmPassword"
                     name="confirmPassword"
-                    type={showConfirmPassword ? "text" : "password"}
+                    type={showConfirmPassword ? 'text' : 'password'}
                     placeholder="••••••••"
                     value={formData.confirmPassword}
-                    onChange={(e) =>
-                      handleInputChange("confirmPassword", e.target.value)
-                    }
+                    onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
                     disabled={loading}
                     className="pl-10 pr-10 h-11"
                     autoComplete="new-password"
@@ -560,11 +482,7 @@ export default function LoginPage() {
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:text-gray-400"
                   >
-                    {showConfirmPassword ? (
-                      <EyeOff className="w-5 h-5" />
-                    ) : (
-                      <Eye className="w-5 h-5" />
-                    )}
+                    {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
                 </div>
               </div>
@@ -581,10 +499,7 @@ export default function LoginPage() {
                   className="w-4 h-4 text-brand-600 border-gray-300 rounded focus:ring-brand-500"
                   disabled={loading}
                 />
-                <label
-                  htmlFor="rememberMe"
-                  className="text-sm text-gray-600 dark:text-gray-400"
-                >
+                <label htmlFor="rememberMe" className="text-sm text-gray-600 dark:text-gray-400">
                   Lembrar meu e-mail
                 </label>
               </div>
@@ -601,19 +516,11 @@ export default function LoginPage() {
                   className="mt-1 w-4 h-4 text-brand-600 border-gray-300 rounded focus:ring-brand-500"
                   disabled={loading}
                 />
-                <label
-                  htmlFor="acceptTerms"
-                  className="text-sm text-gray-600 dark:text-gray-400"
-                >
-                  Aceito receber novidades, promoções e comunicações por email
-                  ou WhatsApp. Consulte nossa{" "}
-                  <Link
-                    href="/politica-privacidade"
-                    className="text-brand-600 hover:underline"
-                  >
+                <label htmlFor="acceptTerms" className="text-sm text-gray-600 dark:text-gray-400">
+                  Aceito receber novidades, promoções e comunicações por email ou WhatsApp. Consulte nossa{' '}
+                  <Link href="/politica-privacidade" className="text-brand-600 hover:underline">
                     Política de Privacidade
-                  </Link>
-                  .
+                  </Link>.
                 </label>
               </div>
             )}
@@ -634,12 +541,10 @@ export default function LoginPage() {
               {loading ? (
                 <div className="flex items-center justify-center gap-2">
                   <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white"></div>
-                  {isLogin ? "Entrando..." : "Cadastrando..."}
+                  {isLogin ? 'Entrando...' : 'Cadastrando...'}
                 </div>
-              ) : isLogin ? (
-                "Entrar"
               ) : (
-                "Concluir cadastro"
+                isLogin ? 'Entrar' : 'Concluir cadastro'
               )}
             </Button>
           </form>

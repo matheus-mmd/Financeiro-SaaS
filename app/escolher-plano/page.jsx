@@ -1,10 +1,10 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { useAuth } from "../../src/contexts/AuthContext";
-import { Button } from "../../src/components/ui/button";
-import { Card, CardContent } from "../../src/components/ui/card";
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '../../src/contexts/AuthContext';
+import { Button } from '../../src/components/ui/button';
+import { Card, CardContent } from '../../src/components/ui/card';
 import {
   Compass,
   Check,
@@ -18,47 +18,40 @@ import {
   QrCode,
   Shield,
   X,
-} from "lucide-react";
-import {
-  getPlans,
-  formatPrice,
-  calculateDiscount,
-} from "../../src/lib/supabase/api/plans";
+} from 'lucide-react';
+import { getPlans, formatPrice, calculateDiscount } from '../../src/lib/supabase/api/plans';
 
 /**
  * Modal de Checkout
  */
 const CheckoutModal = ({ isOpen, onClose, plan, billingCycle }) => {
-  const [selectedPayment, setSelectedPayment] = useState("credit_card");
+  const [selectedPayment, setSelectedPayment] = useState('credit_card');
 
   if (!isOpen || !plan) return null;
 
-  const price =
-    billingCycle === "yearly"
-      ? plan.price_yearly_cents
-      : plan.price_monthly_cents;
+  const price = billingCycle === 'yearly' ? plan.price_yearly_cents : plan.price_monthly_cents;
   const priceFormatted = formatPrice(price);
 
   const paymentMethods = [
     {
-      id: "credit_card",
-      name: "Cartão de Crédito",
-      description: "Renovação automática • Cancele quando quiser",
+      id: 'credit_card',
+      name: 'Cartão de Crédito',
+      description: 'Renovação automática • Cancele quando quiser',
       icon: CreditCard,
-      badge: "Automático",
-      badgeColor: "bg-brand-100 text-brand-700",
+      badge: 'Automático',
+      badgeColor: 'bg-brand-100 text-brand-700',
     },
     {
-      id: "boleto",
-      name: "Boleto Bancário",
-      description: "Pagamento único • Vencimento em 3 dias",
+      id: 'boleto',
+      name: 'Boleto Bancário',
+      description: 'Pagamento único • Vencimento em 3 dias',
       icon: FileText,
       badge: null,
     },
     {
-      id: "pix",
-      name: "PIX",
-      description: "Pagamento único • Aprovação instantânea",
+      id: 'pix',
+      name: 'PIX',
+      description: 'Pagamento único • Aprovação instantânea',
       icon: QrCode,
       badge: null,
     },
@@ -68,7 +61,7 @@ const CheckoutModal = ({ isOpen, onClose, plan, billingCycle }) => {
     // TODO: Integrar com gateway de pagamento (Mercado Pago, Stripe, etc.)
     // Por enquanto, redireciona para configuração do perfil
     onClose();
-    window.location.href = "/configurar-perfil";
+    window.location.href = '/configurar-perfil';
   };
 
   return (
@@ -88,12 +81,8 @@ const CheckoutModal = ({ isOpen, onClose, plan, billingCycle }) => {
             </button>
           </div>
 
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-1">
-            Falta pouco...
-          </h2>
-          <p className="text-gray-500 dark:text-gray-400 text-sm mb-6">
-            Complete sua assinatura do plano escolhido
-          </p>
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-1">Falta pouco...</h2>
+          <p className="text-gray-500 dark:text-gray-400 text-sm mb-6">Complete sua assinatura do plano escolhido</p>
 
           {/* Plano selecionado */}
           <div className="bg-gray-50 dark:bg-slate-800 rounded-lg p-4 mb-6">
@@ -101,28 +90,24 @@ const CheckoutModal = ({ isOpen, onClose, plan, billingCycle }) => {
               <div>
                 <div className="flex items-center gap-2">
                   <span className="font-semibold text-gray-900 dark:text-white">
-                    {plan.name} {billingCycle === "yearly" ? "Anual" : "Mensal"}
+                    {plan.name} {billingCycle === 'yearly' ? 'Anual' : 'Mensal'}
                   </span>
                   <span className="px-2 py-0.5 bg-brand-100 text-brand-700 text-xs font-medium rounded-full">
                     Promoção 2026
                   </span>
                 </div>
                 <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                  Cobrança {billingCycle === "yearly" ? "anual" : "mensal"}
+                  Cobrança {billingCycle === 'yearly' ? 'anual' : 'mensal'}
                 </p>
               </div>
               <div className="text-right">
-                <span className="text-2xl font-bold text-gray-900 dark:text-white">
-                  R$ {priceFormatted}
-                </span>
+                <span className="text-2xl font-bold text-gray-900 dark:text-white">R$ {priceFormatted}</span>
               </div>
             </div>
           </div>
 
           {/* Formas de pagamento */}
-          <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-            Escolha a forma de pagamento:
-          </p>
+          <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Escolha a forma de pagamento:</p>
           <div className="space-y-3 mb-6">
             {paymentMethods.map((method) => (
               <button
@@ -130,49 +115,33 @@ const CheckoutModal = ({ isOpen, onClose, plan, billingCycle }) => {
                 onClick={() => setSelectedPayment(method.id)}
                 className={`w-full flex items-center gap-4 p-4 rounded-lg border-2 transition-all ${
                   selectedPayment === method.id
-                    ? "border-brand-500 bg-brand-50"
-                    : "border-gray-200 dark:border-slate-700 hover:border-gray-300 dark:hover:border-slate-600"
+                    ? 'border-brand-500 bg-brand-50'
+                    : 'border-gray-200 dark:border-slate-700 hover:border-gray-300 dark:hover:border-slate-600'
                 }`}
               >
-                <div
-                  className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                    selectedPayment === method.id
-                      ? "bg-brand-100"
-                      : "bg-gray-100 dark:bg-slate-700"
-                  }`}
-                >
-                  <method.icon
-                    className={`w-5 h-5 ${
-                      selectedPayment === method.id
-                        ? "text-brand-600"
-                        : "text-gray-500 dark:text-gray-400"
-                    }`}
-                  />
+                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                  selectedPayment === method.id ? 'bg-brand-100' : 'bg-gray-100 dark:bg-slate-700'
+                }`}>
+                  <method.icon className={`w-5 h-5 ${
+                    selectedPayment === method.id ? 'text-brand-600' : 'text-gray-500 dark:text-gray-400'
+                  }`} />
                 </div>
                 <div className="flex-1 text-left">
                   <div className="flex items-center gap-2">
-                    <span className="font-medium text-gray-900 dark:text-white">
-                      {method.name}
-                    </span>
+                    <span className="font-medium text-gray-900 dark:text-white">{method.name}</span>
                     {method.badge && (
-                      <span
-                        className={`px-2 py-0.5 text-xs font-medium rounded-full ${method.badgeColor}`}
-                      >
+                      <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${method.badgeColor}`}>
                         {method.badge}
                       </span>
                     )}
                   </div>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    {method.description}
-                  </p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">{method.description}</p>
                 </div>
-                <div
-                  className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                    selectedPayment === method.id
-                      ? "border-brand-500 bg-brand-500"
-                      : "border-gray-300"
-                  }`}
-                >
+                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                  selectedPayment === method.id
+                    ? 'border-brand-500 bg-brand-500'
+                    : 'border-gray-300'
+                }`}>
                   {selectedPayment === method.id && (
                     <Check className="w-3 h-3 text-white" />
                   )}
@@ -209,11 +178,7 @@ export default function EscolherPlanoPage() {
 
   const [plans, setPlans] = useState([]);
   const [loadingPlans, setLoadingPlans] = useState(true);
-  const [checkoutModal, setCheckoutModal] = useState({
-    isOpen: false,
-    plan: null,
-    billingCycle: "yearly",
-  });
+  const [checkoutModal, setCheckoutModal] = useState({ isOpen: false, plan: null, billingCycle: 'yearly' });
 
   // Buscar planos
   useEffect(() => {
@@ -224,7 +189,7 @@ export default function EscolherPlanoPage() {
           setPlans(data);
         }
       } catch (err) {
-        console.error("Erro ao buscar planos:", err);
+        console.error('Erro ao buscar planos:', err);
       } finally {
         setLoadingPlans(false);
       }
@@ -235,7 +200,7 @@ export default function EscolherPlanoPage() {
   // Redirecionar se não estiver logado
   useEffect(() => {
     if (!authLoading && !user) {
-      router.replace("/login");
+      router.replace('/login');
     }
   }, [user, authLoading, router]);
 
@@ -245,12 +210,12 @@ export default function EscolherPlanoPage() {
 
   const handleStartTrial = () => {
     // Redirecionar para configuração do perfil antes do dashboard
-    router.push("/configurar-perfil");
+    router.push('/configurar-perfil');
   };
 
   const handleLogout = async () => {
     await signOut();
-    router.replace("/");
+    router.replace('/');
   };
 
   if (authLoading) {
@@ -269,12 +234,8 @@ export default function EscolherPlanoPage() {
           <div className="inline-flex items-center justify-center w-16 h-16 bg-brand-600 rounded-xl mb-4">
             <Compass className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
-            Financeiro SaaS
-          </h1>
-          <p className="text-gray-500 dark:text-gray-400">
-            Escolha o plano ideal para você
-          </p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">Financeiro SaaS</h1>
+          <p className="text-gray-500 dark:text-gray-400">Escolha o plano ideal para você</p>
         </div>
 
         {/* Banner Promocional */}
@@ -284,15 +245,9 @@ export default function EscolherPlanoPage() {
               <Zap className="w-4 h-4" />
               OFERTA EXCLUSIVA 2026
             </div>
-            <h2 className="text-xl font-bold text-brand-700 mb-1">
-              🔥 Preços PROMOCIONAIS!
-            </h2>
-            <p className="text-brand-600 font-medium mb-2">
-              Restam 36 de 50 vagas
-            </p>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              ✨ Preço garantido enquanto você for assinante ✨
-            </p>
+            <h2 className="text-xl font-bold text-brand-700 mb-1">🔥 Preços PROMOCIONAIS!</h2>
+            <p className="text-brand-600 font-medium mb-2">Restam 36 de 50 vagas</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">✨ Preço garantido enquanto você for assinante ✨</p>
           </CardContent>
         </Card>
 
@@ -300,10 +255,7 @@ export default function EscolherPlanoPage() {
         {loadingPlans ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             {[1, 2].map((i) => (
-              <Card
-                key={i}
-                className="overflow-hidden border border-gray-200 dark:border-slate-700 shadow-md"
-              >
+              <Card key={i} className="overflow-hidden border border-gray-200 dark:border-slate-700 shadow-md">
                 <CardContent className="p-6 animate-pulse">
                   {/* Nome e descricao */}
                   <div className="text-center mb-6">
@@ -337,22 +289,16 @@ export default function EscolherPlanoPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             {plans.map((plan) => {
               const isRecommended = plan.is_recommended;
-              const yearlyDiscount = calculateDiscount(
-                plan.price_original_yearly_cents,
-                plan.price_yearly_cents,
-              );
-              const monthlyDiscount = calculateDiscount(
-                plan.price_original_monthly_cents,
-                plan.price_monthly_cents,
-              );
+              const yearlyDiscount = calculateDiscount(plan.price_original_yearly_cents, plan.price_yearly_cents);
+              const monthlyDiscount = calculateDiscount(plan.price_original_monthly_cents, plan.price_monthly_cents);
 
               return (
                 <Card
                   key={plan.id}
                   className={`relative overflow-hidden transition-all duration-300 hover:shadow-xl ${
                     isRecommended
-                      ? "border-2 border-brand-500 shadow-lg"
-                      : "border border-gray-200 dark:border-slate-700 shadow-md"
+                      ? 'border-2 border-brand-500 shadow-lg'
+                      : 'border border-gray-200 dark:border-slate-700 shadow-md'
                   }`}
                 >
                   {/* Badge Recomendado */}
@@ -365,40 +311,26 @@ export default function EscolherPlanoPage() {
                     </div>
                   )}
 
-                  <CardContent
-                    className={`p-6 ${isRecommended ? "pt-14" : ""}`}
-                  >
+                  <CardContent className={`p-6 ${isRecommended ? 'pt-14' : ''}`}>
                     {/* Nome e descrição */}
                     <div className="text-center mb-6">
                       <h3 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center justify-center gap-2">
                         {plan.name}
-                        {plan.slug === "pro" && (
-                          <MessageCircle className="w-5 h-5 text-brand-600" />
-                        )}
+                        {plan.slug === 'pro' && <MessageCircle className="w-5 h-5 text-brand-600" />}
                       </h3>
-                      <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
-                        {plan.description}
-                      </p>
+                      <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">{plan.description}</p>
                     </div>
 
                     {/* Features */}
                     <ul className="space-y-2.5 mb-6">
                       {plan.features?.map((feature, idx) => (
                         <li key={idx} className="flex items-start gap-2.5">
-                          <Check
-                            className={`w-4 h-4 flex-shrink-0 mt-0.5 ${
-                              feature.is_highlighted
-                                ? "text-brand-600"
-                                : "text-gray-400"
-                            }`}
-                          />
-                          <span
-                            className={`text-sm ${
-                              feature.is_highlighted
-                                ? "text-brand-700 font-medium"
-                                : "text-gray-600 dark:text-gray-400"
-                            }`}
-                          >
+                          <Check className={`w-4 h-4 flex-shrink-0 mt-0.5 ${
+                            feature.is_highlighted ? 'text-brand-600' : 'text-gray-400'
+                          }`} />
+                          <span className={`text-sm ${
+                            feature.is_highlighted ? 'text-brand-700 font-medium' : 'text-gray-600 dark:text-gray-400'
+                          }`}>
                             {feature.feature_text}
                           </span>
                         </li>
@@ -418,9 +350,7 @@ export default function EscolherPlanoPage() {
                     {/* Badge de vagas */}
                     <div className="text-center mb-4">
                       <span className="text-xs text-amber-600 font-medium">
-                        {isRecommended
-                          ? "⚡ Preços promocionais esgotando!"
-                          : "⚡ Lote 1 esgotado! Lote 2 disponível"}
+                        {isRecommended ? '⚡ Preços promocionais esgotando!' : '⚡ Lote 1 esgotado! Lote 2 disponível'}
                       </span>
                       <p className="text-xs text-gray-400">Restam 36 vagas!</p>
                     </div>
@@ -430,28 +360,23 @@ export default function EscolherPlanoPage() {
                       {/* Mensal */}
                       <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-slate-800 rounded-lg">
                         <div>
-                          <span className="text-sm text-gray-500 dark:text-gray-400">
-                            Mensal
-                          </span>
+                          <span className="text-sm text-gray-500 dark:text-gray-400">Mensal</span>
                           <div className="flex items-baseline gap-2">
                             {plan.price_original_monthly_cents && (
                               <span className="text-sm text-gray-400 line-through">
-                                R${" "}
-                                {formatPrice(plan.price_original_monthly_cents)}
+                                R$ {formatPrice(plan.price_original_monthly_cents)}
                               </span>
                             )}
                             <span className="text-xl font-bold text-gray-900 dark:text-white">
                               R$ {formatPrice(plan.price_monthly_cents)}
                             </span>
-                            <span className="text-sm text-gray-500 dark:text-gray-400">
-                              /mês
-                            </span>
+                            <span className="text-sm text-gray-500 dark:text-gray-400">/mês</span>
                           </div>
                         </div>
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => handleSelectPlan(plan, "monthly")}
+                          onClick={() => handleSelectPlan(plan, 'monthly')}
                           className="border-gray-300"
                         >
                           Assinar
@@ -459,18 +384,12 @@ export default function EscolherPlanoPage() {
                       </div>
 
                       {/* Anual */}
-                      <div
-                        className={`flex items-center justify-between p-3 rounded-lg ${
-                          isRecommended
-                            ? "bg-brand-50 border border-brand-200"
-                            : "bg-gray-50 dark:bg-slate-800"
-                        }`}
-                      >
+                      <div className={`flex items-center justify-between p-3 rounded-lg ${
+                        isRecommended ? 'bg-brand-50 border border-brand-200' : 'bg-gray-50 dark:bg-slate-800'
+                      }`}>
                         <div>
                           <div className="flex items-center gap-2">
-                            <span className="text-sm text-gray-500 dark:text-gray-400">
-                              Anual
-                            </span>
+                            <span className="text-sm text-gray-500 dark:text-gray-400">Anual</span>
                             {isRecommended && (
                               <span className="px-2 py-0.5 bg-brand-600 text-white text-xs font-medium rounded">
                                 MELHOR VALOR
@@ -480,16 +399,13 @@ export default function EscolherPlanoPage() {
                           <div className="flex items-baseline gap-2">
                             {plan.price_original_yearly_cents && (
                               <span className="text-sm text-gray-400 line-through">
-                                R${" "}
-                                {formatPrice(plan.price_original_yearly_cents)}
+                                R$ {formatPrice(plan.price_original_yearly_cents)}
                               </span>
                             )}
                             <span className="text-xl font-bold text-gray-900 dark:text-white">
                               R$ {formatPrice(plan.price_yearly_cents)}
                             </span>
-                            <span className="text-sm text-gray-500 dark:text-gray-400">
-                              /ano
-                            </span>
+                            <span className="text-sm text-gray-500 dark:text-gray-400">/ano</span>
                           </div>
                           {yearlyDiscount > 0 && (
                             <span className="text-xs text-brand-600 font-medium">
@@ -499,13 +415,9 @@ export default function EscolherPlanoPage() {
                         </div>
                         <Button
                           size="sm"
-                          onClick={() => handleSelectPlan(plan, "yearly")}
-                          className={
-                            isRecommended
-                              ? "bg-brand-600 hover:bg-brand-700"
-                              : ""
-                          }
-                          variant={isRecommended ? "default" : "outline"}
+                          onClick={() => handleSelectPlan(plan, 'yearly')}
+                          className={isRecommended ? 'bg-brand-600 hover:bg-brand-700' : ''}
+                          variant={isRecommended ? 'default' : 'outline'}
                         >
                           Assinar
                         </Button>
@@ -525,12 +437,9 @@ export default function EscolherPlanoPage() {
               <Clock className="w-4 h-4" />
               Teste Grátis por 3 Dias
             </div>
-            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-              Ainda não decidiu? Teste grátis!
-            </h3>
+            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Ainda não decidiu? Teste grátis!</h3>
             <p className="text-gray-600 dark:text-gray-400 mb-6">
-              Acesso completo a todas as funcionalidades.{" "}
-              <strong>Sem precisar de cartão.</strong>
+              Acesso completo a todas as funcionalidades. <strong>Sem precisar de cartão.</strong>
             </p>
             <Button
               size="lg"
@@ -561,7 +470,7 @@ export default function EscolherPlanoPage() {
         <div className="text-center">
           <button
             onClick={handleLogout}
-            className="inline-flex items-center gap-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-300 transition-colors"
+            className="inline-flex items-center gap-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
           >
             <LogOut className="w-4 h-4" />
             <span>Sair da conta</span>
@@ -572,13 +481,7 @@ export default function EscolherPlanoPage() {
       {/* Modal de Checkout */}
       <CheckoutModal
         isOpen={checkoutModal.isOpen}
-        onClose={() =>
-          setCheckoutModal({
-            isOpen: false,
-            plan: null,
-            billingCycle: "yearly",
-          })
-        }
+        onClose={() => setCheckoutModal({ isOpen: false, plan: null, billingCycle: 'yearly' })}
         plan={checkoutModal.plan}
         billingCycle={checkoutModal.billingCycle}
       />

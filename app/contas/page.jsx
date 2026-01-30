@@ -359,7 +359,7 @@ export default function ContasPage() {
                   <div
                     key={bank.id}
                     onClick={() => handleOpenBankModal(bank)}
-                    className="group relative bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg p-4 hover:shadow-md hover:border-gray-300 dark:border-slate-600 transition-all cursor-pointer"
+                    className="group relative bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg p-4 hover:shadow-md hover:border-gray-300 dark:hover:border-slate-600 transition-all cursor-pointer"
                   >
                     <div className="flex items-start gap-3">
                       <div
@@ -464,7 +464,7 @@ export default function ContasPage() {
                   <div
                     key={card.id}
                     onClick={() => handleOpenCardModal(card)}
-                    className="group relative bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg p-4 hover:shadow-md hover:border-gray-300 dark:border-slate-600 transition-all cursor-pointer"
+                    className="group relative bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg p-4 hover:shadow-md hover:border-gray-300 dark:hover:border-slate-600 transition-all cursor-pointer"
                   >
                     <div className="flex items-start gap-3">
                       <div
@@ -587,7 +587,7 @@ export default function ContasPage() {
                   setIconPickerFor("bank");
                   setIconPickerModalOpen(true);
                 }}
-                className="w-full flex items-center gap-3 p-3 border border-gray-300 dark:border-slate-600 rounded-lg bg-gray-50 dark:bg-slate-800 hover:bg-gray-100 dark:hover:bg-slate-700 dark:bg-slate-700 transition-colors"
+                className="w-full flex items-center gap-3 p-3 border border-gray-300 dark:border-slate-600 rounded-lg bg-gray-50 dark:bg-slate-800 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
               >
                 <div
                   className="flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center"
@@ -746,7 +746,7 @@ export default function ContasPage() {
                   setIconPickerFor("card");
                   setIconPickerModalOpen(true);
                 }}
-                className="w-full flex items-center gap-3 p-3 border border-gray-300 dark:border-slate-600 rounded-lg bg-gray-50 dark:bg-slate-800 hover:bg-gray-100 dark:hover:bg-slate-700 dark:bg-slate-700 transition-colors"
+                className="w-full flex items-center gap-3 p-3 border border-gray-300 dark:border-slate-600 rounded-lg bg-gray-50 dark:bg-slate-800 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
               >
                 <div
                   className="flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center"
