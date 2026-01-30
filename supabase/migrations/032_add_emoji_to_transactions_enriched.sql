@@ -26,7 +26,6 @@ SELECT
   t.category_id,
   c.name AS category_name,
   c.color AS category_color,
-  c.emoji AS category_emoji,
   ci.name AS category_icon,
 
   -- Transaction Type
@@ -59,7 +58,10 @@ SELECT
 
   -- Recurrence Frequency
   t.recurrence_frequency_id,
-  rf.name AS recurrence_frequency_name
+  rf.name AS recurrence_frequency_name,
+
+  -- Category Emoji (adicionado ao final para compatibilidade com CREATE OR REPLACE VIEW)
+  c.emoji AS category_emoji
 
 FROM public.transactions t
 LEFT JOIN public.categories c ON t.category_id = c.id
