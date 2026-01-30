@@ -12,8 +12,17 @@ import {
   updateCategory,
   deleteCategory,
 } from '../api/categories';
-import { categoriesCache } from '../../cache/cacheFactory';
+import { categoriesCache, referenceDataCache } from '../../cache/cacheFactory';
 import { withTimeout } from '../../utils/requestUtils';
+
+/**
+ * Invalida todos os caches que contêm dados de categorias
+ * Garante consistência quando categorias são criadas/editadas/removidas
+ */
+function invalidateAllCategoryCaches() {
+  categoriesCache.clear();
+  referenceDataCache.clearAll();
+}
 
 export function useCategories() {
   const [categories, setCategories] = useState([]);
@@ -107,7 +116,7 @@ export function useCategories() {
     if (data) {
       const normalizedData = normalize([data])[0];
       setCategories(prev => [...prev, normalizedData]);
-      categoriesCache.clear();
+      invalidateAllCategoryCaches();
     }
 
     return { data, error: null };
@@ -126,7 +135,7 @@ export function useCategories() {
       setCategories(prev => prev.map(cat =>
         cat.id === id ? { ...cat, ...updates, ...data } : cat
       ));
-      categoriesCache.clear();
+      invalidateAllCategoryCaches();
     }
 
     return { data, error: null };

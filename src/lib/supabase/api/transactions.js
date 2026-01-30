@@ -35,6 +35,7 @@ export async function getTransactions(filters = {}) {
       category_id,
       category_name,
       category_color,
+      category_emoji,
       category_icon,
       transaction_type_id,
       transaction_type_internal_name,

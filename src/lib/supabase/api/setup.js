@@ -166,6 +166,21 @@ export async function saveUserSetup(userId, setupData) {
 
     // 5. Salvar despesas fixas (moradia e serviços básicos)
     if (fixedExpenses && fixedExpenses.length > 0) {
+      // Buscar categorias do usuário para vincular category_id
+      const categoryNameMap = { moradia: 'Moradia', servicos_basicos: 'Serviços' };
+      let userCategories = [];
+      try {
+        const { data: cats } = await supabase
+          .from('categories')
+          .select('id, name')
+          .eq('user_id', userId)
+          .eq('transaction_type_id', 2)
+          .is('deleted_at', null);
+        userCategories = cats || [];
+      } catch {
+        // Se falhar ao buscar categorias, continua sem category_id
+      }
+
       const expensesToInsert = fixedExpenses.map(expense => {
         // Encontrar o member_id se o responsável não for o titular
         let memberId = null;
@@ -176,11 +191,16 @@ export async function saveUserSetup(userId, setupData) {
           }
         }
 
+        // Vincular à categoria real do sistema
+        const targetCategoryName = categoryNameMap[expense.category];
+        const matchedCategory = userCategories.find(c => c.name === targetCategoryName);
+
         return {
           user_id: userId,
           member_id: memberId,
           expense_type: expense.type,
           category: expense.category,
+          category_id: matchedCategory?.id || null,
           description: expense.description,
           amount_cents: expense.amountCents,
           due_day: expense.dueDay,

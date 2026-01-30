@@ -51,11 +51,11 @@ import {
 } from "../../src/utils";
 import { useTransactions } from "../../src/lib/supabase/hooks/useTransactions";
 import { useReferenceData } from "../../src/lib/supabase/hooks/useReferenceData";
+import { useCategories } from "../../src/lib/supabase/hooks/useCategories";
 import { useBanks } from "../../src/lib/supabase/hooks/useBanks";
 import { useCards } from "../../src/lib/supabase/hooks/useCards";
 import { useDebounce } from "../../src/hooks/useDebounce";
 import { exportToCSV } from "../../src/utils/exportData";
-import { getIconComponent } from "../../src/components/IconPicker";
 import FilterButton from "../../src/components/FilterButton";
 import {
   TRANSACTION_TYPES,
@@ -136,9 +136,9 @@ export default function Transacoes() {
   const router = useRouter();
   const { user, loading: authLoading, signOut } = useAuth();
   const { transactions, loading: transactionsLoading, refresh, create, update, remove } = useTransactions();
+  const { categories } = useCategories();
   const { data: referenceData } = useReferenceData({
     resources: [
-      "categories",
       "transactionTypes",
       "paymentStatuses",
       "paymentMethods",
@@ -148,7 +148,6 @@ export default function Transacoes() {
   const { banks, loading: banksLoading } = useBanks();
   const { cards, loading: cardsLoading } = useCards();
   const {
-    categories = [],
     transactionTypes = [],
     paymentStatuses = [],
     paymentMethods = [],
@@ -647,18 +646,10 @@ export default function Transacoes() {
       label: "Categoria",
       sortable: true,
       render: (row) => {
-        const IconComponent = getIconComponent(row.category_icon || "Tag");
+        const emoji = row.category_emoji || categories.find(c => c.id === row.category_id)?.emoji || '📦';
         return (
           <div className="flex items-center gap-2">
-            <div
-              className="p-1 rounded flex-shrink-0"
-              style={{ backgroundColor: row.category_color + "20" }}
-            >
-              <IconComponent
-                className="w-4 h-4"
-                style={{ color: row.category_color }}
-              />
-            </div>
+            <span className="text-lg leading-none">{emoji}</span>
             <span className="text-sm font-medium text-gray-900 dark:text-white">
               {row.category_name}
             </span>
@@ -819,9 +810,6 @@ export default function Transacoes() {
                       {categories
                         .filter((cat) => cat.transaction_type_id === 1)
                         .map((category) => {
-                          const IconComponent = getIconComponent(
-                            category.icon || "Tag"
-                          );
                           return (
                             <SelectItem
                               key={category.id}
@@ -829,17 +817,7 @@ export default function Transacoes() {
                               className="pl-6"
                             >
                               <div className="flex items-center gap-2">
-                                <div
-                                  className="w-6 h-6 rounded-md flex items-center justify-center"
-                                  style={{
-                                    backgroundColor: category.color + "20",
-                                  }}
-                                >
-                                  <IconComponent
-                                    className="w-4 h-4"
-                                    style={{ color: category.color }}
-                                  />
-                                </div>
+                                <span className="text-lg leading-none">{category.emoji || '📦'}</span>
                                 {category.name}
                               </div>
                             </SelectItem>
@@ -858,9 +836,6 @@ export default function Transacoes() {
                       {categories
                         .filter((cat) => cat.transaction_type_id === 2)
                         .map((category) => {
-                          const IconComponent = getIconComponent(
-                            category.icon || "Tag"
-                          );
                           return (
                             <SelectItem
                               key={category.id}
@@ -868,17 +843,7 @@ export default function Transacoes() {
                               className="pl-6"
                             >
                               <div className="flex items-center gap-2">
-                                <div
-                                  className="w-6 h-6 rounded-md flex items-center justify-center"
-                                  style={{
-                                    backgroundColor: category.color + "20",
-                                  }}
-                                >
-                                  <IconComponent
-                                    className="w-4 h-4"
-                                    style={{ color: category.color }}
-                                  />
-                                </div>
+                                <span className="text-lg leading-none">{category.emoji || '📦'}</span>
                                 {category.name}
                               </div>
                             </SelectItem>
@@ -897,9 +862,6 @@ export default function Transacoes() {
                       {categories
                         .filter((cat) => cat.transaction_type_id === 3)
                         .map((category) => {
-                          const IconComponent = getIconComponent(
-                            category.icon || "Tag"
-                          );
                           return (
                             <SelectItem
                               key={category.id}
@@ -907,17 +869,7 @@ export default function Transacoes() {
                               className="pl-6"
                             >
                               <div className="flex items-center gap-2">
-                                <div
-                                  className="w-6 h-6 rounded-md flex items-center justify-center"
-                                  style={{
-                                    backgroundColor: category.color + "20",
-                                  }}
-                                >
-                                  <IconComponent
-                                    className="w-4 h-4"
-                                    style={{ color: category.color }}
-                                  />
-                                </div>
+                                <span className="text-lg leading-none">{category.emoji || '📦'}</span>
                                 {category.name}
                               </div>
                             </SelectItem>
@@ -1168,9 +1120,6 @@ export default function Transacoes() {
                       {categories
                         .filter((cat) => cat.transaction_type_id === 1)
                         .map((category) => {
-                          const IconComponent = getIconComponent(
-                            category.icon || "Tag"
-                          );
                           return (
                             <SelectItem
                               key={category.id}
@@ -1178,17 +1127,7 @@ export default function Transacoes() {
                               className="pl-6"
                             >
                               <div className="flex items-center gap-2">
-                                <div
-                                  className="w-6 h-6 rounded-md flex items-center justify-center"
-                                  style={{
-                                    backgroundColor: category.color + "20",
-                                  }}
-                                >
-                                  <IconComponent
-                                    className="w-4 h-4"
-                                    style={{ color: category.color }}
-                                  />
-                                </div>
+                                <span className="text-lg leading-none">{category.emoji || '📦'}</span>
                                 {category.name}
                               </div>
                             </SelectItem>
@@ -1207,9 +1146,6 @@ export default function Transacoes() {
                       {categories
                         .filter((cat) => cat.transaction_type_id === 2)
                         .map((category) => {
-                          const IconComponent = getIconComponent(
-                            category.icon || "Tag"
-                          );
                           return (
                             <SelectItem
                               key={category.id}
@@ -1217,17 +1153,7 @@ export default function Transacoes() {
                               className="pl-6"
                             >
                               <div className="flex items-center gap-2">
-                                <div
-                                  className="w-6 h-6 rounded-md flex items-center justify-center"
-                                  style={{
-                                    backgroundColor: category.color + "20",
-                                  }}
-                                >
-                                  <IconComponent
-                                    className="w-4 h-4"
-                                    style={{ color: category.color }}
-                                  />
-                                </div>
+                                <span className="text-lg leading-none">{category.emoji || '📦'}</span>
                                 {category.name}
                               </div>
                             </SelectItem>
@@ -1246,9 +1172,6 @@ export default function Transacoes() {
                       {categories
                         .filter((cat) => cat.transaction_type_id === 3)
                         .map((category) => {
-                          const IconComponent = getIconComponent(
-                            category.icon || "Tag"
-                          );
                           return (
                             <SelectItem
                               key={category.id}
@@ -1256,17 +1179,7 @@ export default function Transacoes() {
                               className="pl-6"
                             >
                               <div className="flex items-center gap-2">
-                                <div
-                                  className="w-6 h-6 rounded-md flex items-center justify-center"
-                                  style={{
-                                    backgroundColor: category.color + "20",
-                                  }}
-                                >
-                                  <IconComponent
-                                    className="w-4 h-4"
-                                    style={{ color: category.color }}
-                                  />
-                                </div>
+                                <span className="text-lg leading-none">{category.emoji || '📦'}</span>
                                 {category.name}
                               </div>
                             </SelectItem>
