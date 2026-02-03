@@ -107,6 +107,7 @@ export default function ConfiguracoesPage() {
     updateMember: updateMemberAPI,
     removeMember: removeMemberAPI,
     resetAccount: resetAccountAPI,
+    deleteAccount: deleteAccountAPI,
   } = useSettings();
 
   // Theme
@@ -135,6 +136,9 @@ export default function ConfiguracoesPage() {
 
   // Estado de confirmação de reset
   const [confirmResetOpen, setConfirmResetOpen] = useState(false);
+
+  // Estado de confirmação de exclusão de conta
+  const [confirmDeleteAccountOpen, setConfirmDeleteAccountOpen] = useState(false);
 
   // Estado de modal de alterar email
   const [emailModalOpen, setEmailModalOpen] = useState(false);
@@ -289,6 +293,27 @@ export default function ConfiguracoesPage() {
     } finally {
       setSaving(false);
       setConfirmResetOpen(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    try {
+      setSaving(true);
+      const { success, error } = await deleteAccountAPI();
+
+      if (error) throw error;
+
+      if (success) {
+        toast.success("Conta excluida com sucesso");
+        await signOut();
+        router.replace("/login");
+      }
+    } catch (err) {
+      console.error("Erro ao excluir conta:", err);
+      toast.error("Erro ao excluir conta. Tente novamente.");
+    } finally {
+      setSaving(false);
+      setConfirmDeleteAccountOpen(false);
     }
   };
 
@@ -689,6 +714,26 @@ export default function ConfiguracoesPage() {
               </Button>
             </div>
           </div>
+
+          {/* Excluir conta */}
+          <div className="p-4 bg-red-50 dark:bg-red-950 rounded-lg border border-red-100 dark:border-red-800 mt-3">
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex-1">
+                <p className="font-semibold text-red-700">Excluir conta</p>
+                <p className="text-sm text-red-600 mt-1">
+                  Apaga permanentemente sua conta e todos os dados associados. Esta acao NAO pode ser desfeita.
+                </p>
+              </div>
+              <Button
+                variant="destructive"
+                onClick={() => setConfirmDeleteAccountOpen(true)}
+                className="flex-shrink-0"
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Excluir conta
+              </Button>
+            </div>
+          </div>
         </CardContent>
       </Card>
 
@@ -809,6 +854,18 @@ export default function ConfiguracoesPage() {
         cancelText="Cancelar"
         variant="danger"
         onConfirm={handleResetAccount}
+      />
+
+      {/* Confirmação de exclusão de conta */}
+      <ConfirmDialog
+        open={confirmDeleteAccountOpen}
+        onOpenChange={setConfirmDeleteAccountOpen}
+        title="Excluir conta permanentemente"
+        description="Esta acao ira EXCLUIR PERMANENTEMENTE sua conta e TODOS os seus dados. Voce nao podera recuperar nenhuma informacao apos a exclusao. Tem certeza absoluta?"
+        confirmText="Sim, excluir minha conta"
+        cancelText="Cancelar"
+        variant="danger"
+        onConfirm={handleDeleteAccount}
       />
     </div>
   );

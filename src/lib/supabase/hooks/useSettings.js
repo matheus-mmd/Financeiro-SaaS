@@ -12,6 +12,7 @@ import {
   updateAccountMember,
   removeAccountMember,
   resetAccount,
+  deleteAccount,
   formatSubscriptionStatus,
   calculateTrialDaysRemaining,
 } from '../api/settings';
@@ -239,6 +240,22 @@ export function useSettings() {
     }
   }, []);
 
+  // Excluir conta permanentemente
+  const deleteAccountFn = useCallback(async () => {
+    try {
+      const result = await deleteAccount();
+
+      if (result.success) {
+        settingsCache.clear();
+        setSettings(null);
+      }
+
+      return result;
+    } catch (err) {
+      return { success: false, error: err };
+    }
+  }, []);
+
   // Helpers de assinatura
   const subscriptionInfo = settings
     ? formatSubscriptionStatus(settings.subscription_status || 'trial', settings.trial_ends_at)
@@ -261,6 +278,7 @@ export function useSettings() {
     updateMember,
     removeMember,
     resetAccount: reset,
+    deleteAccount: deleteAccountFn,
   };
 }
 
