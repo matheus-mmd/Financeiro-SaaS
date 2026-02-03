@@ -340,8 +340,9 @@ export async function resetAccount() {
 }
 
 /**
- * Exclui permanentemente a conta do usuário e todos os dados associados
- * Ordem de deleção respeita foreign keys (RESTRICT antes de CASCADE)
+ * Exclui permanentemente a conta do usuário e todos os dados associados.
+ * Usa função PostgreSQL com SECURITY DEFINER para deletar inclusive
+ * o registro em auth.users (que não é acessível pelo client normal).
  */
 export async function deleteAccount() {
   const { user, error: authError } = await getAuthenticatedUser();
@@ -353,50 +354,11 @@ export async function deleteAccount() {
   }
 
   try {
-    // Ordem de deleção respeita constraints RESTRICT:
-    // 1. transactions → category_id RESTRICT
-    // 2. assets → category_id RESTRICT
-    // 3. category_budgets → category_id CASCADE (mas deletamos explicitamente)
-    // 4. targets → category_id SET NULL
-    // 5. cards → bank_id SET NULL
-    // 6. banks
-    // 7. categories (agora seguro pois nenhum RESTRICT aponta para ela)
-    // 8. user_incomes, user_fixed_expenses, account_members
-    const tablesToDelete = [
-      'transactions',
-      'assets',
-      'category_budgets',
-      'targets',
-      'cards',
-      'banks',
-      'categories',
-      'user_incomes',
-      'user_fixed_expenses',
-      'account_members',
-    ];
+    const { error } = await supabase.rpc('delete_user_account');
 
-    for (const table of tablesToDelete) {
-      const { error } = await supabase
-        .from(table)
-        .delete()
-        .eq('user_id', user.id);
-
-      if (error) {
-        console.error(`[Settings API] Erro ao limpar ${table}:`, error);
-        // Continua mesmo com erro em tabelas que podem não existir
-      }
-    }
-
-    // Agora que todos os dados foram removidos, o trigger
-    // check_user_has_no_data permite a deleção do registro do usuário
-    const { error: deleteUserError } = await supabase
-      .from('users')
-      .delete()
-      .eq('id', user.id);
-
-    if (deleteUserError) {
-      console.error('[Settings API] Erro ao deletar usuário:', deleteUserError);
-      return { success: false, error: deleteUserError };
+    if (error) {
+      console.error('[Settings API] Erro ao excluir conta:', error);
+      return { success: false, error };
     }
 
     return { success: true, error: null };
