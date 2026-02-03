@@ -6,6 +6,29 @@
 import { supabase } from '../client';
 
 /**
+ * Marcador em 'notes' para identificar transações criadas pelo setup
+ * Permite limpar e recriar ao re-executar o setup
+ */
+const SETUP_TRANSACTION_MARKER = 'auto:setup';
+
+/**
+ * Mapeamento de tipo de renda → nome de categoria padrão (receita)
+ */
+const INCOME_CATEGORY_MAP = {
+  clt: 'Salário Líquido',
+  autonomo: 'Projeto/Freela',
+  principal: 'Outras Receitas',
+};
+
+/**
+ * Mapeamento de tipo de despesa fixa → nome de categoria padrão (despesa)
+ */
+const EXPENSE_CATEGORY_MAP = {
+  moradia: 'Moradia',
+  servicos_basicos: 'Serviços',
+};
+
+/**
  * Verifica se o usuário completou o setup inicial
  * @param {string} userId - ID do usuário
  * @returns {Promise<{completed: boolean, error: Error|null}>}
@@ -44,6 +67,13 @@ export async function saveUserSetup(userId, setupData) {
     const workTypeString = Array.isArray(workTypes) ? workTypes.join(',') : workTypes;
 
     // 0. Limpar dados existentes para permitir re-execução do setup
+    // Deletar transações criadas pelo setup anterior
+    await supabase
+      .from('transactions')
+      .delete()
+      .eq('user_id', userId)
+      .eq('notes', SETUP_TRANSACTION_MARKER);
+
     // Deletar despesas fixas existentes
     await supabase
       .from('user_fixed_expenses')
@@ -214,6 +244,96 @@ export async function saveUserSetup(userId, setupData) {
       if (expensesError) {
         console.error('[Setup API] Erro ao salvar despesas fixas:', expensesError);
         // Não retorna erro aqui pois o setup principal foi salvo
+      }
+    }
+
+    // 6. Criar transações recorrentes a partir dos dados do setup
+    // Buscar todas as categorias do usuário para vincular às transações
+    let allUserCategories = [];
+    try {
+      const { data: cats } = await supabase
+        .from('categories')
+        .select('id, name, transaction_type_id')
+        .eq('user_id', userId)
+        .is('deleted_at', null);
+      allUserCategories = cats || [];
+    } catch {
+      console.error('[Setup API] Erro ao buscar categorias para transações');
+    }
+
+    if (allUserCategories.length > 0) {
+      const now = new Date();
+      const transactionsToInsert = [];
+
+      // 6a. Transações de receita (rendas do titular e membros)
+      const allIncomes = incomes || [];
+      for (const income of allIncomes) {
+        if (!income.amountCents || !income.paymentDay) continue;
+
+        const categoryName = INCOME_CATEGORY_MAP[income.incomeType] || 'Outras Receitas';
+        const category = allUserCategories.find(
+          c => c.name === categoryName && c.transaction_type_id === 1
+        );
+
+        if (category) {
+          const day = Math.min(income.paymentDay, 28);
+          const transactionDate = new Date(now.getFullYear(), now.getMonth(), day);
+
+          transactionsToInsert.push({
+            user_id: userId,
+            category_id: category.id,
+            transaction_type_id: 1, // Receita
+            payment_status_id: 1,   // Pendente
+            description: income.description || 'Renda',
+            amount: income.amountCents / 100,
+            transaction_date: transactionDate.toISOString().split('T')[0],
+            is_recurring: true,
+            recurrence_frequency_id: 3, // Mensal
+            notes: SETUP_TRANSACTION_MARKER,
+          });
+        }
+      }
+
+      // 6b. Transações de despesa (moradia e serviços básicos)
+      if (fixedExpenses && fixedExpenses.length > 0) {
+        for (const expense of fixedExpenses) {
+          if (!expense.amountCents || !expense.dueDay) continue;
+
+          const categoryName = EXPENSE_CATEGORY_MAP[expense.category] || 'Outras Despesas';
+          const category = allUserCategories.find(
+            c => c.name === categoryName && c.transaction_type_id === 2
+          );
+
+          if (category) {
+            const day = Math.min(expense.dueDay, 28);
+            const transactionDate = new Date(now.getFullYear(), now.getMonth(), day);
+
+            transactionsToInsert.push({
+              user_id: userId,
+              category_id: category.id,
+              transaction_type_id: 2, // Despesa
+              payment_status_id: 1,   // Pendente
+              description: expense.description,
+              amount: -(expense.amountCents / 100),
+              transaction_date: transactionDate.toISOString().split('T')[0],
+              is_recurring: true,
+              recurrence_frequency_id: 3, // Mensal
+              notes: SETUP_TRANSACTION_MARKER,
+            });
+          }
+        }
+      }
+
+      // Inserir todas as transações de uma vez
+      if (transactionsToInsert.length > 0) {
+        const { error: txError } = await supabase
+          .from('transactions')
+          .insert(transactionsToInsert);
+
+        if (txError) {
+          console.error('[Setup API] Erro ao criar transações do setup:', txError);
+          // Não retorna erro pois o setup principal foi salvo com sucesso
+        }
       }
     }
 

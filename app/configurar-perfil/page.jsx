@@ -29,6 +29,12 @@ import {
   LogOut,
 } from 'lucide-react';
 import { saveUserSetup, parseMoneyToCents } from '../../src/lib/supabase/api/setup';
+import {
+  categoriesCache,
+  referenceDataCache,
+  transactionsCache,
+  dashboardCache,
+} from '../../src/lib/cache/cacheFactory';
 
 const TOTAL_STEPS = 6;
 
@@ -1017,6 +1023,13 @@ export default function ConfigurarPerfilPage() {
       const { success, error } = await saveUserSetup(user.id, setupData);
 
       if (success) {
+        // Invalidar caches para que Categorias, Transações e Dashboard
+        // reflitam os dados criados pelo setup
+        categoriesCache.clear();
+        referenceDataCache.clearAll();
+        transactionsCache.clearAll();
+        dashboardCache.clear();
+
         // Atualizar o perfil no contexto antes de redirecionar
         // para evitar que o dashboard redirecione de volta
         await refreshProfile();
