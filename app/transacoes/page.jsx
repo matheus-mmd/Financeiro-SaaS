@@ -19,6 +19,7 @@ import {
   SelectGroup,
   SelectItem,
   SelectLabel,
+  SelectSeparator,
   SelectTrigger,
   SelectValue,
 } from "../../src/components/ui/select";
@@ -59,6 +60,7 @@ import { exportToCSV } from "../../src/utils/exportData";
 import FilterButton from "../../src/components/FilterButton";
 import {
   TRANSACTION_TYPES,
+  TRANSACTION_TYPE_IDS,
   PAYMENT_STATUS,
   PAYMENT_METHODS,
 } from "../../src/constants";
@@ -66,6 +68,7 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   TrendingUp,
+  TrendingDown,
   Plus,
   Trash2,
   Download,
@@ -74,7 +77,10 @@ import {
   Repeat,
   CheckCircle2,
   Clock,
+  PiggyBank,
 } from "lucide-react";
+import EmojiPicker from "../../src/components/EmojiPicker";
+import { useToast } from "../../src/components/Toast";
 
 /**
  * Estado inicial do formulário de transações
@@ -136,7 +142,8 @@ export default function Transacoes() {
   const router = useRouter();
   const { user, loading: authLoading, signOut } = useAuth();
   const { transactions, loading: transactionsLoading, refresh, create, update, remove } = useTransactions();
-  const { categories } = useCategories();
+  const { categories, create: createCategory } = useCategories();
+  const toast = useToast();
   const { data: referenceData } = useReferenceData({
     resources: [
       "transactionTypes",
@@ -175,6 +182,11 @@ export default function Transacoes() {
   const [importModalOpen, setImportModalOpen] = useState(false);
   const [recurringModalOpen, setRecurringModalOpen] = useState(false);
   const [columnSelectorElement, setColumnSelectorElement] = useState(null);
+
+  // Estados para criação inline de categoria
+  const [newCategoryModalOpen, setNewCategoryModalOpen] = useState(false);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [newCategoryData, setNewCategoryData] = useState({ emoji: '', name: '' });
 
   // Usar useReducer para formulário complexo (16 campos)
   // Previne re-renders desnecessários quando apenas um campo muda
@@ -226,9 +238,9 @@ export default function Transacoes() {
     if (editingTransaction) return;
     if (!categories.length || !transactionTypes.length) return;
 
-    // Definir categoria e tipo padrão
-    const defaultCategory = categories[0];
-    const defaultTypeId = defaultCategory.transaction_type_id || transactionTypes[0].id;
+    // Padrão: Despesa (tipo mais comum)
+    const defaultTypeId = TRANSACTION_TYPE_IDS.EXPENSE;
+    const defaultCategory = categories.find(c => c.transaction_type_id === defaultTypeId) || categories[0];
 
     dispatch({
       type: 'UPDATE_MULTIPLE',
@@ -292,18 +304,19 @@ export default function Transacoes() {
 
   const handleAddTransaction = useCallback(() => {
     setEditingTransaction(null);
-    const defaultCategory = categories[0];
-    const defaultTypeId = defaultCategory?.transaction_type_id || transactionTypes[0]?.id;
+    // Padrão: Despesa (tipo mais comum)
+    const defaultTypeId = TRANSACTION_TYPE_IDS.EXPENSE;
+    const defaultCategory = categories.find(c => c.transaction_type_id === defaultTypeId) || categories[0];
     dispatch({
       type: 'RESET',
       initialState: {
         ...initialFormState,
         categoryId: defaultCategory?.id || null,
-        transactionTypeId: defaultTypeId || null,
+        transactionTypeId: defaultTypeId,
       }
     });
     setModalOpen(true);
-  }, [categories, transactionTypes]);
+  }, [categories]);
 
   const handleEditTransaction = useCallback((transaction) => {
     setEditingTransaction(transaction);
@@ -516,14 +529,14 @@ export default function Transacoes() {
       await refresh();
 
       setModalOpen(false);
-      const defaultCategory = categories[0];
-      const defaultTypeId = defaultCategory?.transaction_type_id || transactionTypes[0]?.id;
+      const defaultTypeId = TRANSACTION_TYPE_IDS.EXPENSE;
+      const defaultCategory = categories.find(c => c.transaction_type_id === defaultTypeId) || categories[0];
       dispatch({
         type: 'RESET',
         initialState: {
           ...initialFormState,
           categoryId: defaultCategory?.id || null,
-          transactionTypeId: defaultTypeId || null,
+          transactionTypeId: defaultTypeId,
         }
       });
     } catch (error) {
@@ -539,8 +552,28 @@ export default function Transacoes() {
     dispatch({ type: 'UPDATE_FIELD', field, value });
   }, []);
 
+  // Quando muda o tipo de transação via toggle, seleciona a primeira categoria do tipo
+  const handleTransactionTypeChange = useCallback((typeId) => {
+    const firstCategoryOfType = categories.find((c) => c.transaction_type_id === typeId);
+    dispatch({
+      type: 'UPDATE_MULTIPLE',
+      updates: {
+        transactionTypeId: typeId,
+        categoryId: firstCategoryOfType?.id || null,
+      }
+    });
+  }, [categories]);
+
   // Quando muda a categoria, o tipo de transação é automaticamente definido
   const handleCategoryChange = useCallback((categoryId) => {
+    // Interceptar seleção de "criar nova categoria"
+    if (categoryId === "__create_new__") {
+      setNewCategoryData({ emoji: '', name: '' });
+      setShowEmojiPicker(false);
+      setNewCategoryModalOpen(true);
+      return;
+    }
+
     const category = categories.find((c) => c.id === parseInt(categoryId));
 
     // Definir o tipo de transação baseado no tipo da categoria
@@ -554,6 +587,52 @@ export default function Transacoes() {
       }
     });
   }, [categories, transactionTypes]);
+
+  // Criar nova categoria inline (a partir do formulário de transação)
+  const handleCreateCategoryInline = useCallback(async () => {
+    if (!newCategoryData.name.trim()) {
+      toast.warning('Por favor, informe o nome da categoria');
+      return;
+    }
+
+    try {
+      const typeId = formData.transactionTypeId || TRANSACTION_TYPE_IDS.EXPENSE;
+      const color = typeId === TRANSACTION_TYPE_IDS.INCOME ? '#22c55e'
+        : typeId === TRANSACTION_TYPE_IDS.INVESTMENT ? '#3b82f6'
+        : '#ef4444';
+
+      const result = await createCategory({
+        name: newCategoryData.name,
+        emoji: newCategoryData.emoji || '📦',
+        color,
+        transactionTypeId: typeId,
+      });
+
+      if (result.error) throw result.error;
+
+      // Selecionar a categoria recém-criada
+      if (result.data) {
+        dispatch({
+          type: 'UPDATE_MULTIPLE',
+          updates: {
+            categoryId: result.data.id,
+            transactionTypeId: typeId,
+          }
+        });
+      }
+
+      toast.success(`Categoria "${newCategoryData.name}" criada!`);
+      setNewCategoryModalOpen(false);
+    } catch (err) {
+      console.error("Erro ao criar categoria:", err);
+      const errorMessage = err?.message || String(err);
+      if (errorMessage.includes('categories_unique_name_per_user') || errorMessage.includes('duplicate key')) {
+        toast.error('Já existe uma categoria com esse nome.');
+      } else {
+        toast.error('Erro ao criar categoria. Tente novamente.');
+      }
+    }
+  }, [newCategoryData, formData.transactionTypeId, createCategory, toast]);
 
   // Calcular estatísticas baseadas nas transações filtradas
   const totalIncome = useMemo(() =>
@@ -1078,115 +1157,80 @@ export default function Transacoes() {
               />
             </div>
 
-            {/* Categoria */}
+            {/* Tipo de Transação - Toggle */}
             <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="category">Categoria</Label>
-                {/* Badge indicador do tipo de transação */}
-                {formData.transactionTypeId && (() => {
-                  const selectedType = transactionTypes.find(t => t.id === formData.transactionTypeId);
-                  if (!selectedType) return null;
-
-                  const typeConfig = {
-                    income: { label: 'Receita', color: 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800' },
-                    expense: { label: 'Despesa', color: 'bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800' },
-                    investment: { label: 'Patrimônio', color: 'bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800' },
-                  };
-
-                  const config = typeConfig[selectedType.internal_name] || { label: selectedType.name, color: 'bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300' };
-
-                  return (
-                    <Badge variant="outline" className={`${config.color} text-xs font-semibold`}>
-                      {config.label}
-                    </Badge>
-                  );
-                })()}
+              <Label>Tipo</Label>
+              <div className="grid grid-cols-3 gap-1 p-1 bg-gray-100 dark:bg-slate-800 rounded-lg">
+                <button
+                  type="button"
+                  onClick={() => handleTransactionTypeChange(TRANSACTION_TYPE_IDS.EXPENSE)}
+                  className={`flex items-center justify-center gap-1.5 py-2 px-2 rounded-md text-sm font-medium transition-all ${
+                    formData.transactionTypeId === TRANSACTION_TYPE_IDS.EXPENSE
+                      ? 'bg-white dark:bg-slate-700 text-red-600 dark:text-red-400 shadow-sm'
+                      : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                  }`}
+                >
+                  <TrendingDown className="w-4 h-4" />
+                  Despesa
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleTransactionTypeChange(TRANSACTION_TYPE_IDS.INCOME)}
+                  className={`flex items-center justify-center gap-1.5 py-2 px-2 rounded-md text-sm font-medium transition-all ${
+                    formData.transactionTypeId === TRANSACTION_TYPE_IDS.INCOME
+                      ? 'bg-white dark:bg-slate-700 text-green-600 dark:text-green-400 shadow-sm'
+                      : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                  }`}
+                >
+                  <TrendingUp className="w-4 h-4" />
+                  Receita
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleTransactionTypeChange(TRANSACTION_TYPE_IDS.INVESTMENT)}
+                  className={`flex items-center justify-center gap-1.5 py-2 px-2 rounded-md text-sm font-medium transition-all ${
+                    formData.transactionTypeId === TRANSACTION_TYPE_IDS.INVESTMENT
+                      ? 'bg-white dark:bg-slate-700 text-purple-600 dark:text-purple-400 shadow-sm'
+                      : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                  }`}
+                >
+                  <PiggyBank className="w-4 h-4" />
+                  Patrimônio
+                </button>
               </div>
+            </div>
+
+            {/* Categoria - Filtrada pelo tipo selecionado */}
+            <div className="space-y-2">
+              <Label htmlFor="category">Categoria</Label>
               <Select
                 value={formData.categoryId?.toString() || ""}
                 onValueChange={handleCategoryChange}
               >
                 <SelectTrigger id="category">
-                  <SelectValue placeholder="Selecione" />
+                  <SelectValue placeholder="Selecione uma categoria" />
                 </SelectTrigger>
                 <SelectContent>
-                  {/* Receitas */}
-                  {categories.filter((cat) => cat.transaction_type_id === 1)
-                    .length > 0 && (
-                    <SelectGroup>
-                      <SelectLabel className="text-green-600 font-bold text-xs uppercase">
-                        Receitas
-                      </SelectLabel>
-                      {categories
-                        .filter((cat) => cat.transaction_type_id === 1)
-                        .map((category) => {
-                          return (
-                            <SelectItem
-                              key={category.id}
-                              value={category.id.toString()}
-                              className="pl-6"
-                            >
-                              <div className="flex items-center gap-2">
-                                <span className="text-lg leading-none">{category.emoji || '📦'}</span>
-                                {category.name}
-                              </div>
-                            </SelectItem>
-                          );
-                        })}
-                    </SelectGroup>
-                  )}
-
-                  {/* Despesas */}
-                  {categories.filter((cat) => cat.transaction_type_id === 2)
-                    .length > 0 && (
-                    <SelectGroup>
-                      <SelectLabel className="text-red-600 font-bold text-xs uppercase">
-                        Despesas
-                      </SelectLabel>
-                      {categories
-                        .filter((cat) => cat.transaction_type_id === 2)
-                        .map((category) => {
-                          return (
-                            <SelectItem
-                              key={category.id}
-                              value={category.id.toString()}
-                              className="pl-6"
-                            >
-                              <div className="flex items-center gap-2">
-                                <span className="text-lg leading-none">{category.emoji || '📦'}</span>
-                                {category.name}
-                              </div>
-                            </SelectItem>
-                          );
-                        })}
-                    </SelectGroup>
-                  )}
-
-                  {/* Patrimônio/Investimentos */}
-                  {categories.filter((cat) => cat.transaction_type_id === 3)
-                    .length > 0 && (
-                    <SelectGroup>
-                      <SelectLabel className="text-purple-600 font-bold text-xs uppercase">
-                        Patrimônio
-                      </SelectLabel>
-                      {categories
-                        .filter((cat) => cat.transaction_type_id === 3)
-                        .map((category) => {
-                          return (
-                            <SelectItem
-                              key={category.id}
-                              value={category.id.toString()}
-                              className="pl-6"
-                            >
-                              <div className="flex items-center gap-2">
-                                <span className="text-lg leading-none">{category.emoji || '📦'}</span>
-                                {category.name}
-                              </div>
-                            </SelectItem>
-                          );
-                        })}
-                    </SelectGroup>
-                  )}
+                  {categories
+                    .filter((cat) => cat.transaction_type_id === formData.transactionTypeId)
+                    .map((category) => (
+                      <SelectItem
+                        key={category.id}
+                        value={category.id.toString()}
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="text-lg leading-none">{category.emoji || '📦'}</span>
+                          {category.name}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  <SelectSeparator />
+                  <SelectItem value="__create_new__" className="text-brand-600 dark:text-brand-400 font-medium">
+                    <div className="flex items-center gap-2">
+                      <Plus className="w-4 h-4" />
+                      Criar nova categoria
+                    </div>
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -1490,6 +1534,99 @@ export default function Transacoes() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Modal de Criar Nova Categoria (inline) */}
+      <Dialog open={newCategoryModalOpen} onOpenChange={setNewCategoryModalOpen}>
+        <DialogContent className="max-w-[95vw] sm:max-w-sm max-h-[90vh] flex flex-col p-0">
+          <DialogHeader className="px-4 pt-4 pb-3 border-b flex-shrink-0">
+            <DialogTitle>
+              Nova Categoria de {formData.transactionTypeId === TRANSACTION_TYPE_IDS.INCOME ? 'Receita'
+                : formData.transactionTypeId === TRANSACTION_TYPE_IDS.INVESTMENT ? 'Patrimônio'
+                : 'Despesa'}
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="flex-1 overflow-y-auto px-4 py-4">
+            <div className="space-y-4">
+              {/* Emoji Picker */}
+              <div className="space-y-2">
+                <Label>Emoji</Label>
+                <button
+                  type="button"
+                  onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                  className="w-full flex items-center gap-3 p-3 border border-gray-200 dark:border-slate-700 rounded-lg bg-gray-50 dark:bg-slate-800 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
+                >
+                  {newCategoryData.emoji ? (
+                    <span className="text-2xl">{newCategoryData.emoji}</span>
+                  ) : (
+                    <span className="text-gray-400">Clique para escolher</span>
+                  )}
+                </button>
+
+                {showEmojiPicker && (
+                  <div className="mt-2">
+                    <EmojiPicker
+                      selectedEmoji={newCategoryData.emoji}
+                      onEmojiSelect={(emoji) => {
+                        setNewCategoryData(prev => ({ ...prev, emoji }));
+                        setShowEmojiPicker(false);
+                      }}
+                      onClose={() => setShowEmojiPicker(false)}
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Nome */}
+              <div className="space-y-2">
+                <Label htmlFor="new-category-name">Nome da Categoria</Label>
+                <Input
+                  id="new-category-name"
+                  value={newCategoryData.name}
+                  onChange={(e) => setNewCategoryData(prev => ({ ...prev, name: e.target.value }))}
+                  placeholder="Ex: Apostas, Academia, Investimento..."
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleCreateCategoryInline();
+                    }
+                  }}
+                />
+              </div>
+
+              {/* Preview */}
+              {newCategoryData.name && (
+                <div className="p-3 bg-gray-50 dark:bg-slate-800 rounded-lg">
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">Preview:</p>
+                  <div className="flex items-center gap-3">
+                    {newCategoryData.emoji && (
+                      <span className="text-2xl">{newCategoryData.emoji}</span>
+                    )}
+                    <span className="font-medium text-gray-900 dark:text-white">{newCategoryData.name}</span>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <DialogFooter className="px-4 py-3 border-t bg-gray-50 dark:bg-slate-800 flex-shrink-0">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setNewCategoryModalOpen(false)}
+              className="flex-1 sm:flex-none"
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleCreateCategoryInline}
+              className="flex-1 sm:flex-none"
+            >
+              Criar Categoria
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Modal de Importação CSV */}
       <Dialog open={importModalOpen} onOpenChange={setImportModalOpen}>
