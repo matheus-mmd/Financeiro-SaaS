@@ -185,7 +185,6 @@ const IncomeVsExpensesChart = memo(function IncomeVsExpensesChart({
                   />
                 }
                 cursor={{ fill: 'rgba(148, 163, 184, 0.1)' }}
-                defaultIndex={1}
               />
             </BarChart>
           </ChartContainer>
