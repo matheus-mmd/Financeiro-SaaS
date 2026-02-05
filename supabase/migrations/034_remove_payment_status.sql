@@ -5,8 +5,11 @@
 -- remove a tabela payment_statuses
 -- ============================================
 
--- 1. Recriar a view transactions_enriched SEM campos de payment_status
-CREATE OR REPLACE VIEW public.transactions_enriched
+-- 1. Dropar a view existente (CREATE OR REPLACE nao permite remover colunas)
+DROP VIEW IF EXISTS public.transactions_enriched;
+
+-- 2. Recriar a view transactions_enriched SEM campos de payment_status
+CREATE VIEW public.transactions_enriched
 WITH (security_invoker = true) AS
 SELECT
   t.id,
@@ -74,11 +77,11 @@ WHERE t.deleted_at IS NULL;
 
 COMMENT ON VIEW public.transactions_enriched IS 'Transações com todos os dados relacionados (categorias, ícones, emojis, tipos, etc) para performance - SECURITY INVOKER para respeitar RLS';
 
--- 2. Remover coluna payment_status_id da tabela transactions
+-- 3. Remover coluna payment_status_id da tabela transactions
 ALTER TABLE public.transactions DROP COLUMN IF EXISTS payment_status_id;
 
--- 3. Remover políticas RLS da tabela payment_statuses
+-- 4. Remover políticas RLS da tabela payment_statuses
 DROP POLICY IF EXISTS "Payment statuses are viewable by everyone" ON public.payment_statuses;
 
--- 4. Remover tabela payment_statuses
+-- 5. Remover tabela payment_statuses
 DROP TABLE IF EXISTS public.payment_statuses;
