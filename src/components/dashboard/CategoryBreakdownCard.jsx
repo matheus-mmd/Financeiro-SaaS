@@ -40,38 +40,30 @@ const CategoryBreakdownCard = memo(function CategoryBreakdownCard({
     [data]
   );
 
-  // Cores padrão modernas para receitas, despesas e investimentos
-  const DEFAULT_INCOME_COLORS = ["#10b981", "#059669", "#06b6d4"];
-  const DEFAULT_EXPENSE_COLORS = [
-    "#3b82f6",
-    "#a855f7",
-    "#10b981",
-    "#f59e0b",
-    "#ef4444",
-  ];
-  const DEFAULT_INVESTMENT_COLORS = [
-    "#06b6d4",
-    "#0891b2",
-    "#0e7490",
-    "#155e75",
-    "#164e63",
+  // Paleta de cores visualmente distintas para diferenciação clara no gráfico
+  // Cores escolhidas para máximo contraste entre categorias adjacentes
+  const CHART_COLORS = [
+    "#3b82f6", // Azul
+    "#ef4444", // Vermelho
+    "#10b981", // Verde
+    "#f59e0b", // Âmbar
+    "#8b5cf6", // Roxo
+    "#ec4899", // Rosa
+    "#06b6d4", // Ciano
+    "#f97316", // Laranja
+    "#14b8a6", // Teal
+    "#6366f1", // Índigo
   ];
 
-  const getColor = (item, index) => {
-    if (item.color) return item.color;
-    return activeTab === "income"
-      ? DEFAULT_INCOME_COLORS[index % DEFAULT_INCOME_COLORS.length]
-      : activeTab === "investments"
-      ? DEFAULT_INVESTMENT_COLORS[index % DEFAULT_INVESTMENT_COLORS.length]
-      : DEFAULT_EXPENSE_COLORS[index % DEFAULT_EXPENSE_COLORS.length];
-  };
+  // Sempre usa a paleta do gráfico para garantir distinção visual entre categorias
+  const getColor = (index) => CHART_COLORS[index % CHART_COLORS.length];
 
   // TOP 5 categorias
   const topCategories = [...data].sort((a, b) => b.value - a.value).slice(0, 5);
 
   const chartData = topCategories.map((item, index) => ({
     ...item,
-    color: getColor(item, index),
+    chartColor: getColor(index),
   }));
 
   const iconColor =
@@ -154,7 +146,7 @@ const CategoryBreakdownCard = memo(function CategoryBreakdownCard({
                       {chartData.map((entry, index) => (
                         <Cell
                           key={`cell-${index}`}
-                          fill={entry.color}
+                          fill={entry.chartColor}
                           strokeWidth={2}
                           stroke="#fff"
                           opacity={
@@ -191,6 +183,7 @@ const CategoryBreakdownCard = memo(function CategoryBreakdownCard({
               const percentage = ((item.value / total) * 100).toFixed(1);
               const isActive = activeIndex === index;
               const IconComponent = getIconComponent(item.icon || "Tag");
+              const hasEmoji = item.emoji && item.emoji.trim();
 
               return (
                 <div
@@ -208,13 +201,17 @@ const CategoryBreakdownCard = memo(function CategoryBreakdownCard({
                       </span>
                     </div>
                     <div
-                      className="p-1 rounded flex-shrink-0"
-                      style={{ backgroundColor: item.color + "20" }}
+                      className="p-1.5 rounded flex-shrink-0 flex items-center justify-center"
+                      style={{ backgroundColor: item.chartColor + "20" }}
                     >
-                      <IconComponent
-                        className="w-4 h-4"
-                        style={{ color: item.color }}
-                      />
+                      {hasEmoji ? (
+                        <span className="text-base leading-none">{item.emoji}</span>
+                      ) : (
+                        <IconComponent
+                          className="w-4 h-4"
+                          style={{ color: item.chartColor }}
+                        />
+                      )}
                     </div>
                     <span
                       className={`text-sm font-medium truncate ${
