@@ -189,7 +189,7 @@ const CategoryBreakdownCard = memo(function CategoryBreakdownCard({
                 <div
                   key={item.name}
                   className={`flex items-center justify-between transition-all duration-200 cursor-pointer ${
-                    isActive ? "scale-105" : ""
+                    isActive ? "scale-[1.01]" : ""
                   }`}
                   onMouseEnter={() => setActiveIndex(index)}
                   onMouseLeave={() => setActiveIndex(null)}
@@ -200,10 +200,7 @@ const CategoryBreakdownCard = memo(function CategoryBreakdownCard({
                         {index + 1}
                       </span>
                     </div>
-                    <div
-                      className="p-1.5 rounded flex-shrink-0 flex items-center justify-center"
-                      style={{ backgroundColor: item.chartColor + "20" }}
-                    >
+                    <div className="flex-shrink-0 flex items-center justify-center w-5 h-5">
                       {hasEmoji ? (
                         <span className="text-base leading-none">{item.emoji}</span>
                       ) : (
