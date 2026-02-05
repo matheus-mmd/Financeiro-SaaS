@@ -61,7 +61,6 @@ import FilterButton from "../../src/components/FilterButton";
 import {
   TRANSACTION_TYPES,
   TRANSACTION_TYPE_IDS,
-  PAYMENT_STATUS,
   PAYMENT_METHODS,
 } from "../../src/constants";
 import {
@@ -75,8 +74,6 @@ import {
   Copy,
   Upload,
   Repeat,
-  CheckCircle2,
-  Clock,
   PiggyBank,
 } from "lucide-react";
 import EmojiPicker from "../../src/components/EmojiPicker";
@@ -92,7 +89,6 @@ const initialFormState = {
   transactionTypeId: null,
   date: new Date(),
   notes: "",
-  status: PAYMENT_STATUS.PENDING,
   payment_method: "",
   payment_date: null,
   card_id: null,
@@ -147,7 +143,6 @@ export default function Transacoes() {
   const { data: referenceData } = useReferenceData({
     resources: [
       "transactionTypes",
-      "paymentStatuses",
       "paymentMethods",
       "recurrenceFrequencies",
     ],
@@ -156,7 +151,6 @@ export default function Transacoes() {
   const { cards, loading: cardsLoading } = useCards();
   const {
     transactionTypes = [],
-    paymentStatuses = [],
     paymentMethods = [],
     recurrenceFrequencies = [],
   } = referenceData || {};
@@ -175,7 +169,6 @@ export default function Transacoes() {
   const [editingTransaction, setEditingTransaction] = useState(null);
   const [filterCategory, setFilterCategory] = useState("all");
   const [filterTransactionType, setFilterTransactionType] = useState("all");
-  const [filterStatus, setFilterStatus] = useState("all");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [transactionToDelete, setTransactionToDelete] = useState(null);
   const [filterMonth, setFilterMonth] = useState(getCurrentMonthRange());
@@ -200,7 +193,6 @@ export default function Transacoes() {
       ...t,
       date: t.transaction_date,
       type_internal_name: t.transaction_type_internal_name,
-      status: t.payment_status_internal_name,
       payment_method: normalizePaymentMethodName(t.payment_method_name || ""),
       payment_method_label: t.payment_method_name || "",
       installments: t.installment_total > 1 ? {
@@ -286,16 +278,12 @@ export default function Transacoes() {
       filtered = filtered.filter((t) => t.type_internal_name === filterTransactionType);
     }
 
-    if (filterStatus !== "all") {
-      filtered = filtered.filter((t) => t.status === filterStatus);
-    }
-
     if (filterMonth?.from && filterMonth?.to) {
       filtered = filtered.filter((t) => isDateInRange(t.date, filterMonth));
     }
 
     return filtered;
-  }, [mappedTransactions, filterCategory, filterTransactionType, filterStatus, filterMonth]);
+  }, [mappedTransactions, filterCategory, filterTransactionType, filterMonth]);
 
   const loading = useMemo(
     () => authLoading || (transactionsLoading && transactions.length === 0),
@@ -329,7 +317,6 @@ export default function Transacoes() {
         transactionTypeId: transaction.transaction_type_id,
         date: parseDateString(transaction.date) || new Date(),
         notes: transaction.notes || "",
-        status: transaction.status || PAYMENT_STATUS.PENDING,
         payment_method: transaction.payment_method || "",
         payment_date: transaction.payment_date ? parseDateString(transaction.payment_date) : null,
         card_id: transaction.card_id || null,
@@ -355,7 +342,6 @@ export default function Transacoes() {
         transactionTypeId: transaction.transaction_type_id,
         date: new Date(),
         notes: transaction.notes || "",
-        status: PAYMENT_STATUS.PENDING,
         payment_method: transaction.payment_method || "",
         payment_date: null,
         card_id: transaction.card_id || null,
@@ -368,28 +354,6 @@ export default function Transacoes() {
     });
     setModalOpen(true);
   }, []);
-
-  // Toggle status de pagamento (pago/pendente)
-  const handleToggleStatus = useCallback(async (transaction) => {
-    try {
-      const newStatus =
-        transaction.status === PAYMENT_STATUS.PAID
-          ? PAYMENT_STATUS.PENDING
-          : PAYMENT_STATUS.PAID;
-
-      const result = await update(transaction.id, {
-        status: newStatus,
-      });
-
-      if (result.error) throw result.error;
-
-      await refresh();
-    } catch (error) {
-      if (!(await handleApiError(error))) {
-        console.error("Erro ao atualizar status:", error);
-      }
-    }
-  }, [refresh, update, handleApiError]);
 
   // Categorização inteligente - sugere categoria baseado na descrição
   const suggestCategory = (description) => {
@@ -491,7 +455,6 @@ export default function Transacoes() {
       const paymentDateString = formData.payment_date ? formData.payment_date.toISOString().split("T")[0] : null;
 
       // Find IDs for enums
-      const paymentStatus = paymentStatuses.find(s => s.internal_name === formData.status);
       const paymentMethod = paymentMethodOptions.find(m => m.internal_name === formData.payment_method);
       const recurrenceFreq = recurrenceFrequencies.find(f => f.internal_name === formData.recurrence_frequency);
 
@@ -502,7 +465,6 @@ export default function Transacoes() {
         amount: amount,
         transactionDate: dateString,
         notes: formData.notes || null,
-        statusId: paymentStatus?.id || 1, // Default to 'pending'
         paymentMethodId: paymentMethod?.id || null,
         paymentDate: paymentDateString,
         cardId: formData.card_id || null,
@@ -545,7 +507,7 @@ export default function Transacoes() {
         alert("Erro ao salvar transação.");
       }
     }
-  }, [formData, transactionTypes, paymentStatuses, paymentMethodOptions, recurrenceFrequencies, editingTransaction, categories, handleApiError, update, create, refresh]);
+  }, [formData, transactionTypes, paymentMethodOptions, recurrenceFrequencies, editingTransaction, categories, handleApiError, update, create, refresh]);
 
   const handleInputChange = useCallback((field, value) => {
     // Atualizar campo principal
@@ -649,14 +611,7 @@ export default function Transacoes() {
     [filteredTransactions]
   );
 
-  const totalInvestment = useMemo(() =>
-    filteredTransactions
-      .filter((t) => t.type_internal_name === TRANSACTION_TYPES.INVESTMENT)
-      .reduce((sum, t) => sum + Math.abs(t.amount), 0),
-    [filteredTransactions]
-  );
-
-  const balance = totalIncome - totalExpense - totalInvestment;
+  const balance = totalIncome - totalExpense;
 
   // Ordenar transações por data (mais recente primeiro)
   const sortedTransactions = useMemo(() => {
@@ -766,34 +721,6 @@ export default function Transacoes() {
       },
     },
     {
-      key: "status",
-      label: "Status",
-      render: (row) => (
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            handleToggleStatus(row);
-          }}
-          className="hover:scale-105 transition-transform"
-        >
-          {row.status === PAYMENT_STATUS.PAID ? (
-            <Badge className="bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-800">
-              <CheckCircle2 className="w-3 h-3 mr-1" />
-              Pago
-            </Badge>
-          ) : (
-            <Badge
-              variant="outline"
-              className="text-amber-700 border-amber-300 hover:bg-amber-50 dark:hover:bg-amber-950"
-            >
-              <Clock className="w-3 h-3 mr-1" />
-              Pendente
-            </Badge>
-          )}
-        </button>
-      ),
-    },
-    {
       key: "date",
       label: "Data",
       sortable: true,
@@ -852,13 +779,11 @@ export default function Transacoes() {
           activeFiltersCount={
             (filterCategory !== "all" ? 1 : 0) +
             (filterTransactionType !== "all" ? 1 : 0) +
-            (filterStatus !== "all" ? 1 : 0) +
             (filterMonth ? 1 : 0)
           }
           onClearFilters={() => {
             setFilterCategory("all");
             setFilterTransactionType("all");
-            setFilterStatus("all");
             setFilterMonth(null);
           }}
           width="w-[calc(100vw-2rem)] sm:w-[28rem]"
@@ -997,30 +922,6 @@ export default function Transacoes() {
               </Select>
             </div>
 
-            {/* Filtro por status de pagamento */}
-            <div className="space-y-2">
-              <Label
-                htmlFor="filter-status"
-                className="text-sm font-medium text-gray-700 dark:text-gray-300"
-              >
-                Status
-              </Label>
-              <Select value={filterStatus} onValueChange={setFilterStatus}>
-                <SelectTrigger id="filter-status">
-                  <SelectValue placeholder="Selecione o status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos os status</SelectItem>
-                  <SelectItem value={PAYMENT_STATUS.PAID}>
-                    <span className="font-medium text-green-600">Pago</span>
-                  </SelectItem>
-                  <SelectItem value={PAYMENT_STATUS.PENDING}>
-                    <span className="font-medium text-amber-600">Pendente</span>
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
             {/* Filtro por período */}
             <div className="space-y-2">
               <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -1037,7 +938,7 @@ export default function Transacoes() {
       </div>
 
       {/* Cards de resumo */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 min-w-0">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 min-w-0">
         <StatsCard
           icon={ArrowUpRight}
           label="Total de Receitas"
@@ -1052,14 +953,6 @@ export default function Transacoes() {
           value={formatCurrency(totalExpense)}
           iconColor="red"
           valueColor="text-red-600"
-        />
-
-        <StatsCard
-          icon={TrendingUp}
-          label="Total em Patrimônio"
-          value={formatCurrency(totalInvestment)}
-          iconColor="purple"
-          valueColor="text-purple-600"
         />
 
         <StatsCard
@@ -1259,35 +1152,6 @@ export default function Transacoes() {
                 onChange={(date) => handleInputChange("date", date)}
                 autoComplete="off"
               />
-            </div>
-
-            {/* Status de Pagamento */}
-            <div className="space-y-2">
-              <Label htmlFor="status" className="text-sm">
-                Status
-              </Label>
-              <Select
-                value={formData.status}
-                onValueChange={(value) => handleInputChange("status", value)}
-              >
-                <SelectTrigger id="status" className="text-sm">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={PAYMENT_STATUS.PENDING}>
-                    <div className="flex items-center gap-2">
-                      <Clock className="w-4 h-4 text-amber-600" />
-                      <span>Pendente</span>
-                    </div>
-                  </SelectItem>
-                  <SelectItem value={PAYMENT_STATUS.PAID}>
-                    <div className="flex items-center gap-2">
-                      <CheckCircle2 className="w-4 h-4 text-green-600" />
-                      <span>Pago</span>
-                    </div>
-                  </SelectItem>
-                </SelectContent>
-              </Select>
             </div>
 
             {/* Forma de Pagamento */}
@@ -1644,7 +1508,7 @@ export default function Transacoes() {
                 O arquivo deve conter as seguintes colunas (nesta ordem):
               </p>
               <div className="bg-white p-3 rounded border border-blue-200 font-mono text-xs">
-                data,descrição,valor,categoria,tipo,status,notas
+                data,descrição,valor,categoria,tipo,notas
               </div>
               <p className="text-xs text-blue-700 dark:text-blue-400 mt-2">
                 • Data: formato AAAA-MM-DD (ex: 2024-01-15)
@@ -1652,8 +1516,6 @@ export default function Transacoes() {
                 • Valor: número positivo ou negativo (ex: 1500.00 ou -350.50)
                 <br />
                 • Tipo: income, expense ou investment
-                <br />
-                • Status: paid ou pending (opcional)
                 <br />
               </p>
             </div>

@@ -40,8 +40,6 @@ export async function getTransactions(filters = {}) {
       transaction_type_id,
       transaction_type_internal_name,
       transaction_type_name,
-      payment_status_id,
-      payment_status_internal_name,
       payment_method_id,
       payment_method_name,
       bank_id,
@@ -76,10 +74,6 @@ export async function getTransactions(filters = {}) {
 
   if (filters.date_to) {
     query = query.lte('transaction_date', filters.date_to);
-  }
-
-  if (filters.payment_status_id) {
-    query = query.eq('payment_status_id', filters.payment_status_id);
   }
 
   const { data, error } = await query;
@@ -149,7 +143,6 @@ export async function createTransaction(transaction) {
       user_id: user.id, // RLS requer user_id
       category_id: transaction.categoryId,
       transaction_type_id: transaction.transactionTypeId,
-      payment_status_id: transaction.statusId || 1, // pending por padrão
       payment_method_id: transaction.paymentMethodId || null,
       bank_id: transaction.bankId || null,
       card_id: transaction.cardId || null,
@@ -176,7 +169,6 @@ export async function createTransaction(transaction) {
       const fieldMessages = {
         'category_id': 'Categoria selecionada é inválida ou não existe',
         'transaction_type_id': 'Tipo de transação selecionado é inválido',
-        'payment_status_id': 'Status de pagamento selecionado é inválido',
         'payment_method_id': 'Forma de pagamento selecionada é inválida',
         'bank_id': 'Banco selecionado não existe',
         'card_id': 'Cartão selecionado não existe',
@@ -250,7 +242,6 @@ export async function updateTransaction(id, updates) {
 
   if (updates.categoryId !== undefined) updateData.category_id = updates.categoryId;
   if (updates.transactionTypeId !== undefined) updateData.transaction_type_id = updates.transactionTypeId;
-  if (updates.statusId !== undefined) updateData.payment_status_id = updates.statusId;
   if (updates.paymentMethodId !== undefined) updateData.payment_method_id = updates.paymentMethodId;
   if (updates.bankId !== undefined) updateData.bank_id = updates.bankId;
   if (updates.cardId !== undefined) updateData.card_id = updates.cardId;

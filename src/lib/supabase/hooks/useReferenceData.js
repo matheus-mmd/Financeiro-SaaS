@@ -1,12 +1,11 @@
 /**
- * Hook para dados de referência (categorias, tipos, status de pagamento, etc.)
+ * Hook para dados de referência (categorias, tipos, formas de pagamento, etc.)
  * Replica o padrão do dashboard: cache em sessionStorage + recarga em background
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   getCategories,
   getTransactionTypes,
-  getPaymentStatuses,
   getPaymentMethods,
   getRecurrenceFrequencies,
   getIcons,
@@ -43,7 +42,6 @@ const normalizeResourceData = (resource, items = []) => {
 const RESOURCE_FETCHERS = {
   categories: getCategories,
   transactionTypes: getTransactionTypes,
-  paymentStatuses: getPaymentStatuses,
   paymentMethods: getPaymentMethods,
   recurrenceFrequencies: getRecurrenceFrequencies,
   icons: getIcons,
@@ -63,7 +61,6 @@ export function useReferenceData({ resources } = {}) {
   const [data, setData] = useState({
     categories: [],
     transactionTypes: [],
-    paymentStatuses: [],
     paymentMethods: [],
     recurrenceFrequencies: [],
     icons: [],

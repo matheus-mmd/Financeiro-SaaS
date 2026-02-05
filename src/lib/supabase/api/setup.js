@@ -6,12 +6,6 @@
 import { supabase } from '../client';
 
 /**
- * Marcador em 'notes' para identificar transações criadas pelo setup
- * Permite limpar e recriar ao re-executar o setup
- */
-const SETUP_TRANSACTION_MARKER = 'auto:setup';
-
-/**
  * Mapeamento de tipo de renda → nome de categoria padrão (receita)
  */
 const INCOME_CATEGORY_MAP = {
@@ -67,13 +61,6 @@ export async function saveUserSetup(userId, setupData) {
     const workTypeString = Array.isArray(workTypes) ? workTypes.join(',') : workTypes;
 
     // 0. Limpar dados existentes para permitir re-execução do setup
-    // Deletar transações criadas pelo setup anterior
-    await supabase
-      .from('transactions')
-      .delete()
-      .eq('user_id', userId)
-      .eq('notes', SETUP_TRANSACTION_MARKER);
-
     // Deletar despesas fixas existentes
     await supabase
       .from('user_fixed_expenses')
@@ -283,13 +270,11 @@ export async function saveUserSetup(userId, setupData) {
             user_id: userId,
             category_id: category.id,
             transaction_type_id: 1, // Receita
-            payment_status_id: 1,   // Pendente
             description: income.description || 'Renda',
             amount: income.amountCents / 100,
             transaction_date: transactionDate.toISOString().split('T')[0],
             is_recurring: true,
             recurrence_frequency_id: 3, // Mensal
-            notes: SETUP_TRANSACTION_MARKER,
           });
         }
       }
@@ -312,13 +297,11 @@ export async function saveUserSetup(userId, setupData) {
               user_id: userId,
               category_id: category.id,
               transaction_type_id: 2, // Despesa
-              payment_status_id: 1,   // Pendente
               description: expense.description,
               amount: -(expense.amountCents / 100),
               transaction_date: transactionDate.toISOString().split('T')[0],
               is_recurring: true,
               recurrence_frequency_id: 3, // Mensal
-              notes: SETUP_TRANSACTION_MARKER,
             });
           }
         }
