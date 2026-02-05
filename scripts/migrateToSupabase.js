@@ -51,14 +51,6 @@ const paymentMethodMap = {
   'Transferência': 7,
 };
 
-// payment_status string → ID
-const paymentStatusMap = {
-  'pending': 1,
-  'paid': 2,
-  'overdue': 3,
-  'cancelled': 4,
-};
-
 // account_type string → ID
 const accountTypeMap = {
   'corrente': 1,
@@ -220,7 +212,6 @@ async function migrateTransactions(mockData) {
       user_id: tx.user_id,
       category_id: tx.category_id,
       transaction_type_id: tx.transaction_type_id,
-      payment_status_id: paymentStatusMap[tx.status] || 1,
       payment_method_id: tx.payment_method ? paymentMethodMap[tx.payment_method] : null,
       bank_id: tx.bank_id,
       card_id: tx.card_id,

@@ -150,7 +150,7 @@ export async function deleteCategory(id) {
 }
 
 // ============================================
-// FUNÇÕES DE REFERÊNCIA (types, statuses, etc.)
+// FUNÇÕES DE REFERÊNCIA (types, métodos, etc.)
 // ============================================
 
 export async function getTransactionTypes() {
@@ -164,23 +164,6 @@ export async function getTransactionTypes() {
 
   const { data, error } = await supabase
     .from('transaction_types')
-    .select('id, name, internal_name')
-    .order('id', { ascending: true });
-
-  return { data, error };
-}
-
-export async function getPaymentStatuses() {
-  const { user, error: authError } = await getAuthenticatedUser();
-
-  if (!user) {
-    const error = authError || new Error('Usuário não autenticado');
-    error.code = 'AUTH_REQUIRED';
-    return { data: [], error };
-  }
-
-  const { data, error } = await supabase
-    .from('payment_statuses')
     .select('id, name, internal_name')
     .order('id', { ascending: true });
 

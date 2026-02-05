@@ -117,15 +117,6 @@ export const TRANSACTION_TYPE_IDS = {
 };
 
 // ========================================
-// STATUS DE PAGAMENTO
-// ========================================
-
-export const PAYMENT_STATUS = {
-  PENDING: 'pending',
-  PAID: 'paid',
-};
-
-// ========================================
 // FORMAS DE PAGAMENTO
 // ========================================
 
