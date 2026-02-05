@@ -239,7 +239,8 @@ export function useDashboard() {
             name,
             value: 0,
             color: categoryMeta?.color || transaction.category_color || defaults[type].color,
-            icon: categoryMeta?.icon || transaction.category_icon || defaults[type].icon,
+            icon: categoryMeta?.icon_name || transaction.category_icon || defaults[type].icon,
+            emoji: categoryMeta?.emoji || transaction.category_emoji || null,
           };
           existing.value += amount;
           breakdownMap.set(name, existing);
