@@ -1204,6 +1204,7 @@ export default function Transacoes() {
             <div className="space-y-2">
               <Label htmlFor="category">Categoria</Label>
               <Select
+                key={formData.transactionTypeId}
                 value={formData.categoryId?.toString() || ""}
                 onValueChange={handleCategoryChange}
               >
@@ -1211,6 +1212,13 @@ export default function Transacoes() {
                   <SelectValue placeholder="Selecione uma categoria" />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="__create_new__" className="text-brand-600 dark:text-brand-400 font-medium">
+                    <div className="flex items-center gap-2">
+                      <Plus className="w-4 h-4" />
+                      Criar nova categoria
+                    </div>
+                  </SelectItem>
+                  <SelectSeparator />
                   {categories
                     .filter((cat) => cat.transaction_type_id === formData.transactionTypeId)
                     .map((category) => (
@@ -1224,13 +1232,6 @@ export default function Transacoes() {
                         </div>
                       </SelectItem>
                     ))}
-                  <SelectSeparator />
-                  <SelectItem value="__create_new__" className="text-brand-600 dark:text-brand-400 font-medium">
-                    <div className="flex items-center gap-2">
-                      <Plus className="w-4 h-4" />
-                      Criar nova categoria
-                    </div>
-                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
