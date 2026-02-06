@@ -26,6 +26,7 @@ import {
   TrendingDown,
   TrendingUp,
   Layers,
+  PiggyBank,
 } from "lucide-react";
 import EmojiPicker from "../../src/components/EmojiPicker";
 import ConfirmDialog from "../../src/components/ConfirmDialog";
@@ -103,12 +104,15 @@ export default function CategoriasPage() {
   // Filtrar categorias por tipo e se é padrão ou personalizada
   const expenseCategories = categories.filter(cat => cat.transaction_type_id === 2);
   const incomeCategories = categories.filter(cat => cat.transaction_type_id === 1);
+  const investmentCategories = categories.filter(cat => cat.transaction_type_id === 3);
 
   // Separar categorias padrão (is_default=true) das personalizadas (is_default=false ou null)
   const defaultExpenseCategories = expenseCategories.filter(cat => cat.is_default === true);
   const defaultIncomeCategories = incomeCategories.filter(cat => cat.is_default === true);
+  const defaultInvestmentCategories = investmentCategories.filter(cat => cat.is_default === true);
   const userExpenseCategories = expenseCategories.filter(cat => !cat.is_default);
   const userIncomeCategories = incomeCategories.filter(cat => !cat.is_default);
+  const userInvestmentCategories = investmentCategories.filter(cat => !cat.is_default);
 
   // Abrir modal para nova categoria
   const handleOpenModal = () => {
@@ -151,12 +155,13 @@ export default function CategoriasPage() {
         toast.success(`Categoria "${categoryData.name}" atualizada com sucesso!`);
       } else {
         // Criar nova categoria
-        const transactionTypeId = activeTab === 'despesas' ? 2 : 1;
+        const transactionTypeId = activeTab === 'despesas' ? 2 : activeTab === 'patrimonio' ? 3 : 1;
+        const color = activeTab === 'despesas' ? '#ef4444' : activeTab === 'patrimonio' ? '#8b5cf6' : '#22c55e';
 
         const result = await createCategory({
           name: categoryData.name,
           emoji: categoryData.emoji || '📦',
-          color: activeTab === 'despesas' ? '#ef4444' : '#22c55e',
+          color,
           transactionTypeId,
         });
 
@@ -208,8 +213,16 @@ export default function CategoriasPage() {
     return <PageSkeleton />;
   }
 
-  const currentUserCategories = activeTab === 'despesas' ? userExpenseCategories : userIncomeCategories;
-  const currentDefaultCategories = activeTab === 'despesas' ? defaultExpenseCategories : defaultIncomeCategories;
+  const currentUserCategories = activeTab === 'despesas'
+    ? userExpenseCategories
+    : activeTab === 'patrimonio'
+    ? userInvestmentCategories
+    : userIncomeCategories;
+  const currentDefaultCategories = activeTab === 'despesas'
+    ? defaultExpenseCategories
+    : activeTab === 'patrimonio'
+    ? defaultInvestmentCategories
+    : defaultIncomeCategories;
 
   return (
     <div className="space-y-4 animate-fade-in">
@@ -244,6 +257,17 @@ export default function CategoriasPage() {
               <TrendingUp className="w-4 h-4" />
               Receitas
             </button>
+            <button
+              onClick={() => setActiveTab('patrimonio')}
+              className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-medium border-b-2 transition-colors ${
+                activeTab === 'patrimonio'
+                  ? 'border-brand-600 text-brand-600'
+                  : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+              }`}
+            >
+              <PiggyBank className="w-4 h-4" />
+              Patrimônio
+            </button>
           </div>
         </CardContent>
       </Card>
@@ -253,9 +277,17 @@ export default function CategoriasPage() {
         <CardContent className="p-4">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
-              <div className={`p-2 rounded-lg ${activeTab === 'despesas' ? 'bg-red-100 dark:bg-red-900' : 'bg-green-100 dark:bg-green-900'}`}>
+              <div className={`p-2 rounded-lg ${
+                activeTab === 'despesas'
+                  ? 'bg-red-100 dark:bg-red-900'
+                  : activeTab === 'patrimonio'
+                  ? 'bg-purple-100 dark:bg-purple-900'
+                  : 'bg-green-100 dark:bg-green-900'
+              }`}>
                 {activeTab === 'despesas' ? (
                   <TrendingDown className="w-5 h-5 text-red-600" />
+                ) : activeTab === 'patrimonio' ? (
+                  <PiggyBank className="w-5 h-5 text-purple-600" />
                 ) : (
                   <TrendingUp className="w-5 h-5 text-green-600" />
                 )}
@@ -285,7 +317,7 @@ export default function CategoriasPage() {
                 Crie suas categorias personalizadas
               </h3>
               <p className="text-gray-500 dark:text-gray-400 mb-6 max-w-sm mx-auto">
-                Organize suas {activeTab === 'despesas' ? 'despesas' : 'receitas'} com categorias personalizadas.
+                Organize {activeTab === 'despesas' ? 'suas despesas' : activeTab === 'patrimonio' ? 'seu patrimônio' : 'suas receitas'} com categorias personalizadas.
               </p>
               <Button onClick={handleOpenModal} className="bg-brand-500 hover:bg-brand-600">
                 <Plus className="w-4 h-4 mr-2" />
@@ -336,7 +368,7 @@ export default function CategoriasPage() {
             <div>
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Categorias Padrão</h2>
               <p className="text-sm text-gray-500 dark:text-gray-400">
-                Categorias de {activeTab === 'despesas' ? 'despesa' : 'receita'} do sistema ({currentDefaultCategories.length})
+                Categorias de {activeTab === 'despesas' ? 'despesa' : activeTab === 'patrimonio' ? 'patrimônio' : 'receita'} do sistema ({currentDefaultCategories.length})
               </p>
             </div>
           </div>
@@ -379,7 +411,7 @@ export default function CategoriasPage() {
             <DialogTitle>
               {editingCategory
                 ? `Editar Categoria`
-                : `Nova Categoria de ${activeTab === 'despesas' ? 'Despesa' : 'Receita'}`
+                : `Nova Categoria de ${activeTab === 'despesas' ? 'Despesa' : activeTab === 'patrimonio' ? 'Patrimônio' : 'Receita'}`
               }
             </DialogTitle>
           </DialogHeader>
