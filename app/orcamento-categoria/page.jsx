@@ -445,7 +445,7 @@ export default function OrcamentoCategoriaPage() {
               </div>
 
               {/* Lista de orçamentos */}
-              <div className="space-y-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {budgets.map((budget) => {
                   const { spent, limit, percentage, status } = getBudgetStatus(budget);
 
@@ -541,7 +541,7 @@ export default function OrcamentoCategoriaPage() {
               {!editingBudget && (
                 <div className="space-y-2">
                   <Label>Tipo</Label>
-                  <div className="grid grid-cols-3 gap-1 p-1 bg-gray-100 dark:bg-slate-800 rounded-lg">
+                  <div className="grid grid-cols-2 gap-1 p-1 bg-gray-100 dark:bg-slate-800 rounded-lg">
                     <button
                       type="button"
                       onClick={() => {
@@ -571,21 +571,6 @@ export default function OrcamentoCategoriaPage() {
                     >
                       <TrendingUp className="w-4 h-4" />
                       Receita
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSelectedTransactionTypeId(TRANSACTION_TYPE_IDS.INVESTMENT);
-                        setBudgetData({ ...budgetData, categoryId: '' });
-                      }}
-                      className={`flex items-center justify-center gap-1.5 py-2 px-2 rounded-md text-sm font-medium transition-all ${
-                        selectedTransactionTypeId === TRANSACTION_TYPE_IDS.INVESTMENT
-                          ? 'bg-white dark:bg-slate-700 text-purple-600 dark:text-purple-400 shadow-sm'
-                          : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
-                      }`}
-                    >
-                      <PiggyBank className="w-4 h-4" />
-                      Patrimônio
                     </button>
                   </div>
                 </div>
