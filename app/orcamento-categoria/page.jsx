@@ -20,6 +20,7 @@ import {
   Select,
   SelectContent,
   SelectItem,
+  SelectSeparator,
   SelectTrigger,
   SelectValue,
 } from "../../src/components/ui/select";
@@ -27,6 +28,7 @@ import { useBudgets } from "../../src/lib/supabase/hooks/useBudgets";
 import { useCategories } from "../../src/lib/supabase/hooks/useCategories";
 import { useToast } from "../../src/components/Toast";
 import ConfirmDialog from "../../src/components/ConfirmDialog";
+import EmojiPicker from "../../src/components/EmojiPicker";
 import {
   Plus,
   Trash2,
@@ -36,8 +38,10 @@ import {
   PiggyBank,
   AlertTriangle,
   TrendingDown,
+  TrendingUp,
 } from "lucide-react";
 import { formatCurrency } from "../../src/utils";
+import { TRANSACTION_TYPE_IDS } from "../../src/constants";
 
 const MONTH_NAMES = [
   'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
@@ -71,6 +75,7 @@ export default function OrcamentoCategoriaPage() {
   const {
     categories,
     loading: categoriesLoading,
+    create: createCategory,
   } = useCategories();
 
   // Loading composto - usado para determinar se esta carregando dados novos
@@ -79,26 +84,35 @@ export default function OrcamentoCategoriaPage() {
   // Tem dados em cache disponiveis para renderizar?
   const hasData = budgets.length > 0 || categories.length > 0;
 
-  // Estados para modal
+  // Estados para modal de orçamento
   const [modalOpen, setModalOpen] = useState(false);
   const [editingBudget, setEditingBudget] = useState(null);
+  const [selectedTransactionTypeId, setSelectedTransactionTypeId] = useState(TRANSACTION_TYPE_IDS.EXPENSE);
   const [budgetData, setBudgetData] = useState({
     categoryId: '',
     limitAmount: '',
     alertPercentage: 80,
   });
 
+  // Estados para modal de nova categoria
+  const [newCategoryModalOpen, setNewCategoryModalOpen] = useState(false);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [newCategoryData, setNewCategoryData] = useState({ emoji: '', name: '' });
+
   // Estados para modal de confirmação de exclusão
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const [budgetToDelete, setBudgetToDelete] = useState(null);
 
-  // Filtrar apenas categorias de despesa (transaction_type_id = 2)
-  const expenseCategories = categories.filter(cat => cat.transaction_type_id === 2);
+  // Filtrar categorias por tipo selecionado
+  const filteredCategories = categories.filter(cat => cat.transaction_type_id === selectedTransactionTypeId);
 
-  // Categorias que ainda não têm orçamento no mês
-  const availableCategories = expenseCategories.filter(
+  // Categorias que ainda não têm orçamento no mês (do tipo selecionado)
+  const availableCategories = filteredCategories.filter(
     cat => !budgets.some(b => b.category_id === cat.id)
   );
+
+  // Todas as categorias de despesa (para verificar se precisa criar)
+  const expenseCategories = categories.filter(cat => cat.transaction_type_id === 2);
 
   // Funções auxiliares
   const handleAuthFailure = async () => {
@@ -154,6 +168,7 @@ export default function OrcamentoCategoriaPage() {
   // Abrir modal para novo orçamento
   const handleOpenModal = () => {
     setEditingBudget(null);
+    setSelectedTransactionTypeId(TRANSACTION_TYPE_IDS.EXPENSE);
     setBudgetData({
       categoryId: '',
       limitAmount: '',
@@ -171,6 +186,56 @@ export default function OrcamentoCategoriaPage() {
       alertPercentage: budget.alert_percentage || 80,
     });
     setModalOpen(true);
+  };
+
+  // Lidar com mudança de categoria (interceptar criação de nova)
+  const handleCategoryChange = (categoryId) => {
+    if (categoryId === "__create_new__") {
+      setNewCategoryData({ emoji: '', name: '' });
+      setShowEmojiPicker(false);
+      setNewCategoryModalOpen(true);
+      return;
+    }
+    setBudgetData({ ...budgetData, categoryId });
+  };
+
+  // Criar nova categoria inline
+  const handleCreateCategoryInline = async () => {
+    if (!newCategoryData.name.trim()) {
+      toast.warning('Por favor, informe o nome da categoria');
+      return;
+    }
+
+    try {
+      const color = selectedTransactionTypeId === TRANSACTION_TYPE_IDS.INCOME ? '#22c55e'
+        : selectedTransactionTypeId === TRANSACTION_TYPE_IDS.INVESTMENT ? '#8b5cf6'
+        : '#ef4444';
+
+      const result = await createCategory({
+        name: newCategoryData.name,
+        emoji: newCategoryData.emoji || '📦',
+        color,
+        transactionTypeId: selectedTransactionTypeId,
+      });
+
+      if (result.error) throw result.error;
+
+      // Selecionar a categoria recém-criada
+      if (result.data) {
+        setBudgetData({ ...budgetData, categoryId: String(result.data.id) });
+      }
+
+      toast.success(`Categoria "${newCategoryData.name}" criada!`);
+      setNewCategoryModalOpen(false);
+    } catch (err) {
+      console.error("Erro ao criar categoria:", err);
+      const errorMessage = err?.message || String(err);
+      if (errorMessage.includes('categories_unique_name_per_user') || errorMessage.includes('duplicate key')) {
+        toast.error('Já existe uma categoria com esse nome.');
+      } else {
+        toast.error('Erro ao criar categoria. Tente novamente.');
+      }
+    }
   };
 
   // Criar ou editar orçamento
@@ -310,7 +375,6 @@ export default function OrcamentoCategoriaPage() {
               onClick={handleOpenModal}
               size="sm"
               className="bg-brand-500 hover:bg-brand-600"
-              disabled={availableCategories.length === 0}
             >
               <Plus className="w-4 h-4 mr-1" />
               Novo
@@ -351,16 +415,10 @@ export default function OrcamentoCategoriaPage() {
               <Button
                 onClick={handleOpenModal}
                 className="bg-brand-500 hover:bg-brand-600"
-                disabled={availableCategories.length === 0}
               >
                 <Plus className="w-4 h-4 mr-2" />
                 Criar Primeiro Orçamento
               </Button>
-              {availableCategories.length === 0 && expenseCategories.length === 0 && (
-                <p className="text-sm text-gray-400 mt-4">
-                  Você precisa criar categorias de despesa primeiro.
-                </p>
-              )}
             </div>
           ) : (
             <div className="space-y-4">
@@ -479,26 +537,94 @@ export default function OrcamentoCategoriaPage() {
 
           <div className="flex-1 overflow-y-auto px-4 py-4">
             <div className="space-y-4">
+              {/* Tipo de Categoria - Toggle (apenas para novo) */}
+              {!editingBudget && (
+                <div className="space-y-2">
+                  <Label>Tipo</Label>
+                  <div className="grid grid-cols-3 gap-1 p-1 bg-gray-100 dark:bg-slate-800 rounded-lg">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedTransactionTypeId(TRANSACTION_TYPE_IDS.EXPENSE);
+                        setBudgetData({ ...budgetData, categoryId: '' });
+                      }}
+                      className={`flex items-center justify-center gap-1.5 py-2 px-2 rounded-md text-sm font-medium transition-all ${
+                        selectedTransactionTypeId === TRANSACTION_TYPE_IDS.EXPENSE
+                          ? 'bg-white dark:bg-slate-700 text-red-600 dark:text-red-400 shadow-sm'
+                          : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                      }`}
+                    >
+                      <TrendingDown className="w-4 h-4" />
+                      Despesa
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedTransactionTypeId(TRANSACTION_TYPE_IDS.INCOME);
+                        setBudgetData({ ...budgetData, categoryId: '' });
+                      }}
+                      className={`flex items-center justify-center gap-1.5 py-2 px-2 rounded-md text-sm font-medium transition-all ${
+                        selectedTransactionTypeId === TRANSACTION_TYPE_IDS.INCOME
+                          ? 'bg-white dark:bg-slate-700 text-green-600 dark:text-green-400 shadow-sm'
+                          : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                      }`}
+                    >
+                      <TrendingUp className="w-4 h-4" />
+                      Receita
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedTransactionTypeId(TRANSACTION_TYPE_IDS.INVESTMENT);
+                        setBudgetData({ ...budgetData, categoryId: '' });
+                      }}
+                      className={`flex items-center justify-center gap-1.5 py-2 px-2 rounded-md text-sm font-medium transition-all ${
+                        selectedTransactionTypeId === TRANSACTION_TYPE_IDS.INVESTMENT
+                          ? 'bg-white dark:bg-slate-700 text-purple-600 dark:text-purple-400 shadow-sm'
+                          : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                      }`}
+                    >
+                      <PiggyBank className="w-4 h-4" />
+                      Patrimônio
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {/* Categoria (apenas para novo) */}
               {!editingBudget && (
                 <div className="space-y-2">
                   <Label>Categoria</Label>
                   <Select
+                    key={selectedTransactionTypeId}
                     value={budgetData.categoryId ? String(budgetData.categoryId) : ''}
-                    onValueChange={(value) => setBudgetData({ ...budgetData, categoryId: value })}
+                    onValueChange={handleCategoryChange}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Selecione uma categoria" />
                     </SelectTrigger>
                     <SelectContent>
-                      {availableCategories.map((cat) => (
-                        <SelectItem key={cat.id} value={String(cat.id)}>
-                          <span className="flex items-center gap-2">
-                            <span>{cat.emoji || '📦'}</span>
-                            <span>{cat.name}</span>
-                          </span>
-                        </SelectItem>
-                      ))}
+                      <SelectItem value="__create_new__" className="text-brand-600 dark:text-brand-400 font-medium">
+                        <div className="flex items-center gap-2">
+                          <Plus className="w-4 h-4" />
+                          Criar nova categoria
+                        </div>
+                      </SelectItem>
+                      <SelectSeparator />
+                      {availableCategories.length > 0 ? (
+                        availableCategories.map((cat) => (
+                          <SelectItem key={cat.id} value={String(cat.id)}>
+                            <span className="flex items-center gap-2">
+                              <span>{cat.emoji || '📦'}</span>
+                              <span>{cat.name}</span>
+                            </span>
+                          </SelectItem>
+                        ))
+                      ) : (
+                        <div className="px-2 py-1.5 text-sm text-gray-500 dark:text-gray-400">
+                          Nenhuma categoria disponível
+                        </div>
+                      )}
                     </SelectContent>
                   </Select>
                 </div>
@@ -569,6 +695,93 @@ export default function OrcamentoCategoriaPage() {
               className="flex-1 sm:flex-none bg-brand-500 hover:bg-brand-600"
             >
               {editingBudget ? 'Salvar' : 'Criar Orçamento'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal Nova Categoria (inline) */}
+      <Dialog open={newCategoryModalOpen} onOpenChange={setNewCategoryModalOpen}>
+        <DialogContent className="max-w-[95vw] sm:max-w-sm max-h-[90vh] flex flex-col p-0">
+          <DialogHeader className="px-4 pt-4 pb-3 border-b flex-shrink-0">
+            <DialogTitle>
+              Nova Categoria de {selectedTransactionTypeId === TRANSACTION_TYPE_IDS.INCOME ? 'Receita'
+                : selectedTransactionTypeId === TRANSACTION_TYPE_IDS.INVESTMENT ? 'Patrimônio'
+                : 'Despesa'}
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="flex-1 overflow-y-auto px-4 py-4">
+            <div className="space-y-4">
+              {/* Emoji Picker */}
+              <div className="space-y-2">
+                <Label>Emoji</Label>
+                <button
+                  type="button"
+                  onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                  className="w-full flex items-center gap-3 p-3 border border-gray-200 dark:border-slate-700 rounded-lg bg-gray-50 dark:bg-slate-800 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
+                >
+                  {newCategoryData.emoji ? (
+                    <span className="text-2xl">{newCategoryData.emoji}</span>
+                  ) : (
+                    <span className="text-gray-400">Clique para escolher</span>
+                  )}
+                </button>
+
+                {showEmojiPicker && (
+                  <div className="mt-2">
+                    <EmojiPicker
+                      selectedEmoji={newCategoryData.emoji}
+                      onEmojiSelect={(emoji) => {
+                        setNewCategoryData({ ...newCategoryData, emoji });
+                        setShowEmojiPicker(false);
+                      }}
+                      onClose={() => setShowEmojiPicker(false)}
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Nome da Categoria */}
+              <div className="space-y-2">
+                <Label htmlFor="new-category-name">Nome da Categoria</Label>
+                <Input
+                  id="new-category-name"
+                  value={newCategoryData.name}
+                  onChange={(e) => setNewCategoryData({ ...newCategoryData, name: e.target.value })}
+                  placeholder="Ex: Apostas, Academia, Investimento..."
+                />
+              </div>
+
+              {/* Preview */}
+              {newCategoryData.name && (
+                <div className="p-3 bg-gray-50 dark:bg-slate-800 rounded-lg">
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">Preview:</p>
+                  <div className="flex items-center gap-3">
+                    {newCategoryData.emoji && (
+                      <span className="text-2xl">{newCategoryData.emoji}</span>
+                    )}
+                    <span className="font-medium text-gray-900 dark:text-white">{newCategoryData.name}</span>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <DialogFooter className="px-4 py-3 border-t bg-gray-50 dark:bg-slate-800 flex-shrink-0">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setNewCategoryModalOpen(false)}
+              className="flex-1 sm:flex-none"
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleCreateCategoryInline}
+              className="flex-1 sm:flex-none bg-brand-500 hover:bg-brand-600"
+            >
+              Criar Categoria
             </Button>
           </DialogFooter>
         </DialogContent>
