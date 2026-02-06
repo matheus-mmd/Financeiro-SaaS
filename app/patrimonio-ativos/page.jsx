@@ -36,7 +36,6 @@ import {
   AlertDialogTitle,
 } from "../../src/components/ui/alert-dialog";
 import PageSkeleton from "../../src/components/PageSkeleton";
-import Table from "../../src/components/Table";
 import DatePicker from "../../src/components/DatePicker";
 import {
   formatCurrency,
@@ -89,7 +88,6 @@ export default function PatrimonioAtivos() {
   const [assetToDelete, setAssetToDelete] = useState(null);
   const [categories, setCategories] = useState([]);
   const [filterMonth, setFilterMonth] = useState(getCurrentMonthRange());
-  const [columnSelectorElement, setColumnSelectorElement] = useState(null);
   const [formData, setFormData] = useState({
     name: "",
     type: "Poupança",
@@ -371,98 +369,6 @@ export default function PatrimonioAtivos() {
     return <PageSkeleton />;
   }
 
-  // Configuração de colunas da tabela
-  const assetColumns = [
-    {
-      key: "name",
-      label: "Nome",
-      sortable: true,
-      render: (row) => (
-        <div className="flex flex-col gap-0.5">
-          <span className="font-medium text-gray-900 dark:text-white">{row.name}</span>
-        </div>
-      ),
-    },
-    {
-      key: "type",
-      label: "Tipo",
-      sortable: true,
-      render: (row) => {
-        const IconComponent = getIconComponent(row.type_icon || "Tag");
-        return (
-          <div className="flex items-center gap-2">
-            <div
-              className="p-1 rounded flex-shrink-0"
-              style={{ backgroundColor: row.type_color + '20' }}
-            >
-              <IconComponent
-                className="w-4 h-4"
-                style={{ color: row.type_color }}
-              />
-            </div>
-            <span className="text-sm font-medium text-gray-900 dark:text-white">
-              {row.type}
-            </span>
-          </div>
-        );
-      },
-    },
-    {
-      key: "value",
-      label: "Valor",
-      sortable: true,
-      render: (row) => (
-        <span className="font-semibold text-blue-600">
-          {formatCurrency(row.value)}
-        </span>
-      ),
-    },
-    {
-      key: "yield",
-      label: "Rendimento",
-      sortable: true,
-      render: (row) => (
-        <span>
-          {(row.yield * 100).toFixed(2)}% a.m.
-        </span>
-      ),
-    },
-    {
-      key: "date",
-      label: "Data",
-      sortable: true,
-      render: (row) => formatDate(row.date),
-    },
-    {
-      key: "actions",
-      label: "Ações",
-      render: (row) => (
-        <div className="flex items-center gap-1">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              handleDuplicateAsset(row);
-            }}
-            className="p-1.5 hover:bg-blue-50 dark:hover:bg-blue-950 rounded transition-colors"
-            title="Duplicar ativo"
-          >
-            <Copy className="w-4 h-4 text-blue-600" />
-          </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              handleDeleteAsset(row);
-            }}
-            className="p-1.5 hover:bg-red-50 dark:hover:bg-red-950 rounded transition-colors"
-            title="Excluir ativo"
-          >
-            <Trash2 className="w-4 h-4 text-red-600" />
-          </button>
-        </div>
-      ),
-    },
-  ];
-
   return (
     <div className="space-y-4 animate-fade-in">
       <PageHeader
@@ -565,17 +471,14 @@ export default function PatrimonioAtivos() {
                 <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Ativos</h2>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              {columnSelectorElement}
-              <Button
-                onClick={handleAddAsset}
-                size="sm"
-                className="bg-brand-500 hover:bg-brand-600"
-              >
-                <Plus className="w-4 h-4 mr-1" />
-                Novo
-              </Button>
-            </div>
+            <Button
+              onClick={handleAddAsset}
+              size="sm"
+              className="bg-brand-500 hover:bg-brand-600"
+            >
+              <Plus className="w-4 h-4 mr-1" />
+              Novo
+            </Button>
           </div>
 
           {sortedAssets.length === 0 ? (
@@ -598,14 +501,77 @@ export default function PatrimonioAtivos() {
               </Button>
             </div>
           ) : (
-            <Table
-              columns={assetColumns}
-              data={sortedAssets}
-              pageSize={10}
-              onRowClick={handleEditAsset}
-              tableId="assets-table"
-              renderColumnSelector={setColumnSelectorElement}
-            />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {sortedAssets.map((asset) => {
+                const IconComponent = getIconComponent(asset.type_icon || "Tag");
+                return (
+                  <div
+                    key={asset.id}
+                    onClick={() => handleEditAsset(asset)}
+                    className="group p-4 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg hover:shadow-md transition-all cursor-pointer"
+                  >
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-3">
+                        <div
+                          className="p-2 rounded-lg"
+                          style={{ backgroundColor: asset.type_color + '20' }}
+                        >
+                          <IconComponent
+                            className="w-5 h-5"
+                            style={{ color: asset.type_color }}
+                          />
+                        </div>
+                        <div>
+                          <h3 className="font-medium text-gray-900 dark:text-white">{asset.name}</h3>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">{asset.type}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDuplicateAsset(asset);
+                          }}
+                          className="p-1.5 hover:bg-blue-100 dark:hover:bg-blue-900 rounded-lg transition-colors"
+                          title="Duplicar ativo"
+                        >
+                          <Copy className="w-4 h-4 text-blue-600" />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteAsset(asset);
+                          }}
+                          className="p-1.5 hover:bg-red-100 dark:hover:bg-red-900 rounded-lg transition-colors"
+                          title="Excluir ativo"
+                        >
+                          <Trash2 className="w-4 h-4 text-red-600" />
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-lg font-semibold text-blue-600">
+                          {formatCurrency(asset.value)}
+                        </p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          {formatDate(asset.date)}
+                        </p>
+                      </div>
+                      {asset.yield > 0 && (
+                        <div className="text-right">
+                          <p className="text-sm font-medium text-green-600">
+                            +{(asset.yield * 100).toFixed(2)}%
+                          </p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">a.m.</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           )}
         </CardContent>
       </Card>
